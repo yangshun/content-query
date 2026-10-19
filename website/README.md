@@ -1,5 +1,7 @@
 # ContentQuery website
 
+The [computed fields guide](./content/guides/computed-fields.md) covers collection names and optional, typed loader source metadata, with file and CMS examples that make those values queryable. It distinguishes the ContentQuery metadata extension from Astro's standard entry fields and explains source-only updates and digest behavior.
+
 Standalone examples and documentation use `content-query build` (or `content-query build --watch`) and `buildContent()` from `content-query/build`. The CLI reference documents CAC's help/version output, short option aliases, and equals-form values. Framework guides also cover the native Angular SSR example, its server API boundaries, and CLI development watching.
 
 The [Next.js guide](./content/guides/integrations/next.md) documents `withContentQuery()` from `content-query/next`, including configuration, the application-local `#content-query` import alias in `package.json`, inferred Server Component types, content options, development updates and error recovery with Turbopack or Webpack, and production/static exports. The introduction, quick start, framework guide, and configuration reference link to that setup. The homepage's Next.js workflow shows the configuration and alias mapping beside its server query.

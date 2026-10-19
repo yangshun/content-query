@@ -15,7 +15,7 @@ export type BuiltinLoader =
   | { kind: "glob"; options: GlobOptions }
   | { kind: "file"; filename: string; options: FileOptions };
 export const builtinSymbol = Symbol.for("content-query.builtin-loader");
-export type MarkedLoader = Loader & { [builtinSymbol]: BuiltinLoader };
+export type MarkedLoader<Source = unknown> = Loader<Source> & { [builtinSymbol]: BuiltinLoader };
 
 /** Finds library-owned loader settings without depending on module instance identity. */
 export function builtinLoader(loader: Loader): BuiltinLoader | undefined {

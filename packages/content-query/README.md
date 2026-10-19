@@ -71,9 +71,15 @@ A string `source` scans a directory recursively for Markdown. For an explicit fo
 
 Any Standard Schema V1 provider can validate collection metadata and computed results. Async validators/resolvers are supported. Validated outputs determine query types and are stored without rerunning transforms at runtime. Collection schemas are optional: an explicit schema overrides the loader’s `schema` or asynchronous `createSchema()` default. Loader defaults also support Zod 3 and Zod 4, including core schemas. Declare a collection schema when you need precise static field inference; dynamically discovered loader schemas provide named fields with `unknown` values.
 
+Computed resolvers receive the registry key `collection`, entry `id`, validated `data`, optional loader-defined `source` metadata, captured `readBody()` text, and cancellation `signal`. `glob()` and collection `source` shorthand provide `{ filePath }`; multi-record `file()` adds the original record `key` (a keyed-object property or array index, as a string). Paths use forward slashes and are relative to the application root, preserving the original filename independently of custom IDs. Access optional metadata with `source?.filePath` or a presence check. Context metadata becomes queryable only when explicitly returned by a computed field.
+
+Custom loaders can declare `Loader<Source>` and attach `source` to their store entries. `defineCollection()` infers that metadata type for resolvers independently of schema-validated `data`. Source metadata is detached for every resolver, must contain supported data values, and stays out of deployed artifacts unless returned by a computed field. Untyped loaders expose `unknown` source metadata, which must be narrowed before accessing fields.
+
 `glob()` supports Markdown and individual JSON/YAML/TOML records. Default IDs follow Astro's slug generation, raw `slug` override, and trailing `/index` removal. `generateId` overrides this policy. A captured Markdown body excludes frontmatter and the blank lines separating it from the content. `file()` reads multi-entry arrays or keyed objects and accepts an async custom parser. Built-in paths resolve from the application root.
 
 ## Astro-compatible content loaders
+
+The named loader interface and standard entry fields remain Astro-compatible. Optional entry `source` metadata and its TypeScript generic are ContentQuery extensions: existing Astro loaders need no changes, and Astro's own store does not retain this extension. The standard `filePath` field remains available for diagnostics independently of source metadata. Store reads keep the standard shape, so custom source metadata read directly from the store remains `unknown`.
 
 ContentQuery uses Astro’s named, store-writing content loader contract directly. Pass an existing loader package to `defineCollection()` without a wrapper:
 

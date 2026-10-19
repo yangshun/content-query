@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { builtinPath, builtinSymbol, type BuiltinLoader, type MarkedLoader } from "./descriptor.ts";
-import type { Loader, LoaderEntry } from "./types.ts";
+import type { FileSource, Loader, LoaderEntry } from "./types.ts";
 import path from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { populateStore } from "./populate.ts";
@@ -13,8 +13,8 @@ import { ContentError, contentError, describeCause, groupDiagnostics } from "../
 import type { GlobOptions } from "./descriptor.ts";
 import { parseData, recordData, coerceIdentity } from "./parse.ts";
 
-/** Declares local Markdown or one-record data files with Astro-style identity defaults. */
-export function glob(options: GlobOptions): Loader {
+/** Declares local files with Astro-style IDs and typed, project-relative source paths. */
+export function glob(options: GlobOptions): Loader<FileSource> {
   if (
     !options ||
     !(
@@ -37,7 +37,7 @@ export function glob(options: GlobOptions): Loader {
       );
       await populateStore(context, entries);
     },
-  } as MarkedLoader;
+  } as MarkedLoader<FileSource>;
 }
 
 /** Captures complete matching Markdown and data sources before deployment. */
@@ -45,7 +45,7 @@ export async function loadGlob(
   descriptor: Extract<BuiltinLoader, { kind: "glob" }>,
   root: string,
   signal: AbortSignal,
-): Promise<LoaderEntry[]> {
+): Promise<LoaderEntry<FileSource>[]> {
   const resolved = builtinPath(descriptor, root);
   const entries = await discover(descriptor.options.pattern, {
     cwd: resolved,
@@ -63,7 +63,10 @@ export async function loadGlob(
       signal.throwIfAborted();
       const filename = path.join(resolved, entry);
       try {
-        return await loadEntry(descriptor, entry, filename, base, signal);
+        return {
+          ...(await loadEntry(descriptor, entry, filename, base, signal)),
+          sourceData: { filePath: path.relative(root, filename).split(path.sep).join("/") },
+        };
       } catch (cause) {
         throw contentError(cause, {
           code: "source-error",
@@ -81,7 +84,7 @@ export async function loadGlob(
   if (failures.length) {
     throw groupDiagnostics(failures);
   }
-  return results.map((result) => (result as PromiseFulfilledResult<LoaderEntry>).value);
+  return results.map((result) => (result as PromiseFulfilledResult<LoaderEntry<FileSource>>).value);
 }
 
 /** Captures one matched file's metadata and Markdown body from a single read. */

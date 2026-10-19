@@ -10,8 +10,88 @@ import { builtinLoader } from "./descriptor.ts";
 import { loadBuiltin } from "./load.ts";
 import { createSession, sessionInternals } from "../preparation/session.ts";
 import { defineCollection } from "../collection/define.ts";
+import type { ComputedContext } from "../collection/types.ts";
 
 describe("built-in loaders", () => {
+  test("passes collection names and loader-defined source metadata to computed fields", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "content-query-computed-context-"));
+    try {
+      await mkdir(path.join(root, "content/posts"), { recursive: true });
+      await writeFile(path.join(root, "content/posts/Intro.md"), "---\ntitle: Intro\n---\nBody\n");
+      await writeFile(path.join(root, "content/authors#team.json"), '{"ada":{"name":"Ada"}}');
+      const computed = {
+        location: {
+          schema: z.object({ collection: z.string(), source: z.unknown() }),
+          resolve: ({ collection, source }: ComputedContext<unknown>) => ({
+            collection,
+            source,
+          }),
+        },
+      };
+      const registry = {
+        posts: defineCollection({
+          loader: glob({
+            base: "./content/posts",
+            pattern: "*.md",
+            generateId: () => "custom-id",
+          }),
+          schema: z.object({ title: z.string() }),
+          computed,
+        }),
+        authors: defineCollection({
+          loader: file("./content/authors#team.json"),
+          schema: z.object({ name: z.string() }),
+          computed,
+        }),
+        remote: defineCollection({
+          loader: {
+            name: "remote-fixture",
+            async load({ store }) {
+              store.set({ id: "remote-id", data: {} });
+              store.set({
+                id: "custom-source",
+                data: {},
+                filePath: path.join(root, "content/posts/Intro.md"),
+                source: { url: "https://example.com/document" },
+              });
+            },
+          },
+          computed,
+        }),
+      };
+      const session = await createSession<typeof registry>({
+        root,
+        config: "unused",
+        outDir: ".content-query",
+        registry,
+        watch: false,
+      });
+      try {
+        expect(await session.content.query("posts").select("id", "location").first()).toEqual({
+          id: "custom-id",
+          location: { collection: "posts", source: { filePath: "content/posts/Intro.md" } },
+        });
+        expect(await session.content.query("authors").select("id", "location").first()).toEqual({
+          id: "ada",
+          location: {
+            collection: "authors",
+            source: { filePath: "content/authors#team.json", key: "ada" },
+          },
+        });
+        expect(await session.content.query("remote").select("id", "location").all()).toEqual([
+          {
+            id: "custom-source",
+            location: { collection: "remote", source: { url: "https://example.com/document" } },
+          },
+          { id: "remote-id", location: { collection: "remote", source: undefined } },
+        ]);
+      } finally {
+        await session.dispose();
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
   test("establishes external source watching before loading the initial snapshot", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "content-query-app-root-"));
     const external = await mkdtemp(path.join(os.tmpdir(), "content-query-external-"));
@@ -101,7 +181,12 @@ describe("built-in loaders", () => {
           new AbortController().signal,
         );
         expect(entries).toEqual([
-          { id: "ada", data: { name: "Ada" }, source: expect.stringContaining("authors.") },
+          {
+            id: "ada",
+            data: { name: "Ada" },
+            source: expect.stringContaining("authors."),
+            sourceData: { filePath: `authors.${extension}`, key: "ada" },
+          },
         ]);
         expect(entries[0]).not.toHaveProperty("body");
       } finally {

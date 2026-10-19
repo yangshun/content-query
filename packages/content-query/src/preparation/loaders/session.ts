@@ -137,6 +137,7 @@ export function createLoaderSession(source: Loader, options: LoaderSessionOption
       ...(entry.body === undefined ? {} : { body: entry.body }),
       ...(entry.rendered === undefined ? {} : { rendered: entry.rendered }),
       ...(entry.filePath === undefined ? {} : { source: path.resolve(state.root, entry.filePath) }),
+      ...(entry.source === undefined ? {} : { sourceData: entry.source }),
     }));
   }
   /** Coalesces synchronous store batches into a complete validated publication. */
