@@ -1,13 +1,13 @@
-import type { PrepareContentOptions } from "../../build.ts";
+import type { BuildContentOptions } from "../../build.ts";
 
-/** Parses the intentionally small, strict standalone preparation command. */
-export function parseArguments(arguments_: string[]): PrepareContentOptions {
-  if (arguments_.shift() !== "prepare") {
+/** Parses the intentionally small, strict standalone build command. */
+export function parseArguments(arguments_: string[]): BuildContentOptions {
+  if (arguments_.shift() !== "build") {
     throw new Error(
-      "Usage: content-query prepare [--config file] [--backend generated|in-memory] [--out-dir dir] [--watch]",
+      "Usage: content-query build [--config file] [--backend generated|in-memory] [--out-dir dir] [--watch]",
     );
   }
-  const options: PrepareContentOptions = {};
+  const options: BuildContentOptions = {};
   const used = new Set<string>();
   while (arguments_.length) {
     const flag = arguments_.shift()!;

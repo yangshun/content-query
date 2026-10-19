@@ -5,7 +5,7 @@ import { z } from "zod";
 import { defineCollection } from "./define.ts";
 import { collectLoader } from "../../tests/helpers/loader.ts";
 import { projectFixture } from "../../tests/helpers/project.ts";
-import { prepareAtRoot } from "../preparation/build.ts";
+import { buildAtRoot } from "../preparation/build.ts";
 
 describe("collection source shorthand", () => {
   test("defaults string sources to Markdown and keeps directory-relative IDs", async () => {
@@ -15,7 +15,7 @@ describe("collection source shorthand", () => {
         fixture.config,
         `import {defineCollection} from "content-query"; import {z} from "zod"; export const collections={posts:defineCollection({source:"./content/posts",schema:z.object({title:z.string()})})};`,
       );
-      const session = await prepareAtRoot(fixture.root, { backend: "in-memory" });
+      const session = await buildAtRoot(fixture.root, { backend: "in-memory" });
       try {
         expect(
           await session.content

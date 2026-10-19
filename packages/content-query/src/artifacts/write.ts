@@ -46,7 +46,7 @@ async function writeImmutable(filename: string, source: string): Promise<void> {
       if ((await readFile(filename, "utf8")) !== source) {
         throw new ContentError({
           code: "artifact-error",
-          operation: "prepare",
+          operation: "build",
           source: filename,
           message:
             "An immutable artifact key has conflicting bytes. Regenerate the output directory.",

@@ -169,7 +169,7 @@ describe("built-in loaders", () => {
         diagnostics: [
           expect.objectContaining({
             code: "source-error",
-            operation: "prepare",
+            operation: "build",
             collection: "posts",
             source: path.join(root, "posts/broken.json"),
             message: expect.stringContaining('Could not load "broken.json": '),

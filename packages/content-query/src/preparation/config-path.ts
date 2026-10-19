@@ -32,7 +32,7 @@ export async function resolveConfigPath(root: string, config?: string): Promise<
         }
         throw contentError(cause, {
           code: "source-error",
-          operation: "prepare",
+          operation: "build",
           source: filename,
           message: `Could not inspect ContentQuery configuration "${filename}".`,
         });
@@ -45,7 +45,7 @@ export async function resolveConfigPath(root: string, config?: string): Promise<
   }
   throw new ContentError({
     code: "source-error",
-    operation: "prepare",
+    operation: "build",
     source: path.resolve(root),
     message: matches.length
       ? `Multiple ContentQuery configuration files found: ${matches.map((filename) => path.basename(filename)).join(", ")}. Set the config option to choose one.`

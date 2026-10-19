@@ -1,12 +1,12 @@
 {
   "version": 1,
   "source": {
-    "name": "content-query-website"
+    "name": "content-query"
   },
   "resolved": {
     "compatibility_date": "2026-02-24",
     "account_id": "c9d3d3304c5e8ffd1c928e6b53249a2a",
-    "name": "content-query-website",
+    "name": "content-query",
     "kv_namespaces": [
       {
         "binding": "ISR_CACHE",
@@ -14,5 +14,5 @@
       }
     ]
   },
-  "text": "{\n  \"compatibility_date\": \"2026-02-24\",\n  \"account_id\": \"c9d3d3304c5e8ffd1c928e6b53249a2a\",\n  \"name\": \"content-query-website\",\n  \"kv_namespaces\": [\n    {\n      \"binding\": \"ISR_CACHE\",\n      \"id\": \"ff0b767a0e744d3381c9913422988f39\"\n    }\n  ]\n}\n"
+  "text": "{\n  \"compatibility_date\": \"2026-02-24\",\n  \"account_id\": \"c9d3d3304c5e8ffd1c928e6b53249a2a\",\n  \"name\": \"content-query\",\n  \"kv_namespaces\": [\n    {\n      \"binding\": \"ISR_CACHE\",\n      \"id\": \"ff0b767a0e744d3381c9913422988f39\"\n    }\n  ]\n}\n"
 }

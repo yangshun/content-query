@@ -13,7 +13,7 @@ const examples: { language: CodeLanguage; code: string }[] = [
   { language: "yaml", code: 'title: "Hello, world"\ndraft: false' },
   { language: "toml", code: 'title = "Hello, world"\ndraft = false' },
   { language: "html", code: '<article data-title="Hello & world">\n  <h1>Hello</h1>\n</article>' },
-  { language: "shellscript", code: 'npx content-query prepare\nprintf "%s\\n" "Hello, world"' },
+  { language: "shellscript", code: 'npx content-query build\nprintf "%s\\n" "Hello, world"' },
 ];
 
 describe("homepage code highlighting", () => {

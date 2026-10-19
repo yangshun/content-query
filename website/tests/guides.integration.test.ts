@@ -266,7 +266,7 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     await writeFile(path.join(quickStartRoot, "render.mjs"), blocks.get("js")!);
     await execFileAsync(
       process.execPath,
-      [path.join(appRoot, "node_modules/content-query/dist/cli.mjs"), "prepare"],
+      [path.join(appRoot, "node_modules/content-query/dist/cli.mjs"), "build"],
       { cwd: quickStartRoot },
     );
     await execFileAsync(process.execPath, ["render.mjs"], { cwd: quickStartRoot });
@@ -296,7 +296,7 @@ ${sourceToDataExample.schema}
 `,
     );
     const cliPath = path.join(appRoot, "node_modules/content-query/dist/cli.mjs");
-    await execFileAsync(process.execPath, [cliPath, "prepare"], { cwd: exampleRoot });
+    await execFileAsync(process.execPath, [cliPath, "build"], { cwd: exampleRoot });
     await writeFile(
       path.join(exampleRoot, "verify.mjs"),
       `import assert from "node:assert/strict";
@@ -359,7 +359,7 @@ export const collections = { posts, authors, ${formatCollections.join(",\n")} };
 `,
     );
     const cliPath = path.join(appRoot, "node_modules/content-query/dist/cli.mjs");
-    await execFileAsync(process.execPath, [cliPath, "prepare"], { cwd: exampleRoot });
+    await execFileAsync(process.execPath, [cliPath, "build"], { cwd: exampleRoot });
 
     const combinations: QueryExampleOptions[] = [];
     for (const excludeDrafts of [false, true]) {
@@ -455,7 +455,7 @@ content.findMany("posts", { select: { title: true, drafft: true } });
       '---\ntitle: Invalid\ndraft: "yes"\nauthorId: ada\n---\n',
     );
     await expect(
-      execFileAsync(process.execPath, [cliPath, "prepare"], { cwd: exampleRoot }),
+      execFileAsync(process.execPath, [cliPath, "build"], { cwd: exampleRoot }),
     ).rejects.toMatchObject({
       stderr: expect.stringMatching(
         /\[content-query:validation-error\] posts invalid .*expected boolean, received string/,

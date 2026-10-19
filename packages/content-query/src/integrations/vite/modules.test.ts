@@ -128,7 +128,7 @@ describe("development error modules", () => {
     (cause.cause as Error).cause = cause;
     const error = new ContentError({
       code: "validation-error",
-      operation: "prepare",
+      operation: "build",
       collection: "posts",
       id: "one",
       source: "posts.json",

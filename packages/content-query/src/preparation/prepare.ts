@@ -59,7 +59,7 @@ export async function prepareRevision(
     ) {
       diagnostics.push({
         code: "validation-error",
-        operation: "prepare",
+        operation: "build",
         collection: collectionName,
         message: "Invalid or overlapping computed/relationship declarations.",
       });
@@ -69,7 +69,7 @@ export async function prepareRevision(
     for (const entry of sources.get(collectionName)?.values() ?? []) {
       signal.throwIfAborted();
       const context = {
-        operation: "prepare",
+        operation: "build",
         collection: collectionName,
         id: entry.id,
         source: entry.source,

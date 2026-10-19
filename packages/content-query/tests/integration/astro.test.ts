@@ -3,7 +3,7 @@ import { mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promi
 import path from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, test } from "vite-plus/test";
-import { prepareAtRoot } from "../../src/preparation/build.ts";
+import { buildAtRoot } from "../../src/preparation/build.ts";
 import { packageRoot, projectFixture } from "../helpers/project.ts";
 
 const execute = promisify(execFile);
@@ -33,7 +33,7 @@ export const collections = {
 };
 `,
       );
-      await (await prepareAtRoot(fixture.root, {})).dispose();
+      await (await buildAtRoot(fixture.root, {})).dispose();
       const server = await readFile(path.join(fixture.root, ".content-query/server.js"), "utf8");
       expect(server).not.toMatch(/astro|csv-loader|content-query\.config|zod/);
       await writeFile(

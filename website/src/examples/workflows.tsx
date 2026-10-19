@@ -103,8 +103,8 @@ export function WorkflowsExample() {
       ) : (
         <div className="standalone-workflow">
           <CodeExample
-            label="Prepare during your build"
-            code={"$ npx content-query prepare\n\n.content-query/\n  server.js\n  types.d.ts\n  …"}
+            label="Build your content"
+            code={"$ npx content-query build\n\n.content-query/\n  server.js\n  types.d.ts\n  …"}
             language="shellscript"
           />
           <CodeExample

@@ -14,7 +14,7 @@ vp run --filter @voidpress/content-query-next dev
 
 Open [localhost:3000](http://localhost:3000). `vp run` executes the Next.js script; `vp dev` would start Vite instead.
 
-Content is prepared once when the development server starts. Restart it after changing Markdown, collection schemas, or loader configuration. This example deliberately uses one-shot preparation; it does not install a Next.js content watcher.
+Content is built once when the development server starts. Restart it after changing Markdown, collection schemas, or loader configuration. This example deliberately uses one-shot builds; it does not install a Next.js content watcher.
 
 ## Production
 
@@ -23,7 +23,7 @@ vp run --filter content-query build
 vp run --filter @voidpress/content-query-next build
 ```
 
-`next.config.mjs` awaits `prepareContent()` before development and production compilation, then disposes the preparation session. Invalid content fails startup or the build. Preparation runs through ContentQuery's public API without a Vite plugin or framework adapter.
+`next.config.mjs` awaits `buildContent()` from `content-query/build` before development and production compilation, then disposes the content session. Invalid content fails startup or the build. Content builds run through ContentQuery's public API without a Vite plugin or framework adapter.
 
 Next.js exports `/`, the three `/docs/<guide-id>/` pages, and a `404.html` page to `out/`. Deploy that directory to a static host. The exported site needs no Node.js server, Markdown source files, collection configuration, or ContentQuery compiler. `next start` does not serve static exports.
 

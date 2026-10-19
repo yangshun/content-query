@@ -5,10 +5,10 @@ import { ContentError } from "../../shared/errors.ts";
 
 describe("standalone command interface", () => {
   test("maps documented flags without adding a deployment target", () => {
-    expect(parseArguments(["prepare"])).toEqual({});
+    expect(parseArguments(["build"])).toEqual({});
     expect(
       parseArguments([
-        "prepare",
+        "build",
         "--watch",
         "--config",
         "src/content-query.config.ts",
@@ -23,18 +23,21 @@ describe("standalone command interface", () => {
       backend: "in-memory",
       outDir: "prepared",
     });
-    expect(parseArguments(["prepare", "--backend", "generated"])).toEqual({ backend: "generated" });
+    expect(parseArguments(["build", "--backend", "generated"])).toEqual({ backend: "generated" });
   });
   test.each([
     [],
     ["unknown"],
-    ["prepare", "--watch", "--watch"],
-    ["prepare", "--config"],
-    ["prepare", "--config", "--watch"],
-    ["prepare", "--target", "ssr"],
-    ["prepare", "--backend", "sqlite"],
+    ["build", "--watch", "--watch"],
+    ["build", "--config"],
+    ["build", "--config", "--watch"],
+    ["build", "--target", "ssr"],
+    ["build", "--backend", "sqlite"],
   ])("rejects invalid arguments %j", (...arguments_: string[]) => {
     expect(() => parseArguments(arguments_)).toThrow();
+  });
+  test("shows the build command when the old command is used", () => {
+    expect(() => parseArguments(["prepare"])).toThrow("Usage: content-query build");
   });
   test("reports each diagnostic and preserves useful context", () => {
     const output = vi.spyOn(console, "error").mockImplementation(() => {});

@@ -4,13 +4,13 @@ import { cp, mkdir, readFile, readdir, rename, rm, symlink, writeFile } from "no
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, test, vi } from "vite-plus/test";
-import { prepareAtRoot } from "../../src/preparation/build.ts";
+import { buildAtRoot } from "../../src/preparation/build.ts";
 import { projectFixture, packageRoot } from "../helpers/project.ts";
 import { createArtifactRuntime } from "../../src/internal.ts";
 
 const execute = promisify(execFile);
 
-describe("portable preparation and production consumption", () => {
+describe("portable content builds and production consumption", () => {
   test("executes the living example and checks the real generated declaration surface", async () => {
     const fixture = await projectFixture();
     try {
@@ -20,13 +20,26 @@ describe("portable preparation and production consumption", () => {
         recursive: true,
       });
       await cp(path.join(example, "content-query.config.ts"), fixture.config);
-      await (await prepareAtRoot(fixture.root, {})).dispose();
+      await execute(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          'const { buildContent } = await import("content-query/build"); const session = await buildContent(); await session.dispose();',
+        ],
+        { cwd: fixture.root },
+      );
       await writeFile(
         path.join(fixture.root, "consumer.ts"),
         `/// <reference path="./.content-query/types.d.ts" />
 import { content, type CollectionData, type CollectionKey } from "./.content-query/server.js";
 import { content as virtualContent, type CollectionData as VirtualData } from "content-query:server";
 import { eq } from "content-query/query";
+import { buildContent, type BuildContentOptions, type ContentSession } from "content-query/build";
+import type { collections } from "./content-query.config.ts";
+const buildOptions: BuildContentOptions = { backend: "in-memory" };
+const session: Promise<ContentSession<typeof collections>> = buildContent<typeof collections>(buildOptions);
+void session;
 const title: CollectionData<"posts">["title"] = "Example";
 const key: CollectionKey = "posts";
 const virtualTitle: VirtualData<"posts">["title"] = title;
@@ -94,7 +107,7 @@ void checked;
         fixture.config,
         `import{defineCollection}from"content-query";import{z}from"zod";export const collections={['__proto__']:defineCollection({loader:{name: "fixture", async load({store}) { store.set({id:'__proto__',data:{value:3},body:''}); }},schema:z.object({value:z.number()}),computed:{constructor:{schema:z.string(),resolve:()=>"computed"}}})};`,
       );
-      await (await prepareAtRoot(fixture.root, {})).dispose();
+      await (await buildAtRoot(fixture.root, {})).dispose();
       const { stdout } = await execute(
         process.execPath,
         [
@@ -113,11 +126,11 @@ void checked;
     const fixture = await projectFixture();
     try {
       const before = await readFile(path.join(fixture.root, "package.json"), "utf8");
-      await expect(prepareAtRoot(fixture.root, { outDir: "." })).rejects.toMatchObject({
+      await expect(buildAtRoot(fixture.root, { outDir: "." })).rejects.toMatchObject({
         code: "source-error",
       });
       await symlink(fixture.root, path.join(fixture.root, "output-link"), "dir");
-      await expect(prepareAtRoot(fixture.root, { outDir: "./output-link" })).rejects.toMatchObject({
+      await expect(buildAtRoot(fixture.root, { outDir: "./output-link" })).rejects.toMatchObject({
         code: "source-error",
       });
       expect(await readFile(path.join(fixture.root, "package.json"), "utf8")).toBe(before);
@@ -129,7 +142,7 @@ void checked;
     test(`renders without configuration or sources, deferRender=${deferRender}`, async () => {
       const fixture = await projectFixture(deferRender, false);
       try {
-        const session = await prepareAtRoot(fixture.root, {});
+        const session = await buildAtRoot(fixture.root, {});
         await session.dispose();
         const generated = path.join(fixture.root, ".content-query");
         const code = await readFile(path.join(generated, "server.js"), "utf8");
@@ -181,7 +194,7 @@ console.log(JSON.stringify({list,body:await content.readBody("posts","getting-st
   test("in-memory preparation emits no backend artifacts", async () => {
     const fixture = await projectFixture();
     try {
-      const session = await prepareAtRoot(fixture.root, { backend: "in-memory" });
+      const session = await buildAtRoot(fixture.root, { backend: "in-memory" });
       expect(await session.content.query("posts" as never).count()).toBe(1);
       expect(await readdir(fixture.root)).not.toContain(".content-query");
       await session.dispose();
@@ -192,7 +205,7 @@ console.log(JSON.stringify({list,body:await content.readBody("posts","getting-st
   test("metadata queries never import payload modules; payload I/O errors are distinct", async () => {
     const fixture = await projectFixture();
     try {
-      await (await prepareAtRoot(fixture.root, {})).dispose();
+      await (await buildAtRoot(fixture.root, {})).dispose();
       const directory = path.join(fixture.root, ".content-query/collections/posts/entries");
       const payload = path.join(directory, (await readdir(directory))[0]!);
       await rm(payload);
@@ -217,16 +230,16 @@ try { await content.readBody("posts","getting-started"); } catch(error) { consol
   test("keeps unchanged artifact bytes and timestamps stable", async () => {
     const fixture = await projectFixture();
     try {
-      await (await prepareAtRoot(fixture.root, {})).dispose();
+      await (await buildAtRoot(fixture.root, {})).dispose();
       const first = await readFile(path.join(fixture.root, ".content-query/server.js"), "utf8");
-      await (await prepareAtRoot(fixture.root, {})).dispose();
+      await (await buildAtRoot(fixture.root, {})).dispose();
       expect(await readFile(path.join(fixture.root, ".content-query/server.js"), "utf8")).toBe(
         first,
       );
       const directory = path.join(fixture.root, ".content-query/collections/posts/entries");
       const payload = path.join(directory, (await readdir(directory))[0]!);
       await writeFile(payload, "export default 'corrupted';");
-      await expect(prepareAtRoot(fixture.root, {})).rejects.toMatchObject({
+      await expect(buildAtRoot(fixture.root, {})).rejects.toMatchObject({
         code: "artifact-error",
       });
       expect(await readFile(payload, "utf8")).toBe("export default 'corrupted';");
@@ -243,7 +256,7 @@ try { await content.readBody("posts","getting-started"); } catch(error) { consol
       entries: await readdir(path.join(posts, "entries")),
     });
     try {
-      await (await prepareAtRoot(fixture.root, {})).dispose();
+      await (await buildAtRoot(fixture.root, {})).dispose();
       const first = await listing();
       const stale = path.join(generated, "collections/removed");
       const hash = "a".repeat(64);
@@ -255,7 +268,7 @@ try { await content.readBody("posts","getting-started"); } catch(error) { consol
       await writeFile(path.join(posts, "notes.txt"), "kept");
       const original = await readFile(fixture.postPath, "utf8");
       await writeFile(fixture.postPath, `${original}\nEdited.\n`);
-      await (await prepareAtRoot(fixture.root, {})).dispose();
+      await (await buildAtRoot(fixture.root, {})).dispose();
       const second = await listing();
       expect(second.indexes).toHaveLength(1);
       expect(second.entries).toHaveLength(1);
@@ -264,7 +277,7 @@ try { await content.readBody("posts","getting-started"); } catch(error) { consol
       expect(await readdir(path.join(generated, "collections"))).not.toContain("removed");
       expect(await readFile(path.join(posts, "notes.txt"), "utf8")).toBe("kept");
 
-      const session = await prepareAtRoot(fixture.root, { watch: true });
+      const session = await buildAtRoot(fixture.root, { watch: true });
       try {
         const before = await listing();
         await writeFile(fixture.postPath, `${original}\nWatched.\n`);
@@ -288,12 +301,18 @@ try { await content.readBody("posts","getting-started"); } catch(error) { consol
       await rename(fixture.config, path.join(fixture.root, "content-query.config.mjs"));
       const cli = path.join(packageRoot, "dist/cli.mjs");
       await expect(
-        execute(process.execPath, [cli, "prepare", "--target", "ssr"], { cwd: fixture.root }),
+        execute(process.execPath, [cli, "prepare"], { cwd: fixture.root }),
+      ).rejects.toMatchObject({
+        code: 1,
+        stderr: expect.stringContaining("Usage: content-query build"),
+      });
+      await expect(
+        execute(process.execPath, [cli, "build", "--target", "ssr"], { cwd: fixture.root }),
       ).rejects.toMatchObject({ code: 1, stderr: expect.stringContaining("Unknown flag") });
       await expect(
-        execute(process.execPath, [cli, "prepare", "--backend", "sqlite"], { cwd: fixture.root }),
+        execute(process.execPath, [cli, "build", "--backend", "sqlite"], { cwd: fixture.root }),
       ).rejects.toMatchObject({ code: 1 });
-      await execute(process.execPath, [cli, "prepare", "--out-dir", "./prepared"], {
+      await execute(process.execPath, [cli, "build", "--out-dir", "./prepared"], {
         cwd: fixture.root,
       });
       expect(await readFile(path.join(fixture.root, "prepared/server.js"), "utf8")).toContain(
@@ -301,7 +320,7 @@ try { await content.readBody("posts","getting-started"); } catch(error) { consol
       );
       await writeFile(fixture.postPath, "---\ntitle: false\n---\n");
       await expect(
-        execute(process.execPath, [cli, "prepare"], { cwd: fixture.root }),
+        execute(process.execPath, [cli, "build"], { cwd: fixture.root }),
       ).rejects.toMatchObject({ code: 1, stderr: expect.stringContaining("validation-error") });
     } finally {
       await fixture.dispose();

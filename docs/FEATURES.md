@@ -13,7 +13,7 @@
 - Rich value/presence preservation through synchronous devalue encoding and detached results.
 - Explicit retained-body access, supplied HTML, built-in HTML/headings rendering, and eager/deferred Markdown policy.
 - In-memory and generated backends using the same JavaScript query semantics.
-- Portable generated ESM indexes and lazy payloads, typed standalone preparation, CLI, and optional Vite integration.
+- Portable generated ESM indexes and lazy payloads, typed standalone `buildContent()` with `BuildContentOptions` from `content-query/build`, the `content-query build` CLI with `--watch`, and optional Vite integration. Build diagnostics use `operation: "build"`.
 - [Void](../examples/void/README.md), [React Router](../examples/react-router/README.md), [TanStack Start](../examples/tanstack-start/README.md), [Next.js](../examples/next/README.md), and [SvelteKit](../examples/sveltekit/README.md) examples use native server loaders/functions and verify production rendering. Next.js uses standalone one-shot preparation; the Vite examples subscribe to content updates.
 - One default `.content-query/` directory for generated runtime artifacts and Vite declarations; in-memory Vite emits only types, while standalone in-memory preparation writes no files.
 - Settled filesystem writes, ordered candidate updates, cancellation, atomic publication, pinned operations, failure recovery, and owned-resource cleanup.

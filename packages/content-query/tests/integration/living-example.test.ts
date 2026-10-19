@@ -3,7 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, test } from "vite-plus/test";
 import { and, eq, gte, isNull, isUndefined, or } from "../../src/query.ts";
-import { prepareAtRoot } from "../../src/preparation/build.ts";
+import { buildAtRoot } from "../../src/preparation/build.ts";
 import type { Content } from "../../src/runtime/content.ts";
 import type { collections } from "../fixtures/example/content-query.config.ts";
 import { packageRoot, projectFixture } from "../helpers/project.ts";
@@ -226,7 +226,7 @@ describe("PLAN.md living example", () => {
   test("in-memory preparation returns every documented value", async () => {
     const fixture = await exampleProject();
     try {
-      const session = await prepareAtRoot<typeof collections>(fixture.root, {
+      const session = await buildAtRoot<typeof collections>(fixture.root, {
         backend: "in-memory",
       });
       try {
@@ -241,7 +241,7 @@ describe("PLAN.md living example", () => {
   test("the generated server returns every documented value without sources or config", async () => {
     const fixture = await exampleProject();
     try {
-      await (await prepareAtRoot(fixture.root, {})).dispose();
+      await (await buildAtRoot(fixture.root, {})).dispose();
       const generated = path.join(fixture.root, ".content-query");
       expect(await readdir(path.join(generated, "collections/authors"))).not.toContain("entries");
       expect(await readdir(path.join(generated, "collections/posts/entries"))).toHaveLength(2);
@@ -275,7 +275,7 @@ describe("PLAN.md living example", () => {
         upcoming,
         (await readFile(upcoming, "utf8")).replace("title: Upcoming features", 'title: ""'),
       );
-      await expect(prepareAtRoot(fixture.root, { backend: "in-memory" })).rejects.toMatchObject({
+      await expect(buildAtRoot(fixture.root, { backend: "in-memory" })).rejects.toMatchObject({
         code: "validation-error",
         diagnostics: [
           expect.objectContaining({

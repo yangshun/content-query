@@ -83,7 +83,7 @@ export function prepareRelationships(
         errors.push(
           new ContentError({
             code: "invalid-reference",
-            operation: "prepare",
+            operation: "build",
             collection: owner.collection,
             id: owner.entry?.id,
             source: owner.entry

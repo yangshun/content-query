@@ -70,7 +70,7 @@ Use structured queries with defined semantics that each backend can execute. Cus
 
 The in-memory and generated backends can share a JavaScript query executor. The SQLite backend translates the same query contract into SQL and can reuse SQL tooling inside its adapter. All backends share the collection definitions, validation and transformation rules, and public query semantics.
 
-The [backend packaging design](#backends) defines eager query data, separately loaded item inputs, and portable generated ESM modules. The [preparation API](#preparation-api-and-defaults) chooses the backend outside collection definitions. Module embedding, internal exports, and adapter initialization are private implementation details. These definitions do not require Drizzle or a SQLite engine for the JavaScript backends.
+The [backend packaging design](#backends) defines eager query data, separately loaded item inputs, and portable generated ESM modules. The [build API](#build-api-and-defaults) chooses the backend outside collection definitions. Module embedding, internal exports, and adapter initialization are private implementation details. These definitions do not require Drizzle or a SQLite engine for the JavaScript backends.
 
 ### 2. Keep backend behavior consistent
 
@@ -404,7 +404,7 @@ Configuration is consumed only by development preparation and production build p
 
 The production entry imports the collection manifest, prepared query data, captured bodies or compiled outputs, and library-owned runtime modules. It must not import `content-query.config`, the exported `posts`/`authors` definition objects, or a shared schema/resolver definition module as a way to reconstruct its registry. Record necessary collection names, relationship mappings, capabilities, and serializable renderer options during preparation instead. Infer types through generated declarations or type-only references, without adding a runtime config import.
 
-Applications provide one registry; integrations or the preparation command produce the server entry. There is no second application-maintained registry or mandatory `content.runtime.ts`. Production runtime initialization consumes prepared artifacts or explicitly embedded prepared state. Follow the agreed [preparation API and generated server entry](#preparation-api-and-defaults); runtime adapter factories are private implementation details.
+Applications provide one registry; integrations or the build command produce the server entry. There is no second application-maintained registry or mandatory `content.runtime.ts`. Production runtime initialization consumes prepared artifacts or explicitly embedded prepared state. Follow the agreed [build API and generated server entry](#build-api-and-defaults); runtime adapter factories are private implementation details.
 
 No runtime-safe definition split, arbitrary function serialization, closure extraction, or bundler-specific removal of config properties is required for v1. Generic deferred resolvers are a [future extension](#generic-deferred-fields), not a reason to reintroduce production config imports.
 
@@ -830,7 +830,7 @@ An individual validation diagnostic can describe:
 ```ts
 {
   code: "validation-error",
-  operation: "prepare",
+  operation: "build",
   collection: "posts",
   id: "getting-started",
   source: "./content/posts/getting-started.md",
@@ -1070,9 +1070,9 @@ Status: framework independence, portable generated modules, optional Vite virtua
 
 Follow the [integration boundary](#10-keep-integrations-and-site-policy-outside-the-core) and [server/client boundary](#4-enforce-the-serverclient-boundary). Framework and bundler integrations connect content preparation, development update notifications, and the query runtime to the host application while keeping routes, rendering, and site policy application-owned.
 
-### Preparation API and defaults
+### Build API and defaults
 
-Expose `prepareContent(...)` from `content-query/build` and the `content-query prepare` CLI command. Both run preparation independently of Vite. A host build finishes preparation before consuming the resulting modules. Ordinary ESM output is the portable integration path for other bundlers, including a future Next.js integration. Vite virtual module IDs and Vite plugin hooks must not become requirements of collection definitions, queries, or core execution.
+Expose `buildContent(...)` from `content-query/build` and the `content-query build` CLI command. Both run preparation independently of Vite. A host build finishes preparation before consuming the resulting modules. Ordinary ESM output is the portable integration path for other bundlers, including a future Next.js integration. Vite virtual module IDs and Vite plugin hooks must not become requirements of collection definitions, queries, or core execution.
 
 Choose a backend per content instance, outside `defineCollection(...)`. Use the same backend in development and production unless explicitly configured otherwise; do not silently substitute in-memory storage during development.
 
@@ -1089,10 +1089,10 @@ Paths in these examples are relative to the application project root. Standalone
 The CLI, standalone API, and Vite integration share configuration discovery. Support `.ts`, `.mts`, `.cts`, `.js`, `.mjs`, and `.cjs`, with `.ts` used in documentation examples. Accept both ES module and CommonJS exports of the named `collections` registry. When `config` is omitted, require exactly one matching root file: report a useful missing-config error when none exists and an ambiguity error listing the matches when several exist. An explicit `config` or `--config` bypasses discovery and is loaded as that exact path, without extension guessing or fallback. JSON, YAML, and JSX/TSX configuration files are not discovered. Generated declarations refer to the selected file, and Vite's client-import guards cover each supported config filename.
 
 ```ts
-// scripts/prepare-content.ts — development/build code, not an SSR import.
-import { prepareContent } from "content-query/build";
+// scripts/build-content.ts — development/build code, not an SSR import.
+import { buildContent } from "content-query/build";
 
-await prepareContent({
+await buildContent({
   config: "./content-query.config.ts",
   backend: "generated",
   outDir: "./.content-query",
@@ -1102,13 +1102,13 @@ await prepareContent({
 The equivalent default CLI preparation and its development watch mode are:
 
 ```sh
-vp exec content-query prepare
-vp exec content-query prepare --watch
+vp exec content-query build
+vp exec content-query build --watch
 ```
 
 The first command performs one-shot production preparation. `--watch` owns a development session and follows development rendering/update behavior. CLI overrides are `--config`, `--backend`, and `--out-dir`, corresponding to the preparation options. Resolve their relative paths from the application project root; overriding the config location does not change that root. Reject unknown flags and invalid backend values. Standalone commands use their working directory as the project root; integrations use the host's resolved project root.
 
-Programmatic preparation returns `ContentSession<Collections>` with a `content` runtime and `dispose(): Promise<void>` for owned-resource cleanup. Direct typed access uses `prepareContent<Collections>(...)`; bind `Collections` to the exported registry through an erased type-only import. A config path is a runtime loading instruction and cannot itself infer collection types. When callers omit the registry generic, expose an empty registered-key type rather than an `any`-based query surface; preparation-only callers may still run the function and ignore its content handle. Generated server entries and Vite facades retain their generated registry typing without a caller-supplied generic. No executable runtime config import or second registry is introduced.
+Programmatic preparation returns `ContentSession<Collections>` with a `content` runtime and `dispose(): Promise<void>` for owned-resource cleanup. Direct typed access uses `buildContent<Collections>(...)`; bind `Collections` to the exported registry through an erased type-only import. A config path is a runtime loading instruction and cannot itself infer collection types. When callers omit the registry generic, expose an empty registered-key type rather than an `any`-based query surface; preparation-only callers may still run the function and ignore its content handle. Generated server entries and Vite facades retain their generated registry typing without a caller-supplied generic. No executable runtime config import or second registry is introduced.
 
 `watch` defaults to `false`. One-shot preparation returns a session only after successful preparation; failures reject and clean up. With `watch: true`, establish subscriptions before loading and return the session after the first content attempt settles, even if that attempt fails source reading or content validation. Such a session exposes the current `ContentError` through terminal queries and body/render operations, keeps watching, and recovers on a later valid revision; it does not wait indefinitely for the first valid content. The CLI's `--watch` follows the same error-display/recovery behavior instead of exiting on a recoverable content failure.
 
@@ -1181,7 +1181,7 @@ Both delivery paths preserve the same query semantics, body-loading behavior, re
 
 ### Compilation policy without a public target
 
-Standalone `prepareContent(...)` and one-shot CLI preparation do not infer whether their output will be used for SSG, SSR, or both. They follow each Markdown loader's `deferRender`: `false` eagerly compiles every deployable Markdown entry, and `true` packages captured inputs and the library-owned runtime renderer. This safe default supports entries that a prerendering pass never visits.
+Standalone `buildContent(...)` and one-shot CLI preparation do not infer whether their output will be used for SSG, SSR, or both. They follow each Markdown loader's `deferRender`: `false` eagerly compiles every deployable Markdown entry, and `true` packages captured inputs and the library-owned runtime renderer. This safe default supports entries that a prerendering pass never visits.
 
 A pure SSG integration may let page generation drive rendering instead of performing an all-entry compilation pass. It already owns the host lifecycle and must finish requested rendering before producing a static-only deployment. That optimization is an integration detail, not a second user-facing deployment setting. A generic Vite plugin cannot assume that a build is static merely because it uses Vite; absent a host-established static-only lifecycle, it uses the safe production policy. SSR and mixed integrations honor eager preparation for all deployable entries when `deferRender` is false.
 
@@ -1197,20 +1197,20 @@ Internal runtime factory names, deployment tracing, cache machinery, and host bu
 
 Status: implemented with these v1 defaults, agreed on October 18, 2026. Follow Astro's conventions where they fit the selected contracts. Our documented query behavior, Standard Schema support, build-only configuration, public-URL asset boundary, backend meanings, and portable runtime take precedence over framework-specific Astro mechanisms. Internal helper signatures and mechanisms remain private.
 
-| Concern                   | Default for implementation                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Query fields              | TypeScript checks field names, eligible operators, and argument types. No complete runtime schema field catalog or duplicate field declarations. Keep runtime query-structure/argument checks and preparation validation.                                                                                                                                                                                                        |
-| Public type names         | Use the names already illustrated here: `Loader`, `LoaderContext`, `DataEntry`, `DataStore`, `MetaStore`, `LoaderConfig`, `LoaderLogger`, `LoaderWatcher`, `ContentHeading`, `RenderedContent`, `ContentRenderResult`, and `ContentSession`. Keep detailed generic/helper declarations implementer-owned.                                                                                                                        |
-| Preparation session       | `prepareContent<Collections>(...)` returns `ContentSession<Collections>` with `content` and asynchronous `dispose()`. Direct access binds a type-only registry; an omitted generic has no registered query keys. `watch: false` returns only on success. `watch: true` returns after the first content attempt, including an error state, and keeps watching; fatal configuration/subscription setup errors reject and clean up. |
-| CLI and paths             | `prepare` supports `--config`, `--backend`, `--out-dir`, and `--watch`. Preserve the existing generated/config/output defaults and project-root-relative paths. Unknown flags and invalid backend choices fail. No public `target`.                                                                                                                                                                                              |
-| Errors                    | Keep one public `ContentError` with the agreed codes and context. Use an options-object constructor and a `diagnostics` array for grouped preparation failures, preserving individual issues and causes. Export the runtime error from `content-query/runtime`; detailed helper declarations are private.                                                                                                                         |
-| Rendering result          | Keep the agreed HTML/headings contract. No additional processor frontmatter, arbitrary metadata passthrough, or asset-processing metadata in v1.                                                                                                                                                                                                                                                                                 |
-| Public cancellation       | No caller-provided signal option for body/render operations in v1. Cancel/discard superseded preparation work. Existing query/body/render operations finish against their pinned revision; never reuse their output under another revision.                                                                                                                                                                                      |
-| Dependencies and watching | Use native loader-context watcher callbacks and private integration filesystem wiring. No new public dependency-declaration API, managed source-reader helper, or generic dependency graph.                                                                                                                                                                                                                                      |
-| Source retries            | Core surfaces source failures without automatic retries. A custom loader may own retries before settling its load attempt and should honor cancellation. Development watching still recovers on a later valid update.                                                                                                                                                                                                            |
-| Asset URLs                | Preserve authored public image/link destinations; applications own asset delivery. No source-relative asset acquisition, copying, optimization, or URL rewriting.                                                                                                                                                                                                                                                                |
-| Caching                   | Keep cached values internal and revision-aware; return detached selected values and rendering metadata. Cross-process/build persistence or sharing is not a v1 guarantee; expose no new public cache settings. Private reuse can evolve without changing behavior.                                                                                                                                                               |
-| Internal mechanics        | Hash choice, codec embedding, private module exports, query representation/indexes, and host hooks are implementer-owned choices. Retain candidate source state separately from published content, publish only complete valid revisions, and retain old payloads for pinned operations. Queue/coalescing and cleanup must preserve these rules.                                                                                 |
+| Concern                   | Default for implementation                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Query fields              | TypeScript checks field names, eligible operators, and argument types. No complete runtime schema field catalog or duplicate field declarations. Keep runtime query-structure/argument checks and preparation validation.                                                                                                                                                                                                      |
+| Public type names         | Use the names already illustrated here: `Loader`, `LoaderContext`, `DataEntry`, `DataStore`, `MetaStore`, `LoaderConfig`, `LoaderLogger`, `LoaderWatcher`, `ContentHeading`, `RenderedContent`, `ContentRenderResult`, and `ContentSession`. Keep detailed generic/helper declarations implementer-owned.                                                                                                                      |
+| Preparation session       | `buildContent<Collections>(...)` returns `ContentSession<Collections>` with `content` and asynchronous `dispose()`. Direct access binds a type-only registry; an omitted generic has no registered query keys. `watch: false` returns only on success. `watch: true` returns after the first content attempt, including an error state, and keeps watching; fatal configuration/subscription setup errors reject and clean up. |
+| CLI and paths             | `prepare` supports `--config`, `--backend`, `--out-dir`, and `--watch`. Preserve the existing generated/config/output defaults and project-root-relative paths. Unknown flags and invalid backend choices fail. No public `target`.                                                                                                                                                                                            |
+| Errors                    | Keep one public `ContentError` with the agreed codes and context. Use an options-object constructor and a `diagnostics` array for grouped preparation failures, preserving individual issues and causes. Export the runtime error from `content-query/runtime`; detailed helper declarations are private.                                                                                                                       |
+| Rendering result          | Keep the agreed HTML/headings contract. No additional processor frontmatter, arbitrary metadata passthrough, or asset-processing metadata in v1.                                                                                                                                                                                                                                                                               |
+| Public cancellation       | No caller-provided signal option for body/render operations in v1. Cancel/discard superseded preparation work. Existing query/body/render operations finish against their pinned revision; never reuse their output under another revision.                                                                                                                                                                                    |
+| Dependencies and watching | Use native loader-context watcher callbacks and private integration filesystem wiring. No new public dependency-declaration API, managed source-reader helper, or generic dependency graph.                                                                                                                                                                                                                                    |
+| Source retries            | Core surfaces source failures without automatic retries. A custom loader may own retries before settling its load attempt and should honor cancellation. Development watching still recovers on a later valid update.                                                                                                                                                                                                          |
+| Asset URLs                | Preserve authored public image/link destinations; applications own asset delivery. No source-relative asset acquisition, copying, optimization, or URL rewriting.                                                                                                                                                                                                                                                              |
+| Caching                   | Keep cached values internal and revision-aware; return detached selected values and rendering metadata. Cross-process/build persistence or sharing is not a v1 guarantee; expose no new public cache settings. Private reuse can evolve without changing behavior.                                                                                                                                                             |
+| Internal mechanics        | Hash choice, codec embedding, private module exports, query representation/indexes, and host hooks are implementer-owned choices. Retain candidate source state separately from published content, publish only complete valid revisions, and retain old payloads for pinned operations. Queue/coalescing and cleanup must preserve these rules.                                                                               |
 
 These defaults close the routine API/scope questions. Implement the selected contracts without treating remaining helper signatures or private mechanisms as approval gates. The future extensions below remain deferred.
 
@@ -1383,7 +1383,7 @@ Schema generation, file-based ordering, typed href helpers, and source-relative 
 
 Keep this example synchronized as decisions change. Update collection definitions, source content, queries, returned values, and execution notes together so they continue to describe the same API.
 
-Status: v1 reference example, covered by consumer and conformance tests. `tests/integration/living-example.test.ts` asserts its documented values against both backends. Build-only configuration, Standard Schema validation, field/value/presence contracts, computed fields, the native named `load(context)`/store loader contract, optional captured bodies and supplied HTML, relationships, prepared runtime initialization, built-in Markdown rendering, and `deferRender` follow the agreed design. Built-in sources now use Astro-style `glob()`/`file()` options, slug-based default IDs, and JSON/YAML/TOML parsing. `prepareContent` from `content-query/build`, the preparation CLI, generated-backend defaults, and `.content-query/server.js` exporting `content` are agreed. The optional `contentQuery(...)` plugin from `content-query/vite` and `content-query:server` facade work with either backend; Vite embeds in-memory state in its production server bundle. Standalone typed access binds `prepareContent<Collections>` and `ContentSession<Collections>` through the registry type; sessions expose `content` and asynchronous `dispose()`, with `watch: false` by default. Watch startup can return an error-state session that recovers after correction. Applications own public asset URLs; asset packaging and URL rewriting are outside the library. There is no public `target` option. The public `ContentError` contract, diagnostic codes, grouped preparation failures, and automatic development recovery are agreed. Collection-grouped query indexes, colocated lazy entry payloads when needed, opaque keys, and synchronous devalue encoding follow the agreed generated storage design. The implementation defaults fix HTML/headings-only rendering, the conventional error/report shape, and routine session/CLI choices. Private module embedding/exports, adapter factories, and detailed helper declarations remain implementation details. Relationship ownership, optionality, singular filtering, and ID-array semantics follow the agreed rules. Raw-body access uses the agreed `content.readBody(collection, id)` operation. Lazy source readers and public snapshot scopes are outside v1. Zod is one example schema provider. Generic deferred field resolvers and `.resolve(...)` are outside v1.
+Status: v1 reference example, covered by consumer and conformance tests. `tests/integration/living-example.test.ts` asserts its documented values against both backends. Build-only configuration, Standard Schema validation, field/value/presence contracts, computed fields, the native named `load(context)`/store loader contract, optional captured bodies and supplied HTML, relationships, prepared runtime initialization, built-in Markdown rendering, and `deferRender` follow the agreed design. Built-in sources now use Astro-style `glob()`/`file()` options, slug-based default IDs, and JSON/YAML/TOML parsing. `buildContent` from `content-query/build`, the preparation CLI, generated-backend defaults, and `.content-query/server.js` exporting `content` are agreed. The optional `contentQuery(...)` plugin from `content-query/vite` and `content-query:server` facade work with either backend; Vite embeds in-memory state in its production server bundle. Standalone typed access binds `buildContent<Collections>` and `ContentSession<Collections>` through the registry type; sessions expose `content` and asynchronous `dispose()`, with `watch: false` by default. Watch startup can return an error-state session that recovers after correction. Applications own public asset URLs; asset packaging and URL rewriting are outside the library. There is no public `target` option. The public `ContentError` contract, diagnostic codes, grouped preparation failures, and automatic development recovery are agreed. Collection-grouped query indexes, colocated lazy entry payloads when needed, opaque keys, and synchronous devalue encoding follow the agreed generated storage design. The implementation defaults fix HTML/headings-only rendering, the conventional error/report shape, and routine session/CLI choices. Private module embedding/exports, adapter factories, and detailed helper declarations remain implementation details. Relationship ownership, optionality, singular filtering, and ID-array semantics follow the agreed rules. Raw-body access uses the agreed `content.readBody(collection, id)` operation. Lazy source readers and public snapshot scopes are outside v1. Zod is one example schema provider. Generic deferred field resolvers and `.resolve(...)` are outside v1.
 
 ### Define the collections
 
@@ -1462,22 +1462,22 @@ Relationship targets use registered names, so definitions do not need cyclic var
 
 ### Prepare once and expose the server runtime
 
-The preparation command or integration consumes the single exported registry. For the generated backend, it runs loaders/validation/computed fields and emits per-collection query indexes, the collection manifest, captured bodies, and applicable compiled output. It then wires a server entry from prepared artifacts and library runtime modules.
+The build command or integration consumes the single exported registry. For the generated backend, it runs loaders/validation/computed fields and emits per-collection query indexes, the collection manifest, captured bodies, and applicable compiled output. It then wires a server entry from prepared artifacts and library runtime modules.
 
 For standalone preparation, run this script from the application project root before the application build consumes the generated modules:
 
 ```ts
-// scripts/prepare-content.ts — build code only.
-import { prepareContent } from "content-query/build";
+// scripts/build-content.ts — build code only.
+import { buildContent } from "content-query/build";
 
-await prepareContent({
+await buildContent({
   config: "./content-query.config.ts",
   backend: "generated",
   outDir: "./.content-query",
 });
 ```
 
-This explicitly selects the example's `content-query.config.ts`. Omitting `config`, as `vp exec content-query prepare` does, discovers that file or a single alternative using `.mts`, `.cts`, `.js`, `.mjs`, or `.cjs`. Multiple matching files require an explicit selection. Generated declarations reference the selected config. `vp exec content-query prepare --watch` owns a development watch session. Git-ignore `.content-query/`. A framework integration wraps the same flow and watching, so its users do not additionally run these commands. Choose a backend outside the collection definitions; generated storage is the default in both development and production.
+This explicitly selects the example's `content-query.config.ts`. Omitting `config`, as `vp exec content-query build` does, discovers that file or a single alternative using `.mts`, `.cts`, `.js`, `.mjs`, or `.cjs`. Multiple matching files require an explicit selection. Generated declarations reference the selected config. `vp exec content-query build --watch` owns a development watch session. Git-ignore `.content-query/`. A framework integration wraps the same flow and watching, so its users do not additionally run these commands. Choose a backend outside the collection definitions; generated storage is the default in both development and production.
 
 There is no `target` argument. In this standalone example, `deferRender: false` prepares HTML/headings for both posts before production use. A pure SSG integration may instead render just the entries requested during page generation, using its host lifecycle to avoid a collection-wide compilation pass. Changing to `deferRender: true` packages captured input and the library-owned renderer for on-demand compilation.
 
@@ -1495,10 +1495,10 @@ Application code does not call `createContent()` or repeat the collection regist
 For direct in-process use, this is an alternative to the generated server import or Vite plugin setup:
 
 ```ts
-import { prepareContent } from "content-query/build";
+import { buildContent } from "content-query/build";
 import type { collections } from "./content-query.config";
 
-const session = await prepareContent<typeof collections>({
+const session = await buildContent<typeof collections>({
   config: "./content-query.config.ts",
   backend: "in-memory",
 });

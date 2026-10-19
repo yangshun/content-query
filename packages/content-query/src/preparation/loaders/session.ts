@@ -245,7 +245,7 @@ export function createLoaderSession(source: Loader, options: LoaderSessionOption
           const operation = (async () => {
             state.lifetime.throwIfAborted();
             const result = await validate(effectiveSchema, data, {
-              operation: "prepare",
+              operation: "build",
               collection: options.collection,
               id,
               source: filePath === undefined ? undefined : path.resolve(state.root, filePath),
@@ -266,7 +266,7 @@ export function createLoaderSession(source: Loader, options: LoaderSessionOption
                   : "";
               throw contentError(cause, {
                 code: "validation-error",
-                operation: "prepare",
+                operation: "build",
                 collection: options.collection,
                 id,
                 source: filePath === undefined ? undefined : path.resolve(state.root, filePath),
