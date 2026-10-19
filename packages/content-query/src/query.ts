@@ -1,0 +1,33 @@
+export {
+  and,
+  or,
+  not,
+  eq,
+  ne,
+  gt,
+  gte,
+  lt,
+  lte,
+  inArray,
+  notInArray,
+  contains,
+  startsWith,
+  endsWith,
+  arrayContains,
+  arrayContainsAny,
+  arrayContainsAll,
+  isNull,
+  isUndefined,
+  isMissing,
+} from "./query/operators.ts";
+export type { Expression } from "./query/plan.ts";
+export type {
+  Field,
+  Fields,
+  Where,
+  QueryOptions,
+  CountOptions,
+  Selection,
+  SelectionResult,
+  Adjacent,
+} from "./query/types.ts";

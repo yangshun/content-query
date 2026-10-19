@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "source": {
+    "name": "content-query-void"
+  },
+  "resolved": {
+    "compatibility_date": "2026-02-24",
+    "account_id": "c9d3d3304c5e8ffd1c928e6b53249a2a",
+    "name": "content-query-void"
+  },
+  "text": "{\n  \"compatibility_date\": \"2026-02-24\",\n  \"account_id\": \"c9d3d3304c5e8ffd1c928e6b53249a2a\",\n  \"name\": \"content-query-void\"\n}\n"
+}

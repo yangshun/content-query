@@ -1,0 +1,8 @@
+[
+  { "id": "ada", "name": "Ada Lovelace" },
+  {
+    "id": "grace",
+    "name": "Grace Hopper",
+    "featuredPostIds": ["upcoming-features", "getting-started", "upcoming-features"]
+  }
+]
