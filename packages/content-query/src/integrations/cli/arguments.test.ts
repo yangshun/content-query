@@ -25,6 +25,51 @@ describe("standalone command interface", () => {
     });
     expect(parseArguments(["build", "--backend", "generated"])).toEqual({ backend: "generated" });
   });
+  test("accepts short flags and values joined with an equals sign", () => {
+    expect(
+      parseArguments([
+        "build",
+        "-w",
+        "-c",
+        "src/content-query.config.ts",
+        "--backend=in-memory",
+        "-o",
+        "output",
+      ]),
+    ).toEqual({
+      watch: true,
+      config: "src/content-query.config.ts",
+      backend: "in-memory",
+      outDir: "output",
+    });
+    expect(parseArguments(["build", "--config=collections.ts", "--out-dir=output"])).toEqual({
+      config: "collections.ts",
+      outDir: "output",
+    });
+  });
+  test("keeps numeric path options as strings and accepts an explicit watch boolean", () => {
+    expect(parseArguments(["build", "--config=123", "--out-dir=456", "--watch=false"])).toEqual({
+      config: "123",
+      outDir: "456",
+      watch: false,
+    });
+  });
+  test.each([
+    ["--help"],
+    ["-h"],
+    ["build", "--help"],
+    ["--version"],
+    ["-v"],
+    ["build", "--version"],
+  ])("prints information without requesting a build: %j", (...arguments_: string[]) => {
+    const output = vi.spyOn(console, "info").mockImplementation(() => {});
+    try {
+      expect(parseArguments(arguments_)).toBeUndefined();
+      expect(output).toHaveBeenCalledWith(expect.stringContaining("content-query/"));
+    } finally {
+      output.mockRestore();
+    }
+  });
   test.each([
     [],
     ["unknown"],
@@ -33,6 +78,17 @@ describe("standalone command interface", () => {
     ["build", "--config", "--watch"],
     ["build", "--target", "ssr"],
     ["build", "--backend", "sqlite"],
+    ["build", "--config", "one.ts", "--config", "two.ts"],
+    ["build", "-c", "one.ts", "--config", "two.ts"],
+    ["build", "-wc", "one.ts", "--config", "two.ts"],
+    ["build", "-ww"],
+    ["build", "--watch", "--no-watch"],
+    ["build", "--backend=generated", "--backend=in-memory"],
+    ["build", "--out-dir=one", "--out-dir=two"],
+    ["build", "extra"],
+    ["build", "--", "extra"],
+    ["build", "--config.nested=file"],
+    ["build", "--watch.nested=true"],
   ])("rejects invalid arguments %j", (...arguments_: string[]) => {
     expect(() => parseArguments(arguments_)).toThrow();
   });

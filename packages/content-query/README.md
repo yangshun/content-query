@@ -121,9 +121,14 @@ Compatibility covers build-time content loaders. The built-in `glob()` and `file
 ```sh
 vp exec content-query build
 vp exec content-query build --watch
+vp exec content-query --help
+vp exec content-query build --help
+vp exec content-query --version
 ```
 
-Defaults are automatic config discovery, `--backend generated`, and `--out-dir ./.content-query`. Unknown flags fail. The command is `build`; the former `prepare` command is no longer accepted. Git-ignore `.content-query/`; generated runtime artifacts and Vite declarations share this directory directly, without a nested `generated/` directory.
+The CLI uses CAC for commands, options, and generated help/version output. `-c`, `-o`, and `-w` are aliases for `--config`, `--out-dir`, and `--watch`; value options accept both `--option value` and `--option=value`. Help and version requests work without loading collection configuration or building content.
+
+Defaults are automatic config discovery, `--backend generated`, and `--out-dir ./.content-query`. Unknown options, repeated build options, missing values, invalid backends, and extra positional arguments fail. The command is `build`; the former `prepare` command is no longer accepted. Git-ignore `.content-query/`; generated runtime artifacts and Vite declarations share this directory directly, without a nested `generated/` directory.
 
 The CLI, standalone API, and Vite integration discover exactly one `content-query.config.{ts,mts,cts,js,mjs,cjs}` file at the application root. Examples use `.ts`; both ES module and CommonJS configurations are supported. Missing or multiple matching files produce a configuration error. Use `--config` on the CLI or the `config` option in `buildContent()`/Vite to select an exact filename or location, bypassing discovery. An explicit path never falls back to another config. Configurations export the named `collections` registry; JSON, YAML, and JSX/TSX are not discovered.
 

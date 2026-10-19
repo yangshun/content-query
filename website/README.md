@@ -1,6 +1,6 @@
 # ContentQuery website
 
-Standalone examples and documentation use `content-query build` (or `content-query build --watch`) and `buildContent()` from `content-query/build`.
+Standalone examples and documentation use `content-query build` (or `content-query build --watch`) and `buildContent()` from `content-query/build`. The CLI reference documents CAC's help/version output, short option aliases, and equals-form values.
 
 A Void + React website based on [`../examples/void`](../examples/void), styled to match the [VoidPress docs app](../../apps/docs). A compact header leads to a dedicated homepage at `/` and sidebar documentation starting at `/docs/introduction`. The dark background, lime accents, article typography, and compact previous/next text links are shared across the site. On small screens, the docs sidebar becomes a collapsible menu. Styles are local so the website can move with ContentQuery.
 
