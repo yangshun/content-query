@@ -16,12 +16,12 @@
     "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@void/react": "1.1.11",
+    "@void/react": "catalog:",
     "content-query": "workspace:*",
     "typescript": "^5.9.3",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "void": "1.1.11",
+    "void": "catalog:",
     "zod": "^4.3.6"
   }
 }

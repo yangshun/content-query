@@ -12,7 +12,7 @@ The docs sidebar belongs to a persistent layout and has its own metadata query. 
 | [Next.js](./next/README.md)                  | Async docs layout Server Component                | Async page Server Component               |
 | [SvelteKit](./sveltekit/README.md)           | `docs/+layout.server.ts`                          | `+page.server.ts`                         |
 
-Void 1.1.11 requires companion server files and shared middleware; SvelteKit requires its server route modules. The examples retain these native server/client boundaries. React Router, TanStack Start, and Next.js colocate loading with route UI where supported.
+Void requires companion server files and shared middleware; SvelteKit requires its server route modules. The examples retain these native server/client boundaries. React Router, TanStack Start, and Next.js colocate loading with route UI where supported.
 
 Each example README contains development/build commands. Run `vp check` and `vp test content-query/examples` at the repository root. Production tests build real framework consumers with a nested guide and verify the home index, sidebar, rendered article, active navigation, and adjacent links. Examples remain standalone when copied. Git records hardlinked files as ordinary file contents; a fresh checkout needs no shared sibling files. The parity test verifies that the local copies match the common source.
 
