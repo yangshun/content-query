@@ -2,6 +2,8 @@
 
 Typed, framework-independent content collections, queries, and rendering. ContentQuery builds validated content into portable runtime artifacts, with optional CLI and Vite integrations. Standalone hosts use `content-query build` or `buildContent()` from `content-query/build`; add `--watch` or `watch: true` for ongoing updates.
 
+The standalone CLI uses CAC and provides `--help`, command-specific help, `--version`, and short aliases for configuration, output directory, and watch mode.
+
 This directory groups the project for a future standalone repository:
 
 ```text

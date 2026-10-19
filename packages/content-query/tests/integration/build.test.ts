@@ -1,4 +1,4 @@
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { cp, mkdir, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -308,11 +308,11 @@ try { await content.readBody("posts","getting-started"); } catch(error) { consol
       });
       await expect(
         execute(process.execPath, [cli, "build", "--target", "ssr"], { cwd: fixture.root }),
-      ).rejects.toMatchObject({ code: 1, stderr: expect.stringContaining("Unknown flag") });
+      ).rejects.toMatchObject({ code: 1, stderr: expect.stringContaining("Unknown option") });
       await expect(
         execute(process.execPath, [cli, "build", "--backend", "sqlite"], { cwd: fixture.root }),
       ).rejects.toMatchObject({ code: 1 });
-      await execute(process.execPath, [cli, "build", "--out-dir", "./prepared"], {
+      await execute(process.execPath, [cli, "build", "--backend=generated", "-o", "./prepared"], {
         cwd: fixture.root,
       });
       expect(await readFile(path.join(fixture.root, "prepared/server.js"), "utf8")).toContain(
@@ -323,6 +323,84 @@ try { await content.readBody("posts","getting-started"); } catch(error) { consol
         execute(process.execPath, [cli, "build"], { cwd: fixture.root }),
       ).rejects.toMatchObject({ code: 1, stderr: expect.stringContaining("validation-error") });
     } finally {
+      await fixture.dispose();
+    }
+  });
+  test("CLI help and version work without executing collection configuration", async () => {
+    const fixture = await projectFixture();
+    try {
+      await writeFile(fixture.config, 'throw new Error("Configuration must not execute");');
+      const cli = path.join(packageRoot, "dist/cli.mjs");
+      const { version } = JSON.parse(
+        await readFile(path.join(packageRoot, "package.json"), "utf8"),
+      ) as { version: string };
+      for (const arguments_ of [
+        ["--help"],
+        ["build", "--help"],
+        ["--version"],
+        ["build", "--version"],
+      ]) {
+        const { stdout, stderr } = await execute(process.execPath, [cli, ...arguments_], {
+          cwd: fixture.root,
+        });
+        expect(stdout).toContain(`content-query/${version}`);
+        expect(stderr).toBe("");
+        if (arguments_.includes("--help")) {
+          expect(stdout).toContain("build");
+        }
+      }
+      expect(await readdir(fixture.root)).not.toContain(".content-query");
+    } finally {
+      await fixture.dispose();
+    }
+  });
+  test("CLI watch rebuilds changed content and shuts down on SIGTERM", async () => {
+    const fixture = await projectFixture();
+    const cli = path.join(packageRoot, "dist/cli.mjs");
+    const child = spawn(process.execPath, [cli, "build", "-w"], {
+      cwd: fixture.root,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk: Buffer) => {
+      stdout += chunk.toString();
+    });
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString();
+    });
+    const closed = new Promise<number | null>((resolve, reject) => {
+      child.once("error", reject);
+      child.once("close", resolve);
+    });
+    try {
+      await vi.waitFor(() => expect(stdout).toContain("Content ready."), { timeout: 3_000 });
+      const original = await readFile(fixture.postPath, "utf8");
+      await writeFile(
+        fixture.postPath,
+        original.replace("title: Getting started", "title: Watched through CLI"),
+      );
+      await vi.waitFor(() => expect(stdout.match(/Content ready\./g)).toHaveLength(2), {
+        timeout: 3_000,
+      });
+      const selected = await execute(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          'const { content } = await import("./.content-query/server.js"); console.log(JSON.stringify(await content.query("posts").select("title").first()));',
+        ],
+        { cwd: fixture.root },
+      );
+      expect(JSON.parse(selected.stdout)).toEqual({ title: "Watched through CLI" });
+      expect(stderr).toBe("");
+      child.kill("SIGTERM");
+      expect(await closed).toBe(0);
+    } finally {
+      if (child.exitCode === null && child.signalCode === null) {
+        child.kill("SIGKILL");
+      }
+      await closed;
       await fixture.dispose();
     }
   });
