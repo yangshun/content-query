@@ -12,6 +12,8 @@ vp run --filter content-query build
 vp run --filter @voidpress/content-query-basic dev
 ```
 
+`void` and `@void/react` use `catalog:` references to the matching `1.1.12` pins in the root `pnpm-workspace.yaml`.
+
 Build the workspace ContentQuery package before starting the app because its exports point at `content-query/packages/content-query/dist/`. The dev server watches Markdown and updates metadata and rendered bodies after edits. `src/content-updates.tsx` subscribes to `content-query:client` and refreshes Void loader data while preserving component state and scroll; the surrounding application remains mounted.
 
 ## Production build
@@ -65,6 +67,6 @@ vp test run
 
 `tests/guides.integration.test.ts` runs the real collection through the ContentQuery Vite integration and exercises the route loaders and prerender hook.
 
-Each example imports its own local stylesheet, hardlinked to the common [`../shared/styles.css`](../shared/styles.css) in this workspace for the site shell, home index, docs sidebar, article typography, and mobile layout. Void 1.1.11 requires native `.server.ts` page companions and middleware for server data; its layouts receive only children. Those native boundaries keep content loading separate from browser code without a standalone content helper.
+Each example imports its own local stylesheet, hardlinked to the common [`../shared/styles.css`](../shared/styles.css) in this workspace for the site shell, home index, docs sidebar, article typography, and mobile layout. Void requires native `.server.ts` page companions and middleware for server data; its layouts receive only children. Those native boundaries keep content loading separate from browser code without a standalone content helper.
 
 The example is self-contained: its stylesheet and browser navigation helper (where needed) are local files. Hardlinks keep the common copies synchronized in this workspace. Git stores ordinary file contents, so copying or checking out an example does not require sibling shared files.

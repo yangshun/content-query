@@ -44,6 +44,8 @@ vp run --filter content-query build
 vp run --filter @content-query/website dev
 ```
 
+`void` and `@void/react` use `catalog:` references to the matching `1.1.12` pins in the root `pnpm-workspace.yaml`.
+
 ## Build and verify
 
 ```sh
