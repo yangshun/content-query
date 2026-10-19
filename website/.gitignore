@@ -1,0 +1,6 @@
+.content-query/
+.void/
+.void-wrangler.jsonc
+.wrangler/
+dist/
+node_modules/

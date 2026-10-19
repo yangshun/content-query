@@ -16,6 +16,7 @@ content-query/
     sveltekit/
     shared/        Common source files and example parity tests
   docs/            Design, features, comparisons, and planned work
+  website/         Void + React homepage and documentation site
   README.md
 ```
 
@@ -34,6 +35,7 @@ Run `vp test` from the enclosing repository root to also verify VoidPress consum
 
 ## Documentation
 
+- [Website development](./website/README.md)
 - [Package API and usage](./packages/content-query/README.md)
 - [Features](./docs/FEATURES.md)
 - [Design and contracts](./docs/PLAN.md)
