@@ -1,6 +1,6 @@
 # ContentQuery
 
-Typed, framework-independent content collections, queries, and rendering. ContentQuery builds validated content into portable runtime artifacts, with optional CLI and Vite integrations. Standalone hosts use `content-query build` or `buildContent()` from `content-query/build`; add `--watch` or `watch: true` for ongoing updates.
+Typed, framework-independent content collections, queries, and rendering. ContentQuery builds validated content into portable runtime artifacts, with optional CLI, Vite, and Next.js integrations. Standalone hosts use `content-query build` or `buildContent()` from `content-query/build`; add `--watch` or `watch: true` for ongoing updates. Next.js applications use `withContentQuery()` from `content-query/next` to own generation and development watching.
 
 The standalone CLI uses CAC and provides `--help`, command-specific help, `--version`, and short aliases for configuration, output directory, and watch mode.
 
@@ -34,6 +34,8 @@ vp test content-query
 ```
 
 Run `vp test` from the enclosing repository root to also verify VoidPress consumers. Each [example](./examples/README.md) documents its own development and production commands. Examples keep local styles and helpers so they can be copied independently; common copies live in `examples/shared/`.
+
+Keep the [website](./website/README.md) current when core changes affect public APIs, features, or behavior.
 
 ## Documentation
 

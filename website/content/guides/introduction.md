@@ -5,7 +5,7 @@ section: getting-started
 order: 1
 ---
 
-ContentQuery turns Markdown and structured data into validated content that your application can query and render. Use it with your existing framework, through Vite, or as a standalone build step.
+ContentQuery turns Markdown and structured data into validated content that your application can query and render. Use it with your existing framework through Vite or Next.js, or as a standalone build step.
 
 ## Features
 
@@ -15,7 +15,7 @@ ContentQuery turns Markdown and structured data into validated content that your
 - **[Typed queries](/docs/querying-content).** Filter, sort, paginate, count, and select fields through fluent or object APIs.
 - **[Relationships](/docs/relationships).** Connect collections, validate references, and select related entries in nested queries.
 - **[Markdown rendering](/docs/rendering-content).** Get HTML, headings, and syntax highlighting, with article output loaded separately from metadata.
-- **[Vite and standalone workflows](/docs/integrations/vite).** Refresh content during development with Vite, or prepare portable runtime artifacts with the [CLI](/docs/integrations/standalone).
+- **[Framework integrations](/docs/integrations/frameworks).** Refresh content during development with [Vite](/docs/integrations/vite) or [Next.js](/docs/integrations/next), or build portable runtime artifacts with the [CLI](/docs/integrations/standalone).
 
 ## The basic workflow
 

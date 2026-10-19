@@ -5,6 +5,7 @@ import { createSession, type ContentSession } from "./session.ts";
 import { assertServerOnly } from "../shared/server-only.ts";
 import type { CollectionRegistry } from "../collection/types.ts";
 import type { InvalidRelationships } from "../collection/registry-types.ts";
+import type { PreparedRevision } from "../runtime/revision.ts";
 import { canonicalPath, withinDirectory } from "../shared/paths.ts";
 import { resolveConfigPath } from "./config-path.ts";
 
@@ -20,7 +21,10 @@ export type BuildContentOptions = {
   watch?: boolean;
 };
 
-/** Builds content independently of a bundler; bind the registry through an erased type import. */
+/**
+ * Builds content independently of a bundler; bind the registry through an erased type import.
+ * Generated watch sessions prune previous-run artifacts after their first successful publication.
+ */
 export async function buildContent<Registry extends CollectionRegistry = {}>(
   ...arguments_: InvalidRelationships<Registry> extends never
     ? [options?: BuildContentOptions]
@@ -29,7 +33,7 @@ export async function buildContent<Registry extends CollectionRegistry = {}>(
   return buildAtRoot<Registry>(process.cwd(), arguments_[0] ?? {});
 }
 
-/** Private host entrypoint resolving all configured paths from one application root. */
+/** Resolves host paths and prunes previous-run artifacts on the first successful publication. */
 export async function buildAtRoot<Registry extends CollectionRegistry = {}>(
   root: string,
   options: BuildContentOptions,
@@ -64,16 +68,33 @@ export async function buildAtRoot<Registry extends CollectionRegistry = {}>(
       });
     }
   }
+  let firstPublication = true;
+  let publication = Promise.resolve();
+  /** Keeps startup pruning from racing an artifact write from a newer content attempt. */
+  function publish(
+    revision: PreparedRevision,
+    _registry: CollectionRegistry,
+    signal: AbortSignal,
+  ): Promise<void> {
+    const pending = publication
+      .catch(() => {})
+      .then(async () => {
+        signal.throwIfAborted();
+        await writeArtifacts(revision, outDir, config, {
+          signal,
+          prune: !watch || firstPublication,
+        });
+        firstPublication = false;
+      });
+    publication = pending;
+    return pending;
+  }
   return createSession<Registry>({
     root,
     config,
     outDir,
     watch,
     change,
-    publish:
-      backend === "generated"
-        ? (revision, _registry, signal) =>
-            writeArtifacts(revision, outDir, config, { signal, prune: !watch })
-        : undefined,
+    publish: backend === "generated" ? publish : undefined,
   });
 }

@@ -14,7 +14,9 @@ vp run --filter @voidpress/content-query-next dev
 
 Open [localhost:3000](http://localhost:3000). `vp run` executes the Next.js script; `vp dev` would start Vite instead.
 
-Content is built once when the development server starts. Restart it after changing Markdown, collection schemas, or loader configuration. This example deliberately uses one-shot builds; it does not install a Next.js content watcher.
+`withContentQuery()` builds content before the development server compiles, then watches Markdown, collection schemas, and loader configuration. Published changes update the generated modules and Next.js refreshes their consumers. This includes body-only changes and added, renamed, or removed guides. Content errors appear in Next's development overlay and recover after a valid edit.
+
+After the first successful content build, startup removes obsolete collection modules and `next-dev-*.js` entries from previous runs while preserving the new snapshot. Invalid startup content delays cleanup until corrected. Later edits retain revisions for the rest of that session; restarting the server reclaims previous-run files. Repeated Next.js configuration evaluation reuses the session without cleaning again.
 
 ## Production
 
@@ -23,7 +25,9 @@ vp run --filter content-query build
 vp run --filter @voidpress/content-query-next build
 ```
 
-`next.config.mjs` awaits `buildContent()` from `content-query/build` before development and production compilation, then disposes the content session. Invalid content fails startup or the build. Content builds run through ContentQuery's public API without a Vite plugin or framework adapter.
+`next.config.mjs` wraps the static-export configuration with `withContentQuery()` from `content-query/next`. The adapter owns a persistent development session and cleans it up on shutdown. Production awaits a one-shot content build and disposes its session before compilation; invalid content fails the build. Content generation uses the same compiler as the standalone API and CLI.
+
+The phase-aware configuration enables `output: "export"` outside development. Development uses normal Next.js route handling so added and removed content routes do not encounter static-export parameter checks.
 
 Next.js exports `/`, the three `/docs/<guide-id>/` pages, and a `404.html` page to `out/`. Deploy that directory to a static host. The exported site needs no Node.js server, Markdown source files, collection configuration, or ContentQuery compiler. `next start` does not serve static exports.
 
@@ -38,7 +42,7 @@ Next.js exports `/`, the three `/docs/<guide-id>/` pages, and a `404.html` page 
 - The guide page awaits its route parameters, renders the requested Markdown body, and selects previous/next links with an independent `_adjacent` sibling scope. Detail queries use the object API; the index also demonstrates fluent queries. `dynamicParams = false` rejects paths outside the generated collection.
 - Source Markdown is trusted repository content. Server Components load and render it; the client presentation component handles internal link clicks. Application code owns routing and presentation.
 
-To add a guide, create a Markdown file under `content/guides/` with `title`, `description`, and numeric `order` frontmatter. Rebuild to publish its route.
+To add a guide, create a Markdown file under `content/guides/` with `title`, `description`, and numeric `order` frontmatter. Development discovers its route automatically; rebuild the static export to publish it in production.
 
 This follows Next.js's [async configuration](https://next.org/docs/app/api-reference/config/next-config-js), [static export](https://next.org/docs/app/guides/static-exports), and [generateStaticParams](https://next.org/docs/app/api-reference/functions/generate-static-params) APIs.
 
@@ -50,7 +54,7 @@ vp test run
 vp run --filter @voidpress/content-query-next build
 ```
 
-The integration suite prepares and builds a real Next.js consumer through `next.config.mjs`, then checks its exported index, metadata, Markdown rendering, adjacent guides, nested routes, and 404 page after removing source content and configuration. It also checks that invalid content blocks compilation.
+The integration suite builds a real Next.js consumer through `next.config.mjs`, then checks its exported index, metadata, Markdown rendering, adjacent guides, nested routes, and 404 page after removing source content and configuration. It also checks that invalid content blocks compilation. Development tests run real Turbopack and Webpack servers and exercise metadata/body edits, route additions/renames/deletions, configuration updates, and invalid-content recovery.
 
 The root layout imports its local stylesheet, hardlinked to the common [`../shared/styles.css`](../shared/styles.css) in this workspace, giving all five examples the same header, footer, home index, sidebar, article typography, and responsive layout. Queries stay inline in Server Components and route metadata functions. `app/docs/content.tsx` is a small client presentation boundary that routes internal Markdown links through Next.js while keeping the docs layout mounted.
 

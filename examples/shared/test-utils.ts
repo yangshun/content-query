@@ -20,6 +20,7 @@ export function testStaticExample(
   sources: string[],
   output: string,
   trailingSlash = true,
+  buildCommand: string[] = ["run", "build"],
 ) {
   describe(`${framework} ContentQuery production example`, () => {
     let root: string;
@@ -44,7 +45,7 @@ export function testStaticExample(
         path.join(root, "content/guides/reference/shortcuts.md"),
         "---\ntitle: Shortcuts\ndescription: Keep your hands on the keyboard.\norder: 4\n---\n## Moving around\nUse the keyboard to move between notes.\n",
       );
-      await execute("vp", ["run", "build"], {
+      await execute("vp", buildCommand, {
         cwd: root,
         env: process.env,
         maxBuffer: 2_000_000,

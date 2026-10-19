@@ -90,7 +90,9 @@ export async function watchProject(
       filename
         .split(path.sep)
         .some((segment) =>
-          ["node_modules", ".git", ".void", ".wrangler", "dist", "coverage"].includes(segment),
+          ["node_modules", ".git", ".next", ".void", ".wrangler", "dist", "coverage"].includes(
+            segment,
+          ),
         ) || ignoredRoots.some((ignored) => withinDirectory(ignored, filename)),
   });
   register(watcher);
