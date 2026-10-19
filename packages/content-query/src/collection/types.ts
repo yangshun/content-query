@@ -5,15 +5,19 @@ export type Schema = StandardSchemaV1;
 export type SchemaOutput<Value> = Value extends StandardSchemaV1
   ? StandardSchemaV1.InferOutput<Value>
   : Record<string, unknown>;
-export type ComputedContext<Data> = {
+export type ComputedContext<Data, Source = unknown> = {
+  /** The collection's key in the configured registry. */
+  collection: string;
   id: string;
+  /** Loader-provided source metadata, detached from stored entries for this resolver. */
+  source?: Source extends object ? Readonly<Source> : Source;
   data: Readonly<Data>;
   readBody(this: void): Promise<string | undefined>;
   signal: AbortSignal;
 };
-export type ComputedDefinition<Data = Record<string, unknown>> = {
+export type ComputedDefinition<Data = Record<string, unknown>, Source = unknown> = {
   schema: Schema;
-  resolve(context: ComputedContext<Data>): unknown;
+  resolve(context: ComputedContext<Data, Source>): unknown;
 };
 export type Relationship = {
   collection: string;
@@ -24,9 +28,9 @@ export type Relationship = {
 };
 export type CollectionDefinition<
   SourceSchema extends Schema | undefined = Schema | undefined,
-  Computed extends Record<string, ComputedDefinition<never>> = Record<
+  Computed extends Record<string, ComputedDefinition<never, never>> = Record<
     string,
-    ComputedDefinition<never>
+    ComputedDefinition<never, never>
   >,
   Relationships extends Record<string, Relationship> = Record<string, Relationship>,
 > = {

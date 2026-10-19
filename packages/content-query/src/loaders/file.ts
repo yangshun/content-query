@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { populateStore } from "./populate.ts";
 import {
   ContentError,
@@ -9,12 +10,12 @@ import {
   type ContentDiagnostic,
 } from "../shared/errors.ts";
 import { builtinPath, builtinSymbol, type BuiltinLoader, type MarkedLoader } from "./descriptor.ts";
-import type { Loader, LoaderEntry } from "./types.ts";
+import type { FileEntrySource, Loader, LoaderEntry } from "./types.ts";
 import type { FileOptions } from "./descriptor.ts";
 import { parseData, recordData, coerceIdentity } from "./parse.ts";
 
-/** Declares a multi-entry JSON, YAML, or TOML file, optionally overriding its parser. */
-export function file(filename: string, options: FileOptions = {}): Loader {
+/** Declares a multi-entry data file with typed source paths and record keys, plus an optional parser. */
+export function file(filename: string, options: FileOptions = {}): Loader<FileEntrySource> {
   if (typeof filename !== "string" || !filename) {
     throw new TypeError("file() requires a filename.");
   }
@@ -30,7 +31,7 @@ export function file(filename: string, options: FileOptions = {}): Loader {
       );
       await populateStore(context, entries);
     },
-  } as MarkedLoader;
+  } as MarkedLoader<FileEntrySource>;
 }
 
 /** Captures a complete multi-entry data source without applying collection validation. */
@@ -38,7 +39,7 @@ export async function loadFile(
   descriptor: Extract<BuiltinLoader, { kind: "file" }>,
   root: string,
   signal: AbortSignal,
-): Promise<LoaderEntry[]> {
+): Promise<LoaderEntry<FileEntrySource>[]> {
   const resolved = builtinPath(descriptor, root);
   let parsed: unknown;
   try {
@@ -81,6 +82,10 @@ export async function loadFile(
           id: coerceIdentity(identity),
           data: metadata,
           source: array ? source : `${resolved}#${coerceIdentity(identity)}`,
+          sourceData: {
+            filePath: path.relative(root, resolved).split(path.sep).join("/"),
+            key,
+          },
         },
       ];
     } catch (cause) {

@@ -1,6 +1,6 @@
 import { glob } from "../loaders/glob.ts";
 import type { GlobOptions } from "../loaders/descriptor.ts";
-import type { Loader } from "../loaders/types.ts";
+import type { FileSource, Loader } from "../loaders/types.ts";
 
 export type CollectionSource =
   | string
@@ -22,7 +22,7 @@ const patterns = {
 } as const;
 
 /** Normalizes local-source convenience declarations into the existing native glob loader. */
-export function sourceLoader(source: CollectionSource): Loader {
+export function sourceLoader(source: CollectionSource): Loader<FileSource> {
   const options =
     typeof source === "string" ? { type: "markdown" as const, directory: source } : source;
   if (

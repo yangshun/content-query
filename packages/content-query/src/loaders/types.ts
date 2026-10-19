@@ -1,8 +1,13 @@
 import type { MaybePromise } from "../shared/types.ts";
 import type { RenderedContent } from "../runtime/types.ts";
 
+declare const loaderSourceType: unique symbol;
+
 /** A stored content record, following Astro's build-time DataEntry contract. */
-export type DataEntry<Data extends Record<string, unknown> = Record<string, unknown>> = {
+export type DataEntry<
+  Data extends Record<string, unknown> = Record<string, unknown>,
+  Source = unknown,
+> = {
   id: string;
   data: Data;
   body?: string;
@@ -12,12 +17,18 @@ export type DataEntry<Data extends Record<string, unknown> = Record<string, unkn
   deferredRender?: boolean;
   assetImports?: string[];
   imageImports?: (string | number)[][];
+  /** Optional ContentQuery metadata; Astro stores do not retain this extension. */
+  source?: Source;
 };
-export type DataStore = {
+/** Source metadata supplied by loaders of individual local files. */
+export type FileSource = { filePath: string };
+/** Source metadata identifying a record within a shared local file. */
+export type FileEntrySource = FileSource & { key: string };
+export type DataStore<in Source = unknown> = {
   get<Data extends Record<string, unknown> = Record<string, unknown>>(
     key: string,
   ): DataEntry<Data> | undefined;
-  set<Data extends Record<string, unknown>>(entry: DataEntry<Data>): boolean;
+  set<Data extends Record<string, unknown>>(entry: DataEntry<Data, Source>): boolean;
   entries(): [string, DataEntry][];
   values(): DataEntry[];
   keys(): string[];
@@ -98,9 +109,9 @@ export interface LoaderWatcher {
   unwatch(paths: string | readonly string[]): LoaderWatcher;
   close(): Promise<void>;
 }
-export type LoaderContext = {
+export type LoaderContext<in Source = unknown> = {
   collection: string;
-  store: DataStore;
+  store: DataStore<Source>;
   meta: MetaStore;
   config: LoaderConfig;
   logger: LoaderLogger;
@@ -117,19 +128,26 @@ export type LoaderContext = {
   refreshContextData?: Record<string, unknown>;
 };
 /** An Astro-compatible, named build-time content loader. */
-export type Loader = {
+export type Loader<out Source = unknown> = {
+  /** Type-only marker preserving metadata inference without changing Astro's load signature. */
+  readonly [loaderSourceType]?: Source;
   name: string;
   schema?: unknown;
   createSchema?(): MaybePromise<{ schema: unknown; types?: string }>;
-  load(context: LoaderContext): Promise<void>;
+  load(context: LoaderContext<Source>): Promise<void>;
 };
+/** Infers the source metadata a typed loader supplies to computed resolvers. */
+export type LoaderSource<Value> = Value extends { readonly [loaderSourceType]?: infer Source }
+  ? Source
+  : unknown;
 
-export type LoaderEntry = {
+export type LoaderEntry<Source = unknown> = {
   id: string;
   data: Record<string, unknown>;
   body?: string;
   rendered?: RenderedContent;
   source?: string;
+  sourceData?: Source;
 };
 export type LoaderUpdate = { upsert?: readonly LoaderEntry[]; remove?: readonly string[] };
 export type LoaderCleanup = () => MaybePromise<void>;

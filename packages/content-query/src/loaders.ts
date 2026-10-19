@@ -5,6 +5,9 @@ export { glob } from "./loaders/glob.ts";
 export type { FileOptions, GlobOptions } from "./loaders/descriptor.ts";
 export type {
   Loader,
+  LoaderSource,
+  FileSource,
+  FileEntrySource,
   DataEntry,
   DataStore,
   MetaStore,

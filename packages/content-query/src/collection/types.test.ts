@@ -4,6 +4,15 @@ import { defineCollection } from "./define.ts";
 import { buildContent } from "../build.ts";
 import type { Content } from "../runtime.ts";
 import { eq } from "../query.ts";
+import {
+  file,
+  glob,
+  type FileSource,
+  type FileEntrySource,
+  type Loader,
+  type LoaderSource,
+} from "../loaders.ts";
+import type { Loader as AstroLoader, LoaderContext as AstroContext } from "astro/loaders";
 
 const loader = { name: "fixture", async load() {} };
 const authors = defineCollection({ loader, schema: z.object({ name: z.string() }) });
@@ -109,6 +118,109 @@ function check(content: Content<typeof registry>, invalid: Content<typeof invali
   defineCollection({ ...base, relationships: wrongFrom });
 }
 void check;
+
+/** Checks loader-specific inference and the unchanged Astro context without executing loaders. */
+function checkSourceContracts(astroContext: AstroContext) {
+  const cms: Loader<{ documentId: string; url: string }> = {
+    name: "typed-cms",
+    async load({ store }) {
+      store.set({
+        id: "one",
+        data: { title: "Hello" },
+        source: { documentId: "doc-one", url: "/one" },
+      });
+      // Astro-compatible entries may omit ContentQuery-specific metadata.
+      store.set({ id: "missing", data: {} });
+      // @ts-expect-error Source field values follow the loader's declared type.
+      store.set({ id: "wrong", data: {}, source: { documentId: 1, url: "/one" } });
+    },
+  };
+  const astroCompatible: AstroLoader = { name: cms.name, load: cms.load.bind(cms) };
+  void astroCompatible;
+  void cms.load(astroContext);
+  expectTypeOf<LoaderSource<typeof cms>>().toEqualTypeOf<{ documentId: string; url: string }>();
+  defineCollection({
+    loader: cms,
+    schema: z.object({ title: z.string() }),
+    computed: {
+      documentId: {
+        schema: z.string(),
+        resolve: ({ data, source }) => {
+          expectTypeOf(data.title).toEqualTypeOf<string>();
+          if (!source) {
+            return data.title;
+          }
+          expectTypeOf(source.documentId).toEqualTypeOf<string>();
+          // @ts-expect-error CMS source metadata does not acquire file fields.
+          void source.filePath;
+          // @ts-expect-error Resolver source metadata is readonly.
+          source.documentId = "mutation";
+          return source.documentId;
+        },
+      },
+    },
+  });
+  defineCollection({
+    loader: glob({ pattern: "*.md" }),
+    computed: {
+      sourceFile: {
+        schema: z.string(),
+        resolve: ({ source }) => {
+          if (!source) {
+            return "";
+          }
+          expectTypeOf(source).toEqualTypeOf<Readonly<FileSource>>();
+          return source.filePath;
+        },
+      },
+    },
+  });
+  defineCollection({
+    loader: file("authors.json"),
+    computed: {
+      recordKey: {
+        schema: z.string(),
+        resolve: ({ source }) => {
+          if (!source) {
+            return "";
+          }
+          expectTypeOf(source).toEqualTypeOf<Readonly<FileEntrySource>>();
+          return source.key;
+        },
+      },
+    },
+  });
+  defineCollection({
+    source: "./content/posts",
+    computed: {
+      sourceFile: {
+        schema: z.string(),
+        resolve: ({ source }) => {
+          if (!source) {
+            return "";
+          }
+          expectTypeOf(source.filePath).toEqualTypeOf<string>();
+          return source.filePath;
+        },
+      },
+    },
+  });
+  defineCollection({
+    loader,
+    computed: {
+      unknownSource: {
+        schema: z.unknown(),
+        resolve: ({ source }) => {
+          expectTypeOf(source).toEqualTypeOf<unknown>();
+          // @ts-expect-error Untyped source metadata must be narrowed before accessing fields.
+          void source.filePath;
+          return source;
+        },
+      },
+    },
+  });
+}
+void checkSourceContracts;
 
 describe("public type contracts", () => {
   test("keeps an omitted source schema optional until preparation supplies loader defaults", () => {

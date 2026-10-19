@@ -28,7 +28,7 @@ export type PreparationCache = Map<string, PreparedEntry>;
 
 import { isRecord, validate, renderedPayload } from "./validation.ts";
 
-/** Prepares one immutable revision, aggregating independent entry/field failures. */
+/** Prepares one immutable revision with loader-defined source metadata, aggregating failures. */
 export async function prepareRevision(
   registry: CollectionRegistry,
   sources: CandidateSources,
@@ -119,7 +119,9 @@ export async function prepareRevision(
         for (const [field, computedField] of Object.entries(computed)) {
           try {
             const result = await computedField.resolve({
+              collection: collectionName,
               id: entry.id,
+              source: detach(entry.sourceData) as never,
               data: detach(metadata) as never,
               readBody: async () => entry.body,
               signal,
