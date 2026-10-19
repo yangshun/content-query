@@ -1,6 +1,6 @@
 import "server-only";
 import type { ReactNode } from "react";
-import { content } from "../../.content-query/server.js";
+import { content } from "#content-query";
 import { Sidebar } from "./sidebar";
 
 export default async function DocsLayout({ children }: { children: ReactNode }) {

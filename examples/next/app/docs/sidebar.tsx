@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 type Guide = { id: string; title: string };
 
 export function Sidebar({ guides }: { guides: readonly Guide[] }) {
-  const pathname = usePathname().replace(/\/$/, "");
+  const pathname = usePathname();
   return (
     <nav className="guide-nav" aria-label="Guide navigation">
       <p>Guides</p>
@@ -14,7 +14,7 @@ export function Sidebar({ guides }: { guides: readonly Guide[] }) {
         {guides.map((guide) => (
           <li key={guide.id}>
             <Link
-              href={`/docs/${guide.id}/`}
+              href={`/docs/${guide.id}`}
               aria-current={pathname === `/docs/${guide.id}` ? "page" : undefined}
             >
               {guide.title}

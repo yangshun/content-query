@@ -29,15 +29,16 @@ vp run --filter @voidpress/content-query-next build
 
 The phase-aware configuration enables `output: "export"` outside development. Development uses normal Next.js route handling so added and removed content routes do not encounter static-export parameter checks.
 
-Next.js exports `/`, the three `/docs/<guide-id>/` pages, and a `404.html` page to `out/`. Deploy that directory to a static host. The exported site needs no Node.js server, Markdown source files, collection configuration, or ContentQuery compiler. `next start` does not serve static exports.
+Guide URLs use Next.js's default convention without trailing slashes, such as `/docs/getting-started`. Next.js exports `/` to `out/index.html`, guide pages to `out/docs/<guide-id>.html`, and the missing-guide page to `out/404.html`. Deploy `out/` to a static host configured to resolve extensionless URLs to their `.html` files. The exported site needs no Node.js server, Markdown source files, collection configuration, or ContentQuery compiler. `next start` does not serve static exports.
 
 ## Content and routing
 
 - `content-query.config.ts` defines a Markdown collection with the string `source` shorthand with a Zod metadata schema.
 - `.content-query/` holds the generated ESM runtime and its inferred TypeScript declarations, including `CollectionKey`, `CollectionData`, and `Collections`. It is ignored by Git and regenerated automatically before compilation.
-- Queries are inline in `app/page.tsx` and `app/docs/[...slug]/page.tsx`, which import `.content-query/server.js` directly. Next.js's `server-only` marker prevents client components from importing these server modules.
+- `package.json` maps `#content-query` to `./.content-query/server.js` through its `imports` field. Server Components use `import { content } from "#content-query"` at any directory depth, with inferred types from the adjacent generated declarations.
+- Queries are inline in `app/page.tsx`, `app/docs/layout.tsx`, and `app/docs/[...slug]/page.tsx`. Next.js's `server-only` marker prevents client components from importing these server modules.
 - The homepage queries selected metadata without rendering any guide bodies. `generateMetadata()` also selects metadata only.
-- `generateStaticParams()` maps collection IDs to catch-all route segments. Nested files such as `content/guides/reference/shortcuts.md` become `/docs/reference/shortcuts/`.
+- `generateStaticParams()` maps collection IDs to catch-all route segments. Nested files such as `content/guides/reference/shortcuts.md` become `/docs/reference/shortcuts`.
 - `app/docs/layout.tsx` loads only sidebar IDs/titles and persists across guide navigation. Its small client `sidebar.tsx` updates the active link from `usePathname`; the article page does not load or pass navigation entries.
 - The guide page awaits its route parameters, renders the requested Markdown body, and selects previous/next links with an independent `_adjacent` sibling scope. Detail queries use the object API; the index also demonstrates fluent queries. `dynamicParams = false` rejects paths outside the generated collection.
 - Source Markdown is trusted repository content. Server Components load and render it; the client presentation component handles internal link clicks. Application code owns routing and presentation.

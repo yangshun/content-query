@@ -59,15 +59,16 @@ describe("Next.js example with inline page queries", () => {
   test("exports an ordered metadata-only homepage without requiring source files", async () => {
     const html = await readFile(path.join(root, "out/index.html"), "utf8");
     const ids = [...guideIds, "reference/shortcuts"];
-    const positions = ids.map((id) => html.indexOf(`href="/docs/${id}/"`));
+    const positions = ids.map((id) => html.indexOf(`href="/docs/${id}"`));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((first, second) => first - second));
     expect(html).toContain("Make a workspace and give your first project a home.");
     expect(html).not.toContain("Start with a workspace");
+    expect(html).not.toMatch(/href="\/docs\/[^"]+\/"/);
   });
 
   test.each(guideIds)("renders %s with metadata and ordered navigation neighbors", async (id) => {
-    const html = await readFile(path.join(root, "out/docs", id, "index.html"), "utf8");
+    const html = await readFile(path.join(root, "out/docs", `${id}.html`), "utf8");
     const ids = [...guideIds, "reference/shortcuts"];
     const index = ids.indexOf(id);
     const navigation = html.match(/<nav class="page-navigation"[\s\S]*?<\/nav>/)?.[0];
@@ -78,16 +79,16 @@ describe("Next.js example with inline page queries", () => {
     const sidebar = html.match(/<nav class="guide-nav"[\s\S]*?<\/nav>/)?.[0];
     expect(sidebar).toBeDefined();
     for (const guideId of ids) {
-      expect(sidebar).toContain(`href="/docs/${guideId}/"`);
+      expect(sidebar).toContain(`href="/docs/${guideId}"`);
     }
     expect(sidebar).toContain('aria-current="page"');
     if (index > 0) {
-      expect(navigation).toContain(`href="/docs/${ids[index - 1]}/"`);
+      expect(navigation).toContain(`href="/docs/${ids[index - 1]}"`);
       expect(navigation).toContain('rel="prev"');
     } else {
       expect(navigation).not.toContain('rel="prev"');
     }
-    expect(navigation).toContain(`href="/docs/${ids[index + 1]}/"`);
+    expect(navigation).toContain(`href="/docs/${ids[index + 1]}"`);
     expect(navigation).toContain('rel="next"');
     if (id === "getting-started") {
       expect(html).toContain("newNoteTemplate");
@@ -96,12 +97,12 @@ describe("Next.js example with inline page queries", () => {
   });
 
   test("generates nested catch-all routes and their page metadata", async () => {
-    const html = await readFile(path.join(root, "out/docs/reference/shortcuts/index.html"), "utf8");
+    const html = await readFile(path.join(root, "out/docs/reference/shortcuts.html"), "utf8");
     const navigation = html.match(/<nav class="page-navigation"[\s\S]*?<\/nav>/)?.[0];
     expect(html).toContain("<title>Shortcuts | ContentQuery x Next.js</title>");
     expect(html).toContain('id="moving-around"');
     expect(html).toContain('content="Keep your hands on the keyboard."');
-    expect(navigation).toContain('href="/docs/sharing-a-workspace/"');
+    expect(navigation).toContain('href="/docs/sharing-a-workspace"');
     expect(navigation).not.toContain('rel="next"');
   });
 

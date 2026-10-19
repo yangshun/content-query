@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { describe, expect, test } from "vite-plus/test";
 
 const styles = [
+  "../angular/src/styles.css",
   "../void/src/styles.css",
   "../next/app/styles.css",
   "../react-router/app/styles.css",
@@ -9,6 +10,7 @@ const styles = [
   "../sveltekit/src/app.css",
 ];
 const navigation = [
+  "../angular/src/navigation.ts",
   "../void/src/navigation.ts",
   "../next/app/navigation.ts",
   "../react-router/app/navigation.ts",

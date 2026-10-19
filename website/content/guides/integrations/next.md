@@ -31,13 +31,27 @@ The wrapper accepts a configuration object, promise, or [phase-aware configurati
 
 Run your usual `next dev` or `next build` command. The adapter handles the content build automatically. Add the generated `.content-query/` directory to `.gitignore`.
 
+## Add a runtime import alias
+
+Add this mapping to your application's `package.json`:
+
+```json
+{
+  "imports": {
+    "#content-query": "./.content-query/server.js"
+  }
+}
+```
+
+The application-local alias resolves to the generated runtime from any directory depth. Generated declarations beside `server.js` provide inferred collection types. If you customize `outDir`, update the mapping to point to that directory's `server.js`.
+
 ## Query in Server Components
 
-Import the generated runtime from server code. For example, `app/page.tsx` can list the posts from the quick start:
+Import `content` through the alias from server code. For example, `app/page.tsx` can list the posts from the quick start:
 
 ```tsx
 import "server-only";
-import { content } from "../.content-query/server.js";
+import { content } from "#content-query";
 
 export default async function PostsPage() {
   const posts = await content.query("posts").select("id", "title").all();
@@ -51,8 +65,6 @@ export default async function PostsPage() {
   );
 }
 ```
-
-The relative import depends on the consumer's location. If you change `outDir`, update that import too. Generated declarations provide the collection types.
 
 Use Next.js's [`server-only` marker](https://nextjs.org/docs/app/getting-started/server-and-client-components#preventing-environment-poisoning) in modules that consume content. Keep collection configuration and the generated runtime in server code, and pass selected data to Client Components when needed. The same query API works in `generateMetadata()` and other server functions; [querying content](/docs/querying-content) covers filtering, relationships, and pagination.
 

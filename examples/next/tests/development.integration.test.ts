@@ -83,7 +83,7 @@ describe("Next.js development content integration", () => {
         if (child.exitCode !== null) {
           throw new Error(output);
         }
-        const response = await fetch(`${origin}${route}`);
+        const response = await fetch(`${origin}${route}`, { redirect: "manual" });
         return { status: response.status, html: await response.text() };
       }
       const waits = { timeout: 15_000, interval: 200 };
@@ -97,8 +97,11 @@ describe("Next.js development content integration", () => {
           },
           { timeout: 30_000 },
         );
-        const route = "/docs/getting-started/";
+        const route = "/docs/getting-started";
         expect((await request(route)).status).toBe(200);
+        const redirect = await fetch(`${origin}${route}/`, { redirect: "manual" });
+        expect(redirect.status).toBe(308);
+        expect(redirect.headers.get("location")).toBe(route);
         await expect(readFile(stalePayload, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
         await expect(readFile(staleRuntime, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
         const initialRuntime = (await readdir(outDir)).find((filename) =>
@@ -129,20 +132,20 @@ describe("Next.js development content integration", () => {
           "---\ntitle: Added guide\ndescription: A new route.\norder: 4\n---\n## Added live\nA new guide.\n",
         );
         await vi.waitFor(async () => {
-          const response = await request("/docs/added-guide/");
+          const response = await request("/docs/added-guide");
           expect(response.status).toBe(200);
           expect(response.html).toContain("Added live");
         }, waits);
         const renamed = path.join(fixture.root, "content/guides/renamed-guide.md");
         await rename(added, renamed);
         await vi.waitFor(async () => {
-          expect((await request("/docs/renamed-guide/")).status).toBe(200);
-          expect((await request("/docs/added-guide/")).status).toBe(404);
+          expect((await request("/docs/renamed-guide")).status).toBe(200);
+          expect((await request("/docs/added-guide")).status).toBe(404);
         }, waits);
         await rm(renamed);
         await vi.waitFor(async () => {
-          expect((await request("/")).html).not.toContain('href="/docs/renamed-guide/"');
-          expect((await request("/docs/renamed-guide/")).status).toBe(404);
+          expect((await request("/")).html).not.toContain('href="/docs/renamed-guide"');
+          expect((await request("/docs/renamed-guide")).status).toBe(404);
         }, waits);
 
         await writeFile(post, "---\ntitle: false\n---\nInvalid metadata.\n");

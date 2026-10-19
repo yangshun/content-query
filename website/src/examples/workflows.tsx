@@ -8,6 +8,26 @@ const developmentSteps = [
   "Page data refreshed",
 ];
 
+export const nextWorkflowExample = {
+  config:
+    'import { withContentQuery } from "content-query/next";\n\nexport default withContentQuery({\n  trailingSlash: true,\n});',
+  packageJson: '{\n  "imports": {\n    "#content-query": "./.content-query/server.js"\n  }\n}',
+  query:
+    'import "server-only";\nimport { content } from "#content-query";\n\nconst posts = await content\n  .query("posts")\n  .select("id", "title")\n  .all();',
+};
+
+export function NextWorkflow() {
+  return (
+    <div className="standalone-workflow">
+      <div className="workflow-setup">
+        <CodeExample label="next.config.mjs" code={nextWorkflowExample.config} />
+        <CodeExample label="package.json" code={nextWorkflowExample.packageJson} language="json" />
+      </div>
+      <CodeExample label="Query from server code" code={nextWorkflowExample.query} />
+    </div>
+  );
+}
+
 function DevelopmentAnimation() {
   const [playback, setPlayback] = useState({ step: 0, playing: false });
   useEffect(() => {
@@ -102,20 +122,7 @@ export function WorkflowsExample() {
       {workflow === "vite" ? (
         <DevelopmentAnimation />
       ) : workflow === "next" ? (
-        <div className="standalone-workflow">
-          <CodeExample
-            label="next.config.mjs"
-            code={
-              'import { withContentQuery } from "content-query/next";\n\nexport default withContentQuery({\n  trailingSlash: true,\n});'
-            }
-          />
-          <CodeExample
-            label="Query from server code"
-            code={
-              'import "server-only";\nimport { content } from "../.content-query/server.js";\n\nconst posts = await content\n  .query("posts")\n  .select("id", "title")\n  .all();'
-            }
-          />
-        </div>
+        <NextWorkflow />
       ) : (
         <div className="standalone-workflow">
           <CodeExample
