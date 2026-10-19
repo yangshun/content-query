@@ -1,5 +1,7 @@
 # ContentQuery website
 
+Standalone examples and documentation use `content-query build` (or `content-query build --watch`) and `buildContent()` from `content-query/build`.
+
 A Void + React website based on [`../examples/void`](../examples/void), styled to match the [VoidPress docs app](../../apps/docs). A compact header leads to a dedicated homepage at `/` and sidebar documentation starting at `/docs/introduction`. The dark background, lime accents, article typography, and compact previous/next text links are shared across the site. On small screens, the docs sidebar becomes a collapsible menu. Styles are local so the website can move with ContentQuery.
 
 The header has no bottom divider and leaves 2.5rem before page content, reduced to 2rem on small screens. Hero action buttons use compact padding and text sizes.
@@ -55,7 +57,7 @@ vp check
 vp test run
 ```
 
-Static pages are emitted to `dist/client/`. The separate Cloudflare Worker name is `content-query-website`; this app is not wired into the existing deployment scripts.
+Static pages are emitted to `dist/client/`. The Cloudflare Worker name is `content-query`, which is also the site's `workers.dev` subdomain prefix; this app is not wired into the existing deployment scripts.
 
 ## Pages
 

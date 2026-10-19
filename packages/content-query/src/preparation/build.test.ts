@@ -4,9 +4,10 @@ import path from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { z } from "zod";
 import type { CollectionDefinition } from "../collection/types.ts";
-import { prepareContent, prepareAtRoot, type PrepareContentOptions } from "./build.ts";
+import { buildContent, type BuildContentOptions } from "../build.ts";
+import { buildAtRoot } from "./build.ts";
 
-describe("preparation entry points", () => {
+describe("content build entry points", () => {
   for (const options of [
     { backend: "sqlite" },
     { watch: "true" },
@@ -15,13 +16,13 @@ describe("preparation entry points", () => {
   ]) {
     test(`rejects malformed options before loading configuration: ${JSON.stringify(options)}`, async () => {
       await expect(
-        prepareAtRoot(".", options as unknown as PrepareContentOptions),
-      ).rejects.toMatchObject({ code: "source-error", message: "Invalid preparation options." });
+        buildAtRoot(".", options as unknown as BuildContentOptions),
+      ).rejects.toMatchObject({ code: "source-error", message: "Invalid build options." });
     });
   }
 
-  test("prepares typed in-memory content from an explicit custom configuration path", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "content-query-public-prepare-"));
+  test("builds typed in-memory content from an explicit custom configuration path", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "content-query-public-build-"));
     const filename = path.join(root, "collections.ts");
     const schema = z.object({ title: z.string() });
     type Registry = {
@@ -36,7 +37,7 @@ describe("preparation entry points", () => {
 import {z} from ${JSON.stringify(validator.href)};
 export const collections = {posts: defineCollection({loader: {name: "fixture", async load({store}) { store.set({id: "one", data: {title: "Standalone"}}); }}, schema: z.object({title: z.string()})})};`,
       );
-      const session = await prepareContent<Registry>({ config: filename, backend: "in-memory" });
+      const session = await buildContent<Registry>({ config: filename, backend: "in-memory" });
       try {
         const selected: { title: string } | undefined = await session.content
           .query("posts")
@@ -64,7 +65,7 @@ describe("configuration discovery", () => {
     ["mjs", "module"],
     ["cjs", "commonjs"],
   ] as const) {
-    test(`prepares content-query.config.${extension} with ${moduleType} exports`, async () => {
+    test(`builds content-query.config.${extension} with ${moduleType} exports`, async () => {
       const root = await mkdtemp(path.join(os.tmpdir(), "content-query-config-format-"));
       const filename = `content-query.config.${extension}`;
       const annotation = extension.endsWith("ts") ? ": string" : "";
@@ -78,7 +79,7 @@ describe("configuration discovery", () => {
 const collections = {posts: {loader: {name: "fixture", async load({store}) { store.set({id: "one", data: {title}}); }}}};
 ${declaration}`,
         );
-        const session = await prepareAtRoot<{
+        const session = await buildAtRoot<{
           posts: CollectionDefinition<undefined, {}, {}>;
         }>(root, {});
         try {
@@ -103,7 +104,7 @@ ${declaration}`,
       for (const filename of ["content-query.config.ts", "content-query.config.mjs"]) {
         await writeFile(path.join(root, filename), 'throw new Error("Must not execute");');
       }
-      await expect(prepareAtRoot(root, {})).rejects.toMatchObject({
+      await expect(buildAtRoot(root, {})).rejects.toMatchObject({
         code: "source-error",
         message: expect.stringMatching(
           /Multiple.*content-query\.config\.ts.*content-query\.config\.mjs/,
@@ -122,13 +123,13 @@ ${declaration}`,
         await writeFile(path.join(root, filename), 'throw new Error("Must not execute");');
       }
       await writeFile(path.join(root, "config/collections.mts"), "export const collections = {};");
-      const session = await prepareAtRoot(root, {
+      const session = await buildAtRoot(root, {
         config: "./config/collections.mts",
         backend: "in-memory",
       });
       await session.dispose();
       await expect(
-        prepareAtRoot(root, { config: "./config/missing.mts", backend: "in-memory" }),
+        buildAtRoot(root, { config: "./config/missing.mts", backend: "in-memory" }),
       ).rejects.toMatchObject({ code: "source-error" });
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -141,7 +142,7 @@ ${declaration}`,
       for (const extension of ["json", "yaml", "yml", "jsx", "tsx"]) {
         await writeFile(path.join(root, `content-query.config.${extension}`), "{}");
       }
-      await expect(prepareAtRoot(root, {})).rejects.toMatchObject({
+      await expect(buildAtRoot(root, {})).rejects.toMatchObject({
         code: "source-error",
         message: expect.stringMatching(/No ContentQuery configuration found.*config option/),
       });
@@ -161,7 +162,7 @@ ${declaration}`,
         'export { collections } from "./collections.mjs";',
       );
       await symlink("./config/index.mjs", path.join(root, "content-query.config.js"));
-      const session = await prepareAtRoot(root, { backend: "in-memory" });
+      const session = await buildAtRoot(root, { backend: "in-memory" });
       await session.dispose();
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -173,7 +174,7 @@ ${declaration}`,
     const filename = path.join(root, "content-query.config.ts");
     try {
       await symlink("./content-query.config.ts", filename);
-      await expect(prepareAtRoot(root, {})).rejects.toMatchObject({
+      await expect(buildAtRoot(root, {})).rejects.toMatchObject({
         code: "source-error",
         source: filename,
         cause: expect.objectContaining({ code: "ELOOP" }),

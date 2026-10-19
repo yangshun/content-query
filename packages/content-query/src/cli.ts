@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-import { prepareAtRoot } from "./preparation/build.ts";
+import { buildAtRoot } from "./preparation/build.ts";
 import { parseArguments } from "./integrations/cli/arguments.ts";
 import { report } from "./integrations/cli/report.ts";
 
 try {
   const options = parseArguments(process.argv.slice(2));
-  const session = await prepareAtRoot(
+  const session = await buildAtRoot(
     process.cwd(),
     options,
     options.watch

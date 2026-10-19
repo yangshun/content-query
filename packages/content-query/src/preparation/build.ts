@@ -10,7 +10,8 @@ import { resolveConfigPath } from "./config-path.ts";
 
 assertServerOnly();
 export type { ContentSession } from "./session.ts";
-export type PrepareContentOptions = {
+/** Options shared by standalone content builds and host integrations. */
+export type BuildContentOptions = {
   /** Exact config path; omission discovers one content-query.config.{ts,mts,cts,js,mjs,cjs} file. */
   config?: string;
   backend?: "in-memory" | "generated";
@@ -19,19 +20,19 @@ export type PrepareContentOptions = {
   watch?: boolean;
 };
 
-/** Prepares content independently of a bundler; bind the registry through an erased type import. */
-export async function prepareContent<Registry extends CollectionRegistry = {}>(
+/** Builds content independently of a bundler; bind the registry through an erased type import. */
+export async function buildContent<Registry extends CollectionRegistry = {}>(
   ...arguments_: InvalidRelationships<Registry> extends never
-    ? [options?: PrepareContentOptions]
+    ? [options?: BuildContentOptions]
     : [invalidRegistry: never]
 ): Promise<ContentSession<Registry>> {
-  return prepareAtRoot<Registry>(process.cwd(), arguments_[0] ?? {});
+  return buildAtRoot<Registry>(process.cwd(), arguments_[0] ?? {});
 }
 
 /** Private host entrypoint resolving all configured paths from one application root. */
-export async function prepareAtRoot<Registry extends CollectionRegistry = {}>(
+export async function buildAtRoot<Registry extends CollectionRegistry = {}>(
   root: string,
-  options: PrepareContentOptions,
+  options: BuildContentOptions,
   change?: Parameters<typeof createSession>[0]["change"],
 ): Promise<ContentSession<Registry>> {
   const { backend = "generated", watch = false } = options;
@@ -41,7 +42,7 @@ export async function prepareAtRoot<Registry extends CollectionRegistry = {}>(
     (options.config !== undefined && typeof options.config !== "string") ||
     (options.outDir !== undefined && typeof options.outDir !== "string")
   ) {
-    throw new ContentError({ code: "source-error", message: "Invalid preparation options." });
+    throw new ContentError({ code: "source-error", message: "Invalid build options." });
   }
   const config = await resolveConfigPath(root, options.config);
   const outDir = path.resolve(root, options.outDir ?? "./.content-query");
@@ -57,7 +58,7 @@ export async function prepareAtRoot<Registry extends CollectionRegistry = {}>(
     ) {
       throw new ContentError({
         code: "source-error",
-        operation: "prepare",
+        operation: "build",
         message:
           "Generated output must be a dedicated directory outside collection configuration and cannot contain the application root.",
       });

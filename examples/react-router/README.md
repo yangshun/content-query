@@ -18,7 +18,7 @@ vp run --filter @voidpress/content-query-react-router dev
 vp run --filter @voidpress/content-query-react-router build
 ```
 
-The example prerenders the homepage and guide pages. ContentQuery's Vite integration prepares content before compilation, generates `.content-query/types.d.ts`, and keeps its server runtime out of client modules. Content files live under `content/guides`; the application owns URLs, metadata, and HTML presentation. Nested guide IDs map to catch-all routes. Missing guides return a 404.
+The example prerenders the homepage and guide pages. ContentQuery's Vite integration builds content before compilation, generates `.content-query/types.d.ts`, and keeps its server runtime out of client modules. `react-router.config.ts` calls `buildContent()` from `content-query/build` with the in-memory backend to enumerate prerender paths. Content files live under `content/guides`; the application owns URLs, metadata, and HTML presentation. Nested guide IDs map to catch-all routes. Missing guides return a 404.
 
 Queries are inline in native route loaders. `app/routes/docs.tsx` fetches IDs/titles for a persistent docs layout with an `Outlet`; `app/routes/guide.tsx` loads only the current article and its neighbors. `NavLink` keeps the active sidebar item in sync. There is no separate content-loading helper. Generated data and declarations are ignored by Git.
 

@@ -2,7 +2,7 @@ import path from "node:path";
 import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import type { ResolvedConfig } from "vite-plus";
-import type { PrepareContentOptions } from "../../preparation/build.ts";
+import type { BuildContentOptions } from "../../preparation/build.ts";
 import { configCandidates } from "../../preparation/config-path.ts";
 import { virtualPrefix, clientFacade, clientModule } from "./modules.ts";
 import { withinDirectory } from "../../shared/paths.ts";
@@ -47,7 +47,7 @@ export function physicalPath(source: string, config: ResolvedConfig, importer?: 
 export function forbidden(
   source: string,
   config: ResolvedConfig,
-  options: Pick<PrepareContentOptions, "config" | "outDir">,
+  options: Pick<BuildContentOptions, "config" | "outDir">,
   importer?: string,
 ): boolean {
   if (source === clientFacade || source === clientModule) {

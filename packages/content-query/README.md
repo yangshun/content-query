@@ -1,6 +1,6 @@
 # ContentQuery
 
-A framework-independent content collection library with typed queries, explicit field selection, relationships, captured bodies, and Markdown rendering. Preparation runs during development or the build. Production consumes prepared content without loading source files or importing collection configuration.
+A framework-independent content collection library with typed queries, explicit field selection, relationships, captured bodies, and Markdown rendering. Content builds run during development or your application's build. Production consumes prepared content without loading source files or importing collection configuration.
 
 ## Source layout
 
@@ -116,16 +116,16 @@ In development, register callbacks on `context.watcher` and call `watcher.add()`
 
 Compatibility covers build-time content loaders. The built-in `glob()` and `file()` loaders use the same context. Astro integration hooks, live loaders, component modules, optimized image imports, and Astro-specific deferred rendering require additional host functionality and are not supported. Unsupported module/image entries fail explicitly. `context.renderMarkdown()` uses ContentQuery’s portable renderer and returns HTML/headings. Third-party packages may require Astro as their own dependency or peer; ContentQuery itself does not import Astro at runtime. The published `@ascorbic/csv-loader` is covered by watch-mode, generated-consumer, and type-checking tests.
 
-## Prepare and query
+## Build and query
 
 ```sh
-vp exec content-query prepare
-vp exec content-query prepare --watch
+vp exec content-query build
+vp exec content-query build --watch
 ```
 
-Defaults are automatic config discovery, `--backend generated`, and `--out-dir ./.content-query`. Unknown flags fail. Git-ignore `.content-query/`; generated runtime artifacts and Vite declarations share this directory directly, without a nested `generated/` directory.
+Defaults are automatic config discovery, `--backend generated`, and `--out-dir ./.content-query`. Unknown flags fail. The command is `build`; the former `prepare` command is no longer accepted. Git-ignore `.content-query/`; generated runtime artifacts and Vite declarations share this directory directly, without a nested `generated/` directory.
 
-The CLI, standalone API, and Vite integration discover exactly one `content-query.config.{ts,mts,cts,js,mjs,cjs}` file at the application root. Examples use `.ts`; both ES module and CommonJS configurations are supported. Missing or multiple matching files produce a configuration error. Use `--config` on the CLI or the `config` option in preparation/Vite to select an exact filename or location, bypassing discovery. An explicit path never falls back to another config. Configurations export the named `collections` registry; JSON, YAML, and JSX/TSX are not discovered.
+The CLI, standalone API, and Vite integration discover exactly one `content-query.config.{ts,mts,cts,js,mjs,cjs}` file at the application root. Examples use `.ts`; both ES module and CommonJS configurations are supported. Missing or multiple matching files produce a configuration error. Use `--config` on the CLI or the `config` option in `buildContent()`/Vite to select an exact filename or location, bypassing discovery. An explicit path never falls back to another config. Configurations export the named `collections` registry; JSON, YAML, and JSX/TSX are not discovered.
 
 ```ts
 import { content } from "./.content-query/server.js";
@@ -209,15 +209,15 @@ Both return `_adjacent: { previous, next }`, with `null` at boundaries or when t
 
 ## Backends and Vite
 
-The generated backend writes collection indexes and separate lazy item payloads, with versioned devalue encoding. Immutable content-addressed modules keep old operations consistent; stable entry/index aliases expose the latest complete publication. Watch sessions keep superseded modules for operations pinned to earlier revisions. One-shot preparation (the CLI without `--watch`, `prepareContent`, and Vite builds) then removes generated collection modules its revision no longer references, leaving other files in place; avoid running it against an output directory a live server is still loading. Only `server.js` and its declarations are application imports.
+The generated backend writes collection indexes and separate lazy item payloads, with versioned devalue encoding. Immutable content-addressed modules keep old operations consistent; stable entry/index aliases expose the latest complete publication. Watch sessions keep superseded modules for operations pinned to earlier revisions. One-shot builds (the CLI without `--watch`, `buildContent`, and Vite builds) then remove generated collection modules their revision no longer references, leaving other files in place; avoid running them against an output directory a live server is still loading. Only `server.js` and its declarations are application imports.
 
-The in-memory backend writes no backend content artifacts. Direct use binds the registry through an erased type import:
+The in-memory backend writes no backend content artifacts. `buildContent()` accepts `BuildContentOptions` (`config`, `backend`, `outDir`, and `watch`) from `content-query/build` and returns a `ContentSession` with `content` and asynchronous `dispose()`. Build diagnostics report `operation: "build"`. Direct use binds the registry through an erased type import:
 
 ```ts
-import { prepareContent } from "content-query/build";
+import { buildContent } from "content-query/build";
 import type { collections } from "./content-query.config";
 
-const session = await prepareContent<typeof collections>({ backend: "in-memory" });
+const session = await buildContent<typeof collections>({ backend: "in-memory" });
 try {
   const titles = await session.content.query("posts").select("title").all();
 } finally {
@@ -225,7 +225,7 @@ try {
 }
 ```
 
-Omitting the generic is valid for preparation-only calls and exposes no registered query keys. `watch` defaults to `false`. Watch sessions subscribe before loading, return after the first content attempt even if it fails, reject reads while content is invalid, and recover automatically. Configuration/import or subscription-setup failures reject initialization and clean up. Newer preparations supersede obsolete work without requiring user code to honor its signal. Already-started operations finish on their pinned revision.
+Omitting the generic is valid for build-only calls and exposes no registered query keys. `watch` defaults to `false`. Watch sessions subscribe before loading, return after the first content attempt even if it fails, reject reads while content is invalid, and recover automatically. Configuration/import or subscription-setup failures reject initialization and clean up. Newer builds supersede obsolete work without requiring user code to honor its signal. Already-started operations finish on their pinned revision.
 
 A failed configuration reload keeps new operations in the error state until configuration loading, subscription setup, and content validation succeed. Content edits cannot clear that failure using an older registry. Replacement subscriptions are staged before taking over, and failed setup releases its partial subscriptions while keeping the previous configuration's subscriptions available for recovery.
 
@@ -237,7 +237,7 @@ import { contentQuery } from "content-query/vite";
 export default defineConfig({ plugins: [contentQuery()] });
 ```
 
-Server modules import `content` from `content-query:server` with either backend. Vite owns watching, preparation, invalidation, error display, and cleanup. Its `.content-query/types.d.ts` binds the facade to the configured registry; include that file in the application's TypeScript project. Remove handwritten ambient bindings when using the generated declarations. Both `content-query:server` and the physical server entry export the type-only aliases `CollectionKey`, `CollectionData<"posts">` (metadata plus computed fields and ID), and `Collections` (a map from collection keys to queryable data types). Include `.content-query/**/*.d.ts` in `tsconfig.json`; run `vp exec content-query prepare` before an initial type check without starting Vite. With generated storage, the default directory also contains `server.js`, `server.d.ts`, `manifest.js`, `package.json`, and `collections/`. A fresh in-memory Vite setup emits only `types.d.ts`; standalone in-memory preparation writes no files. Standalone generated preparation also writes `types.d.ts` beside the server entry. Custom `outDir` values relocate backend artifacts while the Vite declaration stays in `.content-query/`. `content-query:server` is a virtual module supplied by Vite; other bundlers import the physical generated entry.
+Server modules import `content` from `content-query:server` with either backend. Vite owns watching, preparation, invalidation, error display, and cleanup. Its `.content-query/types.d.ts` binds the facade to the configured registry; include that file in the application's TypeScript project. Remove handwritten ambient bindings when using the generated declarations. Both `content-query:server` and the physical server entry export the type-only aliases `CollectionKey`, `CollectionData<"posts">` (metadata plus computed fields and ID), and `Collections` (a map from collection keys to queryable data types). Include `.content-query/**/*.d.ts` in `tsconfig.json`; run `vp exec content-query build` before an initial type check without starting Vite. With generated storage, the default directory also contains `server.js`, `server.d.ts`, `manifest.js`, `package.json`, and `collections/`. A fresh in-memory Vite setup emits only `types.d.ts`; standalone in-memory preparation writes no files. Standalone generated preparation also writes `types.d.ts` beside the server entry. Custom `outDir` values relocate backend artifacts while the Vite declaration stays in `.content-query/`. `content-query:server` is a virtual module supplied by Vite; other bundlers import the physical generated entry.
 
 Generated output is ordinary ESM for Node or another bundler; it does not require Vite. The Vite integration rejects direct/transitive client imports, including the physical generated server entry. It recognizes package files by the installed package's location and `node_modules/content-query` paths, so an application directory named `content-query` is unaffected. Other hosts must enforce equivalent server-only boundaries. Runtime guards provide a fallback. The [Next.js example](../../examples/next/README.md) uses standalone preparation, server-only queries, and App Router static generation. A dedicated Next.js integration remains outside v1.
 

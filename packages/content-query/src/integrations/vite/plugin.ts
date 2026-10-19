@@ -1,7 +1,7 @@
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { Plugin, ResolvedConfig, ViteDevServer } from "vite-plus";
-import { prepareAtRoot, type PrepareContentOptions } from "../../preparation/build.ts";
+import { buildAtRoot, type BuildContentOptions } from "../../preparation/build.ts";
 import { resolveConfigPath } from "../../preparation/config-path.ts";
 import { revisionModules } from "../../artifacts/modules.ts";
 import { writeChanged } from "../../artifacts/write.ts";
@@ -26,7 +26,7 @@ const bridgeSymbol = Symbol.for("content-query.dev-sessions");
 type BridgeGlobal = typeof globalThis & { [bridgeSymbol]?: Map<string, ContentSession> };
 
 /** Adapts preparation to Vite without making Vite part of collection or runtime contracts. */
-export function contentQuery(options: Omit<PrepareContentOptions, "watch"> = {}): Plugin {
+export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): Plugin {
   let config: ResolvedConfig;
   let building = false;
   let server: ViteDevServer | undefined;
@@ -130,7 +130,7 @@ export function contentQuery(options: Omit<PrepareContentOptions, "watch"> = {})
   /** Starts exactly one host-owned preparation/watch session. */
   async function ensureSession(): Promise<ContentSession> {
     starting ??= resolveConfigPath(config.root, options.config).then(async (configPath) => {
-      const prepared = await prepareAtRoot(
+      const prepared = await buildAtRoot(
         config.root,
         {
           ...options,

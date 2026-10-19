@@ -3,7 +3,7 @@ import { defineConfig } from "void/config";
 export default defineConfig({
   output: "static",
   cloudflare: {
-    name: "content-query-website",
+    name: "content-query",
   },
   head: {
     titleTemplate: "%s | ContentQuery",

@@ -46,10 +46,10 @@ title: Hello ContentQuery
 Content starts here.
 ```
 
-## Prepare the content
+## Build the content
 
 ```sh
-npx content-query prepare
+npx content-query build
 ```
 
 This writes the runtime and inferred types to `.content-query/`. Add that directory to `.gitignore`.

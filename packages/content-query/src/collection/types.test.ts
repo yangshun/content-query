@@ -1,7 +1,7 @@
 import { describe, expectTypeOf, test } from "vite-plus/test";
 import { z } from "zod";
 import { defineCollection } from "./define.ts";
-import { prepareContent } from "../build.ts";
+import { buildContent } from "../build.ts";
 import type { Content } from "../runtime.ts";
 import { eq } from "../query.ts";
 
@@ -98,7 +98,7 @@ function check(content: Content<typeof registry>, invalid: Content<typeof invali
     name: string;
   } | null>();
   // @ts-expect-error Complete-registry preparation checks target fields.
-  void prepareContent<typeof invalidRegistry>();
+  void buildContent<typeof invalidRegistry>();
   // @ts-expect-error Generated/facade content cannot query an invalid registry.
   invalid.query("posts");
   const base = { loader, schema: z.object({ authorId: z.string() }) };

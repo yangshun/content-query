@@ -130,7 +130,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
   function fail(cause: unknown): void {
     state.error = contentError(cause, {
       code: "source-error",
-      operation: "prepare",
+      operation: "build",
       message: cause instanceof Error ? cause.message : "Content preparation failed.",
     });
     options.change?.(state);
@@ -224,7 +224,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
     } catch (cause) {
       const failure = contentError(cause, {
         code: "source-error",
-        operation: "prepare",
+        operation: "build",
         source: options.config,
         message: cause instanceof Error ? cause.message : "Configuration setup failed.",
       });
@@ -288,7 +288,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
           name,
           withContext(result.reason, {
             code: "source-error",
-            operation: "prepare",
+            operation: "build",
             collection: name,
             message: `Could not load collection "${name}"`,
           }),
@@ -365,7 +365,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
           if (command.kind === "config") {
             configurationError = contentError(cause, {
               code: "source-error",
-              operation: "prepare",
+              operation: "build",
               source: options.config,
               message: cause instanceof Error ? cause.message : "Configuration reload failed.",
             });
@@ -438,7 +438,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
   } catch (cause) {
     const failure = contentError(cause, {
       code: "source-error",
-      operation: "prepare",
+      operation: "build",
       message: "Content configuration or subscription initialization failed.",
     });
     try {

@@ -1,6 +1,6 @@
 # ContentQuery
 
-Typed, framework-independent content collections, queries, and rendering. ContentQuery prepares validated content into portable runtime artifacts, with optional CLI and Vite integrations.
+Typed, framework-independent content collections, queries, and rendering. ContentQuery builds validated content into portable runtime artifacts, with optional CLI and Vite integrations. Standalone hosts use `content-query build` or `buildContent()` from `content-query/build`; add `--watch` or `watch: true` for ongoing updates.
 
 This directory groups the project for a future standalone repository:
 
