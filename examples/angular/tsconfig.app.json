@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "outDir": "./out-tsc/app", "noEmit": false },
+  "files": ["src/main.ts", "src/main.server.ts", "src/server.ts"],
+  "include": ["src/**/*.d.ts", ".content-query/**/*.d.ts"]
+}

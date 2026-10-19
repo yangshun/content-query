@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GuideContent } from "../content";
-import { content } from "../../../.content-query/server.js";
+import { content } from "#content-query";
 
 type GuideProps = { params: Promise<{ slug: string[] }> };
 
@@ -14,6 +14,7 @@ export async function generateStaticParams() {
     select: { id: true },
     orderBy: [{ order: "asc" }],
   });
+
   return guides.map((guide) => ({ slug: guide.id.split("/") }));
 }
 
@@ -23,9 +24,11 @@ export async function generateMetadata({ params }: GuideProps): Promise<Metadata
     where: { id: slug.join("/") },
     select: { title: true, description: true },
   });
+
   if (!guide) {
     notFound();
   }
+
   return { title: guide.title, description: guide.description };
 }
 
@@ -41,6 +44,7 @@ export default async function GuidePage({ params }: GuideProps) {
       _adjacent: { orderBy: { order: "asc" }, select: { id: true, title: true } },
     },
   });
+
   if (!guide) {
     notFound();
   }
@@ -60,7 +64,7 @@ export default async function GuidePage({ params }: GuideProps) {
       <nav className="page-navigation" aria-label="Previous and next guides">
         <div>
           {previous && (
-            <Link href={`/docs/${previous.id}/`} rel="prev">
+            <Link href={`/docs/${previous.id}`} rel="prev">
               <span>← Previous</span>
               {previous.title}
             </Link>
@@ -68,7 +72,7 @@ export default async function GuidePage({ params }: GuideProps) {
         </div>
         <div className="next-page">
           {next && (
-            <Link href={`/docs/${next.id}/`} rel="next">
+            <Link href={`/docs/${next.id}`} rel="next">
               <span>Next →</span>
               {next.title}
             </Link>

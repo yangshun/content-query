@@ -259,15 +259,34 @@ export default withContentQuery({ trailingSlash: true });
 
 The wrapper preserves the application's Next.js settings. For static exports, the example selects `output: "export"` outside development so Next's static-parameter checks do not interfere with added or removed development routes.
 
-Server Components import `content` from the generated `./.content-query/server.js` entry. Next's module graph observes published changes, including body-only edits, and refreshes route data through its normal HMR behavior. Validation and configuration failures publish a contextual error entry so server consumers fail visibly; correcting the input republishes the runtime. The application owns routing and should use Next's `server-only` marker around content consumers. Next.js is an optional peer dependency used only by this adapter. Each development publication uses a fresh immutable `next-dev-*.js` runtime entry, including when content returns to an earlier revision, so Next invalidates cached modules reliably. The first successful publication removes entries from previous runs while preserving the new runtime. Later publications retain entries for the rest of the session; repeated configuration evaluation reuses that session without cleaning again. A successful one-shot Next.js build removes all development entries after publishing the ordinary server entry.
+Add an application-local alias in `package.json`:
+
+```json
+{
+  "imports": {
+    "#content-query": "./.content-query/server.js"
+  }
+}
+```
+
+Server Components use the same import at every directory depth:
+
+```ts
+import "server-only";
+import { content } from "#content-query";
+```
+
+The alias resolves to the generated server entry and its inferred declarations. If you customize `outDir`, update the alias target to match.
+
+Next's module graph observes published changes, including body-only edits, and refreshes route data through its normal HMR behavior. Validation and configuration failures publish a contextual error entry so server consumers fail visibly; correcting the input republishes the runtime. The application owns routing and should use Next's `server-only` marker around content consumers. Next.js is an optional peer dependency used only by this adapter. Each development publication uses a fresh immutable `next-dev-*.js` runtime entry, including when content returns to an earlier revision, so Next invalidates cached modules reliably. The first successful publication removes entries from previous runs while preserving the new runtime. Later publications retain entries for the rest of the session; repeated configuration evaluation reuses that session without cleaning again. A successful one-shot Next.js build removes all development entries after publishing the ordinary server entry.
 
 ## Development updates
 
 `content-query:client` exports `onContentUpdate(callback)`, a browser-safe Vite subscription. Register the host router's asynchronous data revalidation and return the unsubscribe function from the framework's lifecycle hook. Revalidation is serialized and rapid edits are coalesced. The production module is a no-op and includes no content runtime.
 
-The Void example and docs app clear the router cache and call `router.refresh({ replace: true, preserveState: true, preserveScroll: true })` from a root component effect. React Router calls `revalidator.revalidate()`, TanStack Start calls `router.invalidate()`, and SvelteKit calls `refreshAll()`. Successful edits update prepared server modules before notifying browsers. Clients without a subscription retain full-document reload as a fallback. Preparation errors still reach Vite's error overlay. Server startup and dependency optimization can still cause framework-owned reloads. Next.js uses `withContentQuery()` and generated-module HMR.
+The Void example and docs app clear the router cache and call `router.refresh({ replace: true, preserveState: true, preserveScroll: true })` from a root component effect. React Router calls `revalidator.revalidate()`, TanStack Start calls `router.invalidate()`, and SvelteKit calls `refreshAll()`. Successful edits update prepared server modules before notifying browsers. Clients without a subscription retain full-document reload as a fallback. Preparation errors still reach Vite's error overlay. Server startup and dependency optimization can still cause framework-owned reloads. Next.js uses `withContentQuery()` and generated-module HMR. The native Angular example runs `content-query build --watch` alongside Angular CLI; generated server imports trigger Angular rebuilds and page reloads.
 
-The examples use native framework loaders/server functions and keep routing and HTML presentation in the application: [Void](../../examples/void/README.md), [React Router](../../examples/react-router/README.md), [TanStack Start](../../examples/tanstack-start/README.md), [Next.js](../../examples/next/README.md), and [SvelteKit](../../examples/sveltekit/README.md).
+The examples use native framework loaders/server functions and keep routing and HTML presentation in the application: [Void](../../examples/void/README.md), [React Router](../../examples/react-router/README.md), [TanStack Start](../../examples/tanstack-start/README.md), [Next.js](../../examples/next/README.md), [SvelteKit](../../examples/sveltekit/README.md), and [Angular](../../examples/angular/README.md).
 
 ## Body and rendering policy
 

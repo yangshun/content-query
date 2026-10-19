@@ -992,6 +992,9 @@
 .standalone-workflow > :last-child {
   border-left: 1px solid var(--line);
 }
+.workflow-setup > * + * {
+  border-top: 1px solid var(--line);
+}
 
 @container (max-width: 66rem) {
   .relationship-columns {

@@ -1,8 +1,8 @@
 # ContentQuery website
 
-Standalone examples and documentation use `content-query build` (or `content-query build --watch`) and `buildContent()` from `content-query/build`. The CLI reference documents CAC's help/version output, short option aliases, and equals-form values.
+Standalone examples and documentation use `content-query build` (or `content-query build --watch`) and `buildContent()` from `content-query/build`. The CLI reference documents CAC's help/version output, short option aliases, and equals-form values. Framework guides also cover the native Angular SSR example, its server API boundaries, and CLI development watching.
 
-The [Next.js guide](./content/guides/integrations/next.md) documents `withContentQuery()` from `content-query/next`, including configuration, Server Component imports, content options, development updates and error recovery with Turbopack or Webpack, and production/static exports. The introduction, quick start, framework guide, and configuration reference link to that setup.
+The [Next.js guide](./content/guides/integrations/next.md) documents `withContentQuery()` from `content-query/next`, including configuration, the application-local `#content-query` import alias in `package.json`, inferred Server Component types, content options, development updates and error recovery with Turbopack or Webpack, and production/static exports. The introduction, quick start, framework guide, and configuration reference link to that setup. The homepage's Next.js workflow shows the configuration and alias mapping beside its server query.
 
 The Next.js and standalone guides describe cleanup of previous-run generated artifacts after the first successful startup publication and retention of revisions for the rest of a watch session.
 
@@ -78,4 +78,4 @@ order: 14
 
 Introduction renders at `/docs/introduction`. Nested files work too: `reference/cli.md` becomes `/docs/reference/cli`. Rebuild to include new static routes.
 
-`tests/guides.integration.test.ts` exercises the real ContentQuery integration, homepage examples and SSR output, section metadata, guide loaders, internal links, executable snippets, and prerender paths. It runs every published Next.js configuration against the quick-start collection and type-checks the guide's Server Component against the generated declarations.
+`tests/guides.integration.test.ts` exercises the real ContentQuery integration, homepage examples and SSR output, section metadata, guide loaders, internal links, executable snippets, and prerender paths. It runs every published Next.js configuration against the quick-start collection, executes the homepage's aliased server query, and type-checks the guide's Server Component against the generated declarations.

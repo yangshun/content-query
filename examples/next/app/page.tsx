@@ -1,6 +1,6 @@
 import "server-only";
 import Link from "next/link";
-import { content } from "../.content-query/server.js";
+import { content } from "#content-query";
 
 export default async function HomePage() {
   const guides = await content
@@ -20,7 +20,7 @@ export default async function HomePage() {
         <ol className="guide-list">
           {guides.map((guide, index) => (
             <li key={guide.id}>
-              <Link className="guide-row" href={`/docs/${guide.id}/`}>
+              <Link className="guide-row" href={`/docs/${guide.id}`}>
                 <span className="guide-number" aria-hidden="true">
                   {String(index + 1).padStart(2, "0")}
                 </span>

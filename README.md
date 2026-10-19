@@ -11,6 +11,7 @@ content-query/
   packages/
     content-query/  Published package, source, tests, and API guide
   examples/
+    angular/
     void/
     next/
     react-router/

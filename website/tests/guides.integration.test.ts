@@ -14,6 +14,7 @@ import type { NavigationShared } from "../middleware/01.docs";
 import type { Props as HomeProps } from "../pages/index.server";
 import type { Props as GuideProps } from "../pages/docs/[...slug].server";
 import Homepage from "../pages/index";
+import { NextWorkflow, nextWorkflowExample } from "../src/examples/workflows";
 import {
   collectionExampleCode,
   computedExampleCode,
@@ -277,7 +278,7 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     expect(html).toContain("Content starts here.");
   });
 
-  test("runs the Next.js guide configurations and type-checks its Server Component", async () => {
+  test("executes the Next.js guide and homepage snippets with inferred collection types", async () => {
     const quickStart = (await content.readBody("guides", "quick-start"))!;
     const guide = (await content.readBody("guides", "integrations/next"))!;
     const exampleRoot = path.join(workspace, "next-guide");
@@ -288,7 +289,12 @@ describe("ContentQuery website guide routes with the generated backend", () => {
       path.join(exampleRoot, "node_modules"),
       "dir",
     );
-    await writeFile(path.join(exampleRoot, "package.json"), '{"type":"module"}\n');
+    const packageJson = JSON.parse(guide.match(/^```json\n([\s\S]*?)^```/m)![1]!);
+    expect(JSON.parse(nextWorkflowExample.packageJson).imports).toEqual(packageJson.imports);
+    await writeFile(
+      path.join(exampleRoot, "package.json"),
+      JSON.stringify({ type: "module", ...packageJson }),
+    );
     await writeFile(
       path.join(exampleRoot, "content-query.config.ts"),
       quickStart.match(/^```ts\n([\s\S]*?)^```/m)![1]!,
@@ -304,16 +310,31 @@ import { PHASE_PRODUCTION_BUILD } from "next/constants.js";
 import configure from "./next.config.mjs";
 const config = await configure(PHASE_PRODUCTION_BUILD, { defaultConfig: {} });
 assert.equal(config.trailingSlash, true);
-const { content } = await import("./.content-query/server.js");
+const { content } = await import("#content-query");
 assert.deepEqual(await content.query("posts").select("id", "title").all(), [
   { id: "hello", title: "Hello ContentQuery" },
 ]);
 `,
     );
-    for (const match of guide.matchAll(/^```js\n([\s\S]*?)^```/gm)) {
-      await writeFile(path.join(exampleRoot, "next.config.mjs"), match[1]!);
+    const configurations = [
+      ...[...guide.matchAll(/^```js\n([\s\S]*?)^```/gm)].map((match) => match[1]!),
+      nextWorkflowExample.config,
+    ];
+    for (const configuration of configurations) {
+      await writeFile(path.join(exampleRoot, "next.config.mjs"), configuration);
       await execFileAsync(process.execPath, ["verify.mjs"], { cwd: exampleRoot });
     }
+    await writeFile(
+      path.join(exampleRoot, "homepage.mjs"),
+      `import assert from "node:assert/strict";\n${nextWorkflowExample.query}\nassert.deepEqual(posts, [{ id: "hello", title: "Hello ContentQuery" }]);\n`,
+    );
+    await execFileAsync(process.execPath, ["--conditions=react-server", "homepage.mjs"], {
+      cwd: exampleRoot,
+    });
+    const workflow = renderToStaticMarkup(createElement(NextWorkflow));
+    expect(workflow).toContain("package.json");
+    expect(workflow).toContain("#content-query");
+    expect(workflow).not.toContain("../.content-query/server.js");
     await writeFile(
       path.join(exampleRoot, "app/page.tsx"),
       guide.match(/^```tsx\n([\s\S]*?)^```/m)![1]!,
