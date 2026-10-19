@@ -1,0 +1,69 @@
+{
+  "name": "content-query",
+  "version": "0.0.0",
+  "description": "Typed, framework-independent content collections, queries, and rendering.",
+  "license": "MIT",
+  "author": "Yangshun Tay",
+  "bin": {
+    "content-query": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./build": "./dist/build.mjs",
+    "./cli": "./dist/cli.mjs",
+    "./internal": "./dist/internal.mjs",
+    "./internal/markdown": "./dist/internal/markdown.mjs",
+    "./loaders": "./dist/loaders.mjs",
+    "./query": "./dist/query.mjs",
+    "./runtime": "./dist/runtime.mjs",
+    "./vite": "./dist/vite.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch --no-clean",
+    "check": "vp check",
+    "test": "vp test",
+    "prepublishOnly": "vp run build"
+  },
+  "dependencies": {
+    "@shikijs/engine-javascript": "^4.5.0",
+    "@standard-schema/spec": "^1.1.0",
+    "chokidar": "^5.0.0",
+    "devalue": "6.0.2",
+    "github-slugger": "^2.0.0",
+    "gray-matter": "^4.0.3",
+    "jiti": "^2.7.0",
+    "markdown-exit": "^1.3.0",
+    "picomatch": "^4.0.4",
+    "shiki": "^4.5.0",
+    "smol-toml": "^1.4.2",
+    "tinyglobby": "^0.2.17",
+    "yaml": "^2.9.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@ascorbic/csv-loader": "^2.0.3",
+    "@types/node": "^25.5.0",
+    "@types/picomatch": "^4.0.3",
+    "astro": "7.4.0",
+    "typescript": "^6.0.2",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "vite-plus": "*"
+  },
+  "peerDependenciesMeta": {
+    "vite-plus": {
+      "optional": true
+    }
+  }
+}

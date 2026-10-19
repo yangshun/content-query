@@ -1,0 +1,43 @@
+import { eq } from "content-query/query";
+import { defineHandler, defineHead, type InferProps } from "void";
+import { content } from "content-query:server";
+
+export const prerender = true;
+
+export const loader = defineHandler(async (context) => {
+  const id = context.req.param("slug");
+  if (!id) {
+    return context.notFound();
+  }
+
+  const guide = await content
+    .query("guides")
+    .where((fields) => eq(fields.id, id))
+    .select("id", "title", "description")
+    .selectAdjacent((siblings) => siblings.orderBy("order").select("id", "title"))
+    .first();
+
+  if (!guide) {
+    return context.notFound();
+  }
+
+  const { html } = await content.render("guides", guide.id);
+  return {
+    guide: { ...guide, html },
+    previous: guide._adjacent.previous,
+    next: guide._adjacent.next,
+  };
+});
+
+export type Props = InferProps<typeof loader>;
+
+export const head = defineHead((_context, props: Props) => ({
+  title: props.guide.title,
+  meta: [{ name: "description", content: props.guide.description }],
+}));
+
+/** Queries the current collection instead of capturing entries during module initialization. */
+export async function getPrerenderPaths() {
+  const guides = await content.query("guides").select("id").orderBy("order").all();
+  return guides.map((guide) => ({ slug: guide.id }));
+}

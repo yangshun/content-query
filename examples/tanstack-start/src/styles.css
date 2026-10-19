@@ -1,0 +1,399 @@
+:root {
+  color-scheme: light;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #202329;
+  background: #fff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --muted: #656b73;
+  --line: #e6e8eb;
+  --link: #365f8b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: var(--link);
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 5px;
+}
+
+.site-shell {
+  max-width: 1008px;
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 16px;
+  z-index: 10;
+  transform: translateY(-200%);
+  background: #fff;
+  padding: 10px 16px;
+  border: 1px solid var(--link);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.site-header {
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.wordmark {
+  color: #202329;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.8px;
+  text-decoration: none;
+}
+
+.header-link {
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.home {
+  padding: 88px 0 96px;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 18px;
+  font-size: 44px;
+  line-height: 1.15;
+  font-weight: 550;
+  letter-spacing: -1.5px;
+  text-wrap: balance;
+}
+
+.home-intro {
+  max-width: 590px;
+}
+
+.home-intro > p {
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+.guide-index {
+  margin-top: 64px;
+}
+
+.guide-index > h2,
+.guide-nav > p {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.guide-list,
+.guide-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.guide-list {
+  border-top: 1px solid var(--line);
+}
+
+.guide-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 24px;
+  align-items: baseline;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding: 27px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.guide-row:hover {
+  text-decoration: none;
+}
+
+.guide-row:hover h3 {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.guide-number {
+  color: #767c84;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.guide-row h3 {
+  font-size: 18px;
+  font-weight: 550;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.guide-row p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.guide-arrow {
+  color: var(--link);
+  justify-self: end;
+}
+
+.docs-layout {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 650px);
+  gap: 72px;
+  padding: 64px 0 80px;
+}
+
+.guide-nav {
+  align-self: start;
+  position: sticky;
+  top: 32px;
+  padding-top: 6px;
+}
+
+.guide-nav > p {
+  margin-left: 13px;
+  margin-bottom: 12px;
+}
+
+.guide-nav a {
+  display: block;
+  padding: 9px 12px;
+  border-left: 2px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.guide-nav a:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.guide-nav a[aria-current="page"] {
+  color: var(--link);
+  border-color: var(--link);
+  font-weight: 550;
+}
+
+.guide-main {
+  min-width: 0;
+}
+
+.article-header {
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 32px;
+}
+
+.article-header h1 {
+  font-size: 36px;
+  letter-spacing: -1px;
+}
+
+.article-header p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.prose {
+  font-size: 16px;
+  line-height: 1.8;
+  overflow-wrap: break-word;
+}
+
+.prose h2 {
+  font-size: 23px;
+  font-weight: 550;
+  letter-spacing: -0.4px;
+  line-height: 1.4;
+  margin-top: 36px;
+  margin-bottom: 14px;
+  scroll-margin-top: 24px;
+}
+
+.prose h2:first-child {
+  margin-top: 0;
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose pre {
+  margin-bottom: 22px;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 24px;
+}
+
+.prose li + li {
+  margin-top: 7px;
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose code {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.86em;
+}
+
+.prose :not(pre) > code {
+  background: #f3f4f6;
+  border: 1px solid var(--line);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  line-height: 1.7;
+}
+
+.page-navigation {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.page-navigation a {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.page-navigation a:hover {
+  text-decoration: underline;
+}
+
+.page-navigation a > span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.next-page {
+  text-align: right;
+}
+
+.site-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 0 32px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-header {
+    min-height: 76px;
+  }
+
+  .home {
+    padding: 56px 0 64px;
+  }
+
+  h1 {
+    font-size: 36px;
+  }
+
+  .home-intro > p {
+    font-size: 17px;
+  }
+
+  .guide-index {
+    margin-top: 44px;
+  }
+
+  .guide-row {
+    grid-template-columns: 24px minmax(0, 1fr) 16px;
+    padding: 24px 0;
+  }
+
+  .docs-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 36px;
+    padding: 32px 0 56px;
+  }
+
+  .guide-nav {
+    position: static;
+    padding-top: 0;
+  }
+
+  .article-header h1 {
+    font-size: 32px;
+  }
+
+  .prose pre {
+    padding: 16px;
+  }
+}
