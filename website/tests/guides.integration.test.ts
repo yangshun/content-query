@@ -43,6 +43,7 @@ const guideIds = [
   "querying-content",
   "rendering-content",
   "integrations/vite",
+  "integrations/next",
   "integrations/frameworks",
   "integrations/standalone",
   "reference/configuration",
@@ -166,6 +167,7 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     expect(html).toContain('href="/docs/introduction"');
     expect(html).toContain('href="/docs/quick-start"');
     expect(html).toContain("Play demo");
+    expect(html).toContain("Next.js development");
     expect(html).toContain("Exclude drafts");
     expect(html).toContain('class="home-flow-diagram"');
     expect(html).toContain("Pause animation");
@@ -274,6 +276,67 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     expect(html).toContain('<h2 id="my-first-post">My first post</h2>');
     expect(html).toContain("Content starts here.");
   });
+
+  test("runs the Next.js guide configurations and type-checks its Server Component", async () => {
+    const quickStart = (await content.readBody("guides", "quick-start"))!;
+    const guide = (await content.readBody("guides", "integrations/next"))!;
+    const exampleRoot = path.join(workspace, "next-guide");
+    await mkdir(path.join(exampleRoot, "content/posts"), { recursive: true });
+    await mkdir(path.join(exampleRoot, "app"));
+    await symlink(
+      path.join(appRoot, "../examples/next/node_modules"),
+      path.join(exampleRoot, "node_modules"),
+      "dir",
+    );
+    await writeFile(path.join(exampleRoot, "package.json"), '{"type":"module"}\n');
+    await writeFile(
+      path.join(exampleRoot, "content-query.config.ts"),
+      quickStart.match(/^```ts\n([\s\S]*?)^```/m)![1]!,
+    );
+    await writeFile(
+      path.join(exampleRoot, "content/posts/hello.md"),
+      quickStart.match(/^```md\n([\s\S]*?)^```/m)![1]!,
+    );
+    await writeFile(
+      path.join(exampleRoot, "verify.mjs"),
+      `import assert from "node:assert/strict";
+import { PHASE_PRODUCTION_BUILD } from "next/constants.js";
+import configure from "./next.config.mjs";
+const config = await configure(PHASE_PRODUCTION_BUILD, { defaultConfig: {} });
+assert.equal(config.trailingSlash, true);
+const { content } = await import("./.content-query/server.js");
+assert.deepEqual(await content.query("posts").select("id", "title").all(), [
+  { id: "hello", title: "Hello ContentQuery" },
+]);
+`,
+    );
+    for (const match of guide.matchAll(/^```js\n([\s\S]*?)^```/gm)) {
+      await writeFile(path.join(exampleRoot, "next.config.mjs"), match[1]!);
+      await execFileAsync(process.execPath, ["verify.mjs"], { cwd: exampleRoot });
+    }
+    await writeFile(
+      path.join(exampleRoot, "app/page.tsx"),
+      guide.match(/^```tsx\n([\s\S]*?)^```/m)![1]!,
+    );
+    await execFileAsync(
+      process.execPath,
+      [
+        path.join(appRoot, "node_modules/typescript/bin/tsc"),
+        "--noEmit",
+        "--strict",
+        "--skipLibCheck",
+        "--module",
+        "nodenext",
+        "--target",
+        "es2022",
+        "--jsx",
+        "react-jsx",
+        "--allowImportingTsExtensions",
+        "app/page.tsx",
+      ],
+      { cwd: exampleRoot },
+    );
+  }, 20_000);
 
   test("executes the source-to-data example through its displayed schema and query", async () => {
     const exampleRoot = path.join(workspace, "source-to-data");

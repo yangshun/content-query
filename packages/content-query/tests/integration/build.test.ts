@@ -29,6 +29,11 @@ describe("portable content builds and production consumption", () => {
         ],
         { cwd: fixture.root },
       );
+      await symlink(
+        path.join(packageRoot, "node_modules/next"),
+        path.join(fixture.root, "node_modules/next"),
+        "dir",
+      );
       await writeFile(
         path.join(fixture.root, "consumer.ts"),
         `/// <reference path="./.content-query/types.d.ts" />
@@ -36,7 +41,14 @@ import { content, type CollectionData, type CollectionKey } from "./.content-que
 import { content as virtualContent, type CollectionData as VirtualData } from "content-query:server";
 import { eq } from "content-query/query";
 import { buildContent, type BuildContentOptions, type ContentSession } from "content-query/build";
+import { withContentQuery, type NextContentOptions } from "content-query/next";
 import type { collections } from "./content-query.config.ts";
+const nextOptions: NextContentOptions = { config: "content-query.config.ts", outDir: ".content-query" };
+const nextConfig = withContentQuery({ output: "export" }, nextOptions);
+const configured: Promise<import("next").NextConfig> = nextConfig("phase-production-server", {defaultConfig:{}});
+// @ts-expect-error The Next adapter owns the watch lifecycle.
+withContentQuery({}, { watch: true });
+void configured;
 const buildOptions: BuildContentOptions = { backend: "in-memory" };
 const session: Promise<ContentSession<typeof collections>> = buildContent<typeof collections>(buildOptions);
 void session;

@@ -13,13 +13,19 @@ Use the `config` option, or CLI `--config`, to select an exact configuration pat
 
 ## Build options
 
-| Option    | Default             | Purpose                                     |
-| --------- | ------------------- | ------------------------------------------- |
-| `config`  | Automatic discovery | Exact configuration file                    |
-| `backend` | `"generated"`       | `"generated"` or `"in-memory"`              |
+| Option    | Default              | Purpose                                     |
+| --------- | -------------------- | ------------------------------------------- |
+| `config`  | Automatic discovery  | Exact configuration file                    |
+| `backend` | `"generated"`        | `"generated"` or `"in-memory"`              |
 | `outDir`  | `"./.content-query"` | Generated runtime output directory          |
-| `watch`   | `false`             | Keep the build subscribed to source changes |
+| `watch`   | `false`              | Keep the build subscribed to source changes |
 
-These options configure `buildContent()`. The Vite plugin owns its watch lifecycle and accepts `config`, `backend`, and `outDir`.
+These options configure `buildContent()`.
 
-See [standalone usage](/docs/integrations/standalone) and [Vite integration](/docs/integrations/vite).
+## Integration options
+
+The [Vite plugin](/docs/integrations/vite) owns its watch lifecycle and accepts `config`, `backend`, and `outDir`.
+
+The [Next.js adapter](/docs/integrations/next#content-options) accepts `config` and `outDir` as the second argument to `withContentQuery(nextConfig, options)`. It uses the generated backend, watches during `next dev`, and performs a one-shot content build during `next build`.
+
+See [standalone usage](/docs/integrations/standalone) for direct control of a build session.

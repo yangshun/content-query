@@ -19,6 +19,7 @@
     "./internal": "./dist/internal.mjs",
     "./internal/markdown": "./dist/internal/markdown.mjs",
     "./loaders": "./dist/loaders.mjs",
+    "./next": "./dist/next.mjs",
     "./query": "./dist/query.mjs",
     "./runtime": "./dist/runtime.mjs",
     "./vite": "./dist/vite.mjs",
@@ -56,13 +57,18 @@
     "@types/node": "^25.5.0",
     "@types/picomatch": "^4.0.3",
     "astro": "7.4.0",
+    "next": "16.4.2",
     "typescript": "^6.0.2",
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
+    "next": "^16.0.0",
     "vite-plus": "*"
   },
   "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    },
     "vite-plus": {
       "optional": true
     }

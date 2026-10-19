@@ -19,4 +19,6 @@ Your server imports the prepared runtime. Queries return selected metadata; `rea
 
 The Vite plugin watches sources and publishes complete revisions. Invalid edits surface errors until corrected. The host framework refreshes its page data after updates; [Vite integration](/docs/integrations/vite#development-updates) explains how to connect that refresh.
 
-Standalone builds prepare a snapshot. Run preparation again when you want to publish changed content.
+The [Next.js adapter](/docs/integrations/next) watches sources and collection configuration, then publishes generated modules that Next.js observes through HMR. It supports Turbopack and Webpack. Content errors appear in Next.js's development overlay and recover after a valid edit.
+
+Standalone builds produce a snapshot. Use `content-query build --watch` or `buildContent({ watch: true })` to keep it current during development. The host owns refreshing application data and stopping the watch session. See [standalone usage](/docs/integrations/standalone).

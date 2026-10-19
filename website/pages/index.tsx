@@ -79,10 +79,10 @@ export default function Homepage({ renderedExample }: Props) {
     },
     {
       id: "workflows",
-      title: "Vite or standalone",
+      title: "Vite, Next.js, or standalone",
       description:
-        "Keep content fresh during development, or prepare portable artifacts for your build. Your framework owns routes and rendering.",
-      href: "/docs/integrations/vite",
+        "Keep content fresh with Vite or Next.js, or build portable artifacts with the CLI. Your framework owns routes and rendering.",
+      href: "/docs/integrations/frameworks",
       example: <WorkflowsExample />,
     },
   ];

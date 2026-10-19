@@ -1,11 +1,13 @@
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, test } from "vite-plus/test";
+import { describe, expect, test, vi } from "vite-plus/test";
 import { z } from "zod";
 import type { CollectionDefinition } from "../collection/types.ts";
 import { buildContent, type BuildContentOptions } from "../build.ts";
 import { buildAtRoot } from "./build.ts";
+import { sessionInternals, type ContentSession } from "./session.ts";
+import { projectFixture } from "../../tests/helpers/project.ts";
 
 describe("content build entry points", () => {
   for (const options of [
@@ -53,6 +55,76 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
       await rm(root, { recursive: true, force: true });
     }
   });
+});
+
+describe("generated watch startup cleanup", () => {
+  test.each(["none", "invalid-content", "failed-publication"] as const)(
+    "prunes previous runs after the first valid publication and retains this session's revisions, initial failure=%s",
+    async (initialFailure) => {
+      const fixture = await projectFixture(true);
+      const outDir = path.join(fixture.root, ".content-query");
+      const entries = path.join(outDir, "collections/posts/entries");
+      const stale = path.join(entries, `${"0".repeat(64)}.js`);
+      const unrelated = path.join(entries, "notes.js");
+      const original = await readFile(fixture.postPath, "utf8");
+      let session: ContentSession | undefined;
+      try {
+        await mkdir(entries, { recursive: true });
+        await writeFile(stale, "Previous run");
+        await writeFile(unrelated, "Application-owned file");
+        if (initialFailure === "invalid-content") {
+          await writeFile(
+            fixture.postPath,
+            original.replace("title: Getting started", "title: false"),
+          );
+        } else if (initialFailure === "failed-publication") {
+          await mkdir(path.join(outDir, "server.js"));
+        }
+        session = await buildAtRoot(fixture.root, { watch: true });
+        if (initialFailure !== "none") {
+          expect(sessionInternals(session).state.error).toBeDefined();
+          expect(await readFile(stale, "utf8")).toBe("Previous run");
+          if (initialFailure === "failed-publication") {
+            await rm(path.join(outDir, "server.js"), { recursive: true });
+            sessionInternals(session).invalidate();
+          } else {
+            await writeFile(fixture.postPath, original);
+          }
+          await vi.waitFor(() => {
+            expect(sessionInternals(session!).state.error).toBeUndefined();
+            expect(sessionInternals(session!).state.revision).toBeDefined();
+          });
+        }
+        await expect(readFile(stale, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
+        const initialPayload = (await readdir(entries)).find((filename) =>
+          /^[a-f0-9]{64}\.js$/.test(filename),
+        )!;
+        const initialBytes = await readFile(path.join(entries, initialPayload), "utf8");
+        await writeFile(
+          fixture.postPath,
+          `${original.replace("title: Getting started", "title: Updated")}\nChanged body.\n`,
+        );
+        await vi.waitFor(() => {
+          expect(
+            sessionInternals(session!).state.revision?.collections.posts?.records[0]?.title,
+          ).toBe("Updated");
+        });
+        expect(await readFile(path.join(entries, initialPayload), "utf8")).toBe(initialBytes);
+        await session.dispose();
+        session = await buildAtRoot(fixture.root, { watch: true });
+        await expect(readFile(path.join(entries, initialPayload), "utf8")).rejects.toMatchObject({
+          code: "ENOENT",
+        });
+        expect(await readFile(unrelated, "utf8")).toBe("Application-owned file");
+        expect(sessionInternals(session).state.revision?.collections.posts?.records[0]?.title).toBe(
+          "Updated",
+        );
+      } finally {
+        await session?.dispose();
+        await fixture.dispose();
+      }
+    },
+  );
 });
 
 describe("configuration discovery", () => {

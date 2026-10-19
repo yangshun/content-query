@@ -84,9 +84,9 @@ function DevelopmentAnimation() {
 }
 
 export function WorkflowsExample() {
-  const [workflow, setWorkflow] = useState<"vite" | "standalone">("vite");
+  const [workflow, setWorkflow] = useState<"vite" | "next" | "standalone">("vite");
   return (
-    <div className="feature-example" aria-label="Vite and standalone workflows example">
+    <div className="feature-example" aria-label="Vite, Next.js, and standalone workflows example">
       <div className="workflow-switch">
         <Choices
           label="Content workflow"
@@ -94,12 +94,28 @@ export function WorkflowsExample() {
           onChange={setWorkflow}
           options={[
             { value: "vite", label: "Vite development" },
+            { value: "next", label: "Next.js development" },
             { value: "standalone", label: "Standalone build" },
           ]}
         />
       </div>
       {workflow === "vite" ? (
         <DevelopmentAnimation />
+      ) : workflow === "next" ? (
+        <div className="standalone-workflow">
+          <CodeExample
+            label="next.config.mjs"
+            code={
+              'import { withContentQuery } from "content-query/next";\n\nexport default withContentQuery({\n  trailingSlash: true,\n});'
+            }
+          />
+          <CodeExample
+            label="Query from server code"
+            code={
+              'import "server-only";\nimport { content } from "../.content-query/server.js";\n\nconst posts = await content\n  .query("posts")\n  .select("id", "title")\n  .all();'
+            }
+          />
+        </div>
       ) : (
         <div className="standalone-workflow">
           <CodeExample
@@ -110,7 +126,7 @@ export function WorkflowsExample() {
           <CodeExample
             label="Import the generated runtime"
             code={
-              'import { content } from\n  "./.content-query/server.js";\n\nconst posts = await content\n  .query("posts")\n  .select("title")\n  .all();'
+              'import { content } from "./.content-query/server.js";\n\nconst posts = await content\n  .query("posts")\n  .select("title")\n  .all();'
             }
           />
         </div>

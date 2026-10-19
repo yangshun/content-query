@@ -11,6 +11,7 @@ export default defineConfig({
       internal: "src/internal.ts",
       "internal/markdown": "src/runtime/markdown.ts",
       vite: "src/vite.ts",
+      next: "src/next.ts",
       cli: "src/cli.ts",
     },
     dts: true,

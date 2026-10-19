@@ -5,7 +5,7 @@ section: getting-started
 order: 2
 ---
 
-This walkthrough uses the CLI so you can try ContentQuery without choosing a framework. For an existing Vite application, see the [Vite integration](/docs/integrations/vite).
+This walkthrough uses the CLI so you can try ContentQuery without choosing a framework. For an existing application, see the [Vite](/docs/integrations/vite) or [Next.js](/docs/integrations/next) integration.
 
 ## Install
 

@@ -26,6 +26,8 @@ Development subscribes to `content-query:client` and calls `useRevalidator().rev
 
 Run `vp test run content-query/examples/react-router/tests` from the repository root to build an isolated copy, add a nested guide, and verify ordered metadata, Markdown, and previous/next links after deleting the source files.
 
+The fixture invokes the installed React Router CLI by its physical path so pnpm's relative executable shims also work with the fixture's symlinked dependencies.
+
 The root layout imports its local stylesheet, hardlinked to the common [`../shared/styles.css`](../shared/styles.css) in this workspace. All examples use the same site shell, home index, docs sidebar, article typography, footer, and responsive layout. Sidebar metadata is loaded independently of child article data.
 
 The example is self-contained: its stylesheet and browser navigation helper (where needed) are local files. Hardlinks keep the common copies synchronized in this workspace. Git stores ordinary file contents, so copying or checking out an example does not require sibling shared files.
