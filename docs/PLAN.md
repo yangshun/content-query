@@ -1086,6 +1086,8 @@ Expose `buildContent(...)` from `content-query/build` and the `content-query bui
 
 Choose a backend per content instance, outside `defineCollection(...)`. Use the same backend in development and production unless explicitly configured otherwise; do not silently substitute in-memory storage during development.
 
+The defaults below apply to standalone preparation. The Vite plugin defaults to `backend: "in-memory"` in both development and production: it serves prepared state through virtual modules and bundles the runtime data with the application. `contentQuery({ backend: "generated" })` additionally publishes standalone artifacts. Vite writes its registry declaration with either backend. The Next.js adapter retains generated storage by default.
+
 | Setting                | Agreed API/default                                                                                                                                                                     |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Configuration          | Omit `config` to discover one root `content-query.config.{ts,mts,cts,js,mjs,cjs}`; an explicit `config` selects an exact path. Consumes the named `collections` registry.               |

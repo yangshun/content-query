@@ -254,6 +254,8 @@ Both return `_adjacent: { previous, next }`, with `null` at boundaries or when t
 
 ## Backends and Vite
 
+The Vite plugin defaults to `backend: "in-memory"`: `contentQuery()` serves virtual modules in development, bundles prepared content for production, and writes only `.content-query/types.d.ts`. Use `contentQuery({ backend: "generated" })` to also publish standalone runtime artifacts. The standalone CLI, `buildContent()`, and Next.js adapter continue to default to generated storage.
+
 Artifact publication reuses unchanged immutable files and stages new modules with bounded parallel I/O before switching the public entry. Conflicting bytes still fail publication, and older revisions retain their immutable payloads.
 
 The generated backend writes collection indexes and separate lazy item payloads, with versioned devalue encoding. Immutable content-addressed modules keep old operations consistent; stable entry/index aliases expose the latest complete publication. A new watch session removes obsolete collection modules from previous runs after its first successful publication. Invalid startup content delays cleanup until the first valid publication. Later updates retain superseded modules for the rest of that session, so restarting reclaims files from earlier runs. One-shot builds (the CLI without `--watch`, `buildContent`, and Vite builds) also remove generated collection modules their revision no longer references, leaving other files in place. Each output directory belongs to one host; start a new session or one-shot build after previous consumers stop. Only `server.js` and its declarations are application imports.

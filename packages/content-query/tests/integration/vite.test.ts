@@ -27,7 +27,7 @@ vi.setConfig({ testTimeout: 20_000 });
 describe("Vite preparation and server/client boundaries", () => {
   test("refreshes subscribed clients and retains reload fallback for other clients", async () => {
     const fixture = await projectFixture();
-    const plugin = contentQuery({ backend: "in-memory" });
+    const plugin = contentQuery();
     const configure = plugin.configureServer as (server: ViteDevServer) => Promise<void>;
     const registrations = new Map<string, (data: unknown, client: object) => void>();
     plugin.configureServer = async function (server) {
@@ -168,8 +168,8 @@ describe("Vite preparation and server/client boundaries", () => {
       await fixture.dispose();
     }
   });
-  for (const backend of ["generated", "in-memory"] as const) {
-    test(`${backend} starts with BigInt validation errors and recovers in an isolated runtime`, async () => {
+  for (const backend of [undefined, "generated", "in-memory"] as const) {
+    test(`${backend ?? "default"} starts with BigInt validation errors and recovers in an isolated runtime`, async () => {
       const fixture = await projectFixture();
       const filename = path.join(fixture.root, "content/values.json");
       await writeFile(filename, JSON.stringify([{ id: "one", value: "1" }]));
@@ -234,7 +234,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         await fixture.dispose();
       }
     });
-    test(`${backend} serves current data, surfaces errors, and recovers without a restart`, async () => {
+    test(`${backend ?? "default"} serves current data, surfaces errors, and recovers without a restart`, async () => {
       const fixture = await projectFixture();
       const configName =
         backend === "generated" ? "content-query.config.mjs" : "content-query.config.mts";
@@ -303,7 +303,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
           watcherWait,
         );
         const outputFiles = await readdir(path.join(fixture.root, ".content-query"));
-        if (backend === "in-memory") {
+        if (backend !== "generated") {
           expect(outputFiles).toEqual(["types.d.ts"]);
         } else {
           expect(outputFiles.sort()).toEqual([
@@ -323,7 +323,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         await fixture.dispose();
       }
     });
-    test(`${backend} bundles source-independent SSR output`, async () => {
+    test(`${backend ?? "default"} bundles source-independent SSR output`, async () => {
       const fixture = await projectFixture();
       const entry = path.join(fixture.root, "consumer.mjs");
       await writeFile(entry, 'export {content} from "content-query:server";');
@@ -340,6 +340,9 @@ export const collections = { posts: defineCollection({loader:file("./content/val
             rollupOptions: { output: { entryFileNames: "server.mjs" } },
           },
         });
+        if (backend !== "generated") {
+          expect(await readdir(path.join(fixture.root, ".content-query"))).toEqual(["types.d.ts"]);
+        }
         await rm(fixture.config);
         await rm(path.join(fixture.root, "content"), { recursive: true });
         await rm(path.join(fixture.root, ".content-query"), { recursive: true, force: true });
