@@ -28,6 +28,8 @@ Vite production builds prepare content only for server graphs. Before bundling, 
 
 ## Astro, Content Collections, and Velite
 
+The Vite plugin defaults to in-memory preparation with virtual modules and bundled production output. Standalone artifact publication requires `backend: "generated"` in Vite; the CLI, standalone build API, and Next.js adapter retain generated storage by default.
+
 Checked on October 18, 2026 against [Astro content collections](https://docs.astro.build/en/guides/content-collections/) 7.x, [Content Collections](https://www.content-collections.dev/) (`@content-collections/core` 0.15.3), and [Velite](https://velite.js.org/) 0.4.0, with 1.0.0-alpha.3 in progress. Claims about other libraries come from their documentation. Direct loader compatibility is additionally exercised with the published `@ascorbic/csv-loader` 2.0.3 and Astro 7.4.0 types, including live CSV edits and a generated consumer that blocks Astro/loader imports at runtime. That loader’s declared Astro peer range remains 4/5; the fixture verifies its actual behavior against the current public contract.
 
 | Concern                | ContentQuery                                                                            | Astro                                                   | Content Collections                                   | Velite                                              |

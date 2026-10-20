@@ -26,7 +26,7 @@ import {
 const bridgeSymbol = Symbol.for("content-query.dev-sessions");
 type BridgeGlobal = typeof globalThis & { [bridgeSymbol]?: Map<string, ContentSession> };
 
-/** Adapts preparation to Vite without making Vite part of collection or runtime contracts. */
+/** Integrates in-memory content with Vite; opt into generated storage for standalone artifacts. */
 export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): Plugin {
   let config: ResolvedConfig;
   let building = false;
@@ -135,6 +135,7 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
         config.root,
         {
           ...options,
+          backend: options.backend ?? "in-memory",
           config: configPath,
           watch:
             !building &&

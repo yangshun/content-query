@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { rm, writeFile } from "node:fs/promises";
+import { readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
@@ -19,7 +19,7 @@ describe("Vite artifact watching", () => {
       const server = await createServer({
         root: fixture.root,
         configFile: false,
-        plugins: [contentQuery({ outDir })],
+        plugins: [contentQuery({ backend: "generated", outDir })],
         server: { watch: { ignored: /application-ignored/ } },
         optimizeDeps: { noDiscovery: true },
       });
@@ -77,6 +77,7 @@ describe("Vite content preparation", () => {
   });
 
   test.each([
+    { backend: "default", customSplitting: false, padding: 0 },
     { backend: "generated", customSplitting: false, padding: 0 },
     { backend: "in-memory", customSplitting: false, padding: 0 },
     { backend: "generated", customSplitting: true, padding: 0 },
@@ -107,7 +108,7 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
         const result = await build({
           root: fixture.root,
           configFile: false,
-          plugins: [contentQuery({ backend })],
+          plugins: [contentQuery(backend === "default" ? undefined : { backend })],
           build: {
             ssr: true,
             outDir,
@@ -127,6 +128,9 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
           },
           logLevel: "silent",
         });
+        if (backend === "default") {
+          expect(await readdir(path.join(fixture.root, ".content-query"))).toEqual(["types.d.ts"]);
+        }
         const outputs = Array.isArray(result) ? result : [result];
         const chunks = outputs.flatMap((output) =>
           "output" in output ? output.output.filter((chunk) => chunk.type === "chunk") : [],

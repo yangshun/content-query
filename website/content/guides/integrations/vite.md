@@ -18,6 +18,8 @@ export default defineConfig({
 
 ## Server imports and types
 
+The plugin defaults to the in-memory backend. It writes `.content-query/types.d.ts` for editor types and delivers runtime content through Vite's virtual modules and production bundle. To also publish standalone runtime files for consumers outside Vite, use `contentQuery({ backend: "generated" })`. The standalone CLI and build API still default to generated storage.
+
 Server modules import `content` from `content-query:server`. Include `.content-query/**/*.d.ts` in `tsconfig.json` for the generated collection types. The plugin rejects direct and transitive client imports of the server runtime.
 
 ## Development updates
