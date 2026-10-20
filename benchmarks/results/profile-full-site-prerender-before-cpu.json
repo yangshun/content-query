@@ -1,0 +1,349 @@
+{
+  "label": "full-site-prerender-before-cpu",
+  "diagnostic": "Prerender replay with worker CPU sampling and query counters; no bundling or CLI startup.",
+  "node": "v24.21.0",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 50000,
+    "copies": 0
+  },
+  "phases": {
+    "bootstrapMs": 2927.998584,
+    "collectPathsMs": 296.93266600000015,
+    "renderMs": 41566.499667,
+    "disposeMs": 58.981832999998005
+  },
+  "fetches": {
+    "html": 10001,
+    "pageData": 10001
+  },
+  "io": {
+    "mkdirSync": {
+      "calls": 20002,
+      "totalMs": 649.2239879998315
+    },
+    "writeFileSync": {
+      "calls": 20002,
+      "totalMs": 6431.958976000162
+    }
+  },
+  "query": {
+    "calls": 20003,
+    "candidates": 200030000,
+    "idQueries": 20000,
+    "idCandidates": 200000000
+  },
+  "pages": 10001,
+  "cpu": {
+    "sampledMs": 41788.505,
+    "activeMs": 38953.566,
+    "idleMs": 2834.939,
+    "self": [
+      {
+        "name": "",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 6992.881,
+        "activePercent": 17.951837836874805
+      },
+      {
+        "name": "matches",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 6544.126,
+        "activePercent": 16.79981237147839
+      },
+      {
+        "name": "(garbage collector)",
+        "source": "",
+        "durationMs": 2146.825,
+        "activePercent": 5.511241255806977
+      },
+      {
+        "name": "(program)",
+        "source": "",
+        "durationMs": 2101.729,
+        "activePercent": 5.395472650693906
+      },
+      {
+        "name": "pageRecords",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 1598,
+        "activePercent": 4.102320182958346
+      },
+      {
+        "name": "equal",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 1392.781,
+        "activePercent": 3.575490367172032
+      },
+      {
+        "name": "flatten",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 1170.537,
+        "activePercent": 3.0049546683351145
+      },
+      {
+        "name": "",
+        "source": "",
+        "durationMs": 862.645,
+        "activePercent": 2.214546930055133
+      },
+      {
+        "name": "pull",
+        "source": "index.js",
+        "durationMs": 734.746,
+        "activePercent": 1.8862098530337374
+      },
+      {
+        "name": "parse",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 726.259,
+        "activePercent": 1.8644223740645467
+      },
+      {
+        "name": "ReadableStream",
+        "source": "",
+        "durationMs": 688.374,
+        "activePercent": 1.7671655529560504
+      },
+      {
+        "name": "run",
+        "source": "",
+        "durationMs": 680.303,
+        "activePercent": 1.746446012157141
+      },
+      {
+        "name": "Response",
+        "source": "",
+        "durationMs": 628.815,
+        "activePercent": 1.6142681263122354
+      },
+      {
+        "name": "",
+        "source": "index.js",
+        "durationMs": 600.801,
+        "activePercent": 1.5423517323163687
+      },
+      {
+        "name": "read",
+        "source": "",
+        "durationMs": 477.015,
+        "activePercent": 1.2245733805218244
+      },
+      {
+        "name": "createBuilder",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 440.933,
+        "activePercent": 1.1319451472042381
+      },
+      {
+        "name": "#dispatch",
+        "source": "index.js",
+        "durationMs": 372.478,
+        "activePercent": 0.9562102735343923
+      },
+      {
+        "name": "loadPayload$1",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 362.377,
+        "activePercent": 0.9302793998372318
+      },
+      {
+        "name": "match",
+        "source": "index.js",
+        "durationMs": 322.253,
+        "activePercent": 0.8272747095862802
+      },
+      {
+        "name": "unflatten",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 309.274,
+        "activePercent": 0.7939555521052938
+      },
+      {
+        "name": "pageJsonResponse",
+        "source": "index.js",
+        "durationMs": 279.919,
+        "activePercent": 0.7185965978057054
+      },
+      {
+        "name": "json",
+        "source": "",
+        "durationMs": 247.709,
+        "activePercent": 0.6359084043807439
+      },
+      {
+        "name": "handlePageGet",
+        "source": "index.js",
+        "durationMs": 237.02,
+        "activePercent": 0.608468041154435
+      },
+      {
+        "name": "dispatch",
+        "source": "index.js",
+        "durationMs": 236.689,
+        "activePercent": 0.6076183115045231
+      },
+      {
+        "name": "",
+        "source": "assets/_id_.server-DLrgmTOS.js",
+        "durationMs": 215.271,
+        "activePercent": 0.552634898689378
+      }
+    ],
+    "inclusive": [
+      {
+        "name": "",
+        "source": "index.js",
+        "durationMs": 24104.714,
+        "activePercent": 61.88063501041214
+      },
+      {
+        "name": "handlePageGet",
+        "source": "index.js",
+        "durationMs": 22134.672,
+        "activePercent": 56.82322383527095
+      },
+      {
+        "name": "",
+        "source": "assets/_id_.server-DLrgmTOS.js",
+        "durationMs": 20165.81,
+        "activePercent": 51.7688419078243
+      },
+      {
+        "name": "",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 20155.66,
+        "activePercent": 51.742785243333046
+      },
+      {
+        "name": "run",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 19196.2,
+        "activePercent": 49.27969880857634
+      },
+      {
+        "name": "pinned",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 18016.828,
+        "activePercent": 46.252063289918055
+      },
+      {
+        "name": "first",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 17455.829,
+        "activePercent": 44.8118896226343
+      },
+      {
+        "name": "executeQuery",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 17280.18,
+        "activePercent": 44.36097070034615
+      },
+      {
+        "name": "pageRecords",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 16105.984,
+        "activePercent": 41.346622796998865
+      },
+      {
+        "name": "matches",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 7936.907,
+        "activePercent": 20.375302738650422
+      },
+      {
+        "name": "detach",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 3195.179,
+        "activePercent": 8.202532728325822
+      },
+      {
+        "name": "fetch",
+        "source": "index.js",
+        "durationMs": 2503.93,
+        "activePercent": 6.427986593063135
+      },
+      {
+        "name": "renderReactPage",
+        "source": "index.js",
+        "durationMs": 2292.622,
+        "activePercent": 5.885525345741132
+      },
+      {
+        "name": "(garbage collector)",
+        "source": "",
+        "durationMs": 2146.825,
+        "activePercent": 5.511241255806977
+      },
+      {
+        "name": "(program)",
+        "source": "",
+        "durationMs": 2101.729,
+        "activePercent": 5.395472650693906
+      },
+      {
+        "name": "pull",
+        "source": "index.js",
+        "durationMs": 1991.505,
+        "activePercent": 5.11251011011418
+      },
+      {
+        "name": "encode",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 1852.321,
+        "activePercent": 4.755202643064822
+      },
+      {
+        "name": "stringify",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 1851.963,
+        "activePercent": 4.754283600120204
+      },
+      {
+        "name": "",
+        "source": "",
+        "durationMs": 1723.917,
+        "activePercent": 4.425569150716522
+      },
+      {
+        "name": "flatten",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 1701.569,
+        "activePercent": 4.368198279972622
+      },
+      {
+        "name": "where",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 1571.864,
+        "activePercent": 4.035224913683128
+      },
+      {
+        "name": "render",
+        "source": "index.js",
+        "durationMs": 1499.46,
+        "activePercent": 3.8493523288727918
+      },
+      {
+        "name": "equal",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 1392.781,
+        "activePercent": 3.575490367172032
+      },
+      {
+        "name": "#dispatch",
+        "source": "index.js",
+        "durationMs": 1387.675,
+        "activePercent": 3.562382452995446
+      },
+      {
+        "name": "decode",
+        "source": "assets/_content_query_server-4vaHnvse.js",
+        "durationMs": 1302.814,
+        "activePercent": 3.344530767735103
+      }
+    ]
+  },
+  "outputRoot": ".runs/profiles/full-site-prerender-before-cpu"
+}

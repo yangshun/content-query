@@ -1,0 +1,26 @@
+{
+  "name": "@content-query/benchmark-vite-react",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "node scripts/build.ts",
+    "preview": "node ../../shared/preview.ts --dir dist"
+  },
+  "dependencies": {
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
+  },
+  "devDependencies": {
+    "@content-collections/core": "0.15.3",
+    "@content-collections/markdown": "0.1.4",
+    "@content-collections/vite": "0.3.1",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.1.2",
+    "typescript": "6.0.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.1.16",
+    "vite-plus": "0.1.16",
+    "zod": "4.6.7"
+  }
+}

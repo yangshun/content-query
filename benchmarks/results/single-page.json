@@ -1,0 +1,568 @@
+{
+  "startedAt": "2026-10-19T15:07:25.282Z",
+  "repetitions": 3,
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10248894,
+    "sha256": "591f5510c25529afdf3e999f7586c3d30a39120239131572460c7208fd8f19f4",
+    "hardlinks": 40000,
+    "copies": 0
+  },
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.3.0",
+    "cpu": "Apple M5",
+    "logicalCpus": 10,
+    "memoryBytes": 25769803776,
+    "vitePlus": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\n",
+    "chromium": "156.0.8078.4",
+    "revision": "d594e7fc91424f2b481bbfd386985ee0c3358fed",
+    "dirty": true,
+    "lockfileSha256": "b90d85129234e2432256377d17a7c5a4441d9d6419158699568bdb0986050a99",
+    "contentQueryArtifactsSha256": "0e505e735032bc98929598b328efc835f2256347b51b6169bf0631d221e5e63f",
+    "packages": {
+      "astro": {
+        "astro": "7.4.0",
+        "vite-plus": "0.1.16",
+        "@voidzero-dev/vite-plus-core": "1.3.0",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7"
+      },
+      "vite-react": {
+        "react": "19.2.5",
+        "@content-collections/core": "0.15.3",
+        "@content-collections/vite": "0.3.1",
+        "@content-collections/markdown": "0.1.4",
+        "vite-plus": "0.1.16",
+        "@voidzero-dev/vite-plus-core": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7"
+      },
+      "nuxt": {
+        "nuxt": "4.6.2",
+        "vue": "3.5.44",
+        "@nuxt/content": "3.16.2",
+        "vite-plus": "0.1.16",
+        "@voidzero-dev/vite-plus-core": "1.3.0",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7"
+      },
+      "void": {
+        "void": "1.1.12",
+        "@void/react": "1.1.12",
+        "react": "19.2.5",
+        "content-query": "0.0.0",
+        "vite-plus": "0.1.16",
+        "@voidzero-dev/vite-plus-core": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7"
+      }
+    }
+  },
+  "samples": [
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-astro-startup-cold.log",
+      "listenMs": 3489.825166999999,
+      "durationMs": 4465.804
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-astro-startup-warm.log",
+      "listenMs": 2439.805874999998,
+      "durationMs": 2930.939208
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-astro-build-cold.log",
+      "durationMs": 2583.689083000001
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-astro-build-warm.log",
+      "durationMs": 1931.9672500000015
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-vite-react-startup-cold.log",
+      "listenMs": 6275.323666999997,
+      "durationMs": 6887.097209
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-vite-react-startup-warm.log",
+      "listenMs": 2960.9513750000006,
+      "durationMs": 3745.9350000000013
+    },
+    {
+      "app": "vite-react",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-vite-react-build-cold.log",
+      "durationMs": 4877.5613749999975
+    },
+    {
+      "app": "vite-react",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-vite-react-build-warm.log",
+      "durationMs": 2361.378708000004
+    },
+    {
+      "app": "nuxt",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec nuxt dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-nuxt-startup-cold.log",
+      "listenMs": 180.4809580000001,
+      "durationMs": 15534.549917000004
+    },
+    {
+      "app": "nuxt",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec nuxt dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-nuxt-startup-warm.log",
+      "listenMs": 157.39400000000023,
+      "durationMs": 4458.270333000008
+    },
+    {
+      "app": "nuxt",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec nuxt build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-nuxt-build-cold.log",
+      "durationMs": 15505.545583
+    },
+    {
+      "app": "nuxt",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec nuxt build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-nuxt-build-warm.log",
+      "durationMs": 6741.927041000003
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-void-startup-cold.log",
+      "listenMs": 30991.672292000003,
+      "durationMs": 32047.014292000007
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-void-startup-warm.log",
+      "listenMs": 8906.703332999983,
+      "durationMs": 9645.84474999999
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-void-build-cold.log",
+      "durationMs": 51649.65375000003
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/1-void-build-warm.log",
+      "durationMs": 55843.18775000004
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-vite-react-startup-cold.log",
+      "listenMs": 6785.659042000014,
+      "durationMs": 7400.728874999972
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-vite-react-startup-warm.log",
+      "listenMs": 3462.942417000013,
+      "durationMs": 4126.124917000008
+    },
+    {
+      "app": "vite-react",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-vite-react-build-cold.log",
+      "durationMs": 5210.757084000041
+    },
+    {
+      "app": "vite-react",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-vite-react-build-warm.log",
+      "durationMs": 2663.545625000028
+    },
+    {
+      "app": "nuxt",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec nuxt dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-nuxt-startup-cold.log",
+      "listenMs": 232.32045900000958,
+      "durationMs": 14618.592500000028
+    },
+    {
+      "app": "nuxt",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec nuxt dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-nuxt-startup-warm.log",
+      "listenMs": 149.0539160000044,
+      "durationMs": 4770.382916000031
+    },
+    {
+      "app": "nuxt",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec nuxt build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-nuxt-build-cold.log",
+      "durationMs": 14888.369000000006
+    },
+    {
+      "app": "nuxt",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec nuxt build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-nuxt-build-warm.log",
+      "durationMs": 6496.582250000036
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-void-startup-cold.log",
+      "listenMs": 28613.878666999983,
+      "durationMs": 29747.43424999999
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-void-startup-warm.log",
+      "listenMs": 10312.503583999991,
+      "durationMs": 11243.746541999979
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-void-build-cold.log",
+      "durationMs": 58352.715665999975
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-void-build-warm.log",
+      "durationMs": 59490.95154199994
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-astro-startup-cold.log",
+      "listenMs": 2843.167916999897,
+      "durationMs": 3358.319749999908
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-astro-startup-warm.log",
+      "listenMs": 2976.6130419999827,
+      "durationMs": 3509.6366249999264
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-astro-build-cold.log",
+      "durationMs": 2348.6339170000283
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/2-astro-build-warm.log",
+      "durationMs": 2118.2171249999665
+    },
+    {
+      "app": "nuxt",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec nuxt dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-nuxt-startup-cold.log",
+      "listenMs": 196.29958300001454,
+      "durationMs": 15412.213249999913
+    },
+    {
+      "app": "nuxt",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec nuxt dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-nuxt-startup-warm.log",
+      "listenMs": 176.47604099998716,
+      "durationMs": 4771.823875000002
+    },
+    {
+      "app": "nuxt",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec nuxt build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-nuxt-build-cold.log",
+      "durationMs": 15291.569458000013
+    },
+    {
+      "app": "nuxt",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec nuxt build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-nuxt-build-warm.log",
+      "durationMs": 6483.588125000009
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-void-startup-cold.log",
+      "listenMs": 30600.490541999927,
+      "durationMs": 31614.260249999934
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-void-startup-warm.log",
+      "listenMs": 9885.068417000002,
+      "durationMs": 10834.011958000017
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-void-build-cold.log",
+      "durationMs": 60900.64304200001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-void-build-warm.log",
+      "durationMs": 59793.59574999998
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-astro-startup-cold.log",
+      "listenMs": 3053.090375000029,
+      "durationMs": 3601.782041000086
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-astro-startup-warm.log",
+      "listenMs": 2586.3588750000345,
+      "durationMs": 3132.6449590000557
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-astro-build-cold.log",
+      "durationMs": 2492.6849589999765
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-astro-build-warm.log",
+      "durationMs": 2079.6163340000203
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-vite-react-startup-cold.log",
+      "listenMs": 7389.2047500000335,
+      "durationMs": 8128.517584000016
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-vite-react-startup-warm.log",
+      "listenMs": 3204.86166699999,
+      "durationMs": 3987.591749999905
+    },
+    {
+      "app": "vite-react",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-vite-react-build-cold.log",
+      "durationMs": 6080.2989580000285
+    },
+    {
+      "app": "vite-react",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-19T15-07-25-282Z/3-vite-react-build-warm.log",
+      "durationMs": 2501.3295420000795
+    }
+  ],
+  "contentQueryArtifactsUnchanged": true,
+  "completedAt": "2026-10-19T15:22:06.720Z"
+}

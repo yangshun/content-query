@@ -1,0 +1,13 @@
+{
+  "include": ["src", "*.ts", ".content-query/**/*.d.ts"],
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node", "vite-plus/client"]
+  }
+}

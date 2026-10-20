@@ -1,0 +1,13 @@
+{
+  "files": 20002,
+  "htmlPages": 10001,
+  "navigationJsonFiles": 10001,
+  "bytesPerOutput": 49971135,
+  "byteIdentical": true,
+  "sha256": [
+    "7f09175ababef12150e59dc86c57a3b8a489827a2172a06f6881812e220504aa",
+    "7f09175ababef12150e59dc86c57a3b8a489827a2172a06f6881812e220504aa"
+  ],
+  "sourceRuns": ["full-site-prerender-before-cpu", "full-site-prerender-id-index"],
+  "corpusSha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914"
+}

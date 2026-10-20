@@ -1,0 +1,1009 @@
+{
+  "note": "Instrumented diagnostics; use timings mode for wall-clock comparisons.",
+  "traces": [
+    {
+      "file": ".runs/profiles/full-site-build-cpu/1-build-cold/18657-0.json",
+      "argv": [
+        "/Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node",
+        "/Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.16_@types+node@25.6.0_esbuild@0.28.2_jiti@2.7.0_sass-e_777c8734f4404c328c78bc0253a1a720/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/cli.js",
+        "build"
+      ],
+      "elapsedMs": 15289.071249999999,
+      "spans": {
+        "loadRegistry": {
+          "calls": 1,
+          "totalMs": 43.142292,
+          "maxMs": 43.142292
+        },
+        "configure": {
+          "calls": 1,
+          "totalMs": 43.26062500000012,
+          "maxMs": 43.26062500000012
+        },
+        "loadGlob": {
+          "calls": 1,
+          "totalMs": 815.2379169999999,
+          "maxMs": 815.2379169999999
+        },
+        "populateStore": {
+          "calls": 1,
+          "totalMs": 156.98862499999996,
+          "maxMs": 156.98862499999996
+        },
+        "glob-CES9G_er.mjs:load:64": {
+          "calls": 1,
+          "totalMs": 972.3771660000002,
+          "maxMs": 972.3771660000002
+        },
+        "build-DQA-86C-.mjs:load:781": {
+          "calls": 1,
+          "totalMs": 977.6875409999998,
+          "maxMs": 977.6875409999998
+        },
+        "renderMarkdown": {
+          "calls": 10000,
+          "totalMs": 193.18572700000232,
+          "maxMs": 3.225916000000325
+        },
+        "prepareRevision": {
+          "calls": 1,
+          "totalMs": 398.9822079999999,
+          "maxMs": 398.9822079999999
+        },
+        "prepare": {
+          "calls": 1,
+          "totalMs": 1378.8854159999999,
+          "maxMs": 1378.8854159999999
+        },
+        "createSession": {
+          "calls": 1,
+          "totalMs": 1422.364209,
+          "maxMs": 1422.364209
+        },
+        "buildAtRoot": {
+          "calls": 1,
+          "totalMs": 1422.437958,
+          "maxMs": 1422.437958
+        },
+        "ensureSession": {
+          "calls": 192,
+          "totalMs": 1424.6519200000023,
+          "maxMs": 1423.8289579999998
+        },
+        "revisionModules": {
+          "calls": 1,
+          "totalMs": 141.65812499999993,
+          "maxMs": 141.65812499999993
+        },
+        "buildStart": {
+          "calls": 2,
+          "totalMs": 1565.6541250000005,
+          "maxMs": 1565.6502500000001
+        },
+        "vite.mjs:load:269": {
+          "calls": 315,
+          "totalMs": 1.3614069999989624,
+          "maxMs": 0.15233299999999872
+        }
+      },
+      "events": [
+        {
+          "name": "loadRegistry",
+          "startMs": 1326.870875,
+          "durationMs": 43.142292
+        },
+        {
+          "name": "configure",
+          "startMs": 1326.831708,
+          "durationMs": 43.26062500000012
+        },
+        {
+          "name": "loadGlob",
+          "startMs": 1370.407125,
+          "durationMs": 815.2379169999999
+        },
+        {
+          "name": "populateStore",
+          "startMs": 2185.7277080000003,
+          "durationMs": 156.98862499999996
+        },
+        {
+          "name": "glob-CES9G_er.mjs:load:64",
+          "startMs": 1370.3637919999999,
+          "durationMs": 972.3771660000002
+        },
+        {
+          "name": "build-DQA-86C-.mjs:load:781",
+          "startMs": 1370.223792,
+          "durationMs": 977.6875409999998
+        },
+        {
+          "name": "prepareRevision",
+          "startMs": 2350.018875,
+          "durationMs": 398.9822079999999
+        },
+        {
+          "name": "prepare",
+          "startMs": 1370.157417,
+          "durationMs": 1378.8854159999999
+        },
+        {
+          "name": "createSession",
+          "startMs": 1326.718833,
+          "durationMs": 1422.364209
+        },
+        {
+          "name": "buildAtRoot",
+          "startMs": 1326.6477499999999,
+          "durationMs": 1422.437958
+        },
+        {
+          "name": "ensureSession",
+          "startMs": 1326.430625,
+          "durationMs": 1423.8289579999998
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 2750.3708330000004,
+          "durationMs": 141.65812499999993
+        },
+        {
+          "name": "buildStart",
+          "startMs": 1326.395667,
+          "durationMs": 1565.6502500000001
+        }
+      ],
+      "io": {
+        "other:mkdir": {
+          "calls": 9,
+          "totalMs": 5.158875000000421
+        },
+        "other:writeFile": {
+          "calls": 3,
+          "totalMs": 1.045541000000128
+        },
+        "other:readFile": {
+          "calls": 11,
+          "totalMs": 6.853375000000369
+        },
+        "sources:readFile": {
+          "calls": 10000,
+          "totalMs": 6525155.756575998
+        },
+        "artifacts:readFile": {
+          "calls": 1,
+          "totalMs": 0.22458400000004985
+        },
+        "artifacts:writeFile": {
+          "calls": 1,
+          "totalMs": 0.2510409999999865
+        },
+        "artifacts:rm": {
+          "calls": 1,
+          "totalMs": 0.3080419999996593
+        },
+        "other:rm": {
+          "calls": 1,
+          "totalMs": 1.6193750000002183
+        }
+      },
+      "watchEvents": {},
+      "watchedDirectories": 0,
+      "watchedArtifacts": 0,
+      "cpu": {
+        "sampledMs": 15254.458,
+        "activeMs": 9089.728,
+        "idleMs": 6164.73,
+        "self": [
+          {
+            "name": "writeFileUtf8",
+            "source": "",
+            "durationMs": 1496.335,
+            "activePercent": 16.46182372013772
+          },
+          {
+            "name": "allocate$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1152.086,
+            "activePercent": 12.674592683081388
+          },
+          {
+            "name": "(garbage collector)",
+            "source": "",
+            "durationMs": 617.916,
+            "activePercent": 6.797959190858076
+          },
+          {
+            "name": "(program)",
+            "source": "",
+            "durationMs": 337.206,
+            "activePercent": 3.7097479704563217
+          },
+          {
+            "name": "DOMException",
+            "source": "node:internal/per_context/domexception",
+            "durationMs": 213.118,
+            "activePercent": 2.3446026107711915
+          },
+          {
+            "name": "detectModuleFormat",
+            "source": "node:internal/modules/esm/get_format",
+            "durationMs": 180.249,
+            "activePercent": 1.9829966309222895
+          },
+          {
+            "name": "mkdir",
+            "source": "",
+            "durationMs": 147.413,
+            "activePercent": 1.6217536982404752
+          },
+          {
+            "name": "nextTick",
+            "source": "node:internal/process/task_queues",
+            "durationMs": 142.421,
+            "activePercent": 1.566834563146444
+          },
+          {
+            "name": "compileSourceTextModule",
+            "source": "node:internal/modules/esm/utils",
+            "durationMs": 142.167,
+            "activePercent": 1.5640402001027973
+          },
+          {
+            "name": "stringify_string",
+            "source": "devalue/src/utils.js",
+            "durationMs": 120.96,
+            "activePercent": 1.3307328888169152
+          },
+          {
+            "name": "processChunk",
+            "source": "node:zlib",
+            "durationMs": 118.629,
+            "activePercent": 1.3050885571053392
+          },
+          {
+            "name": "flatten",
+            "source": "devalue/src/stringify.js",
+            "durationMs": 97.628,
+            "activePercent": 1.07404754025643
+          },
+          {
+            "name": "writeLatin1String",
+            "source": "",
+            "durationMs": 87.958,
+            "activePercent": 0.9676637188703556
+          },
+          {
+            "name": "consoleCall",
+            "source": "",
+            "durationMs": 76.789,
+            "activePercent": 0.8447887549550438
+          },
+          {
+            "name": "readFileUtf8",
+            "source": "",
+            "durationMs": 76.5,
+            "activePercent": 0.8416093418856978
+          },
+          {
+            "name": "parseJSONFromBytes",
+            "source": "undici/lib/web/infra/index.js",
+            "durationMs": 69.419,
+            "activePercent": 0.7637082209720687
+          },
+          {
+            "name": "createUnsafeBuffer",
+            "source": "node:internal/buffer",
+            "durationMs": 67.833,
+            "activePercent": 0.7462599540932359
+          },
+          {
+            "name": "parse",
+            "source": "",
+            "durationMs": 65.792,
+            "activePercent": 0.7238060368803115
+          },
+          {
+            "name": "",
+            "source": "void/dist/prerender-render-Bfsumdkv.mjs",
+            "durationMs": 57.043,
+            "activePercent": 0.6275545318847825
+          },
+          {
+            "name": "read",
+            "source": "",
+            "durationMs": 57.038,
+            "activePercent": 0.627499524738254
+          },
+          {
+            "name": "runMicrotasks",
+            "source": "",
+            "durationMs": 51.789,
+            "activePercent": 0.5697530223126589
+          },
+          {
+            "name": "__init",
+            "source": "wrangler/wrangler-dist/cli.js",
+            "durationMs": 48.709,
+            "activePercent": 0.535868620051117
+          },
+          {
+            "name": "encodeUtf8String",
+            "source": "",
+            "durationMs": 45.206,
+            "activePercent": 0.49733061319326605
+          },
+          {
+            "name": "next",
+            "source": "yaml/dist/parse/parser.js",
+            "durationMs": 41.748,
+            "activePercent": 0.4592876706541714
+          },
+          {
+            "name": "internalModuleStat",
+            "source": "",
+            "durationMs": 39.457,
+            "activePercent": 0.4340833961148233
+          }
+        ],
+        "inclusive": [
+          {
+            "name": "processTicksAndRejections",
+            "source": "node:internal/process/task_queues",
+            "durationMs": 3952.313,
+            "activePercent": 43.48109206348089
+          },
+          {
+            "name": "runMicrotasks",
+            "source": "",
+            "durationMs": 2957.528,
+            "activePercent": 32.53703521161469
+          },
+          {
+            "name": "",
+            "source": "void/dist/prerender-render-Bfsumdkv.mjs",
+            "durationMs": 1997.827,
+            "activePercent": 21.978952505509515
+          },
+          {
+            "name": "writeFileSync",
+            "source": "node:fs",
+            "durationMs": 1511.125,
+            "activePercent": 16.624534859568953
+          },
+          {
+            "name": "writeFileUtf8",
+            "source": "",
+            "durationMs": 1496.335,
+            "activePercent": 16.46182372013772
+          },
+          {
+            "name": "#assembleAndUpdateConfigInternal",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1268.877,
+            "activePercent": 13.959460613122857
+          },
+          {
+            "name": "serializeConfig",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1264.543,
+            "activePercent": 13.911780418511974
+          },
+          {
+            "name": "encodeCapnpStruct",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1259.459,
+            "activePercent": 13.855849151921817
+          },
+          {
+            "name": "setText",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1221.624,
+            "activePercent": 13.439610074140832
+          },
+          {
+            "name": "set",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1207.625,
+            "activePercent": 13.285601065290404
+          },
+          {
+            "name": "set esModule",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1194.75,
+            "activePercent": 13.143957662979574
+          },
+          {
+            "name": "allocate",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1162.961,
+            "activePercent": 12.794233226780824
+          },
+          {
+            "name": "allocateSegment",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1159.252,
+            "activePercent": 12.753428925485998
+          },
+          {
+            "name": "initList$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1155.085,
+            "activePercent": 12.707585969569166
+          },
+          {
+            "name": "allocate$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1152.086,
+            "activePercent": 12.674592683081388
+          },
+          {
+            "name": "emit",
+            "source": "node:domain",
+            "durationMs": 962.996,
+            "activePercent": 10.594332415667443
+          },
+          {
+            "name": "emit",
+            "source": "node:events",
+            "durationMs": 953.414,
+            "activePercent": 10.48891672006027
+          },
+          {
+            "name": "",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 658.248,
+            "activePercent": 7.241668837615382
+          },
+          {
+            "name": "getOrCreateModuleJob",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 655.79,
+            "activePercent": 7.214627324381984
+          },
+          {
+            "name": "tracePromise",
+            "source": "node:diagnostics_channel",
+            "durationMs": 655.79,
+            "activePercent": 7.214627324381984
+          },
+          {
+            "name": "import",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 655.79,
+            "activePercent": 7.214627324381984
+          },
+          {
+            "name": "#getOrCreateModuleJobAfterResolve",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 654.499,
+            "activePercent": 7.200424479148331
+          },
+          {
+            "name": "afterResolve",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 654.499,
+            "activePercent": 7.200424479148331
+          },
+          {
+            "name": "syncLink",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 651.749,
+            "activePercent": 7.170170548557668
+          },
+          {
+            "name": "link",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 651.749,
+            "activePercent": 7.170170548557668
+          }
+        ]
+      },
+      "build": {
+        "serverModulesTransformed": 291,
+        "clientModulesTransformed": 27,
+        "serverAssetJsFiles": 199,
+        "hashedEntryJsFiles": 189,
+        "outputPayloadGroupJsFiles": 0
+      }
+    },
+    {
+      "file": ".runs/profiles/full-site-build-cpu/1-build-warm/19117-0.json",
+      "argv": [
+        "/Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node",
+        "/Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.16_@types+node@25.6.0_esbuild@0.28.2_jiti@2.7.0_sass-e_777c8734f4404c328c78bc0253a1a720/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/cli.js",
+        "build"
+      ],
+      "elapsedMs": 22204.104292,
+      "spans": {
+        "loadRegistry": {
+          "calls": 1,
+          "totalMs": 62.1814159999999,
+          "maxMs": 62.1814159999999
+        },
+        "configure": {
+          "calls": 1,
+          "totalMs": 62.3489169999998,
+          "maxMs": 62.3489169999998
+        },
+        "loadGlob": {
+          "calls": 1,
+          "totalMs": 1350.969416,
+          "maxMs": 1350.969416
+        },
+        "populateStore": {
+          "calls": 1,
+          "totalMs": 329.2433329999999,
+          "maxMs": 329.2433329999999
+        },
+        "glob-CES9G_er.mjs:load:64": {
+          "calls": 1,
+          "totalMs": 1680.4204579999996,
+          "maxMs": 1680.4204579999996
+        },
+        "build-DQA-86C-.mjs:load:781": {
+          "calls": 1,
+          "totalMs": 1702.880083,
+          "maxMs": 1702.880083
+        },
+        "renderMarkdown": {
+          "calls": 10000,
+          "totalMs": 382.2077709999976,
+          "maxMs": 16.29462499999954
+        },
+        "prepareRevision": {
+          "calls": 1,
+          "totalMs": 720.2741660000002,
+          "maxMs": 720.2741660000002
+        },
+        "prepare": {
+          "calls": 1,
+          "totalMs": 2426.8216250000005,
+          "maxMs": 2426.8216250000005
+        },
+        "createSession": {
+          "calls": 1,
+          "totalMs": 2489.416625,
+          "maxMs": 2489.416625
+        },
+        "buildAtRoot": {
+          "calls": 1,
+          "totalMs": 2489.491292,
+          "maxMs": 2489.491292
+        },
+        "ensureSession": {
+          "calls": 192,
+          "totalMs": 2490.940124000006,
+          "maxMs": 2490.048
+        },
+        "revisionModules": {
+          "calls": 1,
+          "totalMs": 178.34383400000024,
+          "maxMs": 178.34383400000024
+        },
+        "buildStart": {
+          "calls": 2,
+          "totalMs": 2668.5556680000004,
+          "maxMs": 2668.5502090000005
+        },
+        "vite.mjs:load:269": {
+          "calls": 315,
+          "totalMs": 1.3399149999986548,
+          "maxMs": 0.0816660000000411
+        }
+      },
+      "events": [
+        {
+          "name": "loadRegistry",
+          "startMs": 2119.1571670000003,
+          "durationMs": 62.1814159999999
+        },
+        {
+          "name": "configure",
+          "startMs": 2119.1184580000004,
+          "durationMs": 62.3489169999998
+        },
+        {
+          "name": "loadGlob",
+          "startMs": 2182.1302920000003,
+          "durationMs": 1350.969416
+        },
+        {
+          "name": "populateStore",
+          "startMs": 3533.2242920000003,
+          "durationMs": 329.2433329999999
+        },
+        {
+          "name": "glob-CES9G_er.mjs:load:64",
+          "startMs": 2182.0837920000004,
+          "durationMs": 1680.4204579999996
+        },
+        {
+          "name": "build-DQA-86C-.mjs:load:781",
+          "startMs": 2181.766625,
+          "durationMs": 1702.880083
+        },
+        {
+          "name": "prepareRevision",
+          "startMs": 3888.0755420000005,
+          "durationMs": 720.2741660000002
+        },
+        {
+          "name": "prepare",
+          "startMs": 2181.567583,
+          "durationMs": 2426.8216250000005
+        },
+        {
+          "name": "createSession",
+          "startMs": 2119.0087080000003,
+          "durationMs": 2489.416625
+        },
+        {
+          "name": "buildAtRoot",
+          "startMs": 2118.9365000000003,
+          "durationMs": 2489.491292
+        },
+        {
+          "name": "ensureSession",
+          "startMs": 2118.701333,
+          "durationMs": 2490.048
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 4608.854833,
+          "durationMs": 178.34383400000024
+        },
+        {
+          "name": "buildStart",
+          "startMs": 2118.665708,
+          "durationMs": 2668.5502090000005
+        }
+      ],
+      "io": {
+        "other:mkdir": {
+          "calls": 8,
+          "totalMs": 4.4096659999993335
+        },
+        "other:writeFile": {
+          "calls": 3,
+          "totalMs": 2.33916699999952
+        },
+        "other:readFile": {
+          "calls": 11,
+          "totalMs": 24.49253900000076
+        },
+        "sources:readFile": {
+          "calls": 10000,
+          "totalMs": 9968690.324578013
+        },
+        "artifacts:readFile": {
+          "calls": 1,
+          "totalMs": 0.23391600000013568
+        },
+        "other:rm": {
+          "calls": 1,
+          "totalMs": 1.897791999999754
+        }
+      },
+      "watchEvents": {},
+      "watchedDirectories": 0,
+      "watchedArtifacts": 0,
+      "cpu": {
+        "sampledMs": 22160.375,
+        "activeMs": 14817.549,
+        "idleMs": 7342.826,
+        "self": [
+          {
+            "name": "writeFileUtf8",
+            "source": "",
+            "durationMs": 1637.633,
+            "activePercent": 11.051983023643114
+          },
+          {
+            "name": "rmSync",
+            "source": "",
+            "durationMs": 1604.667,
+            "activePercent": 10.829503583892317
+          },
+          {
+            "name": "allocate$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1402.073,
+            "activePercent": 9.462246421456072
+          },
+          {
+            "name": "(garbage collector)",
+            "source": "",
+            "durationMs": 977.34,
+            "activePercent": 6.595827690531005
+          },
+          {
+            "name": "(program)",
+            "source": "",
+            "durationMs": 462.96,
+            "activePercent": 3.124403367925424
+          },
+          {
+            "name": "detectModuleFormat",
+            "source": "node:internal/modules/esm/get_format",
+            "durationMs": 330,
+            "activePercent": 2.227088974026676
+          },
+          {
+            "name": "compileSourceTextModule",
+            "source": "node:internal/modules/esm/utils",
+            "durationMs": 244.79,
+            "activePercent": 1.652027605915121
+          },
+          {
+            "name": "stringify_string",
+            "source": "devalue/src/utils.js",
+            "durationMs": 237.173,
+            "activePercent": 1.6006223431419058
+          },
+          {
+            "name": "DOMException",
+            "source": "node:internal/per_context/domexception",
+            "durationMs": 226.328,
+            "activePercent": 1.527432100950029
+          },
+          {
+            "name": "mkdir",
+            "source": "",
+            "durationMs": 185.829,
+            "activePercent": 1.2541142938012217
+          },
+          {
+            "name": "flatten",
+            "source": "devalue/src/stringify.js",
+            "durationMs": 184.92,
+            "activePercent": 1.2479796759909483
+          },
+          {
+            "name": "processChunk",
+            "source": "node:zlib",
+            "durationMs": 153.711,
+            "activePercent": 1.0373577978382256
+          },
+          {
+            "name": "nextTick",
+            "source": "node:internal/process/task_queues",
+            "durationMs": 151.203,
+            "activePercent": 1.0204319216356228
+          },
+          {
+            "name": "read",
+            "source": "",
+            "durationMs": 138.872,
+            "activePercent": 0.9372130303061592
+          },
+          {
+            "name": "normalizedFile",
+            "source": "void/dist/prerender-render-Bfsumdkv.mjs",
+            "durationMs": 131.253,
+            "activePercent": 0.8857942700240101
+          },
+          {
+            "name": "parse",
+            "source": "",
+            "durationMs": 126.085,
+            "activePercent": 0.8509167069398589
+          },
+          {
+            "name": "encodeUtf8String",
+            "source": "",
+            "durationMs": 120.088,
+            "activePercent": 0.8104444264027741
+          },
+          {
+            "name": "readFileUtf8",
+            "source": "",
+            "durationMs": 117.795,
+            "activePercent": 0.7949695324105222
+          },
+          {
+            "name": "renderConcurrency",
+            "source": "void/dist/prerender-render-Bfsumdkv.mjs",
+            "durationMs": 112.833,
+            "activePercent": 0.7614822127465211
+          },
+          {
+            "name": "createUnsafeBuffer",
+            "source": "node:internal/buffer",
+            "durationMs": 106.709,
+            "activePercent": 0.7201528403921593
+          },
+          {
+            "name": "consoleCall",
+            "source": "",
+            "durationMs": 102.583,
+            "activePercent": 0.6923074794623592
+          },
+          {
+            "name": "runMicrotasks",
+            "source": "",
+            "durationMs": 100.712,
+            "activePercent": 0.6796805598550746
+          },
+          {
+            "name": "writeLatin1String",
+            "source": "",
+            "durationMs": 91.003,
+            "activePercent": 0.614156902737423
+          },
+          {
+            "name": "encode",
+            "source": "node:internal/encoding",
+            "durationMs": 83.416,
+            "activePercent": 0.5629541025982098
+          },
+          {
+            "name": "parseJSONFromBytes",
+            "source": "undici/lib/web/infra/index.js",
+            "durationMs": 75.71,
+            "activePercent": 0.5109482006774534
+          }
+        ],
+        "inclusive": [
+          {
+            "name": "processTicksAndRejections",
+            "source": "node:internal/process/task_queues",
+            "durationMs": 5244.067,
+            "activePercent": 35.39092059017318
+          },
+          {
+            "name": "runMicrotasks",
+            "source": "",
+            "durationMs": 3985.348,
+            "activePercent": 26.896135116543228
+          },
+          {
+            "name": "",
+            "source": "void/dist/prerender-render-Bfsumdkv.mjs",
+            "durationMs": 2407.764,
+            "activePercent": 16.249408049873836
+          },
+          {
+            "name": "plugin.<computed>",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 1725.5,
+            "activePercent": 11.644975832372817
+          },
+          {
+            "name": "plugin",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 1714.291,
+            "activePercent": 11.569329043555046
+          },
+          {
+            "name": "handler",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 1691.084,
+            "activePercent": 11.412710698645235
+          },
+          {
+            "name": "#assembleAndUpdateConfigInternal",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1677.955,
+            "activePercent": 11.324106301251307
+          },
+          {
+            "name": "serializeConfig",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1676.205,
+            "activePercent": 11.312295980934499
+          },
+          {
+            "name": "encodeCapnpStruct",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1670.83,
+            "activePercent": 11.276021425675731
+          },
+          {
+            "name": "setText",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1646.289,
+            "activePercent": 11.11040024230728
+          },
+          {
+            "name": "writeFileSync",
+            "source": "node:fs",
+            "durationMs": 1646.091,
+            "activePercent": 11.109063988922864
+          },
+          {
+            "name": "set",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1638.914,
+            "activePercent": 11.060628178115017
+          },
+          {
+            "name": "writeFileUtf8",
+            "source": "",
+            "durationMs": 1637.633,
+            "activePercent": 11.051983023643114
+          },
+          {
+            "name": "prepareOutDir",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 1609,
+            "activePercent": 10.858745936996733
+          },
+          {
+            "name": "emptyDir",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 1605.459,
+            "activePercent": 10.83484859742998
+          },
+          {
+            "name": "rmSync",
+            "source": "",
+            "durationMs": 1604.667,
+            "activePercent": 10.829503583892317
+          },
+          {
+            "name": "rmSync",
+            "source": "node:fs",
+            "durationMs": 1604.667,
+            "activePercent": 10.829503583892317
+          },
+          {
+            "name": "set esModule",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1558.245,
+            "activePercent": 10.516212904036964
+          },
+          {
+            "name": "allocate",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1421.239,
+            "activePercent": 9.591593049565756
+          },
+          {
+            "name": "allocateSegment",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1421.239,
+            "activePercent": 9.591593049565756
+          },
+          {
+            "name": "allocate$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1418.572,
+            "activePercent": 9.57359412140294
+          },
+          {
+            "name": "initList$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 1416.115,
+            "activePercent": 9.55701243167814
+          },
+          {
+            "name": "emit",
+            "source": "node:domain",
+            "durationMs": 1222.678,
+            "activePercent": 8.251553613893904
+          },
+          {
+            "name": "emit",
+            "source": "node:events",
+            "durationMs": 1198.469,
+            "activePercent": 8.088173017008414
+          },
+          {
+            "name": "",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1164.375,
+            "activePercent": 7.858080982219125
+          }
+        ]
+      },
+      "build": {
+        "serverModulesTransformed": 291,
+        "clientModulesTransformed": 27,
+        "serverAssetJsFiles": 199,
+        "hashedEntryJsFiles": 189,
+        "outputPayloadGroupJsFiles": 0
+      }
+    }
+  ]
+}

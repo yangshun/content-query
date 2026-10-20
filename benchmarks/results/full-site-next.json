@@ -1,0 +1,162 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-20T03:27:34.354Z",
+  "repetitions": 3,
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 50000,
+    "copies": 0
+  },
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.3.0",
+    "cpu": "Apple M5",
+    "logicalCpus": 10,
+    "memoryBytes": 25769803776,
+    "vitePlus": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\n",
+    "chromium": "156.0.8078.4",
+    "revision": "ad97f39096e3ceaec39078bd0e0c2bb8dd37687f",
+    "dirty": true,
+    "lockfileSha256": "4124699dc039ebe02e7da114162d4c2c5af11c5c8b87f5f49e172dc70782804c",
+    "contentQueryArtifactsSha256": "da14c14bc1950629e891ad56103b6dd34c07c85751547410c23a94227b67183d",
+    "packages": {
+      "next": {
+        "next": "16.4.2",
+        "react": "19.2.5",
+        "react-dom": "19.2.5",
+        "content-query": "0.0.0",
+        "vite-plus": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7"
+      }
+    }
+  },
+  "executionRoot": ".runs/next-isolated",
+  "packageSnapshot": ".runs/next-benchmark/content-query-snapshot",
+  "samples": [
+    {
+      "app": "next",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec next dev",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/1-next-startup-cold.log",
+      "listenMs": 840.2703750000001,
+      "durationMs": 35776.752625
+    },
+    {
+      "app": "next",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec next dev",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/1-next-startup-warm.log",
+      "listenMs": 385.3687080000018,
+      "durationMs": 33269.95370800001
+    },
+    {
+      "app": "next",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec next build",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/1-next-build-cold.log",
+      "durationMs": 92007.736708,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "next",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec next build",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/1-next-build-warm.log",
+      "durationMs": 98716.04862500002,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "next",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec next dev",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/2-next-startup-cold.log",
+      "listenMs": 1410.6449999999604,
+      "durationMs": 42032.27270899998
+    },
+    {
+      "app": "next",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec next dev",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/2-next-startup-warm.log",
+      "listenMs": 424.5698750000447,
+      "durationMs": 33581.918542
+    },
+    {
+      "app": "next",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec next build",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/2-next-build-cold.log",
+      "durationMs": 70219.77558299998,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "next",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec next build",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/2-next-build-warm.log",
+      "durationMs": 103668.75154199998,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "next",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec next dev",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/3-next-startup-cold.log",
+      "listenMs": 1176.2830420000246,
+      "durationMs": 62043.930458000046
+    },
+    {
+      "app": "next",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec next dev",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/3-next-startup-warm.log",
+      "listenMs": 586.4966669999994,
+      "durationMs": 40764.82412500004
+    },
+    {
+      "app": "next",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec next build",
+      "log": ".runs/next-isolated/.runs/2026-10-20T03-27-34-354Z/3-next-build-cold.log",
+      "durationMs": 71974.847083,
+      "prerenderedPages": 10001
+    }
+  ]
+}

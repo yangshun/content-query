@@ -1,0 +1,73 @@
+{
+  "node": "v24.21.0",
+  "miniflare": "5.20261012.0-beta",
+  "workload": "Synthetic workerd configs with 100, 1000, and 10000 distinct 1 KiB JavaScript payload modules; only serialization is timed.",
+  "patch": {
+    "original": "new ArrayBuffer(srcBuffer.byteLength + minSize)",
+    "replacement": "new ArrayBuffer(Math.max(srcBuffer.byteLength * 2, srcBuffer.byteLength + minSize))",
+    "appliedOnlyInIsolatedChild": true
+  },
+  "identicalBytes": true,
+  "variants": [
+    {
+      "variant": "linear",
+      "samples": [
+        {
+          "count": 100,
+          "durationMs": 6.625915999999961,
+          "cpuUserMs": 7.016,
+          "cpuSystemMs": 0.654,
+          "bytes": 109880,
+          "sha256": "5ee27e42a25e0399ee70995ecd0af7f0e20ffabe4a8e3a830459845b76951741"
+        },
+        {
+          "count": 1000,
+          "durationMs": 75.20404200000007,
+          "cpuUserMs": 73.985,
+          "cpuSystemMs": 15.494,
+          "bytes": 1096280,
+          "sha256": "0d74a405d524c117961234be01946499361a4470ad23ff32d5e7d04671da58bb"
+        },
+        {
+          "count": 10000,
+          "durationMs": 6079.776458,
+          "cpuUserMs": 5452.79,
+          "cpuSystemMs": 2012.495,
+          "bytes": 11032280,
+          "sha256": "1dab59254ed9f204122b9aa7967acaf4ca2f7b8c5ddf672866f67bdcdccadb0e"
+        }
+      ],
+      "maxRssKiB": 1098944
+    },
+    {
+      "variant": "geometric",
+      "samples": [
+        {
+          "count": 100,
+          "durationMs": 6.630917000000068,
+          "cpuUserMs": 8.616,
+          "cpuSystemMs": 0.462,
+          "bytes": 109880,
+          "sha256": "5ee27e42a25e0399ee70995ecd0af7f0e20ffabe4a8e3a830459845b76951741"
+        },
+        {
+          "count": 1000,
+          "durationMs": 24.049333000000047,
+          "cpuUserMs": 32.771,
+          "cpuSystemMs": 3.161,
+          "bytes": 1096280,
+          "sha256": "0d74a405d524c117961234be01946499361a4470ad23ff32d5e7d04671da58bb"
+        },
+        {
+          "count": 10000,
+          "durationMs": 136.337083,
+          "cpuUserMs": 147.769,
+          "cpuSystemMs": 13.898,
+          "bytes": 11032280,
+          "sha256": "1dab59254ed9f204122b9aa7967acaf4ca2f7b8c5ddf672866f67bdcdccadb0e"
+        }
+      ],
+      "maxRssKiB": 282112
+    }
+  ]
+}

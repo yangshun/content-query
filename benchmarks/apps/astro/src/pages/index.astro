@@ -1,0 +1,34 @@
+---
+import { getCollection } from "astro:content";
+import "../../../../shared/styles.css";
+
+const entries = (await getCollection("entries")).sort((left, right) => left.data.order - right.data.order);
+if (!entries.length) {
+  throw new Error("Generate the benchmark corpus before starting the app.");
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Astro content benchmark</title>
+  </head>
+  <body>
+    <main data-benchmark-count={entries.length}>
+      <h1>Astro content collections</h1>
+      <p>{entries.length} entries</p>
+      <p>Final entry: <span data-benchmark-last>{entries.at(-1)?.data.title}</span></p>
+      <h2>All entries</h2>
+      <ol data-benchmark-index>
+        {entries.map((entry) => (
+          <li>
+            <a href={`/entries/${entry.id}/`}>{entry.data.title}</a>
+            <p>{entry.data.description}</p>
+          </li>
+        ))}
+      </ol>
+    </main>
+  </body>
+</html>

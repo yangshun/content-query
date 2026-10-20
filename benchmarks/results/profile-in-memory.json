@@ -1,0 +1,68 @@
+{
+  "startedAt": "2026-10-20T00:55:03.992Z",
+  "label": "in-memory",
+  "mode": "timings",
+  "backend": "in-memory",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [9.80078125, 9.6826171875, 11.06689453125],
+  "lockfileSha256": "b90d85129234e2432256377d17a7c5a4441d9d6419158699568bdb0986050a99",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10248894,
+    "sha256": "591f5510c25529afdf3e999f7586c3d30a39120239131572460c7208fd8f19f4",
+    "hardlinks": 40000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "394ac9681bdd845a4b48771c53922ccc3ab2e3ad8a4550aa4d9a0813be7ce15c",
+  "contentQueryArtifactsUnchanged": true,
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/in-memory/1-startup-cold/output.log",
+      "listenMs": 5058.237666,
+      "durationMs": 6098.55075
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/in-memory/1-startup-warm/output.log",
+      "listenMs": 2915.2964169999996,
+      "durationMs": 3727.7704169999997
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/in-memory/1-build-cold/output.log",
+      "durationMs": 4511.941792
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/in-memory/1-build-warm/output.log",
+      "durationMs": 3356.9945830000033
+    }
+  ],
+  "completedAt": "2026-10-20T00:55:26.398Z",
+  "loadAverageAtEnd": [9.7294921875, 9.67041015625, 11.02978515625]
+}

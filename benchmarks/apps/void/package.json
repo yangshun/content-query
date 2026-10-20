@@ -1,0 +1,26 @@
+{
+  "name": "@content-query/benchmark-void",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "preview": "node ../../shared/preview.ts --dir dist/client"
+  },
+  "dependencies": {
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
+  },
+  "devDependencies": {
+    "@types/node": "25.6.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@void/react": "catalog:",
+    "content-query": "workspace:*",
+    "typescript": "6.0.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.1.16",
+    "vite-plus": "0.1.16",
+    "void": "catalog:",
+    "zod": "4.6.7"
+  }
+}

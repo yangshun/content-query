@@ -1,0 +1,67 @@
+{
+  "startedAt": "2026-10-20T00:50:08.137Z",
+  "label": "final-confirmation",
+  "mode": "timings",
+  "backend": "generated",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [4.169921875, 8.56640625, 11.333984375],
+  "lockfileSha256": "b90d85129234e2432256377d17a7c5a4441d9d6419158699568bdb0986050a99",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10248894,
+    "sha256": "591f5510c25529afdf3e999f7586c3d30a39120239131572460c7208fd8f19f4",
+    "hardlinks": 40000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "394ac9681bdd845a4b48771c53922ccc3ab2e3ad8a4550aa4d9a0813be7ce15c",
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/final-confirmation/1-startup-cold/output.log",
+      "listenMs": 9988.099624999999,
+      "durationMs": 11038.036499999998
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/final-confirmation/1-startup-warm/output.log",
+      "listenMs": 4804.066541999999,
+      "durationMs": 5750.121583999999
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/final-confirmation/1-build-cold/output.log",
+      "durationMs": 7962.12975
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/final-confirmation/1-build-warm/output.log",
+      "durationMs": 5288.532374999999
+    }
+  ],
+  "completedAt": "2026-10-20T00:50:45.234Z",
+  "loadAverageAtEnd": [11.7275390625, 9.970703125, 11.73291015625]
+}
