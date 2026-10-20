@@ -2,33 +2,107 @@
 
 Outstanding tasks and future design notes. Implemented capabilities are documented in [FEATURES.md](./FEATURES.md); [PLAN.md](./PLAN.md) records the v1 contracts.
 
-## Next
+## Index
 
-- [ ] Remove manual `onContentUpdate` plumbing.
+- **Querying and storage**
+  - [Indexing for joins](#indexing-for-joins)
+  - [SQLite storage and SQL queries](#sqlite-storage-and-sql-queries)
+  - [Built-in search](#built-in-search)
+  - [Cursor pagination](#cursor-pagination)
+  - [General-purpose joins](#general-purpose-joins)
+  - [Browser querying](#browser-querying)
+  - [Richer filtering](#richer-filtering)
+  - [Advanced relationship queries](#advanced-relationship-queries)
+- **Content modeling and authoring**
+  - [Schema generation and inference](#schema-generation-and-inference)
+  - [File-based ordering](#file-based-ordering)
+  - [Singletons](#singletons)
+  - [Authoring ergonomics](#authoring-ergonomics)
+- **Sources and runtime loading**
+  - [CMS-specific adapters](#cms-specific-adapters)
+  - [Lazy source bodies and cross-operation snapshots](#lazy-source-bodies-and-cross-operation-snapshots)
+  - [Live collections and runtime source loading](#live-collections-and-runtime-source-loading)
+- **Processing and rendering**
+  - [Build-time transforms](#build-time-transforms)
+  - [Collection-wide computed context](#collection-wide-computed-context)
+  - [Built-in derived fields](#built-in-derived-fields)
+  - [Configurable Markdown processing](#configurable-markdown-processing)
+  - [MDX and component content](#mdx-and-component-content)
+- **Assets and links**
+  - [Typed content href helpers](#typed-content-href-helpers)
+  - [Assets and images](#assets-and-images)
+- **Caching and performance**
+  - [Public preparation cache helper](#public-preparation-cache-helper)
+  - [Persistent preparation cache and benchmarks](#persistent-preparation-cache-and-benchmarks)
+- **Integrations and developer tooling**
+  - [Validation-only command](#validation-only-command)
+  - [Automatic content updates](#automatic-content-updates)
+  - [Host integrations and editor tooling](#host-integrations-and-editor-tooling)
 
 ## Future improvements
 
-- [ ] Change index structure to allow fast lookup during joins.
-  - [ ] Possibly allow for indexing on multiple fields.
-- [ ] SQLite storage and SQL query execution, preserving collection definitions, query call sites, values, body access, and rendering. Follow the [backend contract](./PLAN.md#1-keep-the-public-api-independent-of-the-backend).
-- [ ] Built-in search.
-- [ ] Generate or infer schemas from content.
-- [ ] File-based ordering, such as `meta.json`.
-- [ ] Typed content href helpers.
-- [ ] Resolve source-relative images into emitted assets. See [assets and images](#assets-and-images).
-- [ ] Cursor pagination; the current query API uses limit and offset.
-- [ ] General-purpose joins and implicit recursive relationship loading. See [advanced relationship queries](#advanced-relationship-queries).
-- [ ] CMS-specific adapters; custom loaders remain the existing extension point.
-- [ ] Browser querying.
-- [ ] General build-time transforms for typed output reshaping and conditional entry omission. See [build-time transforms](#build-time-transforms).
-- [ ] Public preparation cache helper for expensive custom processing. See [public preparation cache helper](#public-preparation-cache-helper).
-- [ ] **Richer filtering:** map/set-specific filters, binary and other rich-value filtering, regular expressions, and deep object equality remain outside v1. These values can still be stored and selected under the supported data-value contract.
+### Indexing for joins
+
+- Change index structure to allow fast lookup during joins.
+  - Possibly allow for indexing on multiple fields.
+
+### SQLite storage and SQL queries
+
+- SQLite storage and SQL query execution, preserving collection definitions, query call sites, values, body access, and rendering. Follow the [backend contract](./PLAN.md#1-keep-the-public-api-independent-of-the-backend).
+
+### Built-in search
+
+- Built-in search.
+
+### Cursor pagination
+
+- Cursor pagination; the current query API uses limit and offset.
+
+### General-purpose joins
+
+- General-purpose joins and implicit recursive relationship loading. See [advanced relationship queries](#advanced-relationship-queries).
+
+### Browser querying
+
+- Browser querying.
+
+### Richer filtering
+
+- **Richer filtering:** map/set-specific filters, binary and other rich-value filtering, regular expressions, and deep object equality remain outside v1. These values can still be stored and selected under the supported data-value contract.
 
 ### Advanced relationship queries
 
 Status: deferred beyond v1 on October 18, 2026.
 
 Parent predicates based on related data, composite multi-field matching, and automatic traversal through linking collections need separate query and declaration contracts. No `exists`, composite-key, or `through` public syntax is selected. Applications can explicitly query declared links and request bounded nested relationships in v1. General-purpose joins remain a separate future capability.
+
+### Schema generation and inference
+
+- Generate or infer schemas from content.
+
+### File-based ordering
+
+- File-based ordering, such as `meta.json`.
+
+### Singletons
+
+Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
+
+Content Collections provides `defineSingleton()` and Velite provides `single: true` for one-record sources such as site settings. `file()` treats a top-level object as keyed entries, so a settings file needs a wrapper entry and a `first()` query.
+
+Define whether a singleton is a collection with exactly one entry and a fixed ID or a separate registry kind with its own runtime accessor, how it interacts with relationships and field selection, and whether a missing optional file yields `undefined`, as in Content Collections.
+
+### Authoring ergonomics
+
+Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
+
+Every query is async and must select fields. A relationship declaration needs `collection`, `type`, `from`, `to`, and `referenceSide`, while Astro uses `reference("authors")` inside the schema. These choices buy payload control and relationship integrity, but the simplest page is more verbose than importing `allPosts` from Content Collections.
+
+Candidates that keep [explicit field selection](./PLAN.md#3-require-explicit-field-selection) include relationship shorthands with defaults such as `to: "id"` and a schema-level reference helper that declares the relationship. An implicit select-all or a synchronous array export would contradict the design guidelines and needs a separate decision.
+
+### CMS-specific adapters
+
+- CMS-specific adapters; custom loaders remain the existing extension point.
 
 ### Lazy source bodies and cross-operation snapshots
 
@@ -39,16 +113,6 @@ Lazy source-reader callbacks would require pinning or verifying external source 
 Public multi-operation scopes such as the proposed `withSnapshot()` would need revision retention, body/output pinning, cleanup, and rules for builders or handles escaping the scope. V1 guarantees consistency per operation and documents that separate development operations can observe different revisions. Immutable production artifacts do not require this additional API.
 
 Neither extension should reintroduce `content-query.config` imports, original source paths, arbitrary callback extraction, or automatic replay of application callbacks in deployed SSR.
-
-### Generic deferred fields
-
-Status: removed from v1 and deferred on October 18, 2026. No `deferred` declaration group or query `.resolve(...)` is part of v1.
-
-The earlier proposal allowed arbitrary `{ schema, resolve }` fields requested after filtering/pagination. This could provide typed processed projections and central output validation/caching, but it also requires packaging application callbacks, validators, captured dependencies, and cache/invalidation rules for SSR. Ordinary data generation does not serialize closures or isolate them from loader imports.
-
-Revisit only with an explicit runtime-module contract that preserves build-only `content-query.config`, sound input/result typing, revision consistency, errors/cancellation, and cross-backend behavior. Shared intermediate processing and any dependency graph belong to that future design. Do not treat function extraction, `memo()`, or a loader-free runtime definitions module as implicit v1 mechanisms.
-
-V1 lazy body access and the library-owned Markdown renderer remain available independently. Other custom processing belongs to ordinary application-owned server modules, with application-owned validation and caching.
 
 ### Live collections and runtime source loading
 
@@ -71,33 +135,9 @@ Before implementation, define freshness and caching, invalidation or explicit re
 
 Reference: [Astro's live collections](https://docs.astro.build/en/guides/content-collections/#live-content-collections) use separate APIs and loaders that return request-time data directly. The [original proposal](https://github.com/withastro/roadmap/discussions/1137) explicitly excluded updating its content-layer store. That is a different contract from refreshing prepared content and is a reference for the second approach, not an API decision for this library. Astro live loaders also return cache hints (`tags` and `lastModified`) that applications pass to `Astro.cache.set()` or response headers. A ContentQuery live design should decide whether freshness metadata belongs in runtime results.
 
-### Configurable Markdown processing
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-The built-in renderer uses fixed markdown-exit options and GitHub Light/Dark Shiki themes, and accepts no extensions. Astro, Content Collections, and Velite accept remark/rehype plugins and highlighter settings. Documentation sites use these for callouts, math, code block titles, and link handling.
-
-Eager compilation (`deferRender: false`) already runs during the build, so build-only extensions could apply without entering the deployed import graph. `deferRender: true` packages the renderer, so extensions would need serializable settings or module references that generated runtime code imports directly, never functions extracted from `content-query.config`. markdown-exit uses a markdown-it token pipeline rather than unified, so the design must choose between markdown-it-style plugins, a unified pipeline, or a curated set of built-in options.
-
-Before implementation, define the extension contract, how settings participate in invalidation and revision consistency, how `headings` stays consistent with HTML heading IDs when extensions change headings, and whether extensions are allowed with `deferRender: true`.
-
-### Assets and images
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-Authored image and link URLs pass through unchanged, and [application-owned behavior](./PLAN.md#application-owned-behavior) keeps asset discovery, copying, optimization, and URL rewriting outside this library. Relative images in Markdown therefore break unless the application handles them. Astro provides an `image()` schema helper with optimization and resolves relative Markdown images. Velite's `s.image()` and `s.file()` copy, hash, and measure assets and generate blur placeholders.
-
-Moving this boundary would need an asset reference value under the [supported data values](./PLAN.md#supported-data-values), path resolution relative to the source entry, asset emission through the host bundler or a portable output directory, consistent Markdown reference rewriting for eager and deferred rendering, and watch invalidation when an asset changes. Image optimization could remain an integration concern even if discovery and URL resolution move into preparation.
-
-### MDX and component content
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-Rendering returns framework-independent HTML. Astro supports MDX and Markdoc with component mapping. Content Collections offers `@content-collections/mdx` and bundler-compiled static imports through `createDefaultImport()`. Velite compiles `s.mdx()` to function-body code.
-
-Component content conflicts with framework independence and with packaging rules that exclude application callbacks. One candidate is an entry field that records a typed module reference to the source file, so the host bundler compiles it and `content.render()` stays unchanged for HTML content. Define how references are typed, how component modules cross the [server/client boundary](./PLAN.md#4-enforce-the-serverclient-boundary) when pages import them, and how headings are extracted without a framework renderer.
-
 ### Build-time transforms
+
+- General build-time transforms for typed output reshaping and conditional entry omission. See [build-time transforms](#build-time-transforms).
 
 Status: deferred beyond v1 on October 19, 2026. No public transform API is selected.
 
@@ -121,7 +161,41 @@ Status: reading time, word count, and excerpt helpers implemented on October 19,
 
 Queryable headings, table of contents, slug helpers, and uniqueness helpers remain future work. Rendered headings are available only from `content.render()`. Any helper derived from rendered output must make its compilation cost explicit under [guideline 8](./PLAN.md#8-make-expensive-work-explicit), and uniqueness across a collection depends on the [collection-wide context](#collection-wide-computed-context).
 
+### Configurable Markdown processing
+
+Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
+
+The built-in renderer uses fixed markdown-exit options and GitHub Light/Dark Shiki themes, and accepts no extensions. Astro, Content Collections, and Velite accept remark/rehype plugins and highlighter settings. Documentation sites use these for callouts, math, code block titles, and link handling.
+
+Eager compilation (`deferRender: false`) already runs during the build, so build-only extensions could apply without entering the deployed import graph. `deferRender: true` packages the renderer, so extensions would need serializable settings or module references that generated runtime code imports directly, never functions extracted from `content-query.config`. markdown-exit uses a markdown-it token pipeline rather than unified, so the design must choose between markdown-it-style plugins, a unified pipeline, or a curated set of built-in options.
+
+Before implementation, define the extension contract, how settings participate in invalidation and revision consistency, how `headings` stays consistent with HTML heading IDs when extensions change headings, and whether extensions are allowed with `deferRender: true`.
+
+### MDX and component content
+
+Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
+
+Rendering returns framework-independent HTML. Astro supports MDX and Markdoc with component mapping. Content Collections offers `@content-collections/mdx` and bundler-compiled static imports through `createDefaultImport()`. Velite compiles `s.mdx()` to function-body code.
+
+Component content conflicts with framework independence and with packaging rules that exclude application callbacks. One candidate is an entry field that records a typed module reference to the source file, so the host bundler compiles it and `content.render()` stays unchanged for HTML content. Define how references are typed, how component modules cross the [server/client boundary](./PLAN.md#4-enforce-the-serverclient-boundary) when pages import them, and how headings are extracted without a framework renderer.
+
+### Typed content href helpers
+
+- Typed content href helpers.
+
+### Assets and images
+
+- Resolve source-relative images into emitted assets. See [assets and images](#assets-and-images).
+
+Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
+
+Authored image and link URLs pass through unchanged, and [application-owned behavior](./PLAN.md#application-owned-behavior) keeps asset discovery, copying, optimization, and URL rewriting outside this library. Relative images in Markdown therefore break unless the application handles them. Astro provides an `image()` schema helper with optimization and resolves relative Markdown images. Velite's `s.image()` and `s.file()` copy, hash, and measure assets and generate blur placeholders.
+
+Moving this boundary would need an asset reference value under the [supported data values](./PLAN.md#supported-data-values), path resolution relative to the source entry, asset emission through the host bundler or a portable output directory, consistent Markdown reference rewriting for eager and deferred rendering, and watch invalidation when an asset changes. Image optimization could remain an integration concern even if discovery and URL resolution move into preparation.
+
 ### Public preparation cache helper
+
+- Public preparation cache helper for expensive custom processing. See [public preparation cache helper](#public-preparation-cache-helper).
 
 Status: deferred beyond v1 on October 19, 2026. No public cache API is selected.
 
@@ -137,13 +211,16 @@ The preparation cache lives for one session, so every cold build reloads, valida
 
 [Guideline 9](./PLAN.md#9-prioritize-correctness-over-caching) requires that removing a cache affects only performance. Persistent keys must cover source content, loader identity, schema and resolver code, library version, and renderer settings. Resolver code identity is the hard part because computed functions can import arbitrary modules. Establish benchmarks at representative sizes before choosing a cache layout, and decide whether loaders get a persistent `meta` store for sync tokens.
 
-### Singletons
+### Validation-only command
 
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
+- Add a lightweight CLI command that validates source content against collection schemas without generating runtime artifacts, declarations, or rendered output.
+- Collect schema errors across entries and report clear diagnostics with collection names, source paths, and field paths instead of crashing on invalid content.
+- Exit successfully when all content is valid and return a nonzero exit code when validation fails, so editors and CI can use it without a build.
+- Reuse the normal schema-validation rules while skipping computed fields, rendering, and artifact publication.
 
-Content Collections provides `defineSingleton()` and Velite provides `single: true` for one-record sources such as site settings. `file()` treats a top-level object as keyed entries, so a settings file needs a wrapper entry and a `first()` query.
+### Automatic content updates
 
-Define whether a singleton is a collection with exactly one entry and a fixed ID or a separate registry kind with its own runtime accessor, how it interacts with relationships and field selection, and whether a missing optional file yields `undefined`, as in Content Collections.
+- Remove manual `onContentUpdate` plumbing.
 
 ### Host integrations and editor tooling
 
@@ -152,11 +229,3 @@ Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./
 V1 ships the CLI, a Vite plugin, and an optional Next.js configuration wrapper with managed development watching. Generated output works with other hosts, which must enforce the server-only boundary themselves. Content Collections ships Next.js, Remix, Solid Start, and Vinxi adapters.
 
 Astro generates a JSON Schema per collection for data-file IntelliSense, and Content Collections exports named entry types through `typeName`. ContentQuery now generates `CollectionKey`, `CollectionData<"posts">`, and `Collections` aliases alongside the server entry and Vite facade, in addition to `QueryData<typeof collections.posts>`. Standard Schema validation does not expose JSON Schema, but `@standard-schema/spec` 1.1 defines a companion `StandardJSONSchemaV1` interface that providers can implement. Schema generation remains [parked](#parked); named data types are implemented.
-
-### Authoring ergonomics
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-Every query is async and must select fields. A relationship declaration needs `collection`, `type`, `from`, `to`, and `referenceSide`, while Astro uses `reference("authors")` inside the schema. These choices buy payload control and relationship integrity, but the simplest page is more verbose than importing `allPosts` from Content Collections.
-
-Candidates that keep [explicit field selection](./PLAN.md#3-require-explicit-field-selection) include relationship shorthands with defaults such as `to: "id"` and a schema-level reference helper that declares the relationship. An implicit select-all or a synchronous array export would contradict the design guidelines and needs a separate decision.
