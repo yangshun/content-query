@@ -2,7 +2,14 @@ import { cp, mkdir, mkdtemp, readdir, realpath, rm, symlink, writeFile } from "n
 import path from "node:path";
 import { chromium, type Browser } from "playwright";
 import { afterAll, beforeAll, describe, expect, test } from "vite-plus/test";
-import { apps, appDirectory, benchmarkRoot, cacheDirectories, command } from "../scripts/config.ts";
+import {
+  apps,
+  appDirectory,
+  benchmarkRoot,
+  cacheDirectories,
+  command,
+  executable,
+} from "../scripts/config.ts";
 import { generateCorpus } from "../scripts/generate.ts";
 import { clearCaches, measureSample, verifyArticle, verifyPage } from "../scripts/measure.ts";
 import {
@@ -91,7 +98,7 @@ describe.sequential("native benchmark apps with isolated content", () => {
           if (app.id === "tanstack-start") {
             const port = await availablePort();
             const preview = await startProcess(
-              "vp",
+              executable(root, app),
               command(app, "preview", port),
               appDirectory(root, app),
               path.join(root, `${app.id}-navigation.log`),

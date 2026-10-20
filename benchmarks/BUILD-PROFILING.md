@@ -75,7 +75,7 @@ Three uninstrumented cold/warm pairs, with the same full-site verification:
 
 These samples do **not** establish a reliable whole-build speedup against the earlier 17.551/18.671-second medians. System load and filesystem time varied. The worker replays are instrumented diagnostics, not full-build benchmarks: their prerender phases measured 41.57 seconds before and 12.30 seconds after, with different filesystem costs. The deterministic work reduction and CPU attribution establish the fixed bottleneck independently of those wall-clock differences.
 
-All six builds audited every article HTML file and passed production browser verification. Raw follow-up timings: [profile-full-site-id-index.json](./results/profile-full-site-id-index.json). The existing [cross-stack comparison](./RESULTS.md) retains its original source runs and links to this follow-up.
+All six builds audited every article HTML file and passed production browser verification. Raw follow-up timings: [profile-full-site-id-index.json](./results/profile-full-site-id-index.json). The [archived composite comparison](./results/composite-20261020-RESULTS.md) retains its original source runs; the current [cross-stack comparison](./RESULTS.md) measures all six stacks in one controlled run.
 
 ## Reproduction and validation
 

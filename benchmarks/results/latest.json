@@ -1,6 +1,6 @@
 {
   "workload": "full-index-and-prerendered-articles",
-  "startedAt": "2026-10-20T04:53:08.063Z",
+  "startedAt": "2026-10-20T10:38:14.019Z",
   "repetitions": 3,
   "corpus": {
     "entries": 10000,
@@ -19,15 +19,15 @@
     "memoryBytes": 25769803776,
     "vitePlus": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\n",
     "chromium": "156.0.8078.4",
-    "revision": "0621349ee7d18d04e32069a36d4ea4421ce17ce1",
+    "revision": "10243a4952e92ac8e9cde1abb5cf01596c76dcb8",
     "dirty": true,
-    "lockfileSha256": "4124699dc039ebe02e7da114162d4c2c5af11c5c8b87f5f49e172dc70782804c",
+    "lockfileSha256": "6d1776a6d25e47714e6bc508aefb855354214af33be9465c37d347942584a674",
     "contentQueryArtifactsSha256": "fc104e63574fb1c3d01c6ce7b46ab4381e1226bc922a7de9943189e0776f9926",
     "packages": {
       "astro": {
         "astro": "7.4.0",
         "vite-plus": "0.1.16",
-        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
         "@voidzero-dev/vite-plus-core": "1.3.0"
       },
       "vite-react": {
@@ -72,157 +72,43 @@
         "react-dom": "19.2.5",
         "content-query": "0.0.0",
         "vite-plus": "1.3.0",
-        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v1.3.0\n\nTools:\n  vite             v8.3.4\n  rolldown         v1.2.14\n  vitest           v5.0.5\n  oxfmt            v0.73.0\n  oxlint           v1.88.0\n  oxlint-tsgolint  v7.0.2004\n  tsdown           v0.23.1\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
-        "@voidzero-dev/vite-plus-core": "0.1.24"
+        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v1.3.0\n\nTools:\n  vite             v8.3.4\n  rolldown         v1.2.14\n  vitest           v5.0.5\n  oxfmt            v0.73.0\n  oxlint           v1.88.0\n  oxlint-tsgolint  v7.0.2004\n  tsdown           v0.23.1",
+        "@voidzero-dev/vite-plus-core": "1.3.0"
       }
     }
   },
+  "control": {
+    "seed": 20261020,
+    "orders": [
+      ["nuxt", "astro", "next", "void", "tanstack-start", "vite-react"],
+      ["nuxt", "tanstack-start", "astro", "next", "vite-react", "void"],
+      ["vite-react", "void", "astro", "nuxt", "tanstack-start", "next"]
+    ],
+    "settle": {
+      "threshold": 0.8,
+      "windows": 3,
+      "windowMs": 1000,
+      "timeoutMs": 180000
+    },
+    "spotlightIndexesApps": false
+  },
   "samples": [
     {
-      "app": "void",
-      "phase": "startup",
-      "cache": "cold",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-void-startup-cold.log",
-      "listenMs": 5903.684125,
-      "durationMs": 9112.243834
-    },
-    {
-      "app": "void",
-      "phase": "startup",
-      "cache": "warm",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-void-startup-warm.log",
-      "listenMs": 3300.509542,
-      "durationMs": 4519.332291999999
-    },
-    {
-      "app": "void",
-      "phase": "build",
-      "cache": "cold",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-void-build-cold.log",
-      "durationMs": 12441.889500000001,
-      "prerenderedPages": 10001
-    },
-    {
-      "app": "void",
-      "phase": "build",
-      "cache": "warm",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-void-build-warm.log",
-      "durationMs": 12010.134125000004,
-      "prerenderedPages": 10001
-    },
-    {
-      "app": "astro",
-      "phase": "startup",
-      "cache": "cold",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp exec astro dev --ignore-lock",
-      "log": ".runs/2026-10-20T05-32-56-841Z/1-astro-startup-cold.log",
-      "listenMs": 3598.396208,
-      "durationMs": 4919.079625,
-      "sourceRun": "results/astro-rerun-20261020.json"
-    },
-    {
-      "app": "astro",
-      "phase": "startup",
-      "cache": "warm",
-      "repetition": 1,
-      "status": "timeout",
-      "command": "vp exec astro dev --ignore-lock",
-      "log": ".runs/2026-10-20T05-32-56-841Z/1-astro-startup-warm.log",
-      "error": "page.goto: Timeout 296242.15112500003ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:58961/\", waiting until \"load\"\u001b[22m\n\nServer output:\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Generated 0ms\",\"label\":\"types\",\"level\":\"info\"}\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Syncing content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Astro config changed\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Clearing content store\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Synced content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\" astro  v7.4.0 ready in 2524 ms\\n┃ Local    http://127.0.0.1:58961/\",\"label\":\"SKIP_FORMAT\",\"level\":\"info\"}\n{\"message\":\"watching for file changes...\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 530ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 14ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] /entries/entry-00001/ 29ms\",\"label\":null,\"level\":\"info\"}\n",
-      "sourceRun": "results/astro-rerun-20261020.json"
-    },
-    {
-      "app": "astro",
-      "phase": "build",
-      "cache": "cold",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp exec astro build",
-      "log": ".runs/2026-10-20T05-32-56-841Z/1-astro-build-cold.log",
-      "durationMs": 13544.334957999992,
-      "prerenderedPages": 10001,
-      "sourceRun": "results/astro-rerun-20261020.json"
-    },
-    {
-      "app": "astro",
-      "phase": "build",
-      "cache": "warm",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp exec astro build",
-      "log": ".runs/2026-10-20T05-32-56-841Z/1-astro-build-warm.log",
-      "durationMs": 9932.443041999999,
-      "prerenderedPages": 10001,
-      "sourceRun": "results/astro-rerun-20261020.json"
-    },
-    {
-      "app": "vite-react",
-      "phase": "startup",
-      "cache": "cold",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-vite-react-startup-cold.log",
-      "listenMs": 5942.728000000003,
-      "durationMs": 10851.397750000004
-    },
-    {
-      "app": "vite-react",
-      "phase": "startup",
-      "cache": "warm",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-vite-react-startup-warm.log",
-      "listenMs": 3076.602082999947,
-      "durationMs": 11042.643624999968
-    },
-    {
-      "app": "vite-react",
-      "phase": "build",
-      "cache": "cold",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp run --no-cache build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-vite-react-build-cold.log",
-      "durationMs": 9132.78570800001,
-      "prerenderedPages": 10001
-    },
-    {
-      "app": "vite-react",
-      "phase": "build",
-      "cache": "warm",
-      "repetition": 1,
-      "status": "success",
-      "command": "vp run --no-cache build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-vite-react-build-warm.log",
-      "durationMs": 8264.952165999974,
-      "prerenderedPages": 10001
-    },
-    {
       "app": "nuxt",
       "phase": "startup",
       "cache": "cold",
       "repetition": 1,
       "status": "success",
       "command": "vp exec nuxt dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-nuxt-startup-cold.log",
-      "listenMs": 235.55645799997728,
-      "durationMs": 18773.976291999978
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-nuxt-startup-cold.log",
+      "listenMs": 181.66658299999835,
+      "durationMs": 15619.288,
+      "host": {
+        "settled": true,
+        "waitedMs": 51105.193875000004,
+        "idle": 0.8010797675789302,
+        "loadAverage": [8.12646484375, 8.6572265625, 7.09619140625]
+      }
     },
     {
       "app": "nuxt",
@@ -231,9 +117,15 @@
       "repetition": 1,
       "status": "success",
       "command": "vp exec nuxt dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-nuxt-startup-warm.log",
-      "listenMs": 173.64137500000652,
-      "durationMs": 6268.054332999978
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-nuxt-startup-warm.log",
+      "listenMs": 152.9254590000055,
+      "durationMs": 5850.4020420000015,
+      "host": {
+        "settled": true,
+        "waitedMs": 3004.8590000000113,
+        "idle": 0.8317161027438079,
+        "loadAverage": [7.21337890625, 8.41845703125, 7.04638671875]
+      }
     },
     {
       "app": "nuxt",
@@ -242,9 +134,15 @@
       "repetition": 1,
       "status": "success",
       "command": "vp exec nuxt generate",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-nuxt-build-cold.log",
-      "durationMs": 67189.62733300001,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-nuxt-build-cold.log",
+      "durationMs": 60184.077666,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 7013.772417,
+        "idle": 0.8244721396948084,
+        "loadAverage": [6.7529296875, 8.2646484375, 7.015625]
+      }
     },
     {
       "app": "nuxt",
@@ -253,9 +151,83 @@
       "repetition": 1,
       "status": "success",
       "command": "vp exec nuxt generate",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-nuxt-build-warm.log",
-      "durationMs": 64087.23354100005,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-nuxt-build-warm.log",
+      "durationMs": 55449.33387500001,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 18037.87483300001,
+        "idle": 0.8771466857639202,
+        "loadAverage": [7.50830078125, 7.98876953125, 7.0048828125]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-astro-startup-cold.log",
+      "listenMs": 4558.408041999966,
+      "durationMs": 5463.967249999987,
+      "host": {
+        "settled": true,
+        "waitedMs": 5010.196292000008,
+        "idle": 0.8428610903198633,
+        "loadAverage": [7.423828125, 8.1162109375, 7.13916015625]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-astro-startup-warm.log",
+      "listenMs": 5223.285124999995,
+      "durationMs": 6203.564707999991,
+      "host": {
+        "settled": true,
+        "waitedMs": 3006.955499999982,
+        "idle": 0.8711630488051937,
+        "loadAverage": [7.3896484375, 8.09765625, 7.13818359375]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-astro-build-cold.log",
+      "durationMs": 5978.0405829999945,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3005.141292000015,
+        "idle": 0.8569915305845962,
+        "loadAverage": [6.94189453125, 7.978515625, 7.10693359375]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-astro-build-warm.log",
+      "durationMs": 6587.612500000047,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3004.6089999999967,
+        "idle": 0.8737938493431451,
+        "loadAverage": [6.8896484375, 7.9296875, 7.09912109375]
+      }
     },
     {
       "app": "next",
@@ -264,9 +236,15 @@
       "repetition": 1,
       "status": "success",
       "command": "vp exec next dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-next-startup-cold.log",
-      "listenMs": 1079.684499999974,
-      "durationMs": 30151.56316599995
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-next-startup-cold.log",
+      "listenMs": 465.7169170000125,
+      "durationMs": 18611.494000000006,
+      "host": {
+        "settled": true,
+        "waitedMs": 10021.714915999968,
+        "idle": 0.8220035019565346,
+        "loadAverage": [6.53662109375, 7.771484375, 7.06494140625]
+      }
     },
     {
       "app": "next",
@@ -275,9 +253,15 @@
       "repetition": 1,
       "status": "success",
       "command": "vp exec next dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-next-startup-warm.log",
-      "listenMs": 344.09633400000166,
-      "durationMs": 15284.632125000004
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-next-startup-warm.log",
+      "listenMs": 348.82929199998034,
+      "durationMs": 14364.757042000012,
+      "host": {
+        "settled": true,
+        "waitedMs": 21042.432375000033,
+        "idle": 0.8337882126418434,
+        "loadAverage": [5.95361328125, 7.49462890625, 6.99609375]
+      }
     },
     {
       "app": "next",
@@ -286,9 +270,15 @@
       "repetition": 1,
       "status": "success",
       "command": "vp exec next build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-next-build-cold.log",
-      "durationMs": 48092.64816600003,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-next-build-cold.log",
+      "durationMs": 38685.944750000024,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 8016.707417000027,
+        "idle": 0.8059397396027861,
+        "loadAverage": [5.4375, 7.24609375, 6.919921875]
+      }
     },
     {
       "app": "next",
@@ -297,101 +287,219 @@
       "repetition": 1,
       "status": "success",
       "command": "vp exec next build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/1-next-build-warm.log",
-      "durationMs": 60604.29504200001,
-      "prerenderedPages": 10001
-    },
-    {
-      "app": "astro",
-      "phase": "startup",
-      "cache": "cold",
-      "repetition": 2,
-      "status": "success",
-      "command": "vp exec astro dev --ignore-lock",
-      "log": ".runs/2026-10-20T05-32-56-841Z/2-astro-startup-cold.log",
-      "listenMs": 3318.2128329999978,
-      "durationMs": 4606.636125000019,
-      "sourceRun": "results/astro-rerun-20261020.json"
-    },
-    {
-      "app": "astro",
-      "phase": "startup",
-      "cache": "warm",
-      "repetition": 2,
-      "status": "success",
-      "command": "vp exec astro dev --ignore-lock",
-      "log": ".runs/2026-10-20T05-32-56-841Z/2-astro-startup-warm.log",
-      "listenMs": 2564.9963330000173,
-      "durationMs": 4073.6603749999776,
-      "sourceRun": "results/astro-rerun-20261020.json"
-    },
-    {
-      "app": "astro",
-      "phase": "build",
-      "cache": "cold",
-      "repetition": 2,
-      "status": "success",
-      "command": "vp exec astro build",
-      "log": ".runs/2026-10-20T05-32-56-841Z/2-astro-build-cold.log",
-      "durationMs": 6547.142500000016,
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-next-build-warm.log",
+      "durationMs": 38135.54329100001,
       "prerenderedPages": 10001,
-      "sourceRun": "results/astro-rerun-20261020.json"
+      "host": {
+        "settled": true,
+        "waitedMs": 6014.486333000008,
+        "idle": 0.8143527248411903,
+        "loadAverage": [10.79638671875, 8.421875, 7.3681640625]
+      }
     },
     {
-      "app": "astro",
-      "phase": "build",
-      "cache": "warm",
-      "repetition": 2,
-      "status": "success",
-      "command": "vp exec astro build",
-      "log": ".runs/2026-10-20T05-32-56-841Z/2-astro-build-warm.log",
-      "durationMs": 7936.3505000000005,
-      "prerenderedPages": 10001,
-      "sourceRun": "results/astro-rerun-20261020.json"
-    },
-    {
-      "app": "vite-react",
+      "app": "void",
       "phase": "startup",
       "cache": "cold",
-      "repetition": 2,
+      "repetition": 1,
       "status": "success",
       "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-vite-react-startup-cold.log",
-      "listenMs": 6435.770790999988,
-      "durationMs": 13081.67970800004
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-void-startup-cold.log",
+      "listenMs": 3906.2792079999927,
+      "durationMs": 5102.225666000042,
+      "host": {
+        "settled": true,
+        "waitedMs": 41077.88966699998,
+        "idle": 0.8174460775003792,
+        "loadAverage": [8.4111328125, 8.4970703125, 7.51123046875]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-void-startup-warm.log",
+      "listenMs": 2743.98904200003,
+      "durationMs": 3854.8292920000385,
+      "host": {
+        "settled": true,
+        "waitedMs": 3005.2248750000144,
+        "idle": 0.8254769973258772,
+        "loadAverage": [8.5380859375, 8.52197265625, 7.525390625]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-void-build-cold.log",
+      "durationMs": 9047.433667000034,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 5011.315333999984,
+        "idle": 0.8100238116934914,
+        "loadAverage": [7.52587890625, 8.306640625, 7.46044921875]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-void-build-warm.log",
+      "durationMs": 9806.947749999934,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 5008.082625000039,
+        "idle": 0.8161081790520762,
+        "loadAverage": [7.18603515625, 8.193359375, 7.43408203125]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-tanstack-start-startup-cold.log",
+      "listenMs": 2615.7214159999276,
+      "durationMs": 3788.633166000014,
+      "host": {
+        "settled": true,
+        "waitedMs": 56093.40654200001,
+        "idle": 0.8000428618331091,
+        "loadAverage": [4.958984375, 7.3359375, 7.169921875]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-tanstack-start-startup-warm.log",
+      "listenMs": 1980.1476670000702,
+      "durationMs": 3022.9435420000227,
+      "host": {
+        "settled": true,
+        "waitedMs": 3005.5186669999966,
+        "idle": 0.8120768203072813,
+        "loadAverage": [4.7216796875, 7.2470703125, 7.13916015625]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-tanstack-start-build-cold.log",
+      "durationMs": 6042.474415999954,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 4005.6187080000527,
+        "idle": 0.8217193860527194,
+        "loadAverage": [4.58349609375, 7.17626953125, 7.11474609375]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-tanstack-start-build-warm.log",
+      "durationMs": 7784.618916000007,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.7564590000547,
+        "idle": 0.8107328899770779,
+        "loadAverage": [4.94189453125, 7.16943359375, 7.11279296875]
+      }
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-vite-react-startup-cold.log",
+      "listenMs": 4852.618125000037,
+      "durationMs": 8404.839542000089,
+      "host": {
+        "settled": true,
+        "waitedMs": 23039.879749999964,
+        "idle": 0.8043189382856669,
+        "loadAverage": [6.287109375, 7.3095703125, 7.16845703125]
+      }
     },
     {
       "app": "vite-react",
       "phase": "startup",
       "cache": "warm",
-      "repetition": 2,
+      "repetition": 1,
       "status": "success",
       "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-vite-react-startup-warm.log",
-      "listenMs": 3536.5824579999316,
-      "durationMs": 12002.217749999836
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-vite-react-startup-warm.log",
+      "listenMs": 2459.765417000046,
+      "durationMs": 8917.825209000031,
+      "host": {
+        "settled": true,
+        "waitedMs": 10020.67724999995,
+        "idle": 0.8758937426432759,
+        "loadAverage": [5.986328125, 7.1875, 7.1279296875]
+      }
     },
     {
       "app": "vite-react",
       "phase": "build",
       "cache": "cold",
-      "repetition": 2,
+      "repetition": 1,
       "status": "success",
       "command": "vp run --no-cache build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-vite-react-build-cold.log",
-      "durationMs": 10369.380375000183,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-vite-react-build-cold.log",
+      "durationMs": 7248.569875000045,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 85150.65899999999,
+        "idle": 0.8127536274613562,
+        "loadAverage": [4.5009765625, 6.4912109375, 6.87158203125]
+      }
     },
     {
       "app": "vite-react",
       "phase": "build",
       "cache": "warm",
-      "repetition": 2,
+      "repetition": 1,
       "status": "success",
       "command": "vp run --no-cache build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-vite-react-build-warm.log",
-      "durationMs": 12541.798167000059,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/1-vite-react-build-warm.log",
+      "durationMs": 7862.312666999991,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 7012.612749999971,
+        "idle": 0.8243466863809261,
+        "loadAverage": [4.408203125, 6.38232421875, 6.826171875]
+      }
     },
     {
       "app": "nuxt",
@@ -400,9 +508,15 @@
       "repetition": 2,
       "status": "success",
       "command": "vp exec nuxt dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-nuxt-startup-cold.log",
-      "listenMs": 535.2554170000367,
-      "durationMs": 39357.74883299996
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-nuxt-startup-cold.log",
+      "listenMs": 190.97741700010374,
+      "durationMs": 17265.648375000106,
+      "host": {
+        "settled": true,
+        "waitedMs": 8013.597415999975,
+        "idle": 0.8004944287509419,
+        "loadAverage": [8.4765625, 7.23486328125, 7.12451171875]
+      }
     },
     {
       "app": "nuxt",
@@ -411,9 +525,15 @@
       "repetition": 2,
       "status": "success",
       "command": "vp exec nuxt dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-nuxt-startup-warm.log",
-      "listenMs": 191.61283400002867,
-      "durationMs": 23472.203417000128
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-nuxt-startup-warm.log",
+      "listenMs": 156.8605839998927,
+      "durationMs": 7812.083583999891,
+      "host": {
+        "settled": true,
+        "waitedMs": 12017.021209000028,
+        "idle": 0.8135725387122653,
+        "loadAverage": [6.484375, 6.875, 6.9970703125]
+      }
     },
     {
       "app": "nuxt",
@@ -422,9 +542,15 @@
       "repetition": 2,
       "status": "success",
       "command": "vp exec nuxt generate",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-nuxt-build-cold.log",
-      "durationMs": 69708.625,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-nuxt-build-cold.log",
+      "durationMs": 62205.033874999965,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 5006.022958999965,
+        "idle": 0.8052108743166237,
+        "loadAverage": [5.7177734375, 6.68505859375, 6.9267578125]
+      }
     },
     {
       "app": "nuxt",
@@ -433,9 +559,151 @@
       "repetition": 2,
       "status": "success",
       "command": "vp exec nuxt generate",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-nuxt-build-warm.log",
-      "durationMs": 62618.665167000145,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-nuxt-build-warm.log",
+      "durationMs": 64341.20670800004,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 4004.361540999962,
+        "idle": 0.8414137996318272,
+        "loadAverage": [10.6279296875, 8.19677734375, 7.49462890625]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-tanstack-start-startup-cold.log",
+      "listenMs": 2773.160249999957,
+      "durationMs": 3962.8865000000224,
+      "host": {
+        "settled": true,
+        "waitedMs": 4004.8662499999627,
+        "idle": 0.8177137681325286,
+        "loadAverage": [7.6748046875, 7.8662109375, 7.42724609375]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-tanstack-start-startup-warm.log",
+      "listenMs": 2405.380125000025,
+      "durationMs": 4387.121042000013,
+      "host": {
+        "settled": true,
+        "waitedMs": 5003.85804099997,
+        "idle": 0.8142402325589203,
+        "loadAverage": [14.32275390625, 9.23291015625, 7.9140625]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-tanstack-start-build-cold.log",
+      "durationMs": 7693.362292000093,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 4004.281541000004,
+        "idle": 0.8448030751613954,
+        "loadAverage": [12.86328125, 9.09228515625, 7.87939453125]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-tanstack-start-build-warm.log",
+      "durationMs": 7262.61175000004,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.4217089999,
+        "idle": 0.850244731863581,
+        "loadAverage": [12.00927734375, 9.0380859375, 7.87451171875]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-astro-startup-cold.log",
+      "listenMs": 2366.068208999932,
+      "durationMs": 3228.1516249999404,
+      "host": {
+        "settled": true,
+        "waitedMs": 4004.9436249999562,
+        "idle": 0.8165820247764826,
+        "loadAverage": [11.17431640625, 9.001953125, 7.8818359375]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-astro-startup-warm.log",
+      "listenMs": 4729.043791000033,
+      "durationMs": 5867.513875000179,
+      "host": {
+        "settled": true,
+        "waitedMs": 16016.241749999928,
+        "idle": 0.8793630271315184,
+        "loadAverage": [8.6865234375, 8.57861328125, 7.755859375]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-astro-build-cold.log",
+      "durationMs": 5818.506584000075,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.583333000075,
+        "idle": 0.8395476656123492,
+        "loadAverage": [7.65185546875, 8.361328125, 7.68798828125]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-astro-build-warm.log",
+      "durationMs": 7134.807083999971,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.2653340001125,
+        "idle": 0.8291228296261837,
+        "loadAverage": [7.599609375, 8.33837890625, 7.68359375]
+      }
     },
     {
       "app": "next",
@@ -444,9 +712,15 @@
       "repetition": 2,
       "status": "success",
       "command": "vp exec next dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-next-startup-cold.log",
-      "listenMs": 633.9280000000726,
-      "durationMs": 21563.03087499994
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-next-startup-cold.log",
+      "listenMs": 456.9285839998629,
+      "durationMs": 20984.912333999993,
+      "host": {
+        "settled": true,
+        "waitedMs": 18019.40841699997,
+        "idle": 0.8154935749131161,
+        "loadAverage": [7.48974609375, 8.27294921875, 7.6875]
+      }
     },
     {
       "app": "next",
@@ -455,9 +729,15 @@
       "repetition": 2,
       "status": "success",
       "command": "vp exec next dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-next-startup-warm.log",
-      "listenMs": 324.22866599983536,
-      "durationMs": 15385.318582999986
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-next-startup-warm.log",
+      "listenMs": 279.2427089998964,
+      "durationMs": 17207.39124999987,
+      "host": {
+        "settled": true,
+        "waitedMs": 8008.3949580001645,
+        "idle": 0.801590950897145,
+        "loadAverage": [7.69873046875, 8.25927734375, 7.7021484375]
+      }
     },
     {
       "app": "next",
@@ -466,9 +746,15 @@
       "repetition": 2,
       "status": "success",
       "command": "vp exec next build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-next-build-cold.log",
-      "durationMs": 40018.151875000214,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-next-build-cold.log",
+      "durationMs": 41660.414541000035,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 8009.9884580001235,
+        "idle": 0.8123169785967459,
+        "loadAverage": [7.92626953125, 8.32763671875, 7.7490234375]
+      }
     },
     {
       "app": "next",
@@ -477,9 +763,83 @@
       "repetition": 2,
       "status": "success",
       "command": "vp exec next build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-next-build-warm.log",
-      "durationMs": 49381.25458399998,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-next-build-warm.log",
+      "durationMs": 43137.727624999825,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 15017.514916999964,
+        "idle": 0.8103917682556053,
+        "loadAverage": [8.5146484375, 8.5234375, 7.86181640625]
+      }
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-vite-react-startup-cold.log",
+      "listenMs": 5235.3088749998715,
+      "durationMs": 11158.978540999815,
+      "host": {
+        "settled": true,
+        "waitedMs": 50046.95854200004,
+        "idle": 0.8126199159063008,
+        "loadAverage": [7.00537109375, 8.30126953125, 7.86279296875]
+      }
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-vite-react-startup-warm.log",
+      "listenMs": 2806.4738749999087,
+      "durationMs": 6630.725791000063,
+      "host": {
+        "settled": true,
+        "waitedMs": 15016.124249999877,
+        "idle": 0.8042034722186675,
+        "loadAverage": [6.0927734375, 7.99853515625, 7.7666015625]
+      }
+    },
+    {
+      "app": "vite-react",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp run --no-cache build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-vite-react-build-cold.log",
+      "durationMs": 9972.603707999922,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 177203.11729199998,
+        "idle": 0.80435093533921,
+        "loadAverage": [6.59521484375, 6.96533203125, 7.33984375]
+      }
+    },
+    {
+      "app": "vite-react",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp run --no-cache build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-vite-react-build-warm.log",
+      "durationMs": 6991.017458999995,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 19023.21579099982,
+        "idle": 0.8142813552137742,
+        "loadAverage": [6.24462890625, 6.87890625, 7.2958984375]
+      }
     },
     {
       "app": "void",
@@ -488,9 +848,15 @@
       "repetition": 2,
       "status": "success",
       "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-void-startup-cold.log",
-      "listenMs": 4709.9648749998305,
-      "durationMs": 6287.833832999924
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-void-startup-cold.log",
+      "listenMs": 3646.858583000023,
+      "durationMs": 5265.326208000071,
+      "host": {
+        "settled": true,
+        "waitedMs": 22026.45904100011,
+        "idle": 0.8177905401299029,
+        "loadAverage": [5.55029296875, 6.66259765625, 7.203125]
+      }
     },
     {
       "app": "void",
@@ -499,9 +865,15 @@
       "repetition": 2,
       "status": "success",
       "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-void-startup-warm.log",
-      "listenMs": 3919.468207999831,
-      "durationMs": 5495.579207999865
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-void-startup-warm.log",
+      "listenMs": 3289.480875000125,
+      "durationMs": 4503.64370799996,
+      "host": {
+        "settled": true,
+        "waitedMs": 23026.452166999923,
+        "idle": 0.8236246613673655,
+        "loadAverage": [4.70654296875, 6.34423828125, 7.06787109375]
+      }
     },
     {
       "app": "void",
@@ -510,9 +882,15 @@
       "repetition": 2,
       "status": "success",
       "command": "vp build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-void-build-cold.log",
-      "durationMs": 16574.430708000204,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-void-build-cold.log",
+      "durationMs": 10091.124374999898,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 6005.975832999917,
+        "idle": 0.8014040874707042,
+        "loadAverage": [4.28369140625, 6.20068359375, 7.00830078125]
+      }
     },
     {
       "app": "void",
@@ -521,9 +899,15 @@
       "repetition": 2,
       "status": "success",
       "command": "vp build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/2-void-build-warm.log",
-      "durationMs": 17873.86116700014,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/2-void-build-warm.log",
+      "durationMs": 12203.116708999965,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 10010.118125000037,
+        "idle": 0.8088026704058767,
+        "loadAverage": [4.67138671875, 6.18212890625, 6.98291015625]
+      }
     },
     {
       "app": "vite-react",
@@ -532,9 +916,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-vite-react-startup-cold.log",
-      "listenMs": 6320.943916999968,
-      "durationMs": 11127.901041999925
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-vite-react-startup-cold.log",
+      "listenMs": 5552.147457999876,
+      "durationMs": 9540.364124999847,
+      "host": {
+        "settled": true,
+        "waitedMs": 72077.41862499993,
+        "idle": 0.8007966294592679,
+        "loadAverage": [5.36376953125, 6.22705078125, 6.93505859375]
+      }
     },
     {
       "app": "vite-react",
@@ -543,9 +933,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-vite-react-startup-warm.log",
-      "listenMs": 3226.904957999941,
-      "durationMs": 11363.767500000075
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-vite-react-startup-warm.log",
+      "listenMs": 2652.117542000022,
+      "durationMs": 9050.372208999936,
+      "host": {
+        "settled": true,
+        "waitedMs": 8007.175499999896,
+        "idle": 0.8141185279034339,
+        "loadAverage": [4.974609375, 6.08203125, 6.8662109375]
+      }
     },
     {
       "app": "vite-react",
@@ -554,9 +950,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp run --no-cache build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-vite-react-build-cold.log",
-      "durationMs": 9117.495542000048,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-vite-react-build-cold.log",
+      "durationMs": 7894.162416999927,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 96105.03862500004,
+        "idle": 0.8122997519319014,
+        "loadAverage": [4.5810546875, 5.650390625, 6.60546875]
+      }
     },
     {
       "app": "vite-react",
@@ -565,97 +967,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp run --no-cache build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-vite-react-build-warm.log",
-      "durationMs": 8578.482374999905,
-      "prerenderedPages": 10001
-    },
-    {
-      "app": "nuxt",
-      "phase": "startup",
-      "cache": "cold",
-      "repetition": 3,
-      "status": "success",
-      "command": "vp exec nuxt dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-nuxt-startup-cold.log",
-      "listenMs": 253.14808299997821,
-      "durationMs": 19583.54712500004
-    },
-    {
-      "app": "nuxt",
-      "phase": "startup",
-      "cache": "warm",
-      "repetition": 3,
-      "status": "success",
-      "command": "vp exec nuxt dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-nuxt-startup-warm.log",
-      "listenMs": 180.7659579999745,
-      "durationMs": 6901.052124999929
-    },
-    {
-      "app": "nuxt",
-      "phase": "build",
-      "cache": "cold",
-      "repetition": 3,
-      "status": "success",
-      "command": "vp exec nuxt generate",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-nuxt-build-cold.log",
-      "durationMs": 82507.44650000008,
-      "prerenderedPages": 10001
-    },
-    {
-      "app": "nuxt",
-      "phase": "build",
-      "cache": "warm",
-      "repetition": 3,
-      "status": "success",
-      "command": "vp exec nuxt generate",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-nuxt-build-warm.log",
-      "durationMs": 64411.52658299985,
-      "prerenderedPages": 10001
-    },
-    {
-      "app": "next",
-      "phase": "startup",
-      "cache": "cold",
-      "repetition": 3,
-      "status": "success",
-      "command": "vp exec next dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-next-startup-cold.log",
-      "listenMs": 483.5046250000596,
-      "durationMs": 21184.547584000044
-    },
-    {
-      "app": "next",
-      "phase": "startup",
-      "cache": "warm",
-      "repetition": 3,
-      "status": "success",
-      "command": "vp exec next dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-next-startup-warm.log",
-      "listenMs": 325.9883340001106,
-      "durationMs": 16342.280792000005
-    },
-    {
-      "app": "next",
-      "phase": "build",
-      "cache": "cold",
-      "repetition": 3,
-      "status": "success",
-      "command": "vp exec next build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-next-build-cold.log",
-      "durationMs": 37218.49525000015,
-      "prerenderedPages": 10001
-    },
-    {
-      "app": "next",
-      "phase": "build",
-      "cache": "warm",
-      "repetition": 3,
-      "status": "success",
-      "command": "vp exec next build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-next-build-warm.log",
-      "durationMs": 58290.82400000002,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-vite-react-build-warm.log",
+      "durationMs": 7024.773667000001,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 4003.719042000128,
+        "idle": 0.8094304469073096,
+        "loadAverage": [5.04296875, 5.71240234375, 6.611328125]
+      }
     },
     {
       "app": "void",
@@ -664,9 +984,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-void-startup-cold.log",
-      "listenMs": 5482.805625000037,
-      "durationMs": 7041.106958000222
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-void-startup-cold.log",
+      "listenMs": 3855.6182500000577,
+      "durationMs": 5466.452208000002,
+      "host": {
+        "settled": true,
+        "waitedMs": 22024.94158299989,
+        "idle": 0.8023860728805342,
+        "loadAverage": [5.11376953125, 5.6982421875, 6.576171875]
+      }
     },
     {
       "app": "void",
@@ -675,9 +1001,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp dev",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-void-startup-warm.log",
-      "listenMs": 4179.236375000095,
-      "durationMs": 5704.785666000098
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-void-startup-warm.log",
+      "listenMs": 3380.890332999872,
+      "durationMs": 4471.2828750000335,
+      "host": {
+        "settled": true,
+        "waitedMs": 49054.28816600004,
+        "idle": 0.8061544945532509,
+        "loadAverage": [6.619140625, 6.01220703125, 6.6357421875]
+      }
     },
     {
       "app": "void",
@@ -686,9 +1018,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-void-build-cold.log",
-      "durationMs": 19930.83825000003,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-void-build-cold.log",
+      "durationMs": 11255.422250000061,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 21022.618958000094,
+        "idle": 0.8102543182481794,
+        "loadAverage": [5.7021484375, 5.8486328125, 6.55810546875]
+      }
     },
     {
       "app": "void",
@@ -697,31 +1035,49 @@
       "repetition": 3,
       "status": "success",
       "command": "vp build",
-      "log": ".runs/2026-10-20T04-53-08-063Z/3-void-build-warm.log",
-      "durationMs": 19313.922666999977,
-      "prerenderedPages": 10001
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-void-build-warm.log",
+      "durationMs": 12775.816624999978,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 5005.081833000062,
+        "idle": 0.8086031168501755,
+        "loadAverage": [5.859375, 5.8857421875, 6.55859375]
+      }
     },
     {
       "app": "astro",
       "phase": "startup",
       "cache": "cold",
       "repetition": 3,
-      "status": "timeout",
+      "status": "success",
       "command": "vp exec astro dev --ignore-lock",
-      "log": ".runs/2026-10-20T05-32-56-841Z/3-astro-startup-cold.log",
-      "error": "page.goto: Timeout 295699.12362499995ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:60523/\", waiting until \"load\"\u001b[22m\n\nServer output:\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Generated 1ms\",\"label\":\"types\",\"level\":\"info\"}\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Syncing content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Synced content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\" astro  v7.4.0 ready in 2765 ms\\n┃ Local    http://127.0.0.1:60523/\",\"label\":\"SKIP_FORMAT\",\"level\":\"info\"}\n{\"message\":\"watching for file changes...\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 472ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 12ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] /entries/entry-00001/ 27ms\",\"label\":null,\"level\":\"info\"}\n",
-      "sourceRun": "results/astro-rerun-20261020.json"
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-astro-startup-cold.log",
+      "listenMs": 2490.5447499998845,
+      "durationMs": 3529.878334000008,
+      "host": {
+        "settled": true,
+        "waitedMs": 66072.4605419999,
+        "idle": 0.8086268141751894,
+        "loadAverage": [4.37939453125, 5.43359375, 6.32080078125]
+      }
     },
     {
       "app": "astro",
       "phase": "startup",
       "cache": "warm",
       "repetition": 3,
-      "status": "timeout",
+      "status": "success",
       "command": "vp exec astro dev --ignore-lock",
-      "log": ".runs/2026-10-20T05-32-56-841Z/3-astro-startup-warm.log",
-      "error": "page.goto: Timeout 293243.20233400003ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:61232/\", waiting until \"load\"\u001b[22m\n\nServer output:\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Generated 0ms\",\"label\":\"types\",\"level\":\"info\"}\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Syncing content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Astro config changed\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Clearing content store\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Synced content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\" astro  v7.4.0 ready in 5495 ms\\n┃ Local    http://127.0.0.1:61232/\",\"label\":\"SKIP_FORMAT\",\"level\":\"info\"}\n{\"message\":\"watching for file changes...\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 440ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 7ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] /entries/entry-00001/ 15ms\",\"label\":null,\"level\":\"info\"}\n",
-      "sourceRun": "results/astro-rerun-20261020.json"
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-astro-startup-warm.log",
+      "listenMs": 2400.694250000175,
+      "durationMs": 3625.0620829998516,
+      "host": {
+        "settled": true,
+        "waitedMs": 58060.66970900004,
+        "idle": 0.8011877874524441,
+        "loadAverage": [4.00146484375, 5.14990234375, 6.1533203125]
+      }
     },
     {
       "app": "astro",
@@ -730,10 +1086,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp exec astro build",
-      "log": ".runs/2026-10-20T05-32-56-841Z/3-astro-build-cold.log",
-      "durationMs": 7654.83504200005,
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-astro-build-cold.log",
+      "durationMs": 6529.059041999746,
       "prerenderedPages": 10001,
-      "sourceRun": "results/astro-rerun-20261020.json"
+      "host": {
+        "settled": true,
+        "waitedMs": 37040.436583000235,
+        "idle": 0.8047174819058309,
+        "loadAverage": [4.6279296875, 5.1357421875, 6.099609375]
+      }
     },
     {
       "app": "astro",
@@ -742,106 +1103,83 @@
       "repetition": 3,
       "status": "success",
       "command": "vp exec astro build",
-      "log": ".runs/2026-10-20T05-32-56-841Z/3-astro-build-warm.log",
-      "durationMs": 8319.278082999983,
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-astro-build-warm.log",
+      "durationMs": 7040.569582999684,
       "prerenderedPages": 10001,
-      "sourceRun": "results/astro-rerun-20261020.json"
+      "host": {
+        "settled": true,
+        "waitedMs": 3004.287790999748,
+        "idle": 0.8256318637655009,
+        "loadAverage": [4.45751953125, 5.08154296875, 6.06884765625]
+      }
     },
     {
-      "app": "tanstack-start",
+      "app": "nuxt",
       "phase": "startup",
       "cache": "cold",
-      "repetition": 1,
+      "repetition": 3,
       "status": "success",
-      "command": "vp dev",
-      "log": ".runs/2026-10-20T06-00-25-061Z/1-tanstack-start-startup-cold.log",
-      "listenMs": 3308.543875,
-      "durationMs": 4791.364041,
-      "sourceRun": "results/tanstack-start-20261020.json"
+      "command": "vp exec nuxt dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-nuxt-startup-cold.log",
+      "listenMs": 198.78850000025705,
+      "durationMs": 18571.314291000366,
+      "host": {
+        "settled": true,
+        "waitedMs": 20023.197124999948,
+        "idle": 0.838033433634236,
+        "loadAverage": [4.58642578125, 5.06787109375, 6.0302734375]
+      }
     },
     {
-      "app": "tanstack-start",
+      "app": "nuxt",
       "phase": "startup",
       "cache": "warm",
-      "repetition": 1,
+      "repetition": 3,
       "status": "success",
-      "command": "vp dev",
-      "log": ".runs/2026-10-20T06-00-25-061Z/1-tanstack-start-startup-warm.log",
-      "listenMs": 2086.601291,
-      "durationMs": 3186.4814160000005,
-      "sourceRun": "results/tanstack-start-20261020.json"
+      "command": "vp exec nuxt dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-nuxt-startup-warm.log",
+      "listenMs": 143.98837499972433,
+      "durationMs": 7439.056249999907,
+      "host": {
+        "settled": true,
+        "waitedMs": 3001.3391249999404,
+        "idle": 0.8814113488963217,
+        "loadAverage": [10.5078125, 6.32373046875, 6.4482421875]
+      }
     },
     {
-      "app": "tanstack-start",
+      "app": "nuxt",
       "phase": "build",
       "cache": "cold",
-      "repetition": 1,
+      "repetition": 3,
       "status": "success",
-      "command": "vp build",
-      "log": ".runs/2026-10-20T06-00-25-061Z/1-tanstack-start-build-cold.log",
-      "durationMs": 7433.073624999999,
+      "command": "vp exec nuxt generate",
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-nuxt-build-cold.log",
+      "durationMs": 65460.533375000115,
       "prerenderedPages": 10001,
-      "sourceRun": "results/tanstack-start-20261020.json"
+      "host": {
+        "settled": true,
+        "waitedMs": 4005.1866249996237,
+        "idle": 0.8343703775305863,
+        "loadAverage": [11.63671875, 6.7197265625, 6.587890625]
+      }
     },
     {
-      "app": "tanstack-start",
+      "app": "nuxt",
       "phase": "build",
       "cache": "warm",
-      "repetition": 1,
+      "repetition": 3,
       "status": "success",
-      "command": "vp build",
-      "log": ".runs/2026-10-20T06-00-25-061Z/1-tanstack-start-build-warm.log",
-      "durationMs": 11987.466958,
+      "command": "vp exec nuxt generate",
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-nuxt-build-warm.log",
+      "durationMs": 79434.30908400007,
       "prerenderedPages": 10001,
-      "sourceRun": "results/tanstack-start-20261020.json"
-    },
-    {
-      "app": "tanstack-start",
-      "phase": "startup",
-      "cache": "cold",
-      "repetition": 2,
-      "status": "success",
-      "command": "vp dev",
-      "log": ".runs/2026-10-20T06-00-25-061Z/2-tanstack-start-startup-cold.log",
-      "listenMs": 2756.0475409999963,
-      "durationMs": 4023.8715829999965,
-      "sourceRun": "results/tanstack-start-20261020.json"
-    },
-    {
-      "app": "tanstack-start",
-      "phase": "startup",
-      "cache": "warm",
-      "repetition": 2,
-      "status": "success",
-      "command": "vp dev",
-      "log": ".runs/2026-10-20T06-00-25-061Z/2-tanstack-start-startup-warm.log",
-      "listenMs": 2008.7800419999985,
-      "durationMs": 3117.4573329999985,
-      "sourceRun": "results/tanstack-start-20261020.json"
-    },
-    {
-      "app": "tanstack-start",
-      "phase": "build",
-      "cache": "cold",
-      "repetition": 2,
-      "status": "success",
-      "command": "vp build",
-      "log": ".runs/2026-10-20T06-00-25-061Z/2-tanstack-start-build-cold.log",
-      "durationMs": 6442.460165999997,
-      "prerenderedPages": 10001,
-      "sourceRun": "results/tanstack-start-20261020.json"
-    },
-    {
-      "app": "tanstack-start",
-      "phase": "build",
-      "cache": "warm",
-      "repetition": 2,
-      "status": "success",
-      "command": "vp build",
-      "log": ".runs/2026-10-20T06-00-25-061Z/2-tanstack-start-build-warm.log",
-      "durationMs": 8406.440750000002,
-      "prerenderedPages": 10001,
-      "sourceRun": "results/tanstack-start-20261020.json"
+      "host": {
+        "settled": true,
+        "waitedMs": 4004.783999999985,
+        "idle": 0.8199051303844599,
+        "loadAverage": [9.09716796875, 6.88037109375, 6.65283203125]
+      }
     },
     {
       "app": "tanstack-start",
@@ -850,10 +1188,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp dev",
-      "log": ".runs/2026-10-20T06-00-25-061Z/3-tanstack-start-startup-cold.log",
-      "listenMs": 2772.7029170000023,
-      "durationMs": 4111.491792000001,
-      "sourceRun": "results/tanstack-start-20261020.json"
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-tanstack-start-startup-cold.log",
+      "listenMs": 4167.044207999948,
+      "durationMs": 6656.775832999963,
+      "host": {
+        "settled": true,
+        "waitedMs": 11009.935041000135,
+        "idle": 0.8214085466783635,
+        "loadAverage": [9.7412109375, 8.044921875, 7.14697265625]
+      }
     },
     {
       "app": "tanstack-start",
@@ -862,10 +1205,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp dev",
-      "log": ".runs/2026-10-20T06-00-25-061Z/3-tanstack-start-startup-warm.log",
-      "listenMs": 2207.5544169999994,
-      "durationMs": 3949.374708999996,
-      "sourceRun": "results/tanstack-start-20261020.json"
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-tanstack-start-startup-warm.log",
+      "listenMs": 2311.7813750002533,
+      "durationMs": 3523.9837500001304,
+      "host": {
+        "settled": true,
+        "waitedMs": 12015.464292000048,
+        "idle": 0.8109831077874105,
+        "loadAverage": [8.78369140625, 7.96826171875, 7.1416015625]
+      }
     },
     {
       "app": "tanstack-start",
@@ -874,10 +1222,15 @@
       "repetition": 3,
       "status": "success",
       "command": "vp build",
-      "log": ".runs/2026-10-20T06-00-25-061Z/3-tanstack-start-build-cold.log",
-      "durationMs": 8221.949041,
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-tanstack-start-build-cold.log",
+      "durationMs": 8577.326708999928,
       "prerenderedPages": 10001,
-      "sourceRun": "results/tanstack-start-20261020.json"
+      "host": {
+        "settled": true,
+        "waitedMs": 7007.266375000123,
+        "idle": 0.8228486394386901,
+        "loadAverage": [7.89404296875, 7.80419921875, 7.0927734375]
+      }
     },
     {
       "app": "tanstack-start",
@@ -886,504 +1239,85 @@
       "repetition": 3,
       "status": "success",
       "command": "vp build",
-      "log": ".runs/2026-10-20T06-00-25-061Z/3-tanstack-start-build-warm.log",
-      "durationMs": 9573.864124999993,
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-tanstack-start-build-warm.log",
+      "durationMs": 8032.836416000035,
       "prerenderedPages": 10001,
-      "sourceRun": "results/tanstack-start-20261020.json"
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.5374170001596,
+        "idle": 0.8684584582069522,
+        "loadAverage": [7.294921875, 7.67822265625, 7.05615234375]
+      }
+    },
+    {
+      "app": "next",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec next dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-next-startup-cold.log",
+      "listenMs": 464.890374999959,
+      "durationMs": 23102.855332999956,
+      "host": {
+        "settled": true,
+        "waitedMs": 8008.8434170000255,
+        "idle": 0.8000681404295862,
+        "loadAverage": [7.0390625, 7.615234375, 7.05224609375]
+      }
+    },
+    {
+      "app": "next",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec next dev",
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-next-startup-warm.log",
+      "listenMs": 301.65479200007394,
+      "durationMs": 15348.258292000275,
+      "host": {
+        "settled": true,
+        "waitedMs": 4005.100500000175,
+        "idle": 0.8090867872031406,
+        "loadAverage": [9.66796875, 8.1943359375, 7.2802734375]
+      }
+    },
+    {
+      "app": "next",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec next build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-next-build-cold.log",
+      "durationMs": 46191.88437499991,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 14015.7423340003,
+        "idle": 0.8181096949076663,
+        "loadAverage": [9.3623046875, 8.306640625, 7.3544921875]
+      }
+    },
+    {
+      "app": "next",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec next build",
+      "log": ".runs/2026-10-20T10-38-14-019Z/3-next-build-warm.log",
+      "durationMs": 46359.44375000009,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 9011.669999999925,
+        "idle": 0.8051417426553241,
+        "loadAverage": [17.30712890625, 10.59130859375, 8.259765625]
+      }
     }
   ],
   "contentQueryArtifactsUnchanged": true,
-  "completedAt": "2026-10-20T06:01:50.406Z",
-  "measurementControl": {
-    "applicationsAtOnce": 1,
-    "measurementTypesAtOnce": 1,
-    "composite": true,
-    "sourceRuns": [
-      "results/full-site-sequential-20261020.json",
-      "results/astro-rerun-20261020.json",
-      "results/tanstack-start-20261020.json"
-    ]
-  },
-  "hostObservations": [
-    {
-      "type": "processes",
-      "at": "2026-10-20T04:52:51.845Z",
-      "frameworkProcesses": []
-    },
-    {
-      "type": "processes",
-      "at": "2026-10-20T04:56:39.190Z",
-      "frameworkProcesses": [
-        " 9466  9456   0.0  0.2       03:45 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-        "11282 11263   0.0  0.3       02:49 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/apps/astro/node_modules/.bin/../astro/bin/astro.mjs dev --ignore-lock --host 127.0.0.1 --port 62471"
-      ]
-    },
-    {
-      "type": "processes",
-      "at": "2026-10-20T05:00:07.272Z",
-      "frameworkProcesses": [
-        " 9466  9456   5.2  0.4       07:13 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-        "16752 16746  88.8  1.0       00:09 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/apps/nuxt/node_modules/.bin/../nuxt/bin/nuxt.mjs dev --host 127.0.0.1 --port 64217"
-      ]
-    },
-    {
-      "type": "processes",
-      "at": "2026-10-20T05:04:57.760Z",
-      "frameworkProcesses": [
-        " 9466  9456   0.0  0.2       12:03 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-        "21131  9466   0.0  0.2       00:28 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/node_modules/.bin/../vite-plus/bin/vp exec next build"
-      ]
-    },
-    {
-      "type": "processes",
-      "at": "2026-10-20T05:13:04.776Z",
-      "frameworkProcesses": [
-        " 9466  9456   0.0  0.3       20:10 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-        "27509  9466   0.0  0.2       00:04 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/node_modules/.bin/../vite-plus/bin/vp exec nuxt generate",
-        "27517 27509  93.3  1.3       00:03 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/apps/nuxt/node_modules/.bin/../nuxt/bin/nuxt.mjs generate"
-      ]
-    },
-    {
-      "type": "processes",
-      "at": "2026-10-20T05:19:09.297Z",
-      "frameworkProcesses": [
-        " 9466  9456   0.2  0.9       26:15 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-        "31393 31387 263.8  3.0       00:05 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/build.ts"
-      ]
-    },
-    {
-      "type": "processes",
-      "at": "2026-10-20T05:24:25.158Z",
-      "frameworkProcesses": [
-        " 9466  9456   0.0  0.1       31:31 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-        "34870  9466   0.0  0.2       00:40 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/node_modules/.bin/../vite-plus/bin/vp exec next build"
-      ]
-    },
-    {
-      "type": "postflight-processes",
-      "at": "2026-10-20T05:26:42.923Z",
-      "frameworkProcesses": [
-        "84353     1   0.0  0.0    18:59:09 /Users/yangshun/.nvm/versions/node/v24.14.0/bin/node /Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/next@16.4.2_@opentelemetry+api@1.9.1_@types+node@25.6.0_react-dom@19.2.5_react@19.2.5__react@19.2.5/node_modules/next/dist/telemetry/detached-flush.js dev /Users/yangshun/Developer/voidzero/voidpress/content-query/examples/next _events_75812_efa88ac2d7601196.json"
-      ]
-    },
-    {
-      "type": "postflight-host",
-      "at": "2026-10-20T05:26:42.923Z",
-      "summary": "Processes: 805 total, 17 running, 1 stuck, 787 sleeping, 7994 threads \n2026/10/20 13:26:42\nLoad Avg: 21.62, 19.63, 17.34 \nCPU usage: 58.54% user, 35.0% sys, 6.45% idle \nSharedLibs: 368M resident, 71M data, 62M linkedit.\nMemRegions: 2753219 total, 7027M resident, 98M private, 1780M shared.\nPhysMem: 23G used (5352M wired, 9145M compressor), 181M unused.\nVM: 546T vsize, 17G framework vsize, 640010201(0) swapins, 675799054(0) swapouts.\nNetworks: packets: 189402647/265G in, 99858246/130G out.\nDisks: 1053471605/19T read, 336598812/12T written.\n\n\n"
-    },
-    {
-      "type": "postflight-one-second-host-sample",
-      "at": "2026-10-20T05:27:03.000Z",
-      "command": "top -l 2 -s 1 -n 10 -o cpu",
-      "cpuPercent": {
-        "user": 63.1,
-        "system": 21.3,
-        "idle": 15.59
-      },
-      "loadAverage": [21.25, 19.67, 17.4],
-      "physicalMemory": "23 GiB used; 9302 MiB compressed; 169 MiB unused",
-      "busiestProcesses": [
-        {
-          "name": "mds_stores",
-          "cpuPercent": 97.8
-        },
-        {
-          "name": "Code Helper (Plugin)",
-          "cpuPercent": 55.6
-        },
-        {
-          "name": "Code Helper",
-          "cpuPercent": 53.1
-        },
-        {
-          "name": "kernel_task",
-          "cpuPercent": 50.9
-        },
-        {
-          "name": "WindowServer",
-          "cpuPercent": 40.1
-        },
-        {
-          "name": "mds",
-          "cpuPercent": 28.8
-        }
-      ],
-      "note": "Taken after benchmark completion. Background system activity remained; these are not idle-host measurements."
-    }
-  ],
-  "refreshedAt": "2026-10-20T06:01:50.406Z",
-  "measurementRuns": [
-    {
-      "sourceRun": "results/full-site-sequential-20261020.json",
-      "apps": ["void", "vite-react", "nuxt", "next"],
-      "startedAt": "2026-10-20T04:53:08.063Z",
-      "completedAt": "2026-10-20T05:26:13.705Z",
-      "corpus": {
-        "entries": 10000,
-        "bytes": 10368894,
-        "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
-        "hardlinks": 50000,
-        "copies": 0
-      },
-      "environment": {
-        "node": "v24.21.0",
-        "platform": "darwin",
-        "architecture": "arm64",
-        "osRelease": "25.3.0",
-        "cpu": "Apple M5",
-        "logicalCpus": 10,
-        "memoryBytes": 25769803776,
-        "vitePlus": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\n",
-        "chromium": "156.0.8078.4",
-        "revision": "0621349ee7d18d04e32069a36d4ea4421ce17ce1",
-        "dirty": true,
-        "lockfileSha256": "4124699dc039ebe02e7da114162d4c2c5af11c5c8b87f5f49e172dc70782804c",
-        "contentQueryArtifactsSha256": "fc104e63574fb1c3d01c6ce7b46ab4381e1226bc922a7de9943189e0776f9926",
-        "packages": {
-          "astro": {
-            "astro": "7.4.0",
-            "vite-plus": "0.1.16",
-            "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
-            "@voidzero-dev/vite-plus-core": "1.3.0"
-          },
-          "vite-react": {
-            "react": "19.2.5",
-            "react-dom": "19.2.5",
-            "@content-collections/core": "0.15.3",
-            "@content-collections/vite": "0.3.1",
-            "@content-collections/markdown": "0.1.4",
-            "vite-plus": "0.1.16",
-            "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
-            "@voidzero-dev/vite-plus-core": "0.1.16"
-          },
-          "nuxt": {
-            "nuxt": "4.6.2",
-            "vue": "3.5.44",
-            "@nuxt/content": "3.16.2",
-            "vite-plus": "0.1.16",
-            "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
-            "@voidzero-dev/vite-plus-core": "1.3.0"
-          },
-          "void": {
-            "void": "1.1.12",
-            "@void/react": "1.1.12",
-            "react": "19.2.5",
-            "content-query": "0.0.0",
-            "vite-plus": "0.1.16",
-            "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
-            "@voidzero-dev/vite-plus-core": "0.1.16"
-          },
-          "next": {
-            "next": "16.4.2",
-            "react": "19.2.5",
-            "react-dom": "19.2.5",
-            "content-query": "0.0.0",
-            "vite-plus": "0.1.16",
-            "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7"
-          }
-        }
-      },
-      "measurementControl": {
-        "invocation": "CONTENT_QUERY_BENCH_BACKEND=in-memory vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks bench --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-        "applicationsAtOnce": 1,
-        "measurementTypesAtOnce": 1,
-        "schedule": "One cold/warm startup pair, then one cold/warm build pair per app; app order rotates between the three repetitions. Each process group and validation preview is stopped before the next sample.",
-        "viteContentQueryBackend": "in-memory",
-        "nextContentQueryBackend": "generated",
-        "previousComparison": "results/pre-sequential-20261020.json",
-        "excludedInterruptedAttempt": "results/interrupted-sequential-20261020.json"
-      },
-      "hostObservations": [
-        {
-          "type": "processes",
-          "at": "2026-10-20T04:52:51.845Z",
-          "frameworkProcesses": []
-        },
-        {
-          "type": "processes",
-          "at": "2026-10-20T04:56:39.190Z",
-          "frameworkProcesses": [
-            " 9466  9456   0.0  0.2       03:45 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-            "11282 11263   0.0  0.3       02:49 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/apps/astro/node_modules/.bin/../astro/bin/astro.mjs dev --ignore-lock --host 127.0.0.1 --port 62471"
-          ]
-        },
-        {
-          "type": "processes",
-          "at": "2026-10-20T05:00:07.272Z",
-          "frameworkProcesses": [
-            " 9466  9456   5.2  0.4       07:13 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-            "16752 16746  88.8  1.0       00:09 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/apps/nuxt/node_modules/.bin/../nuxt/bin/nuxt.mjs dev --host 127.0.0.1 --port 64217"
-          ]
-        },
-        {
-          "type": "processes",
-          "at": "2026-10-20T05:04:57.760Z",
-          "frameworkProcesses": [
-            " 9466  9456   0.0  0.2       12:03 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-            "21131  9466   0.0  0.2       00:28 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/node_modules/.bin/../vite-plus/bin/vp exec next build"
-          ]
-        },
-        {
-          "type": "processes",
-          "at": "2026-10-20T05:13:04.776Z",
-          "frameworkProcesses": [
-            " 9466  9456   0.0  0.3       20:10 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-            "27509  9466   0.0  0.2       00:04 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/node_modules/.bin/../vite-plus/bin/vp exec nuxt generate",
-            "27517 27509  93.3  1.3       00:03 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/apps/nuxt/node_modules/.bin/../nuxt/bin/nuxt.mjs generate"
-          ]
-        },
-        {
-          "type": "processes",
-          "at": "2026-10-20T05:19:09.297Z",
-          "frameworkProcesses": [
-            " 9466  9456   0.2  0.9       26:15 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-            "31393 31387 263.8  3.0       00:05 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/build.ts"
-          ]
-        },
-        {
-          "type": "processes",
-          "at": "2026-10-20T05:24:25.158Z",
-          "frameworkProcesses": [
-            " 9466  9456   0.0  0.1       31:31 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
-            "34870  9466   0.0  0.2       00:40 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/node_modules/.bin/../vite-plus/bin/vp exec next build"
-          ]
-        },
-        {
-          "type": "postflight-processes",
-          "at": "2026-10-20T05:26:42.923Z",
-          "frameworkProcesses": [
-            "84353     1   0.0  0.0    18:59:09 /Users/yangshun/.nvm/versions/node/v24.14.0/bin/node /Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/next@16.4.2_@opentelemetry+api@1.9.1_@types+node@25.6.0_react-dom@19.2.5_react@19.2.5__react@19.2.5/node_modules/next/dist/telemetry/detached-flush.js dev /Users/yangshun/Developer/voidzero/voidpress/content-query/examples/next _events_75812_efa88ac2d7601196.json"
-          ]
-        },
-        {
-          "type": "postflight-host",
-          "at": "2026-10-20T05:26:42.923Z",
-          "summary": "Processes: 805 total, 17 running, 1 stuck, 787 sleeping, 7994 threads \n2026/10/20 13:26:42\nLoad Avg: 21.62, 19.63, 17.34 \nCPU usage: 58.54% user, 35.0% sys, 6.45% idle \nSharedLibs: 368M resident, 71M data, 62M linkedit.\nMemRegions: 2753219 total, 7027M resident, 98M private, 1780M shared.\nPhysMem: 23G used (5352M wired, 9145M compressor), 181M unused.\nVM: 546T vsize, 17G framework vsize, 640010201(0) swapins, 675799054(0) swapouts.\nNetworks: packets: 189402647/265G in, 99858246/130G out.\nDisks: 1053471605/19T read, 336598812/12T written.\n\n\n"
-        },
-        {
-          "type": "postflight-one-second-host-sample",
-          "at": "2026-10-20T05:27:03.000Z",
-          "command": "top -l 2 -s 1 -n 10 -o cpu",
-          "cpuPercent": {
-            "user": 63.1,
-            "system": 21.3,
-            "idle": 15.59
-          },
-          "loadAverage": [21.25, 19.67, 17.4],
-          "physicalMemory": "23 GiB used; 9302 MiB compressed; 169 MiB unused",
-          "busiestProcesses": [
-            {
-              "name": "mds_stores",
-              "cpuPercent": 97.8
-            },
-            {
-              "name": "Code Helper (Plugin)",
-              "cpuPercent": 55.6
-            },
-            {
-              "name": "Code Helper",
-              "cpuPercent": 53.1
-            },
-            {
-              "name": "kernel_task",
-              "cpuPercent": 50.9
-            },
-            {
-              "name": "WindowServer",
-              "cpuPercent": 40.1
-            },
-            {
-              "name": "mds",
-              "cpuPercent": 28.8
-            }
-          ],
-          "note": "Taken after benchmark completion. Background system activity remained; these are not idle-host measurements."
-        }
-      ]
-    },
-    {
-      "sourceRun": "results/astro-rerun-20261020.json",
-      "apps": ["astro"],
-      "startedAt": "2026-10-20T05:32:56.841Z",
-      "completedAt": "2026-10-20T05:49:16.043Z",
-      "corpus": {
-        "entries": 10000,
-        "bytes": 10368894,
-        "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
-        "hardlinks": 50000,
-        "copies": 0
-      },
-      "environment": {
-        "node": "v24.21.0",
-        "platform": "darwin",
-        "architecture": "arm64",
-        "osRelease": "25.3.0",
-        "cpu": "Apple M5",
-        "logicalCpus": 10,
-        "memoryBytes": 25769803776,
-        "vitePlus": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)\n",
-        "chromium": "156.0.8078.4",
-        "revision": "0621349ee7d18d04e32069a36d4ea4421ce17ce1",
-        "dirty": true,
-        "lockfileSha256": "4124699dc039ebe02e7da114162d4c2c5af11c5c8b87f5f49e172dc70782804c",
-        "contentQueryArtifactsSha256": "fc104e63574fb1c3d01c6ce7b46ab4381e1226bc922a7de9943189e0776f9926",
-        "packages": {
-          "astro": {
-            "astro": "7.4.0",
-            "vite-plus": "0.1.16",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
-            "@voidzero-dev/vite-plus-core": "1.3.0"
-          },
-          "vite-react": {
-            "react": "19.2.5",
-            "react-dom": "19.2.5",
-            "@content-collections/core": "0.15.3",
-            "@content-collections/vite": "0.3.1",
-            "@content-collections/markdown": "0.1.4",
-            "vite-plus": "0.1.16",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
-            "@voidzero-dev/vite-plus-core": "0.1.16"
-          },
-          "nuxt": {
-            "nuxt": "4.6.2",
-            "vue": "3.5.44",
-            "@nuxt/content": "3.16.2",
-            "vite-plus": "0.1.16",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
-            "@voidzero-dev/vite-plus-core": "1.3.0"
-          },
-          "void": {
-            "void": "1.1.12",
-            "@void/react": "1.1.12",
-            "react": "19.2.5",
-            "content-query": "0.0.0",
-            "vite-plus": "0.1.16",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
-            "@voidzero-dev/vite-plus-core": "0.1.16"
-          },
-          "next": {
-            "next": "16.4.2",
-            "react": "19.2.5",
-            "react-dom": "19.2.5",
-            "content-query": "0.0.0",
-            "vite-plus": "0.1.16",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)"
-          }
-        }
-      },
-      "measurementControl": {
-        "invocation": "vp env exec --node 24.21.0 -- node .runs/astro-rerun-20261020.ts --apps astro --phase all --runs 3",
-        "applicationsAtOnce": 1,
-        "measurementTypesAtOnce": 1,
-        "corpusReused": true,
-        "helper": "scripts/measure.ts"
-      },
-      "hostObservations": []
-    },
-    {
-      "sourceRun": "results/tanstack-start-20261020.json",
-      "apps": ["tanstack-start"],
-      "startedAt": "2026-10-20T06:00:25.061Z",
-      "completedAt": "2026-10-20T06:01:50.406Z",
-      "corpus": {
-        "entries": 10000,
-        "bytes": 10368894,
-        "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
-        "hardlinks": 60000,
-        "copies": 0
-      },
-      "environment": {
-        "node": "v24.21.0",
-        "platform": "darwin",
-        "architecture": "arm64",
-        "osRelease": "25.3.0",
-        "cpu": "Apple M5",
-        "logicalCpus": 10,
-        "memoryBytes": 25769803776,
-        "vitePlus": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.4\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)\n",
-        "chromium": "156.0.8078.4",
-        "revision": "0621349ee7d18d04e32069a36d4ea4421ce17ce1",
-        "dirty": true,
-        "lockfileSha256": "6d1776a6d25e47714e6bc508aefb855354214af33be9465c37d347942584a674",
-        "contentQueryArtifactsSha256": "fc104e63574fb1c3d01c6ce7b46ab4381e1226bc922a7de9943189e0776f9926",
-        "packages": {
-          "astro": {
-            "astro": "7.4.0",
-            "vite-plus": "0.1.16",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.4\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
-            "@voidzero-dev/vite-plus-core": "1.3.0"
-          },
-          "vite-react": {
-            "react": "19.2.5",
-            "react-dom": "19.2.5",
-            "@content-collections/core": "0.15.3",
-            "@content-collections/vite": "0.3.1",
-            "@content-collections/markdown": "0.1.4",
-            "vite-plus": "0.1.16",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.4\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
-            "@voidzero-dev/vite-plus-core": "0.1.16"
-          },
-          "nuxt": {
-            "nuxt": "4.6.2",
-            "vue": "3.5.44",
-            "@nuxt/content": "3.16.2",
-            "vite-plus": "0.1.16",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.4\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
-            "@voidzero-dev/vite-plus-core": "1.3.0"
-          },
-          "void": {
-            "void": "1.1.12",
-            "@void/react": "1.1.12",
-            "react": "19.2.5",
-            "content-query": "0.0.0",
-            "vite-plus": "0.1.16",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.4\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
-            "@voidzero-dev/vite-plus-core": "0.1.16"
-          },
-          "next": {
-            "next": "16.4.2",
-            "react": "19.2.5",
-            "react-dom": "19.2.5",
-            "content-query": "0.0.0",
-            "vite-plus": "0.1.16",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.4\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)"
-          },
-          "tanstack-start": {
-            "@tanstack/react-start": "1.169.3",
-            "@tanstack/react-router": "1.170.45",
-            "react": "19.2.5",
-            "react-dom": "19.2.5",
-            "content-query": "0.0.0",
-            "vite-plus": "1.3.0",
-            "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v1.3.0\n\nTools:\n  vite             v8.3.4\n  rolldown         v1.2.14\n  vitest           v5.0.5\n  oxfmt            v0.73.0\n  oxlint           v1.88.0\n  oxlint-tsgolint  v7.0.2004\n  tsdown           v0.23.1\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
-            "@voidzero-dev/vite-plus-core": "0.1.24"
-          }
-        }
-      },
-      "measurementControl": {
-        "invocation": "vp env exec --node 24.21.0 -- node .runs/tanstack-start-20261020.ts --apps tanstack-start --phase all --runs 3",
-        "applicationsAtOnce": 1,
-        "measurementTypesAtOnce": 1,
-        "corpusReused": true,
-        "helper": "scripts/measure.ts",
-        "backend": "in-memory"
-      },
-      "hostObservations": [
-        {
-          "at": "2026-10-20T06:00:22.201Z",
-          "kind": "preflight",
-          "processes": [
-            "84353     1   0.0  0.0    19:32:50 /Users/yangshun/.nvm/versions/node/v24.14.0/bin/node /Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/next@16.4.2_@opentelemetry+api@1.9.1_@types+node@25.6.0_react-dom@19.2.5_react@19.2.5__react@19.2.5/node_modules/next/dist/telemetry/detached-flush.js dev /Users/yangshun/Developer/voidzero/voidpress/content-query/examples/next _events_75812_efa88ac2d7601196.json"
-          ]
-        },
-        {
-          "at": "2026-10-20T06:02:56.055Z",
-          "kind": "postflight",
-          "processes": [
-            "84353     1   0.0  0.0    19:35:24 /Users/yangshun/.nvm/versions/node/v24.14.0/bin/node /Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/next@16.4.2_@opentelemetry+api@1.9.1_@types+node@25.6.0_react-dom@19.2.5_react@19.2.5__react@19.2.5/node_modules/next/dist/telemetry/detached-flush.js dev /Users/yangshun/Developer/voidzero/voidpress/content-query/examples/next _events_75812_efa88ac2d7601196.json"
-          ]
-        }
-      ]
-    }
-  ]
+  "completedAt": "2026-10-20T11:22:01.490Z"
 }

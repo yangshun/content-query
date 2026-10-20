@@ -10,12 +10,21 @@ import {
   apps,
   appDirectory,
   benchmarkRoot,
+  bundlerDependency,
   defaultEntries,
+  executable,
   workload,
   type App,
   type Phase,
 } from "./config.ts";
 import { generateCorpus } from "./generate.ts";
+import {
+  defaultSettle,
+  repetitionOrders,
+  spotlightIndexes,
+  waitForQuietHost,
+  type SettleOptions,
+} from "./host.ts";
 import { clearCaches, measureSample } from "./measure.ts";
 import { renderReport, type Report } from "./report.ts";
 import { stopAllProcesses } from "./process.ts";
@@ -40,7 +49,7 @@ async function contentQueryFingerprint(): Promise<string> {
 }
 
 /** Reads installed frameworks and the overridden bundler for each Vite-based application. */
-async function packageVersions(app: App): Promise<Record<string, string>> {
+export async function packageVersions(app: App): Promise<Record<string, string>> {
   const directory = appDirectory(benchmarkRoot, app);
   const versions: Record<string, string> = {};
   for (const name of [...app.packages, "vite-plus"]) {
@@ -49,7 +58,9 @@ async function packageVersions(app: App): Promise<Record<string, string>> {
     ) as { version: string };
     versions[name] = manifest.version;
   }
-  const { stdout } = await execute("vp", ["--version"], { cwd: directory });
+  const { stdout } = await execute(executable(benchmarkRoot, app), ["--version"], {
+    cwd: directory,
+  });
   versions["toolchain"] = stdout.trim();
   if (app.id === "next") {
     // Next ships its own Turbopack bundler and does not resolve Vite for the application build.
@@ -64,8 +75,11 @@ async function packageVersions(app: App): Promise<Record<string, string>> {
       "@nuxt/vite-builder/package.json",
     );
   }
+  const ownerManifest = JSON.parse(await readFile(owner, "utf8")) as {
+    dependencies?: Record<string, string>;
+  };
   const bundlerPath = createRequire(owner).resolve(
-    app.cli ? "vite/package.json" : "@voidzero-dev/vite-plus-core/package.json",
+    `${bundlerDependency(ownerManifest)}/package.json`,
   );
   const bundler = JSON.parse(await readFile(bundlerPath, "utf8")) as {
     name: string;
@@ -75,12 +89,17 @@ async function packageVersions(app: App): Promise<Record<string, string>> {
   return versions;
 }
 
-/** Runs independent cold/warm pairs sequentially and checkpoints raw samples after every trial. */
+/**
+ * Runs independent cold/warm pairs sequentially in a seeded random app order, waits for the host
+ * to settle before every sample, and checkpoints raw samples after every trial.
+ */
 export async function runBenchmark(options: {
   entries: number;
   runs: number;
   selected: App[];
   phases: Phase[];
+  seed: number;
+  settle: SettleOptions;
 }): Promise<Report> {
   if (process.versions.node !== "24.21.0") {
     throw new Error(
@@ -90,8 +109,29 @@ export async function runBenchmark(options: {
   if (!Number.isSafeInteger(options.runs) || options.runs < 1) {
     throw new Error("--runs must be a positive integer.");
   }
+  if (!Number.isSafeInteger(options.seed) || options.seed < 0 || options.seed >= 2 ** 32) {
+    throw new Error("--seed must be an integer from 0 to 4294967295.");
+  }
+  const { threshold, windows, windowMs, timeoutMs } = options.settle;
+  if (
+    !(threshold >= 0 && threshold <= 1) ||
+    !Number.isSafeInteger(windows) ||
+    windows < 1 ||
+    !(windowMs > 0) ||
+    !(timeoutMs >= 0)
+  ) {
+    throw new Error("--settle-idle must be from 0 to 1 and --settle-timeout non-negative.");
+  }
   console.log(`Generating ${options.entries} entries per app (excluded from timings).`);
   const corpus = await generateCorpus(benchmarkRoot, options.entries);
+  const orders = repetitionOrders(options.selected, options.runs, options.seed);
+  console.log("Checking whether Spotlight indexes application output (excluded from timings).");
+  const spotlight = await spotlightIndexes(path.join(benchmarkRoot, "apps"));
+  if (spotlight) {
+    console.warn(
+      "Spotlight indexes application output; add content-query/benchmarks/apps to Spotlight's privacy list for cleaner timings.",
+    );
+  }
   const repository = path.resolve(benchmarkRoot, "../..");
   const [version, revision, status, lockfile] = await Promise.all([
     execute("vp", ["--version"], { cwd: repository }),
@@ -124,6 +164,12 @@ export async function runBenchmark(options: {
       contentQueryArtifactsSha256: await contentQueryFingerprint(),
       packages,
     },
+    control: {
+      seed: options.seed,
+      orders: orders.map((order) => order.map((app) => app.id)),
+      settle: options.settle,
+      spotlightIndexesApps: spotlight,
+    },
     samples: [],
   };
   const runDirectory = path.join(benchmarkRoot, ".runs", report.startedAt.replaceAll(/[:.]/g, "-"));
@@ -152,14 +198,16 @@ export async function runBenchmark(options: {
   try {
     await save();
     for (let repetition = 1; repetition <= options.runs; repetition++) {
-      const offset = (repetition - 1) % options.selected.length;
-      const order = [...options.selected.slice(offset), ...options.selected.slice(0, offset)];
-      for (const app of order) {
+      for (const app of orders[repetition - 1]!) {
         for (const phase of options.phases) {
           await clearCaches(appDirectory(benchmarkRoot, app));
           for (const cache of ["cold", "warm"] as const) {
             await assertPackageUnchanged();
             console.log(`[${repetition}/${options.runs}] ${app.id}: ${cache} ${phase}`);
+            const host = await waitForQuietHost(options.settle);
+            console.log(
+              `  host ${(host.idle * 100).toFixed(0)}% idle after ${(host.waitedMs / 1_000).toFixed(1)} s${host.settled ? "" : " (did not settle)"}`,
+            );
             const log = path.join(runDirectory, `${repetition}-${app.id}-${phase}-${cache}.log`);
             const sample = await measureSample(
               browser,
@@ -171,6 +219,7 @@ export async function runBenchmark(options: {
               repetition,
               log,
             );
+            sample.host = host;
             report.samples.push(sample);
             await assertPackageUnchanged();
             console.log(
@@ -205,6 +254,9 @@ if (import.meta.main) {
       runs: { type: "string", default: "3" },
       apps: { type: "string", default: apps.map((app) => app.id).join(",") },
       phase: { type: "string", default: "all" },
+      seed: { type: "string", default: String(Date.now() % 2 ** 32) },
+      "settle-idle": { type: "string", default: String(defaultSettle.threshold) },
+      "settle-timeout": { type: "string", default: String(defaultSettle.timeoutMs / 1_000) },
     },
   });
   const requested = values.apps.split(",");
@@ -225,6 +277,12 @@ if (import.meta.main) {
     runs: Number(values.runs),
     selected,
     phases: values.phase === "all" ? ["startup", "build"] : [values.phase as Phase],
+    seed: Number(values.seed),
+    settle: {
+      ...defaultSettle,
+      threshold: Number(values["settle-idle"]),
+      timeoutMs: Number(values["settle-timeout"]) * 1_000,
+    },
   });
   if (
     !report.contentQueryArtifactsUnchanged ||

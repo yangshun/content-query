@@ -85,6 +85,32 @@ export function appDirectory(root: string, app: App): string {
   return path.join(root, "apps", app.id);
 }
 
+/**
+ * Resolves an application's own Vite+ CLI. A bare `vp` resolves to whichever binary is first on
+ * PATH, which under `vp run` is this benchmark package's pinned version rather than the app's.
+ */
+export function executable(root: string, app: App): string {
+  return path.join(
+    appDirectory(root, app),
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "vp.cmd" : "vp",
+  );
+}
+
+/**
+ * Names the dependency through which a package declares its bundler. Frameworks and newer Vite+
+ * releases declare `vite`, which Vite+ may alias to its core; older Vite+ releases declare
+ * `@voidzero-dev/vite-plus-core` directly. Resolving an undeclared name could find an unrelated
+ * hoisted copy.
+ */
+export function bundlerDependency(manifest: { dependencies?: Record<string, string> }): string {
+  const dependencies = manifest.dependencies ?? {};
+  return dependencies.vite === undefined && dependencies["@voidzero-dev/vite-plus-core"]
+    ? "@voidzero-dev/vite-plus-core"
+    : "vite";
+}
+
 /** Runs framework builds, React prerendering, and static-file previews through Vite+. */
 export function command(app: App, phase: "dev" | "build" | "preview", port?: number): string[] {
   const arguments_ =
