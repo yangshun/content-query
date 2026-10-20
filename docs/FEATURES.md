@@ -13,7 +13,7 @@
 - Generated `CollectionKey`, `CollectionData`, and `Collections` aliases for physical and `content-query:server` entries.
 - Browser-safe `content-query:client` update subscriptions with serialized router revalidation and full-reload fallback; Void preserves component state and scroll.
 - Forward/inverse relationships, explicit reference ownership, authored arrays, nested selection, and per-parent pagination.
-- Rich value/presence preservation through synchronous devalue encoding and detached results.
+- Rich value/presence preservation through synchronous devalue encoding and detached results. Plain selections and rendered output are copied directly, without an encode/decode round trip.
 - Explicit retained-body access, supplied HTML, built-in HTML/headings rendering, and eager/deferred Markdown policy.
 - In-memory and generated backends using the same JavaScript query semantics. Vite defaults to in-memory preparation and bundled output; standalone runtime publication requires `backend: "generated"`. The CLI, standalone API, and Next.js adapter retain generated storage by default.
 - Portable generated ESM indexes and lazy payloads, typed standalone `buildContent()` with `BuildContentOptions` from `content-query/build`, the CAC-based `content-query build` CLI with `--watch`, and optional Vite integration. The CLI provides help/version output without loading configuration, short aliases, and equals-form values while rejecting invalid or repeated build options. Build diagnostics use `operation: "build"`.

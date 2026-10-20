@@ -2,7 +2,7 @@
 
 The corrected workload builds one index and 10,000 dedicated articles. Void's remaining build cost comes from its worker-based prerender pipeline, repeated runtime queries, and larger native output. Markdown compilation is a small part of the total.
 
-The ContentQuery ID-query bottleneck is fixed in `src/runtime/execute.ts`. Void and its installed dependencies are unchanged.
+The ContentQuery ID-query bottleneck is fixed in `src/runtime/execute.ts`, and plain query and render results are now detached without a serialization round trip in `src/shared/values.ts`. Void and its installed dependencies are unchanged.
 
 ## ContentQuery bottleneck and fix
 
@@ -27,6 +27,24 @@ All **20,002 HTML and navigation JSON files are byte-identical** before and afte
 
 Evidence: [worker before](./results/profile-full-site-prerender-before-cpu.json), [worker after](./results/profile-full-site-prerender-id-index.json), [output parity](./results/profile-full-site-output-parity.json).
 
+## Result detachment
+
+Query and `render()` results are detached so callers can mutate them without changing stored content. Detachment previously encoded every result with devalue and parsed it back. Rendered HTML contains characters that the encoder escapes, so each article's HTML was scanned character by character, and each index request detached 10,000 selections. Void runs every loader twice per page.
+
+ContentQuery now copies graphs of primitives, plain objects, dense arrays, and dates directly. Each object first passes the same tag, thenable, symbol-key, and `__proto__` checks that the encoder applies. Any other value sends the whole graph through the original round trip, so rich values, repeated references, cycles, and rejection messages are unchanged. In isolation, a three-field selection took 0.08 µs instead of 1.03 µs, and a render result with 11.9 KB of HTML took 0.31 µs instead of 50.4 µs.
+
+| Worker diagnostic                            |        Baseline |    Direct copy |         Repeat |
+| -------------------------------------------- | --------------: | -------------: | -------------: |
+| `detach()` share of active worker samples    | 11.38% (753 ms) | 1.29% (103 ms) |  1.82% (97 ms) |
+| Query `run()` share of active worker samples | 13.97% (925 ms) | 2.68% (213 ms) | 4.65% (249 ms) |
+| devalue `stringify()` share                  |  5.85% (387 ms) |    not sampled |    not sampled |
+| Active worker time                           |        6,618 ms |       7,954 ms |       5,355 ms |
+| Prerendered content HTML pages               |          10,001 |         10,001 |         10,001 |
+
+Each column replays a fresh Void build of the same corpus. The workstation carried other load (load average about 5 during the repeat). The first direct-copy replay ran slower overall even as its ContentQuery frames shrank, so total worker time is not a reliable speedup measure here. The detachment attribution agrees across both direct-copy replays. All **20,002 HTML and navigation JSON files are byte-identical** across the three replays, with combined ordered SHA-256 `ba02b4a635dc61888fffc195b1046833aa5f26085a991fa4bbcf0b1399fabeb1`.
+
+Evidence: [baseline](./results/profile-detach-baseline-20261020.json), [direct copy](./results/profile-detach-fast-path-20261020.json), [repeat](./results/profile-detach-fast-path-repeat-20261020.json), [function attribution and output parity](./results/profile-detach-attribution.json). The replay summaries list only their top 25 frames, so the attribution record carries the per-function values computed from the raw worker profiles.
+
 ## Remaining costs, left unchanged
 
 The installed Void renderer runs at concurrency four. For every route it fetches HTML from Miniflare, writes the HTML synchronously, fetches the route again for navigation JSON, then writes that synchronously. The replay recorded **10,001 HTML requests, 10,001 JSON requests, 20,002 synchronous file writes, and 20,002 directory-creation calls**.
@@ -40,7 +58,7 @@ The installed Void renderer runs at concurrency four. For every route it fetches
 | Content preparation                     | One session, 1.38–2.43 seconds elapsed, including source loading, validation, and rendering              | ContentQuery, inside server compilation |
 | Markdown rendering                      | 10,000 renders totaled 0.19–0.38 seconds inside preparation                                              | ContentQuery                            |
 
-Result detachment remains another ContentQuery cost: `detach()` accounted for 11.52% of sampled active worker time after the ID-index fix. Its serialization preserves rich values, aliases, and detached mutable graphs; the ID optimization retains that contract.
+Result detachment accounted for 11.52% of sampled active worker time after the ID-index fix. After [direct copies](#result-detachment), it accounts for 1.29–1.82% while preserving rich values, aliases, and detached mutable graphs.
 
 These are different measures, and some overlap. Preparation is inside server compilation, and inclusive CPU frames overlap their children; do not add the rows into a wall-clock total.
 
@@ -89,6 +107,8 @@ vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmar
 vp env exec --node 24.21.0 -- vp exec node content-query/benchmarks/scripts/profile-prerender.mjs --label worker-build
 ```
 
-The last command requires a completed Void build. It replays the installed renderer against that built worker into a fresh ignored output directory. A Node load hook exposes the runner and enables its local inspector; a counter is added to the worker's ContentQuery query function in memory. Neither Void's source nor installed files are edited. It records worker CPU attribution, query candidates, filesystem calls, phase timings, and an audit of all 10,001 content HTML pages. Use a new label for every replay.
+The last command requires a completed Void build; the detachment comparison ran `vp build` in `apps/void` after each package build. It replays the installed renderer against that built worker into a fresh ignored output directory. A Node load hook exposes the runner and enables its local inspector; a counter is added to the worker's ContentQuery query function in memory. Neither Void's source nor installed files are edited. It records worker CPU attribution, query candidates, filesystem calls, phase timings, and an audit of all 10,001 content HTML pages. Use a new label for every replay.
 
 The ContentQuery package suite passed **345 tests in 37 files**. V8 coverage passed its configured thresholds: **92.41% statements, 87.69% branches, 94.44% functions, and 92.49% lines**. Consumer-guide integration and profiler-summary tests passed another 33 tests. `vp check` passed formatting, lint, and TypeScript checks across the workspace.
+
+After the detachment change, the package suite passed **361 tests in 37 files** with **92.47% statements, 87.78% branches, 94.29% functions, and 92.48% lines**, and `vp check` passed.

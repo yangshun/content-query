@@ -113,6 +113,35 @@ describe("ID query execution", () => {
     ).toBe(0);
   });
 
+  test("detaches projected graphs, keeping shared references within each result", async () => {
+    const author = { name: "Ada" };
+    const records = [
+      { id: "plain", title: "Plain", author, editors: [author], date: new Date(1) },
+      { id: "rich", title: "Rich", author, editors: new Set([author]), date: new Date(2) },
+    ];
+    const prepared = revision(records);
+    const plan: QueryPlan = { ...emptyPlan("entries"), select: ["author", "editors", "date"] };
+    const [plain, rich] = (await executeQuery(prepared, plan, "all")) as {
+      author: typeof author;
+      editors: (typeof author)[] | Set<typeof author>;
+      date: Date;
+    }[];
+    expect((plain!.editors as (typeof author)[])[0]).toBe(plain!.author);
+    expect([...(rich!.editors as Set<typeof author>)][0]).toBe(rich!.author);
+    expect(plain!.author).not.toBe(author);
+    expect(rich!.author).not.toBe(plain!.author);
+    plain!.author.name = "Changed";
+    rich!.author.name = "Changed";
+    plain!.date.setTime(0);
+    (plain!.editors as (typeof author)[]).length = 0;
+    expect(await executeQuery(prepared, plan, "all")).toEqual([
+      { author: { name: "Ada" }, editors: [{ name: "Ada" }], date: new Date(1) },
+      { author: { name: "Ada" }, editors: new Set([{ name: "Ada" }]), date: new Date(2) },
+    ]);
+    expect(records[0]!.author).toBe(author);
+    expect(author.name).toBe("Ada");
+  });
+
   test("handles prototype-like IDs and leaves collection ordering intact", async () => {
     const records = [
       { id: "constructor", title: "Constructor" },
