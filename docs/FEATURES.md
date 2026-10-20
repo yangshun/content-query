@@ -2,6 +2,7 @@
 
 - Standard Schema metadata/computed validation and output inference, with grouped contextual errors.
 - Computed context includes the collection registry key and optional, typed loader source metadata. Built-in file loaders supply project-relative paths and multi-record keys; source-only edits participate in preparation cache invalidation. Existing Astro loaders remain compatible without supplying the ContentQuery metadata extension.
+- `content-query/computed` provides reusable `readingTime()`, `wordCount()`, and `excerpt()` computed definitions with Standard Schema result types. Captured-body defaults, typed async input selectors, Markdown/text/HTML extraction, configurable reading speed, Unicode-safe excerpt limits, and cancellation work during preparation; only results enter deployed query data.
 - Build-only root `content-query.config.{ts,mts,cts,js,mjs,cjs}` discovery, ambiguity errors, and an exact custom-path override; generated typings and Vite client guards follow the selected config. Source acquisition stays in preparation, with source-independent deployed queries and rendering.
 - Markdown, JSON, YAML, TOML, and native Astro-compatible named content loaders with matching built-in identities. Existing content loader packages can be passed directly to collections; no adapter API is required.
 - Loader stores, inherited schemas and dynamic schema factories, collection-schema precedence, parsed-data reuse, digests, session metadata, logger/config helpers, portable Markdown rendering, and transactional asynchronous watcher callbacks.

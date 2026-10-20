@@ -148,17 +148,13 @@ export const sourceExamples = [
   },
 ] as const;
 
+export const computedExampleImports =
+  'import { excerpt, readingTime, wordCount } from "content-query/computed";';
+
 export const computedExampleCode = `computed: {
-  readingMinutes: {
-    schema: z.number(),
-    resolve: async ({ readBody }) => {
-      const body = (await readBody()) ?? "";
-      const words = body.trim()
-        ? body.trim().split(/\\s+/).length
-        : 0;
-      return Math.ceil(words / 200);
-    },
-  },
+  readingMinutes: readingTime(),
+  wordCount: wordCount(),
+  excerpt: excerpt({ maxLength: 160 }),
 }`;
 
 export const relationshipExampleCode = `relationships: {

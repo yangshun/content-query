@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { computedExampleCode } from "../feature-example-data";
+import { computedExampleCode, computedExampleImports } from "../feature-example-data";
 import { Choices, CodeExample } from "./shared";
 
 export function ComputedFieldsExample() {
@@ -27,8 +27,8 @@ export function ComputedFieldsExample() {
         <div>
           <CodeExample
             label="Computed field"
-            code={computedExampleCode}
-            highlight={["Math.ceil"]}
+            code={`${computedExampleImports}\n\n${computedExampleCode}`}
+            highlight={["readingMinutes:"]}
           />
           <details className="example-details">
             <summary>Query the computed field</summary>

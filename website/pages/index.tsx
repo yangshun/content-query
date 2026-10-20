@@ -65,7 +65,7 @@ export default function Homepage({ renderedExample }: Props) {
       id: "computed-fields",
       title: "Computed fields",
       description:
-        "Add reading times and other derived fields during preparation. Select them alongside authored metadata.",
+        "Use built-in reading time, word count, and excerpt helpers, or write custom computed fields. Query them alongside authored metadata.",
       href: "/docs/computed-fields",
       example: <ComputedFieldsExample />,
     },

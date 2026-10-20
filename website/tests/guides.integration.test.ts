@@ -18,6 +18,7 @@ import { NextWorkflow, nextWorkflowExample } from "../src/examples/workflows";
 import {
   collectionExampleCode,
   computedExampleCode,
+  computedExampleImports,
   exampleAuthors,
   examplePosts,
   featureExampleIds,
@@ -437,6 +438,7 @@ assert.deepEqual(posts, ${JSON.stringify(sourceToDataExample.data)});
       `
 import { defineCollection } from "content-query";
 import { z } from "zod";
+${computedExampleImports}
 const posts = ${postCollection}
 const authors = defineCollection({ source: { type: "json", directory: "./content/authors" }, schema: z.object({ name: z.string() }) });
 export const collections = { posts, authors, ${formatCollections.join(",\n")} };
@@ -480,6 +482,10 @@ import { eq } from "content-query/query";
 ${queryChecks.join("\n")}
 ${sourceChecks.join("\n")}
 assert.deepEqual(await content.query("posts").where((fields) => eq(fields.id, "hello-world")).select("readingMinutes").first(), { readingMinutes: 3 });
+const derived = await content.query("posts").select("wordCount", "excerpt").first();
+assert.equal(derived.wordCount, 600);
+assert.equal(derived.excerpt.length, 160);
+assert.ok(derived.excerpt.endsWith("…"));
 ${relationshipQueryCode}
 assert.deepEqual(posts, ${JSON.stringify(examplePosts.filter((post) => post.authorId === "ada").map((post) => ({ title: post.title, author: { name: "Ada Lovelace" } })))});
 `,
