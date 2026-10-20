@@ -1,0 +1,12 @@
+.fixtures/
+.runs/
+apps/*/content/
+apps/*/.astro/
+apps/*/.nuxt/
+apps/*/.output/
+apps/*/.data/
+apps/*/.content-collections/
+apps/*/.prerender/
+apps/*/.tanstack/
+apps/*/.void-wrangler.jsonc
+apps/*/void.lock.json

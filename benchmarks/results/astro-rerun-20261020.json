@@ -1,0 +1,210 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-20T05:32:56.841Z",
+  "repetitions": 3,
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 50000,
+    "copies": 0
+  },
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.3.0",
+    "cpu": "Apple M5",
+    "logicalCpus": 10,
+    "memoryBytes": 25769803776,
+    "vitePlus": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)\n",
+    "chromium": "156.0.8078.4",
+    "revision": "0621349ee7d18d04e32069a36d4ea4421ce17ce1",
+    "dirty": true,
+    "lockfileSha256": "4124699dc039ebe02e7da114162d4c2c5af11c5c8b87f5f49e172dc70782804c",
+    "contentQueryArtifactsSha256": "fc104e63574fb1c3d01c6ce7b46ab4381e1226bc922a7de9943189e0776f9926",
+    "packages": {
+      "astro": {
+        "astro": "7.4.0",
+        "vite-plus": "0.1.16",
+        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
+        "@voidzero-dev/vite-plus-core": "1.3.0"
+      },
+      "vite-react": {
+        "react": "19.2.5",
+        "react-dom": "19.2.5",
+        "@content-collections/core": "0.15.3",
+        "@content-collections/vite": "0.3.1",
+        "@content-collections/markdown": "0.1.4",
+        "vite-plus": "0.1.16",
+        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
+        "@voidzero-dev/vite-plus-core": "0.1.16"
+      },
+      "nuxt": {
+        "nuxt": "4.6.2",
+        "vue": "3.5.44",
+        "@nuxt/content": "3.16.2",
+        "vite-plus": "0.1.16",
+        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
+        "@voidzero-dev/vite-plus-core": "1.3.0"
+      },
+      "void": {
+        "void": "1.1.12",
+        "@void/react": "1.1.12",
+        "react": "19.2.5",
+        "content-query": "0.0.0",
+        "vite-plus": "0.1.16",
+        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)",
+        "@voidzero-dev/vite-plus-core": "0.1.16"
+      },
+      "next": {
+        "next": "16.4.2",
+        "react": "19.2.5",
+        "react-dom": "19.2.5",
+        "content-query": "0.0.0",
+        "vite-plus": "0.1.16",
+        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)"
+      }
+    }
+  },
+  "samples": [
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T05-32-56-841Z/1-astro-startup-cold.log",
+      "listenMs": 3598.396208,
+      "durationMs": 4919.079625
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "timeout",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T05-32-56-841Z/1-astro-startup-warm.log",
+      "error": "page.goto: Timeout 296242.15112500003ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:58961/\", waiting until \"load\"\u001b[22m\n\nServer output:\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Generated 0ms\",\"label\":\"types\",\"level\":\"info\"}\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Syncing content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Astro config changed\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Clearing content store\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Synced content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\" astro  v7.4.0 ready in 2524 ms\\n┃ Local    http://127.0.0.1:58961/\",\"label\":\"SKIP_FORMAT\",\"level\":\"info\"}\n{\"message\":\"watching for file changes...\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 530ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 14ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] /entries/entry-00001/ 29ms\",\"label\":null,\"level\":\"info\"}\n"
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T05-32-56-841Z/1-astro-build-cold.log",
+      "durationMs": 13544.334957999992,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T05-32-56-841Z/1-astro-build-warm.log",
+      "durationMs": 9932.443041999999,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T05-32-56-841Z/2-astro-startup-cold.log",
+      "listenMs": 3318.2128329999978,
+      "durationMs": 4606.636125000019
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T05-32-56-841Z/2-astro-startup-warm.log",
+      "listenMs": 2564.9963330000173,
+      "durationMs": 4073.6603749999776
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T05-32-56-841Z/2-astro-build-cold.log",
+      "durationMs": 6547.142500000016,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T05-32-56-841Z/2-astro-build-warm.log",
+      "durationMs": 7936.3505000000005,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "timeout",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T05-32-56-841Z/3-astro-startup-cold.log",
+      "error": "page.goto: Timeout 295699.12362499995ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:60523/\", waiting until \"load\"\u001b[22m\n\nServer output:\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Generated 1ms\",\"label\":\"types\",\"level\":\"info\"}\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Syncing content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Synced content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\" astro  v7.4.0 ready in 2765 ms\\n┃ Local    http://127.0.0.1:60523/\",\"label\":\"SKIP_FORMAT\",\"level\":\"info\"}\n{\"message\":\"watching for file changes...\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 472ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 12ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] /entries/entry-00001/ 27ms\",\"label\":null,\"level\":\"info\"}\n"
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "timeout",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T05-32-56-841Z/3-astro-startup-warm.log",
+      "error": "page.goto: Timeout 293243.20233400003ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:61232/\", waiting until \"load\"\u001b[22m\n\nServer output:\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Generated 0ms\",\"label\":\"types\",\"level\":\"info\"}\n{\"message\":\"connected.\",\"label\":\"vite\",\"level\":\"info\"}\n{\"message\":\"Syncing content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Astro config changed\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Clearing content store\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\"Synced content\",\"label\":\"content\",\"level\":\"info\"}\n{\"message\":\" astro  v7.4.0 ready in 5495 ms\\n┃ Local    http://127.0.0.1:61232/\",\"label\":\"SKIP_FORMAT\",\"level\":\"info\"}\n{\"message\":\"watching for file changes...\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 440ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] / 7ms\",\"label\":null,\"level\":\"info\"}\n{\"message\":\"[200] /entries/entry-00001/ 15ms\",\"label\":null,\"level\":\"info\"}\n"
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T05-32-56-841Z/3-astro-build-cold.log",
+      "durationMs": 7654.83504200005,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T05-32-56-841Z/3-astro-build-warm.log",
+      "durationMs": 8319.278082999983,
+      "prerenderedPages": 10001
+    }
+  ],
+  "contentQueryArtifactsUnchanged": true,
+  "completedAt": "2026-10-20T05:49:16.043Z",
+  "measurementControl": {
+    "invocation": "vp env exec --node 24.21.0 -- node .runs/astro-rerun-20261020.ts --apps astro --phase all --runs 3",
+    "applicationsAtOnce": 1,
+    "measurementTypesAtOnce": 1,
+    "corpusReused": true,
+    "helper": "scripts/measure.ts"
+  }
+}

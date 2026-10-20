@@ -1,0 +1,215 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-20T03:44:53.542Z",
+  "label": "void-no-next-20261020",
+  "mode": "timings",
+  "backend": "in-memory",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [17.20263671875, 83.55859375, 73.3271484375],
+  "lockfileSha256": "4124699dc039ebe02e7da114162d4c2c5af11c5c8b87f5f49e172dc70782804c",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 50000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "da14c14bc1950629e891ad56103b6dd34c07c85751547410c23a94227b67183d",
+  "contentQueryArtifactsUnchanged": true,
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/void-no-next-20261020/1-startup-cold/output.log",
+      "listenMs": 5084.778625,
+      "durationMs": 6975.804625
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/void-no-next-20261020/1-startup-warm/output.log",
+      "listenMs": 4103.42375,
+      "durationMs": 5562.619084
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/void-no-next-20261020/1-build-cold/output.log",
+      "durationMs": 12147.612415999998,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/void-no-next-20261020/1-build-warm/output.log",
+      "durationMs": 11588.055208999998,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/void-no-next-20261020/2-startup-cold/output.log",
+      "listenMs": 4460.475749999998,
+      "durationMs": 5983.342832999995
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/void-no-next-20261020/2-startup-warm/output.log",
+      "listenMs": 3403.5069160000057,
+      "durationMs": 4587.2512080000015
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/void-no-next-20261020/2-build-cold/output.log",
+      "durationMs": 10188.753458,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/void-no-next-20261020/2-build-warm/output.log",
+      "durationMs": 11464.555874999998,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/void-no-next-20261020/3-startup-cold/output.log",
+      "listenMs": 4515.365749999997,
+      "durationMs": 6135.067207999993
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/void-no-next-20261020/3-startup-warm/output.log",
+      "listenMs": 3189.8929999999964,
+      "durationMs": 4647.307958999998
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/void-no-next-20261020/3-build-cold/output.log",
+      "durationMs": 10348.133541999996,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/void-no-next-20261020/3-build-warm/output.log",
+      "durationMs": 14616.727416999987,
+      "prerenderedPages": 10001
+    }
+  ],
+  "completedAt": "2026-10-20T03:46:46.121Z",
+  "loadAverageAtEnd": [13.384765625, 61.46728515625, 65.85400390625],
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.3.0",
+    "cpu": "Apple M5",
+    "logicalCpus": 10,
+    "memoryBytes": 25769803776,
+    "vitePlus": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)\n",
+    "revision": "ad97f39096e3ceaec39078bd0e0c2bb8dd37687f",
+    "dirty": true,
+    "lockfileSha256": "4124699dc039ebe02e7da114162d4c2c5af11c5c8b87f5f49e172dc70782804c",
+    "contentQueryArtifactsSha256": "da14c14bc1950629e891ad56103b6dd34c07c85751547410c23a94227b67183d",
+    "packages": {
+      "void": {
+        "void": "1.1.12",
+        "@void/react": "1.1.12",
+        "react": "19.2.5",
+        "content-query": "0.0.0",
+        "vite-plus": "0.1.16",
+        "@voidzero-dev/vite-plus-core": "0.1.16",
+        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v0.1.24\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)"
+      }
+    },
+    "contentQueryBackend": "in-memory",
+    "runtimeOptimization": "lazy-id-query-index",
+    "sameCompiledPackageAsPrevious": true,
+    "chromium": "156.0.8078.4",
+    "loadAverageAtStart": [17.20263671875, 83.55859375, 73.3271484375],
+    "loadAverageAtEnd": [13.384765625, 61.46728515625, 65.85400390625]
+  },
+  "repetitions": 3,
+  "contentQueryEmittedFiles": ["types.d.ts"],
+  "invocation": "vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks profile --mode timings --backend in-memory --label void-no-next-20261020 --phase all --runs 3",
+  "hostContext": {
+    "preflight": {
+      "at": "2026-10-20T03:44:53.085472+00:00",
+      "loadAverage": [17.20263671875, 83.55859375, 73.3271484375],
+      "nextBuildOrDevProcesses": [],
+      "hostSummary": "Load Avg: 18.27, 84.89, 73.73 \nCPU usage: 26.30% user, 21.77% sys, 51.91% idle \nPhysMem: 23G used (5428M wired, 9931M compressor), 192M unused.\nVM: 531T vsize, 5361M framework vsize, 624467228(0) swapins, 659155512(0) swapouts.\nLoad Avg: 17.20, 83.56, 73.33 \nCPU usage: 24.9% user, 9.34% sys, 66.56% idle \nPhysMem: 23G used (5343M wired, 10G compressor), 243M unused.\nVM: 531T vsize, 5361M framework vsize, 624473483(6255) swapins, 659155512(0) swapouts.\n"
+    },
+    "processObservations": [
+      {
+        "at": "2026-10-20T03:46:19.803442+00:00",
+        "loadAverage": [12.697265625, 65.58642578125, 67.39453125],
+        "nextBuildOrDevProcesses": []
+      },
+      {
+        "at": "2026-10-20T03:47:32.716816+00:00",
+        "loadAverage": [11.29833984375, 53.525390625, 62.6630859375],
+        "nextBuildOrDevProcesses": []
+      }
+    ],
+    "previousRun": "results/profile-void-id-index-refresh-20261020.json",
+    "previousRunOverlap": "The user confirmed that Next.js was running concurrently during the previous Void run."
+  }
+}

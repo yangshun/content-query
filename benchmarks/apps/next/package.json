@@ -1,0 +1,28 @@
+{
+  "name": "@content-query/benchmark-next",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#content-query": "./.content-query/server.js"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "preview": "node ../../shared/preview.ts --dir out"
+  },
+  "dependencies": {
+    "content-query": "workspace:*",
+    "next": "16.4.2",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "25.6.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "typescript": "6.0.2",
+    "vite-plus": "0.1.16",
+    "zod": "4.6.7"
+  }
+}

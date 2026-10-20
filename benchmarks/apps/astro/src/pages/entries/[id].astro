@@ -1,0 +1,35 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import "../../../../../shared/styles.css";
+
+export async function getStaticPaths() {
+  return (await getCollection("entries")).map((entry) => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}
+
+interface Props {
+  entry: CollectionEntry<"entries">;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{entry.data.title}</title>
+  </head>
+  <body>
+    <main data-benchmark-entry={entry.id}>
+      <a href="/">All entries</a>
+      <h1 data-benchmark-title>{entry.data.title}</h1>
+      <p data-benchmark-description>{entry.data.description}</p>
+      <article><Content /></article>
+    </main>
+  </body>
+</html>

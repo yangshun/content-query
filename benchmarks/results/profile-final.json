@@ -1,0 +1,151 @@
+{
+  "startedAt": "2026-10-20T00:30:50.371Z",
+  "label": "final",
+  "mode": "timings",
+  "backend": "generated",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [12.56494140625, 12.79345703125, 12.6748046875],
+  "lockfileSha256": "b90d85129234e2432256377d17a7c5a4441d9d6419158699568bdb0986050a99",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10248894,
+    "sha256": "591f5510c25529afdf3e999f7586c3d30a39120239131572460c7208fd8f19f4",
+    "hardlinks": 40000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "394ac9681bdd845a4b48771c53922ccc3ab2e3ad8a4550aa4d9a0813be7ce15c",
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/final/1-startup-cold/output.log",
+      "listenMs": 40687.9345,
+      "durationMs": 45138.159834
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/final/1-startup-warm/output.log",
+      "listenMs": 18313.493582999996,
+      "durationMs": 24091.250624999993
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/final/1-build-cold/output.log",
+      "durationMs": 29325.089208999998
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/final/1-build-warm/output.log",
+      "durationMs": 15826.14108300001
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/final/2-startup-cold/output.log",
+      "listenMs": 29089.847666999995,
+      "durationMs": 32920.09179199999
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/final/2-startup-warm/output.log",
+      "listenMs": 12717.62954199998,
+      "durationMs": 16777.072583
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/final/2-build-cold/output.log",
+      "durationMs": 26384.338332999992
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/final/2-build-warm/output.log",
+      "durationMs": 17076.04020799999
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/final/3-startup-cold/output.log",
+      "listenMs": 25345.721833000018,
+      "durationMs": 28767.780749999976
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/final/3-startup-warm/output.log",
+      "listenMs": 14572.852208000026,
+      "durationMs": 19217.183415999985
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/final/3-build-cold/output.log",
+      "durationMs": 29864.811917000043
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/final/3-build-warm/output.log",
+      "durationMs": 17253.31266699999
+    }
+  ],
+  "completedAt": "2026-10-20T00:37:01.262Z",
+  "loadAverageAtEnd": [14.3212890625, 14.52587890625, 13.64599609375]
+}

@@ -20,6 +20,7 @@ content-query/
     tanstack-start/
     sveltekit/
     shared/        Common source files and example parity tests
+  benchmarks/      Six stacks with 10,000 shared entries and timing reports
   docs/            Design, features, comparisons, and planned work
   website/         Void + React homepage and documentation site
   README.md
@@ -40,7 +41,13 @@ Run `vp test` from the enclosing repository root to also verify VoidPress consum
 
 Keep the [website](./website/README.md) current when core changes affect public APIs, features, or behavior.
 
+## Benchmarks
+
+The [benchmark suite](./benchmarks/README.md) compares Astro content collections, Vite + React + Content Collections, Nuxt Content, Void + ContentQuery, Next.js + ContentQuery, and TanStack Start + ContentQuery with 10,000 shared Markdown entries per app. Every homepage lists all titles and descriptions with links, and every item has a dedicated prerendered article page: 10,001 content HTML pages per app. It measures cold and warm startup through browser-verified usable content and full-site production build time. See the [results](./benchmarks/RESULTS.md) for recorded timings, environment details, output differences, and reproduction commands.
+
 ## Documentation
+
+See the [historical startup and build profiling report](./benchmarks/PROFILING.md) for bottlenecks and targeted optimizations from the earlier single-page workload. Current full-site measurements are in [RESULTS.md](./benchmarks/RESULTS.md).
 
 - [Website development](./website/README.md)
 - [Package API and usage](./packages/content-query/README.md)

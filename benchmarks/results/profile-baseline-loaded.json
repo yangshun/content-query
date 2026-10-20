@@ -1,0 +1,67 @@
+{
+  "startedAt": "2026-10-20T00:39:42.196Z",
+  "label": "baseline-loaded",
+  "mode": "timings",
+  "backend": "generated",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [12.42431640625, 13.5205078125, 13.3671875],
+  "lockfileSha256": "b90d85129234e2432256377d17a7c5a4441d9d6419158699568bdb0986050a99",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10248894,
+    "sha256": "591f5510c25529afdf3e999f7586c3d30a39120239131572460c7208fd8f19f4",
+    "hardlinks": 40000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "0e505e735032bc98929598b328efc835f2256347b51b6169bf0631d221e5e63f",
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/baseline-loaded/1-startup-cold/output.log",
+      "listenMs": 195778.108333,
+      "durationMs": 197080.531417
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/baseline-loaded/1-startup-warm/output.log",
+      "listenMs": 10162.944000000018,
+      "durationMs": 11007.653625000006
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/baseline-loaded/1-build-cold/output.log",
+      "durationMs": 64640.84520800001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/baseline-loaded/1-build-warm/output.log",
+      "durationMs": 56352.90974999999
+    }
+  ],
+  "completedAt": "2026-10-20T00:46:05.624Z",
+  "loadAverageAtEnd": [17.6201171875, 14.7900390625, 13.890625]
+}

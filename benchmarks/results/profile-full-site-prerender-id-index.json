@@ -1,0 +1,349 @@
+{
+  "label": "full-site-prerender-id-index",
+  "diagnostic": "Prerender replay with worker CPU sampling and query counters; no bundling or CLI startup.",
+  "node": "v24.21.0",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 50000,
+    "copies": 0
+  },
+  "phases": {
+    "bootstrapMs": 2049.268834,
+    "collectPathsMs": 59.26133299999992,
+    "renderMs": 12295.565958,
+    "disposeMs": 29.662874999999985
+  },
+  "fetches": {
+    "html": 10001,
+    "pageData": 10001
+  },
+  "io": {
+    "mkdirSync": {
+      "calls": 20002,
+      "totalMs": 315.01157299994884
+    },
+    "writeFileSync": {
+      "calls": 20002,
+      "totalMs": 2512.3066499999577
+    }
+  },
+  "query": {
+    "calls": 20003,
+    "candidates": 50000,
+    "idQueries": 20000,
+    "idCandidates": 20000
+  },
+  "pages": 10001,
+  "cpu": {
+    "sampledMs": 12349.877,
+    "activeMs": 11231.115,
+    "idleMs": 1118.762,
+    "self": [
+      {
+        "name": "(program)",
+        "source": "",
+        "durationMs": 1304.228,
+        "activePercent": 11.612631515214652
+      },
+      {
+        "name": "(garbage collector)",
+        "source": "",
+        "durationMs": 980.225,
+        "activePercent": 8.727762114447229
+      },
+      {
+        "name": "",
+        "source": "index.js",
+        "durationMs": 461.821,
+        "activePercent": 4.1119781962877235
+      },
+      {
+        "name": "pull",
+        "source": "index.js",
+        "durationMs": 455.655,
+        "activePercent": 4.057077146837158
+      },
+      {
+        "name": "ReadableStream",
+        "source": "",
+        "durationMs": 400.308,
+        "activePercent": 3.564276565594778
+      },
+      {
+        "name": "flatten",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 391.629,
+        "activePercent": 3.4870001776315176
+      },
+      {
+        "name": "parse",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 346.53,
+        "activePercent": 3.08544610219021
+      },
+      {
+        "name": "",
+        "source": "",
+        "durationMs": 337.195,
+        "activePercent": 3.0023287981647417
+      },
+      {
+        "name": "read",
+        "source": "",
+        "durationMs": 321.051,
+        "activePercent": 2.8585852784874874
+      },
+      {
+        "name": "run",
+        "source": "",
+        "durationMs": 265.517,
+        "activePercent": 2.3641196800139612
+      },
+      {
+        "name": "Response",
+        "source": "",
+        "durationMs": 240.548,
+        "activePercent": 2.141799812396187
+      },
+      {
+        "name": "json",
+        "source": "",
+        "durationMs": 188.664,
+        "activePercent": 1.6798332133541503
+      },
+      {
+        "name": "renderReactPage",
+        "source": "index.js",
+        "durationMs": 186.92,
+        "activePercent": 1.6643049243107209
+      },
+      {
+        "name": "match",
+        "source": "index.js",
+        "durationMs": 160.412,
+        "activePercent": 1.4282820539189565
+      },
+      {
+        "name": "entries/[id]",
+        "source": "index.js",
+        "durationMs": 153.46,
+        "activePercent": 1.3663825897962936
+      },
+      {
+        "name": "stringify_string",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 142.437,
+        "activePercent": 1.2682356115131934
+      },
+      {
+        "name": "createBuilder",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 127.472,
+        "activePercent": 1.1349897138440839
+      },
+      {
+        "name": "handlePageGet",
+        "source": "index.js",
+        "durationMs": 122.642,
+        "activePercent": 1.091984188568989
+      },
+      {
+        "name": "enqueue",
+        "source": "",
+        "durationMs": 119.734,
+        "activePercent": 1.0660918350493251
+      },
+      {
+        "name": "stringToChunk",
+        "source": "index.js",
+        "durationMs": 117.355,
+        "activePercent": 1.0449096104883622
+      },
+      {
+        "name": "escapeScriptJson",
+        "source": "assets/react-dom-BBaFryJ-.js",
+        "durationMs": 113.187,
+        "activePercent": 1.0077984242882385
+      },
+      {
+        "name": "flushCompletedQueues",
+        "source": "index.js",
+        "durationMs": 108.255,
+        "activePercent": 0.9638847077961538
+      },
+      {
+        "name": "",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 108.019,
+        "activePercent": 0.9617834026274329
+      },
+      {
+        "name": "layout",
+        "source": "index.js",
+        "durationMs": 102.323,
+        "activePercent": 0.9110671558433869
+      },
+      {
+        "name": "run",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 101.336,
+        "activePercent": 0.9022790702436936
+      }
+    ],
+    "inclusive": [
+      {
+        "name": "",
+        "source": "index.js",
+        "durationMs": 3663.733,
+        "activePercent": 32.621275803871654
+      },
+      {
+        "name": "handlePageGet",
+        "source": "index.js",
+        "durationMs": 2246.317,
+        "activePercent": 20.000836960533306
+      },
+      {
+        "name": "",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 1767.933,
+        "activePercent": 15.7413845375103
+      },
+      {
+        "name": "renderReactPage",
+        "source": "index.js",
+        "durationMs": 1717.779,
+        "activePercent": 15.294821573815245
+      },
+      {
+        "name": "run",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 1346.954,
+        "activePercent": 11.99305678910776
+      },
+      {
+        "name": "(program)",
+        "source": "",
+        "durationMs": 1304.228,
+        "activePercent": 11.612631515214652
+      },
+      {
+        "name": "detach",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 1293.587,
+        "activePercent": 11.517885802077533
+      },
+      {
+        "name": "",
+        "source": "assets/_id_.server-DNEJgYgx.js",
+        "durationMs": 1232.734,
+        "activePercent": 10.976060702788637
+      },
+      {
+        "name": "pull",
+        "source": "index.js",
+        "durationMs": 1197.81,
+        "activePercent": 10.66510315315977
+      },
+      {
+        "name": "",
+        "source": "",
+        "durationMs": 1026.16,
+        "activePercent": 9.136759796333669
+      },
+      {
+        "name": "(garbage collector)",
+        "source": "",
+        "durationMs": 980.225,
+        "activePercent": 8.727762114447229
+      },
+      {
+        "name": "stringify",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 929.612,
+        "activePercent": 8.27711229027572
+      },
+      {
+        "name": "encode",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 905.906,
+        "activePercent": 8.066037966844789
+      },
+      {
+        "name": "fetch",
+        "source": "index.js",
+        "durationMs": 822.523,
+        "activePercent": 7.323609454626723
+      },
+      {
+        "name": "flatten",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 807.721,
+        "activePercent": 7.191814882137704
+      },
+      {
+        "name": "pinned",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 692.257,
+        "activePercent": 6.163742424505492
+      },
+      {
+        "name": "performWork",
+        "source": "index.js",
+        "durationMs": 687.699,
+        "activePercent": 6.123158742475702
+      },
+      {
+        "name": "read",
+        "source": "",
+        "durationMs": 602.074,
+        "activePercent": 5.360767831154788
+      },
+      {
+        "name": "render",
+        "source": "index.js",
+        "durationMs": 544.034,
+        "activePercent": 4.843989221016791
+      },
+      {
+        "name": "ReadableStream",
+        "source": "",
+        "durationMs": 519.638,
+        "activePercent": 4.6267712511179875
+      },
+      {
+        "name": "where",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 498.215,
+        "activePercent": 4.436024384043793
+      },
+      {
+        "name": "first",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 492.257,
+        "activePercent": 4.382975332369048
+      },
+      {
+        "name": "#dispatch",
+        "source": "index.js",
+        "durationMs": 487.39,
+        "activePercent": 4.339640365181908
+      },
+      {
+        "name": "executeQuery",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 484.948,
+        "activePercent": 4.3178971989869215
+      },
+      {
+        "name": "decode",
+        "source": "assets/_content_query_server-k-difNU7.js",
+        "durationMs": 466.284,
+        "activePercent": 4.151716013948749
+      }
+    ]
+  },
+  "outputRoot": ".runs/profiles/full-site-prerender-id-index"
+}

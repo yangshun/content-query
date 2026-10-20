@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["vite-plus/client"],
+    "paths": { "content-collections": ["./.content-collections/generated"] }
+  },
+  "include": ["src", "scripts", "*.ts", ".content-collections/generated"]
+}

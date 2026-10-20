@@ -1,0 +1,66 @@
+{
+  "startedAt": "2026-10-20T00:22:50.697Z",
+  "label": "optimized-cpu",
+  "mode": "cpu",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [12.6015625, 14.8916015625, 12.76513671875],
+  "lockfileSha256": "b90d85129234e2432256377d17a7c5a4441d9d6419158699568bdb0986050a99",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10248894,
+    "sha256": "591f5510c25529afdf3e999f7586c3d30a39120239131572460c7208fd8f19f4",
+    "hardlinks": 40000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "27fd2d7bb46580c193c4ed7edaf42a4768d61a58a2987ad873e0f6fec4795bf8",
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/optimized-cpu/1-startup-cold/output.log",
+      "listenMs": 26507.667041999997,
+      "durationMs": 31073.346708
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/optimized-cpu/1-startup-warm/output.log",
+      "listenMs": 13213.988000000005,
+      "durationMs": 16148.412209000002
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/optimized-cpu/1-build-cold/output.log",
+      "durationMs": 64482.20991699999
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/optimized-cpu/1-build-warm/output.log",
+      "durationMs": 48686.11379099998
+    }
+  ],
+  "completedAt": "2026-10-20T00:26:09.304Z",
+  "loadAverageAtEnd": [15.98681640625, 15.33349609375, 13.38623046875]
+}

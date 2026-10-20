@@ -1,0 +1,18 @@
+{
+  "name": "@content-query/benchmark-astro",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp exec astro dev --ignore-lock",
+    "build": "vp exec astro build",
+    "preview": "node ../../shared/preview.ts --dir dist"
+  },
+  "dependencies": {
+    "astro": "7.4.0"
+  },
+  "devDependencies": {
+    "typescript": "6.0.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.1.16",
+    "vite-plus": "0.1.16"
+  }
+}

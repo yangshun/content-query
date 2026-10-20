@@ -1,0 +1,2634 @@
+{
+  "note": "Instrumented diagnostics; use timings mode for wall-clock comparisons.",
+  "traces": [
+    {
+      "file": ".runs/profiles/optimized-cpu/1-build-cold/33142-0.json",
+      "argv": [
+        "/Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node",
+        "/Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.16_@types+node@25.6.0_esbuild@0.28.2_jiti@2.7.0_sass-e_777c8734f4404c328c78bc0253a1a720/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/cli.js",
+        "build"
+      ],
+      "elapsedMs": 63073.566417,
+      "spans": {
+        "loadRegistry": {
+          "calls": 1,
+          "totalMs": 187.05712499999981,
+          "maxMs": 187.05712499999981
+        },
+        "configure": {
+          "calls": 1,
+          "totalMs": 187.39191600000004,
+          "maxMs": 187.39191600000004
+        },
+        "loadGlob": {
+          "calls": 1,
+          "totalMs": 2404.1982910000006,
+          "maxMs": 2404.1982910000006
+        },
+        "populateStore": {
+          "calls": 1,
+          "totalMs": 438.6725409999999,
+          "maxMs": 438.6725409999999
+        },
+        "glob-CES9G_er.mjs:load:64": {
+          "calls": 1,
+          "totalMs": 2843.2273749999995,
+          "maxMs": 2843.2273749999995
+        },
+        "build-B7cfaihb.mjs:load:756": {
+          "calls": 1,
+          "totalMs": 2878.5482920000004,
+          "maxMs": 2878.5482920000004
+        },
+        "renderMarkdown": {
+          "calls": 10000,
+          "totalMs": 899.3512480000027,
+          "maxMs": 16.82129199999963
+        },
+        "prepareRevision": {
+          "calls": 1,
+          "totalMs": 1707.074791000001,
+          "maxMs": 1707.074791000001
+        },
+        "revisionModules": {
+          "calls": 2,
+          "totalMs": 1160.365167,
+          "maxMs": 634.4574170000014
+        },
+        "writeImmutable": {
+          "calls": 10001,
+          "totalMs": 179394.22366600027,
+          "maxMs": 88.1048750000009
+        },
+        "writeArtifacts": {
+          "calls": 1,
+          "totalMs": 11854.736208,
+          "maxMs": 11854.736208
+        },
+        "prepare": {
+          "calls": 1,
+          "totalMs": 16450.154291,
+          "maxMs": 16450.154291
+        },
+        "createSession": {
+          "calls": 1,
+          "totalMs": 16639.213582999997,
+          "maxMs": 16639.213582999997
+        },
+        "buildAtRoot": {
+          "calls": 1,
+          "totalMs": 16640.769041,
+          "maxMs": 16640.769041
+        },
+        "preparedModules": {
+          "calls": 1,
+          "totalMs": 634.5408749999988,
+          "maxMs": 634.5408749999988
+        },
+        "refreshModules": {
+          "calls": 1,
+          "totalMs": 636.7322499999973,
+          "maxMs": 636.7322499999973
+        },
+        "ensureSession": {
+          "calls": 2,
+          "totalMs": 17289.425750000002,
+          "maxMs": 17289.418417
+        },
+        "buildStart": {
+          "calls": 2,
+          "totalMs": 17290.463458000002,
+          "maxMs": 17289.53425
+        },
+        "vite.mjs:load:283": {
+          "calls": 10123,
+          "totalMs": 6.678900000133581,
+          "maxMs": 1.0136659999989206
+        }
+      },
+      "events": [
+        {
+          "name": "loadRegistry",
+          "startMs": 3732.50075,
+          "durationMs": 187.05712499999981
+        },
+        {
+          "name": "configure",
+          "startMs": 3732.379084,
+          "durationMs": 187.39191600000004
+        },
+        {
+          "name": "loadGlob",
+          "startMs": 3920.591959,
+          "durationMs": 2404.1982910000006
+        },
+        {
+          "name": "populateStore",
+          "startMs": 6324.907834,
+          "durationMs": 438.6725409999999
+        },
+        {
+          "name": "glob-CES9G_er.mjs:load:64",
+          "startMs": 3920.3889590000003,
+          "durationMs": 2843.2273749999995
+        },
+        {
+          "name": "build-B7cfaihb.mjs:load:756",
+          "startMs": 3920.0274999999997,
+          "durationMs": 2878.5482920000004
+        },
+        {
+          "name": "renderMarkdown",
+          "startMs": 6807.235,
+          "durationMs": 16.82129199999963
+        },
+        {
+          "name": "prepareRevision",
+          "startMs": 6806.558083999999,
+          "durationMs": 1707.074791000001
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 8516.147292000001,
+          "durationMs": 525.9077499999985
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.730042000001,
+          "durationMs": 24.36424999999872
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9089.832084000001,
+          "durationMs": 25.39629099999911
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.643125,
+          "durationMs": 24.601834000000963
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.795750000001,
+          "durationMs": 24.46075000000019
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.73525,
+          "durationMs": 24.53150000000096
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9089.954334,
+          "durationMs": 27.38275000000067
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.814875,
+          "durationMs": 26.632834000000003
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.704334,
+          "durationMs": 26.77904099999978
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.809834000002,
+          "durationMs": 26.687999999998283
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.780334000001,
+          "durationMs": 27.240249999998923
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.717459000001,
+          "durationMs": 27.664499999998952
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9089.964334,
+          "durationMs": 29.254541000000245
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.82075,
+          "durationMs": 28.856667000000016
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.804167,
+          "durationMs": 28.949249999999665
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.724084000001,
+          "durationMs": 29.582166000000143
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9090.8305,
+          "durationMs": 30.890417000000525
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9115.260417000001,
+          "durationMs": 16.48345799999879
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9117.3695,
+          "durationMs": 14.416124999999738
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9115.165292000002,
+          "durationMs": 16.67045799999869
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9115.235834000001,
+          "durationMs": 17.097249999998894
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9115.270375,
+          "durationMs": 17.10412499999984
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9115.24925,
+          "durationMs": 17.136791999999332
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9117.469625,
+          "durationMs": 14.937917000001107
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9119.406875,
+          "durationMs": 13.009625000000597
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9117.487834000001,
+          "durationMs": 15.064707999999882
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9119.789792000001,
+          "durationMs": 12.784332999999606
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9118.390292,
+          "durationMs": 14.24329200000102
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9120.318334000001,
+          "durationMs": 12.706582999999227
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9117.515709000001,
+          "durationMs": 15.607957999998689
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9118.105667,
+          "durationMs": 15.541500000001179
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9119.689084000001,
+          "durationMs": 14.530749999999898
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9121.762959000002,
+          "durationMs": 13.265082999998413
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9131.8395,
+          "durationMs": 12.880709000000934
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9132.37925,
+          "durationMs": 12.424750000000131
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9131.789292000001,
+          "durationMs": 13.02587499999936
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9132.410584000001,
+          "durationMs": 12.414040999999997
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9131.766875000001,
+          "durationMs": 13.275166999999783
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9132.560500000001,
+          "durationMs": 12.499291999998604
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9132.419667,
+          "durationMs": 12.64954200000102
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9132.578500000001,
+          "durationMs": 12.49920899999961
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9132.389542,
+          "durationMs": 13.445874999999432
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9132.346917,
+          "durationMs": 13.753082999999606
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9132.637709,
+          "durationMs": 13.662874999999985
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9133.666917,
+          "durationMs": 13.294541999999637
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9133.127292000001,
+          "durationMs": 14.273041999998895
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9133.032292,
+          "durationMs": 14.646292000001267
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9135.880959,
+          "durationMs": 11.893750000001091
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9134.226584,
+          "durationMs": 13.621125000001484
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 9144.80825,
+          "durationMs": 16.131084000000556
+        },
+        {
+          "name": "writeArtifacts",
+          "startMs": 8514.768334,
+          "durationMs": 11854.736208
+        },
+        {
+          "name": "prepare",
+          "startMs": 3919.895209,
+          "durationMs": 16450.154291
+        },
+        {
+          "name": "createSession",
+          "startMs": 3731.816917,
+          "durationMs": 16639.213582999997
+        },
+        {
+          "name": "buildAtRoot",
+          "startMs": 3730.298959,
+          "durationMs": 16640.769041
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 20369.862624999998,
+          "durationMs": 634.4574170000014
+        },
+        {
+          "name": "preparedModules",
+          "startMs": 20369.849917,
+          "durationMs": 634.5408749999988
+        },
+        {
+          "name": "refreshModules",
+          "startMs": 20369.788417,
+          "durationMs": 636.7322499999973
+        },
+        {
+          "name": "ensureSession",
+          "startMs": 3729.094,
+          "durationMs": 17289.418417
+        },
+        {
+          "name": "buildStart",
+          "startMs": 3729.033375,
+          "durationMs": 17289.53425
+        }
+      ],
+      "io": {
+        "other:mkdir": {
+          "calls": 14,
+          "totalMs": 695.0925000000032
+        },
+        "other:writeFile": {
+          "calls": 3,
+          "totalMs": 6.94725099999971
+        },
+        "other:readFile": {
+          "calls": 11,
+          "totalMs": 134.2348339999944
+        },
+        "sources:readFile": {
+          "calls": 10000,
+          "totalMs": 17651933.81136012
+        },
+        "artifacts:readFile": {
+          "calls": 10008,
+          "totalMs": 20717.873071999707
+        },
+        "artifacts:writeFile": {
+          "calls": 10007,
+          "totalMs": 62181.98730399991
+        },
+        "artifacts:rm": {
+          "calls": 10007,
+          "totalMs": 60434.630378999864
+        },
+        "artifacts:mkdir": {
+          "calls": 3,
+          "totalMs": 2.1595830000023852
+        },
+        "artifacts:link": {
+          "calls": 10001,
+          "totalMs": 36395.52055999976
+        },
+        "other:rm": {
+          "calls": 1,
+          "totalMs": 26.290082999999868
+        }
+      },
+      "watchEvents": {},
+      "watchedDirectories": 0,
+      "watchedArtifacts": 0,
+      "cpu": {
+        "sampledMs": 62999.666,
+        "activeMs": 44659.129,
+        "idleMs": 18340.537,
+        "self": [
+          {
+            "name": "allocate$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 12250.2,
+            "activePercent": 27.430449886293122
+          },
+          {
+            "name": "(garbage collector)",
+            "source": "",
+            "durationMs": 5240.21,
+            "activePercent": 11.733793554280918
+          },
+          {
+            "name": "(program)",
+            "source": "",
+            "durationMs": 4862.631,
+            "activePercent": 10.888324758863972
+          },
+          {
+            "name": "encode",
+            "source": "node:internal/encoding",
+            "durationMs": 2450.751,
+            "activePercent": 5.487682036969418
+          },
+          {
+            "name": "read",
+            "source": "",
+            "durationMs": 1028.251,
+            "activePercent": 2.302443023463355
+          },
+          {
+            "name": "handleErrorFromBinding",
+            "source": "node:internal/fs/promises",
+            "durationMs": 565.586,
+            "activePercent": 1.2664510317700106
+          },
+          {
+            "name": "open",
+            "source": "",
+            "durationMs": 551.292,
+            "activePercent": 1.2344441379499365
+          },
+          {
+            "name": "flatten",
+            "source": "devalue/src/stringify.js",
+            "durationMs": 542.667,
+            "activePercent": 1.2151311773232298
+          },
+          {
+            "name": "encodeUtf8String",
+            "source": "",
+            "durationMs": 535.125,
+            "activePercent": 1.1982432527960856
+          },
+          {
+            "name": "stringify_string",
+            "source": "devalue/src/utils.js",
+            "durationMs": 502.5,
+            "activePercent": 1.1251898799907183
+          },
+          {
+            "name": "detectModuleFormat",
+            "source": "node:internal/modules/esm/get_format",
+            "durationMs": 468.916,
+            "activePercent": 1.049989129882045
+          },
+          {
+            "name": "compileSourceTextModule",
+            "source": "node:internal/modules/esm/utils",
+            "durationMs": 461,
+            "activePercent": 1.0322637505984498
+          },
+          {
+            "name": "transformToMutableRollupOutputChunk",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 459.458,
+            "activePercent": 1.0288109291159708
+          },
+          {
+            "name": "injectSsrFlag",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 319.124,
+            "activePercent": 0.7145773040042944
+          },
+          {
+            "name": "revisionModules",
+            "source": "file://<repo>/content-query/packages/content-query/dist/build-B7cfaihb.mjs",
+            "durationMs": 317.875,
+            "activePercent": 0.7117805633871632
+          },
+          {
+            "name": "close",
+            "source": "",
+            "durationMs": 306.207,
+            "activePercent": 0.6856537663329708
+          },
+          {
+            "name": "plugin",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 288.248,
+            "activePercent": 0.6454402637364468
+          },
+          {
+            "name": "handler",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 273.999,
+            "activePercent": 0.6135341331892076
+          },
+          {
+            "name": "transformRenderedChunk",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 227.252,
+            "activePercent": 0.5088590061843794
+          },
+          {
+            "name": "get",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 227.211,
+            "activePercent": 0.5087671996469076
+          },
+          {
+            "name": "openFileHandle",
+            "source": "",
+            "durationMs": 208.001,
+            "activePercent": 0.4657524780655709
+          },
+          {
+            "name": "",
+            "source": "file://<repo>/content-query/packages/content-query/dist/build-B7cfaihb.mjs",
+            "durationMs": 196.334,
+            "activePercent": 0.43962792019521924
+          },
+          {
+            "name": "fromPointer",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 194.75,
+            "activePercent": 0.4360810529914275
+          },
+          {
+            "name": "encodeCapnpStruct",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 193.251,
+            "activePercent": 0.43272451641410203
+          },
+          {
+            "name": "readFileUtf8",
+            "source": "",
+            "durationMs": 191.959,
+            "activePercent": 0.42983149089181744
+          }
+        ],
+        "inclusive": [
+          {
+            "name": "#assembleAndUpdateConfigInternal",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 16384.911,
+            "activePercent": 36.6888279437783
+          },
+          {
+            "name": "serializeConfig",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 16376.577,
+            "activePercent": 36.67016658564926
+          },
+          {
+            "name": "encodeCapnpStruct",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 16356.16,
+            "activePercent": 36.62444916917211
+          },
+          {
+            "name": "setText",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 15963.825,
+            "activePercent": 35.74593897700065
+          },
+          {
+            "name": "set",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 15613.24,
+            "activePercent": 34.96091471018165
+          },
+          {
+            "name": "set esModule",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 13357.367,
+            "activePercent": 29.90960034173528
+          },
+          {
+            "name": "allocate",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 12495.2,
+            "activePercent": 27.979049927283622
+          },
+          {
+            "name": "allocateSegment",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 12461.783,
+            "activePercent": 27.90422312087636
+          },
+          {
+            "name": "initList$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 12424.325,
+            "activePercent": 27.820347772568514
+          },
+          {
+            "name": "allocate$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 12282.575,
+            "activePercent": 27.502943463138298
+          },
+          {
+            "name": "(garbage collector)",
+            "source": "",
+            "durationMs": 5240.21,
+            "activePercent": 11.733793554280918
+          },
+          {
+            "name": "(program)",
+            "source": "",
+            "durationMs": 4862.631,
+            "activePercent": 10.888324758863972
+          },
+          {
+            "name": "plugin",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 3261.793,
+            "activePercent": 7.303754177561323
+          },
+          {
+            "name": "plugin.<computed>",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 3251.457,
+            "activePercent": 7.280609973383045
+          },
+          {
+            "name": "encode",
+            "source": "node:internal/encoding",
+            "durationMs": 2985.876,
+            "activePercent": 6.685925289765504
+          },
+          {
+            "name": "set name",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 2630.083,
+            "activePercent": 5.889239353503737
+          },
+          {
+            "name": "createCloudflarePrerenderRunner",
+            "source": "void/dist/email-cloudflare-etpKiITL.mjs",
+            "durationMs": 2237.875,
+            "activePercent": 5.011013537680056
+          },
+          {
+            "name": "readFileSync",
+            "source": "node:fs",
+            "durationMs": 2023.629,
+            "activePercent": 4.53127735652883
+          },
+          {
+            "name": "collectPrerenderWorkerModules",
+            "source": "void/dist/email-cloudflare-etpKiITL.mjs",
+            "durationMs": 1956.667,
+            "activePercent": 4.381337128182683
+          },
+          {
+            "name": "",
+            "source": "void/dist/email-cloudflare-etpKiITL.mjs",
+            "durationMs": 1926.167,
+            "activePercent": 4.313042021038968
+          },
+          {
+            "name": "getOrCreateModuleJob",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1823.499,
+            "activePercent": 4.083149494474019
+          },
+          {
+            "name": "",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1823.499,
+            "activePercent": 4.083149494474019
+          },
+          {
+            "name": "tracePromise",
+            "source": "node:diagnostics_channel",
+            "durationMs": 1823.499,
+            "activePercent": 4.083149494474019
+          },
+          {
+            "name": "import",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1823.499,
+            "activePercent": 4.083149494474019
+          },
+          {
+            "name": "#getOrCreateModuleJobAfterResolve",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1818.999,
+            "activePercent": 4.07307316719052
+          }
+        ]
+      },
+      "build": {
+        "serverModulesTransformed": 10100,
+        "clientModulesTransformed": 26,
+        "serverAssetJsFiles": 10295,
+        "hashedEntryJsFiles": 10000,
+        "outputPayloadGroupJsFiles": 289
+      }
+    },
+    {
+      "file": ".runs/profiles/optimized-cpu/1-build-warm/34193-0.json",
+      "argv": [
+        "/Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node",
+        "/Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.16_@types+node@25.6.0_esbuild@0.28.2_jiti@2.7.0_sass-e_777c8734f4404c328c78bc0253a1a720/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/cli.js",
+        "build"
+      ],
+      "elapsedMs": 47222.877291000004,
+      "spans": {
+        "loadRegistry": {
+          "calls": 1,
+          "totalMs": 151.6885830000001,
+          "maxMs": 151.6885830000001
+        },
+        "configure": {
+          "calls": 1,
+          "totalMs": 152.1827500000004,
+          "maxMs": 152.1827500000004
+        },
+        "loadGlob": {
+          "calls": 1,
+          "totalMs": 1923.581209,
+          "maxMs": 1923.581209
+        },
+        "populateStore": {
+          "calls": 1,
+          "totalMs": 438.0433749999993,
+          "maxMs": 438.0433749999993
+        },
+        "glob-CES9G_er.mjs:load:64": {
+          "calls": 1,
+          "totalMs": 2361.867542000001,
+          "maxMs": 2361.867542000001
+        },
+        "build-B7cfaihb.mjs:load:756": {
+          "calls": 1,
+          "totalMs": 2394.3838750000004,
+          "maxMs": 2394.3838750000004
+        },
+        "renderMarkdown": {
+          "calls": 10000,
+          "totalMs": 664.3988510000163,
+          "maxMs": 12.504832999999962
+        },
+        "prepareRevision": {
+          "calls": 1,
+          "totalMs": 1264.48225,
+          "maxMs": 1264.48225
+        },
+        "revisionModules": {
+          "calls": 2,
+          "totalMs": 907.1761249999981,
+          "maxMs": 473.3421249999992
+        },
+        "writeImmutable": {
+          "calls": 10001,
+          "totalMs": 11526.265133999854,
+          "maxMs": 6.044791000000259
+        },
+        "writeArtifacts": {
+          "calls": 1,
+          "totalMs": 1280.131292,
+          "maxMs": 1280.131292
+        },
+        "prepare": {
+          "calls": 1,
+          "totalMs": 4949.344542,
+          "maxMs": 4949.344542
+        },
+        "createSession": {
+          "calls": 1,
+          "totalMs": 5102.395708,
+          "maxMs": 5102.395708
+        },
+        "buildAtRoot": {
+          "calls": 1,
+          "totalMs": 5102.795917000001,
+          "maxMs": 5102.795917000001
+        },
+        "preparedModules": {
+          "calls": 1,
+          "totalMs": 433.86770799999977,
+          "maxMs": 433.86770799999977
+        },
+        "refreshModules": {
+          "calls": 1,
+          "totalMs": 436.47716599999876,
+          "maxMs": 436.47716599999876
+        },
+        "ensureSession": {
+          "calls": 2,
+          "totalMs": 5539.9302499999985,
+          "maxMs": 5539.922707999999
+        },
+        "buildStart": {
+          "calls": 2,
+          "totalMs": 5540.023873999999,
+          "maxMs": 5540.0036660000005
+        },
+        "vite.mjs:load:283": {
+          "calls": 10123,
+          "totalMs": 4.340358000044944,
+          "maxMs": 0.4377089999998134
+        }
+      },
+      "events": [
+        {
+          "name": "loadRegistry",
+          "startMs": 3637.6217079999997,
+          "durationMs": 151.6885830000001
+        },
+        {
+          "name": "configure",
+          "startMs": 3637.550416,
+          "durationMs": 152.1827500000004
+        },
+        {
+          "name": "loadGlob",
+          "startMs": 3791.147041,
+          "durationMs": 1923.581209
+        },
+        {
+          "name": "populateStore",
+          "startMs": 5714.836333,
+          "durationMs": 438.0433749999993
+        },
+        {
+          "name": "glob-CES9G_er.mjs:load:64",
+          "startMs": 3791.0553329999993,
+          "durationMs": 2361.867542000001
+        },
+        {
+          "name": "build-B7cfaihb.mjs:load:756",
+          "startMs": 3790.4939159999994,
+          "durationMs": 2394.3838750000004
+        },
+        {
+          "name": "renderMarkdown",
+          "startMs": 6194.192333,
+          "durationMs": 12.504832999999962
+        },
+        {
+          "name": "prepareRevision",
+          "startMs": 6193.800666,
+          "durationMs": 1264.48225
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 7459.127541,
+          "durationMs": 473.3421249999992
+        },
+        {
+          "name": "writeArtifacts",
+          "startMs": 7458.779082999999,
+          "durationMs": 1280.131292
+        },
+        {
+          "name": "prepare",
+          "startMs": 3790.1022079999993,
+          "durationMs": 4949.344542
+        },
+        {
+          "name": "createSession",
+          "startMs": 3637.327625,
+          "durationMs": 5102.395708
+        },
+        {
+          "name": "buildAtRoot",
+          "startMs": 3636.9594580000003,
+          "durationMs": 5102.795917000001
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 8739.229208,
+          "durationMs": 433.8339999999989
+        },
+        {
+          "name": "preparedModules",
+          "startMs": 8739.222875,
+          "durationMs": 433.86770799999977
+        },
+        {
+          "name": "refreshModules",
+          "startMs": 8739.174375,
+          "durationMs": 436.47716599999876
+        },
+        {
+          "name": "ensureSession",
+          "startMs": 3636.022833,
+          "durationMs": 5539.922707999999
+        },
+        {
+          "name": "buildStart",
+          "startMs": 3635.95925,
+          "durationMs": 5540.0036660000005
+        }
+      ],
+      "io": {
+        "other:mkdir": {
+          "calls": 9,
+          "totalMs": 512.9499999999991
+        },
+        "other:writeFile": {
+          "calls": 3,
+          "totalMs": 4.474751000000083
+        },
+        "other:readFile": {
+          "calls": 11,
+          "totalMs": 112.04237400000102
+        },
+        "sources:readFile": {
+          "calls": 10000,
+          "totalMs": 13521722.596223988
+        },
+        "artifacts:readFile": {
+          "calls": 10008,
+          "totalMs": 11914.801991999977
+        },
+        "artifacts:mkdir": {
+          "calls": 2,
+          "totalMs": 0.21262399999977788
+        },
+        "other:rm": {
+          "calls": 1,
+          "totalMs": 13.922874999996566
+        }
+      },
+      "watchEvents": {},
+      "watchedDirectories": 0,
+      "watchedArtifacts": 0,
+      "cpu": {
+        "sampledMs": 46888.959,
+        "activeMs": 37264.376,
+        "idleMs": 9624.583,
+        "self": [
+          {
+            "name": "allocate$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 10828.504,
+            "activePercent": 29.05859472864915
+          },
+          {
+            "name": "(garbage collector)",
+            "source": "",
+            "durationMs": 4269.206,
+            "activePercent": 11.456534251371874
+          },
+          {
+            "name": "rmSync",
+            "source": "",
+            "durationMs": 3799.834,
+            "activePercent": 10.196961301592706
+          },
+          {
+            "name": "(program)",
+            "source": "",
+            "durationMs": 3353.335,
+            "activePercent": 8.998768689968134
+          },
+          {
+            "name": "encode",
+            "source": "node:internal/encoding",
+            "durationMs": 1528.496,
+            "activePercent": 4.101761961611809
+          },
+          {
+            "name": "open",
+            "source": "",
+            "durationMs": 489.123,
+            "activePercent": 1.3125753132160323
+          },
+          {
+            "name": "flatten",
+            "source": "devalue/src/stringify.js",
+            "durationMs": 480.373,
+            "activePercent": 1.2890944423703754
+          },
+          {
+            "name": "transformToMutableRollupOutputChunk",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 460.335,
+            "activePercent": 1.2353219063697727
+          },
+          {
+            "name": "stringify_string",
+            "source": "devalue/src/utils.js",
+            "durationMs": 443.127,
+            "activePercent": 1.1891437548826795
+          },
+          {
+            "name": "detectModuleFormat",
+            "source": "node:internal/modules/esm/get_format",
+            "durationMs": 396.375,
+            "activePercent": 1.0636834493082616
+          },
+          {
+            "name": "plugin",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 396.168,
+            "activePercent": 1.0631279589922558
+          },
+          {
+            "name": "encodeUtf8String",
+            "source": "",
+            "durationMs": 372.499,
+            "activePercent": 0.9996115324727295
+          },
+          {
+            "name": "compileSourceTextModule",
+            "source": "node:internal/modules/esm/utils",
+            "durationMs": 350.708,
+            "activePercent": 0.9411347717187053
+          },
+          {
+            "name": "read",
+            "source": "",
+            "durationMs": 307.833,
+            "activePercent": 0.826078504574986
+          },
+          {
+            "name": "injectChunkMetadata",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 261.083,
+            "activePercent": 0.7006235660567616
+          },
+          {
+            "name": "handler",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 194.082,
+            "activePercent": 0.5208245000533486
+          },
+          {
+            "name": "__init",
+            "source": "wrangler/wrangler-dist/cli.js",
+            "durationMs": 176.542,
+            "activePercent": 0.47375541723816866
+          },
+          {
+            "name": "encodeCapnpStruct",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 173.832,
+            "activePercent": 0.4664830560962566
+          },
+          {
+            "name": "revisionModules",
+            "source": "file://<repo>/content-query/packages/content-query/dist/build-B7cfaihb.mjs",
+            "durationMs": 167.833,
+            "activePercent": 0.4503845710444742
+          },
+          {
+            "name": "transformToOutputBundle",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 149.708,
+            "activePercent": 0.4017456242927562
+          },
+          {
+            "name": "wrapSafe",
+            "source": "node:internal/modules/cjs/loader",
+            "durationMs": 147.417,
+            "activePercent": 0.39559766142333896
+          },
+          {
+            "name": "toArrayBuffer",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 146.875,
+            "activePercent": 0.3941431891949566
+          },
+          {
+            "name": "normalizeString",
+            "source": "node:path",
+            "durationMs": 137.999,
+            "activePercent": 0.3703241938091221
+          },
+          {
+            "name": "readFileUtf8",
+            "source": "",
+            "durationMs": 136.083,
+            "activePercent": 0.3651825539759474
+          },
+          {
+            "name": "collectChangedBundle",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 125.332,
+            "activePercent": 0.33633194340890077
+          }
+        ],
+        "inclusive": [
+          {
+            "name": "#assembleAndUpdateConfigInternal",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 13668.707,
+            "activePercent": 36.68035927932887
+          },
+          {
+            "name": "serializeConfig",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 13664.665,
+            "activePercent": 36.66951245876222
+          },
+          {
+            "name": "encodeCapnpStruct",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 13503.957,
+            "activePercent": 36.23824802540636
+          },
+          {
+            "name": "setText",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 13003.749,
+            "activePercent": 34.895925803238995
+          },
+          {
+            "name": "set",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 12863.374,
+            "activePercent": 34.519225546672246
+          },
+          {
+            "name": "set esModule",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 11681.166,
+            "activePercent": 31.346737162591964
+          },
+          {
+            "name": "allocate",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 10913.337,
+            "activePercent": 29.286246467671965
+          },
+          {
+            "name": "allocateSegment",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 10865.921,
+            "activePercent": 29.159004299441378
+          },
+          {
+            "name": "allocate$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 10828.504,
+            "activePercent": 29.05859472864915
+          },
+          {
+            "name": "initList$1",
+            "source": "miniflare/dist/src/index.js",
+            "durationMs": 10765.836,
+            "activePercent": 28.890423389888507
+          },
+          {
+            "name": "plugin",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 6419.999,
+            "activePercent": 17.228247696942518
+          },
+          {
+            "name": "plugin.<computed>",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/bindingify-input-options-BGxmrQWF.mjs",
+            "durationMs": 6294.667,
+            "activePercent": 16.891915753533617
+          },
+          {
+            "name": "handler",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 5014.206,
+            "activePercent": 13.455762683373527
+          },
+          {
+            "name": "(garbage collector)",
+            "source": "",
+            "durationMs": 4269.206,
+            "activePercent": 11.456534251371874
+          },
+          {
+            "name": "emptyDir",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 3815.209,
+            "activePercent": 10.238220546078647
+          },
+          {
+            "name": "prepareOutDir",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 3815.209,
+            "activePercent": 10.238220546078647
+          },
+          {
+            "name": "rmSync",
+            "source": "",
+            "durationMs": 3799.834,
+            "activePercent": 10.196961301592706
+          },
+          {
+            "name": "rmSync",
+            "source": "node:fs",
+            "durationMs": 3799.834,
+            "activePercent": 10.196961301592706
+          },
+          {
+            "name": "(program)",
+            "source": "",
+            "durationMs": 3353.335,
+            "activePercent": 8.998768689968134
+          },
+          {
+            "name": "encode",
+            "source": "node:internal/encoding",
+            "durationMs": 1900.995,
+            "activePercent": 5.101373494084537
+          },
+          {
+            "name": "run",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 1621.125,
+            "activePercent": 4.350334485676079
+          },
+          {
+            "name": "evaluate",
+            "source": "",
+            "durationMs": 1579.667,
+            "activePercent": 4.239080777845308
+          },
+          {
+            "name": "#getOrCreateModuleJobAfterResolve",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1553.584,
+            "activePercent": 4.169086314500476
+          },
+          {
+            "name": "afterResolve",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1553.584,
+            "activePercent": 4.169086314500476
+          },
+          {
+            "name": "getOrCreateModuleJob",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1553.584,
+            "activePercent": 4.169086314500476
+          }
+        ]
+      },
+      "build": {
+        "serverModulesTransformed": 10100,
+        "clientModulesTransformed": 26,
+        "serverAssetJsFiles": 10295,
+        "hashedEntryJsFiles": 10000,
+        "outputPayloadGroupJsFiles": 289
+      }
+    },
+    {
+      "file": ".runs/profiles/optimized-cpu/1-startup-cold/32474-0.json",
+      "argv": [
+        "/Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node",
+        "/Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.16_@types+node@25.6.0_esbuild@0.28.2_jiti@2.7.0_sass-e_777c8734f4404c328c78bc0253a1a720/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/cli.js",
+        "dev",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "50029",
+        "--strictPort"
+      ],
+      "elapsedMs": 30025.743375,
+      "spans": {
+        "watchProject": {
+          "calls": 1,
+          "totalMs": 2801.3101659999993,
+          "maxMs": 2801.3101659999993
+        },
+        "loadRegistry": {
+          "calls": 1,
+          "totalMs": 588.9074170000004,
+          "maxMs": 588.9074170000004
+        },
+        "watchSources": {
+          "calls": 1,
+          "totalMs": 966.3559170000008,
+          "maxMs": 966.3559170000008
+        },
+        "configure": {
+          "calls": 1,
+          "totalMs": 1555.975375,
+          "maxMs": 1555.975375
+        },
+        "loadGlob": {
+          "calls": 1,
+          "totalMs": 1920.3556669999998,
+          "maxMs": 1920.3556669999998
+        },
+        "populateStore": {
+          "calls": 1,
+          "totalMs": 417.57233300000007,
+          "maxMs": 417.57233300000007
+        },
+        "glob-CES9G_er.mjs:load:64": {
+          "calls": 1,
+          "totalMs": 2339.375,
+          "maxMs": 2339.375
+        },
+        "build-B7cfaihb.mjs:load:756": {
+          "calls": 1,
+          "totalMs": 2368.406500000001,
+          "maxMs": 2368.406500000001
+        },
+        "prepareRevision": {
+          "calls": 1,
+          "totalMs": 383.89708299999984,
+          "maxMs": 383.89708299999984
+        },
+        "revisionModules": {
+          "calls": 3,
+          "totalMs": 1053.3383769999964,
+          "maxMs": 417.7380839999969
+        },
+        "writeImmutable": {
+          "calls": 10001,
+          "totalMs": 158953.94187699992,
+          "maxMs": 72.42816599999969
+        },
+        "writeArtifacts": {
+          "calls": 1,
+          "totalMs": 10295.184333,
+          "maxMs": 10295.184333
+        },
+        "prepare": {
+          "calls": 1,
+          "totalMs": 13058.170375,
+          "maxMs": 13058.170375
+        },
+        "createSession": {
+          "calls": 1,
+          "totalMs": 17417.194041,
+          "maxMs": 17417.194041
+        },
+        "buildAtRoot": {
+          "calls": 1,
+          "totalMs": 17745.952125,
+          "maxMs": 17745.952125
+        },
+        "preparedModules": {
+          "calls": 2,
+          "totalMs": 799.8054999999986,
+          "maxMs": 417.7623749999984
+        },
+        "refreshModules": {
+          "calls": 6,
+          "totalMs": 812.0812500000029,
+          "maxMs": 427.8926250000004
+        },
+        "ensureSession": {
+          "calls": 6,
+          "totalMs": 18269.978707000002,
+          "maxMs": 18266.743749999998
+        },
+        "configureServer": {
+          "calls": 1,
+          "totalMs": 18266.825834,
+          "maxMs": 18266.825834
+        },
+        "buildStart": {
+          "calls": 1,
+          "totalMs": 3.3739580000001297,
+          "maxMs": 3.3739580000001297
+        },
+        "vite.mjs:load:283": {
+          "calls": 80,
+          "totalMs": 0.8032100000054925,
+          "maxMs": 0.181124999999156
+        }
+      },
+      "events": [
+        {
+          "name": "watchProject",
+          "startMs": 3690.0667920000005,
+          "durationMs": 2801.3101659999993
+        },
+        {
+          "name": "loadRegistry",
+          "startMs": 6492.047625,
+          "durationMs": 588.9074170000004
+        },
+        {
+          "name": "watchSources",
+          "startMs": 7081.195458,
+          "durationMs": 966.3559170000008
+        },
+        {
+          "name": "configure",
+          "startMs": 6491.801792,
+          "durationMs": 1555.975375
+        },
+        {
+          "name": "loadGlob",
+          "startMs": 8050.716625000001,
+          "durationMs": 1920.3556669999998
+        },
+        {
+          "name": "populateStore",
+          "startMs": 9972.256417,
+          "durationMs": 417.57233300000007
+        },
+        {
+          "name": "glob-CES9G_er.mjs:load:64",
+          "startMs": 8050.507250000001,
+          "durationMs": 2339.375
+        },
+        {
+          "name": "build-B7cfaihb.mjs:load:756",
+          "startMs": 8049.0014169999995,
+          "durationMs": 2368.406500000001
+        },
+        {
+          "name": "prepareRevision",
+          "startMs": 10426.394667,
+          "durationMs": 383.89708299999984
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 10810.752208,
+          "durationMs": 253.61445900000035
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11111.110833,
+          "durationMs": 10.094374999998763
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11111.167708,
+          "durationMs": 10.151208999999653
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11111.18,
+          "durationMs": 10.156417000000147
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11111.076875,
+          "durationMs": 10.269249999999374
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11111.121167,
+          "durationMs": 10.233833000000232
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11111.129458,
+          "durationMs": 10.305709000000206
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11121.438417,
+          "durationMs": 16.717000000000553
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11121.34,
+          "durationMs": 17.41450000000077
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11129.484833,
+          "durationMs": 14.185374999999112
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11129.627833,
+          "durationMs": 15.214749999999185
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.437333,
+          "durationMs": 14.556542000000263
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11129.605583,
+          "durationMs": 15.454541999999492
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.291417,
+          "durationMs": 14.784874999999374
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.281583,
+          "durationMs": 14.811292000000321
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.257417,
+          "durationMs": 14.844457999999577
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.301,
+          "durationMs": 14.809957999999824
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.485958,
+          "durationMs": 14.633542000001398
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.54175,
+          "durationMs": 14.742582999999286
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.311083,
+          "durationMs": 14.98870899999929
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.590667,
+          "durationMs": 17.31616600000052
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.700458,
+          "durationMs": 17.335792000001675
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11130.532083,
+          "durationMs": 17.797583999999915
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11138.181583,
+          "durationMs": 10.419542000001456
+        },
+        {
+          "name": "writeImmutable",
+          "startMs": 11138.771833,
+          "durationMs": 11.266125000000102
+        },
+        {
+          "name": "writeArtifacts",
+          "startMs": 10810.591292000001,
+          "durationMs": 10295.184333
+        },
+        {
+          "name": "prepare",
+          "startMs": 8048.183333000001,
+          "durationMs": 13058.170375
+        },
+        {
+          "name": "createSession",
+          "startMs": 3689.9285420000006,
+          "durationMs": 17417.194041
+        },
+        {
+          "name": "buildAtRoot",
+          "startMs": 3361.190708,
+          "durationMs": 17745.952125
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 21106.210958,
+          "durationMs": 381.98583399999916
+        },
+        {
+          "name": "preparedModules",
+          "startMs": 21106.202041999997,
+          "durationMs": 382.04312500000015
+        },
+        {
+          "name": "refreshModules",
+          "startMs": 21106.147624999998,
+          "durationMs": 384.17670799999905
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 21107.199708,
+          "durationMs": 417.7380839999969
+        },
+        {
+          "name": "preparedModules",
+          "startMs": 21107.197458,
+          "durationMs": 417.7623749999984
+        },
+        {
+          "name": "refreshModules",
+          "startMs": 21107.196624999997,
+          "durationMs": 427.8926250000004
+        },
+        {
+          "name": "ensureSession",
+          "startMs": 3273.275583,
+          "durationMs": 18266.743749999998
+        },
+        {
+          "name": "configureServer",
+          "startMs": 3273.2073330000003,
+          "durationMs": 18266.825834
+        }
+      ],
+      "io": {
+        "other:mkdir": {
+          "calls": 31,
+          "totalMs": 62.01320700001395
+        },
+        "other:writeFile": {
+          "calls": 1,
+          "totalMs": 1.7993749999999409
+        },
+        "other:readFile": {
+          "calls": 97,
+          "totalMs": 222.5684999999944
+        },
+        "other:rm": {
+          "calls": 4,
+          "totalMs": 23.223292000001038
+        },
+        "sources:readFile": {
+          "calls": 10000,
+          "totalMs": 12974724.763589017
+        },
+        "artifacts:readFile": {
+          "calls": 10008,
+          "totalMs": 17198.94428899985
+        },
+        "artifacts:writeFile": {
+          "calls": 10007,
+          "totalMs": 54962.76851100015
+        },
+        "artifacts:rm": {
+          "calls": 10007,
+          "totalMs": 52974.02154299979
+        },
+        "artifacts:mkdir": {
+          "calls": 3,
+          "totalMs": 8.51774999999725
+        },
+        "artifacts:link": {
+          "calls": 10001,
+          "totalMs": 33576.20633299998
+        }
+      },
+      "watchEvents": {},
+      "watchedDirectories": 6,
+      "watchedArtifacts": 0,
+      "cpu": {
+        "sampledMs": 29905.917,
+        "activeMs": 19243.962,
+        "idleMs": 10661.955,
+        "self": [
+          {
+            "name": "(program)",
+            "source": "",
+            "durationMs": 1523.583,
+            "activePercent": 7.917200210642694
+          },
+          {
+            "name": "start",
+            "source": "",
+            "durationMs": 1177.963,
+            "activePercent": 6.121208304194323
+          },
+          {
+            "name": "(garbage collector)",
+            "source": "",
+            "durationMs": 765.749,
+            "activePercent": 3.979164997311884
+          },
+          {
+            "name": "relative",
+            "source": "node:path",
+            "durationMs": 556.371,
+            "activePercent": 2.891145804590552
+          },
+          {
+            "name": "readFileUtf8",
+            "source": "",
+            "durationMs": 434.75,
+            "activePercent": 2.2591501687646236
+          },
+          {
+            "name": "detectModuleFormat",
+            "source": "node:internal/modules/esm/get_format",
+            "durationMs": 413.207,
+            "activePercent": 2.1472033669573865
+          },
+          {
+            "name": "handleErrorFromBinding",
+            "source": "node:internal/fs/promises",
+            "durationMs": 405.791,
+            "activePercent": 2.108666604101588
+          },
+          {
+            "name": "compileSourceTextModule",
+            "source": "node:internal/modules/esm/utils",
+            "durationMs": 401.497,
+            "activePercent": 2.086353111692904
+          },
+          {
+            "name": "",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 393.129,
+            "activePercent": 2.0428693426021107
+          },
+          {
+            "name": "normalizeString",
+            "source": "node:path",
+            "durationMs": 353.54,
+            "activePercent": 1.8371476726050489
+          },
+          {
+            "name": "resolve",
+            "source": "node:path",
+            "durationMs": 307.372,
+            "activePercent": 1.5972386559482916
+          },
+          {
+            "name": "promises.<computed>",
+            "source": "file://<repo>/content-query/benchmarks/scripts/profile-hook.mjs",
+            "durationMs": 294.001,
+            "activePercent": 1.5277571219481727
+          },
+          {
+            "name": "stringify_string",
+            "source": "devalue/src/utils.js",
+            "durationMs": 275.376,
+            "activePercent": 1.4309735178234089
+          },
+          {
+            "name": "wrappedHook",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/normalize-string-or-regex-BzTP-qJS.mjs",
+            "durationMs": 214.04,
+            "activePercent": 1.1122449732544681
+          },
+          {
+            "name": "open",
+            "source": "node:internal/fs/promises",
+            "durationMs": 207.749,
+            "activePercent": 1.0795541999095613
+          },
+          {
+            "name": "",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 195.084,
+            "activePercent": 1.0137413491047218
+          },
+          {
+            "name": "flatten",
+            "source": "devalue/src/stringify.js",
+            "durationMs": 194.878,
+            "activePercent": 1.0126708834698386
+          },
+          {
+            "name": "jsonParseAst",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/parse-iOGTHQHs.mjs",
+            "durationMs": 178.001,
+            "activePercent": 0.9249706479362203
+          },
+          {
+            "name": "k",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 170.999,
+            "activePercent": 0.8885852092204297
+          },
+          {
+            "name": "lstat",
+            "source": "",
+            "durationMs": 167.332,
+            "activePercent": 0.8695298816324829
+          },
+          {
+            "name": "join",
+            "source": "node:path",
+            "durationMs": 158.332,
+            "activePercent": 0.8227619655453486
+          },
+          {
+            "name": "writeImmutable",
+            "source": "file://<repo>/content-query/packages/content-query/dist/build-B7cfaihb.mjs",
+            "durationMs": 151.209,
+            "activePercent": 0.7857477581799425
+          },
+          {
+            "name": "",
+            "source": "node:internal/fs/utils",
+            "durationMs": 150.085,
+            "activePercent": 0.7799069651041715
+          },
+          {
+            "name": "normalizePath",
+            "source": "chokidar/index.js",
+            "durationMs": 149.125,
+            "activePercent": 0.7749183873882104
+          },
+          {
+            "name": "",
+            "source": "",
+            "durationMs": 144.125,
+            "activePercent": 0.748936211784247
+          }
+        ],
+        "inclusive": [
+          {
+            "name": "_addToNodeFs",
+            "source": "chokidar/handler.js",
+            "durationMs": 2291.544,
+            "activePercent": 11.90785972244177
+          },
+          {
+            "name": "#getOrCreateModuleJobAfterResolve",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1633.374,
+            "activePercent": 8.487722018989645
+          },
+          {
+            "name": "afterResolve",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1633.374,
+            "activePercent": 8.487722018989645
+          },
+          {
+            "name": "getOrCreateModuleJob",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1633.374,
+            "activePercent": 8.487722018989645
+          },
+          {
+            "name": "",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1633.374,
+            "activePercent": 8.487722018989645
+          },
+          {
+            "name": "tracePromise",
+            "source": "node:diagnostics_channel",
+            "durationMs": 1633.374,
+            "activePercent": 8.487722018989645
+          },
+          {
+            "name": "import",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1633.374,
+            "activePercent": 8.487722018989645
+          },
+          {
+            "name": "defaultImportModuleDynamicallyForModule",
+            "source": "node:internal/modules/esm/utils",
+            "durationMs": 1630.999,
+            "activePercent": 8.475380485577762
+          },
+          {
+            "name": "importModuleDynamicallyCallback",
+            "source": "node:internal/modules/esm/utils",
+            "durationMs": 1630.999,
+            "activePercent": 8.475380485577762
+          },
+          {
+            "name": "syncLink",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 1629.457,
+            "activePercent": 8.4673675826215
+          },
+          {
+            "name": "link",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 1629.457,
+            "activePercent": 8.4673675826215
+          },
+          {
+            "name": "ModuleJob",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 1629.457,
+            "activePercent": 8.4673675826215
+          },
+          {
+            "name": "run",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 1629.375,
+            "activePercent": 8.466941474941594
+          },
+          {
+            "name": "evaluate",
+            "source": "",
+            "durationMs": 1577.583,
+            "activePercent": 8.1978077071655
+          },
+          {
+            "name": "",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 1544.339,
+            "activePercent": 8.025057418009867
+          },
+          {
+            "name": "(program)",
+            "source": "",
+            "durationMs": 1523.583,
+            "activePercent": 7.917200210642694
+          },
+          {
+            "name": "_handleFile",
+            "source": "chokidar/handler.js",
+            "durationMs": 1494.13,
+            "activePercent": 7.764149607029987
+          },
+          {
+            "name": "_watchWithNodeFs",
+            "source": "chokidar/handler.js",
+            "durationMs": 1462.547,
+            "activePercent": 7.600030596609991
+          },
+          {
+            "name": "loadAndTranslate",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1442.248,
+            "activePercent": 7.494548160093021
+          },
+          {
+            "name": "loadConfigFromBundledFile",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 1436.416,
+            "activePercent": 7.464242550468557
+          },
+          {
+            "name": "setFsWatchListener",
+            "source": "chokidar/handler.js",
+            "durationMs": 1399.63,
+            "activePercent": 7.2730864881150765
+          },
+          {
+            "name": "",
+            "source": "node:internal/modules/cjs/loader",
+            "durationMs": 1308.083,
+            "activePercent": 6.7973684421118685
+          },
+          {
+            "name": "wrapModuleLoad",
+            "source": "node:internal/modules/cjs/loader",
+            "durationMs": 1308.083,
+            "activePercent": 6.7973684421118685
+          },
+          {
+            "name": "watch",
+            "source": "node:fs",
+            "durationMs": 1295.088,
+            "activePercent": 6.729840767717167
+          },
+          {
+            "name": "createFsWatchInstance",
+            "source": "chokidar/handler.js",
+            "durationMs": 1295.088,
+            "activePercent": 6.729840767717167
+          }
+        ]
+      }
+    },
+    {
+      "file": ".runs/profiles/optimized-cpu/1-startup-warm/32880-0.json",
+      "argv": [
+        "/Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node",
+        "/Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/@voidzero-dev+vite-plus-core@0.1.16_@types+node@25.6.0_esbuild@0.28.2_jiti@2.7.0_sass-e_777c8734f4404c328c78bc0253a1a720/node_modules/@voidzero-dev/vite-plus-core/dist/vite/node/cli.js",
+        "dev",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "52221",
+        "--strictPort"
+      ],
+      "elapsedMs": 15364.368999999999,
+      "spans": {
+        "watchProject": {
+          "calls": 1,
+          "totalMs": 2072.8203329999997,
+          "maxMs": 2072.8203329999997
+        },
+        "loadRegistry": {
+          "calls": 1,
+          "totalMs": 146.31137500000023,
+          "maxMs": 146.31137500000023
+        },
+        "watchSources": {
+          "calls": 1,
+          "totalMs": 896.4174169999997,
+          "maxMs": 896.4174169999997
+        },
+        "configure": {
+          "calls": 1,
+          "totalMs": 1044.8615829999999,
+          "maxMs": 1044.8615829999999
+        },
+        "loadGlob": {
+          "calls": 1,
+          "totalMs": 1723.0119999999997,
+          "maxMs": 1723.0119999999997
+        },
+        "populateStore": {
+          "calls": 1,
+          "totalMs": 438.9243749999987,
+          "maxMs": 438.9243749999987
+        },
+        "glob-CES9G_er.mjs:load:64": {
+          "calls": 1,
+          "totalMs": 2162.2377500000002,
+          "maxMs": 2162.2377500000002
+        },
+        "build-B7cfaihb.mjs:load:756": {
+          "calls": 1,
+          "totalMs": 2192.6078749999997,
+          "maxMs": 2192.6078749999997
+        },
+        "prepareRevision": {
+          "calls": 1,
+          "totalMs": 403.42004199999974,
+          "maxMs": 403.42004199999974
+        },
+        "revisionModules": {
+          "calls": 3,
+          "totalMs": 1045.8275409999987,
+          "maxMs": 431.15908300000046
+        },
+        "writeImmutable": {
+          "calls": 10001,
+          "totalMs": 10654.696007999926,
+          "maxMs": 4.94316599999911
+        },
+        "writeArtifacts": {
+          "calls": 1,
+          "totalMs": 964.9330829999999,
+          "maxMs": 964.9330829999999
+        },
+        "prepare": {
+          "calls": 1,
+          "totalMs": 3570.514083,
+          "maxMs": 3570.514083
+        },
+        "createSession": {
+          "calls": 1,
+          "totalMs": 6689.610375000001,
+          "maxMs": 6689.610375000001
+        },
+        "buildAtRoot": {
+          "calls": 1,
+          "totalMs": 6691.375667,
+          "maxMs": 6691.375667
+        },
+        "preparedModules": {
+          "calls": 2,
+          "totalMs": 826.5672920000015,
+          "maxMs": 431.20529200000055
+        },
+        "refreshModules": {
+          "calls": 6,
+          "totalMs": 837.8000830000001,
+          "maxMs": 440.2665419999994
+        },
+        "ensureSession": {
+          "calls": 6,
+          "totalMs": 7148.105207999999,
+          "maxMs": 7146.627209
+        },
+        "configureServer": {
+          "calls": 1,
+          "totalMs": 7146.706124999999,
+          "maxMs": 7146.706124999999
+        },
+        "buildStart": {
+          "calls": 1,
+          "totalMs": 1.5088749999995343,
+          "maxMs": 1.5088749999995343
+        },
+        "vite.mjs:load:283": {
+          "calls": 80,
+          "totalMs": 0.48428900000180874,
+          "maxMs": 0.20112499999959255
+        }
+      },
+      "events": [
+        {
+          "name": "watchProject",
+          "startMs": 3248.558375,
+          "durationMs": 2072.8203329999997
+        },
+        {
+          "name": "loadRegistry",
+          "startMs": 5321.8598329999995,
+          "durationMs": 146.31137500000023
+        },
+        {
+          "name": "watchSources",
+          "startMs": 5470.076416,
+          "durationMs": 896.4174169999997
+        },
+        {
+          "name": "configure",
+          "startMs": 5321.764875,
+          "durationMs": 1044.8615829999999
+        },
+        {
+          "name": "loadGlob",
+          "startMs": 6370.866416,
+          "durationMs": 1723.0119999999997
+        },
+        {
+          "name": "populateStore",
+          "startMs": 8094.029666,
+          "durationMs": 438.9243749999987
+        },
+        {
+          "name": "glob-CES9G_er.mjs:load:64",
+          "startMs": 6370.755125,
+          "durationMs": 2162.2377500000002
+        },
+        {
+          "name": "build-B7cfaihb.mjs:load:756",
+          "startMs": 6367.175291,
+          "durationMs": 2192.6078749999997
+        },
+        {
+          "name": "prepareRevision",
+          "startMs": 8567.424541,
+          "durationMs": 403.42004199999974
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 8971.303166,
+          "durationMs": 219.363374999999
+        },
+        {
+          "name": "writeArtifacts",
+          "startMs": 8971.139458,
+          "durationMs": 964.9330829999999
+        },
+        {
+          "name": "prepare",
+          "startMs": 6366.773083,
+          "durationMs": 3570.514083
+        },
+        {
+          "name": "createSession",
+          "startMs": 3248.092875,
+          "durationMs": 6689.610375000001
+        },
+        {
+          "name": "buildAtRoot",
+          "startMs": 3246.352583,
+          "durationMs": 6691.375667
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 9936.795,
+          "durationMs": 395.3050829999993
+        },
+        {
+          "name": "preparedModules",
+          "startMs": 9936.784040999999,
+          "durationMs": 395.362000000001
+        },
+        {
+          "name": "refreshModules",
+          "startMs": 9936.653375,
+          "durationMs": 397.5278330000001
+        },
+        {
+          "name": "revisionModules",
+          "startMs": 9937.782458,
+          "durationMs": 431.15908300000046
+        },
+        {
+          "name": "preparedModules",
+          "startMs": 9937.779916,
+          "durationMs": 431.20529200000055
+        },
+        {
+          "name": "refreshModules",
+          "startMs": 9937.779041,
+          "durationMs": 440.2665419999994
+        },
+        {
+          "name": "ensureSession",
+          "startMs": 3231.921041,
+          "durationMs": 7146.627209
+        },
+        {
+          "name": "configureServer",
+          "startMs": 3231.852541,
+          "durationMs": 7146.706124999999
+        }
+      ],
+      "io": {
+        "other:mkdir": {
+          "calls": 26,
+          "totalMs": 52.4321660000071
+        },
+        "other:writeFile": {
+          "calls": 1,
+          "totalMs": 0.8029999999999973
+        },
+        "other:readFile": {
+          "calls": 97,
+          "totalMs": 180.88828800000056
+        },
+        "sources:readFile": {
+          "calls": 10000,
+          "totalMs": 11485404.516581984
+        },
+        "artifacts:readFile": {
+          "calls": 10008,
+          "totalMs": 10619.753798999956
+        },
+        "artifacts:mkdir": {
+          "calls": 2,
+          "totalMs": 0.3691260000014154
+        }
+      },
+      "watchEvents": {},
+      "watchedDirectories": 6,
+      "watchedArtifacts": 0,
+      "cpu": {
+        "sampledMs": 15293.708,
+        "activeMs": 12940.416,
+        "idleMs": 2353.292,
+        "self": [
+          {
+            "name": "(garbage collector)",
+            "source": "",
+            "durationMs": 666.829,
+            "activePercent": 5.153072358724789
+          },
+          {
+            "name": "(program)",
+            "source": "",
+            "durationMs": 553.335,
+            "activePercent": 4.276021729131428
+          },
+          {
+            "name": "start",
+            "source": "",
+            "durationMs": 488.832,
+            "activePercent": 3.777560164990059
+          },
+          {
+            "name": "detectModuleFormat",
+            "source": "node:internal/modules/esm/get_format",
+            "durationMs": 401.083,
+            "activePercent": 3.0994598628050287
+          },
+          {
+            "name": "flatten",
+            "source": "devalue/src/stringify.js",
+            "durationMs": 349.044,
+            "activePercent": 2.697316685955073
+          },
+          {
+            "name": "compileSourceTextModule",
+            "source": "node:internal/modules/esm/utils",
+            "durationMs": 308.375,
+            "activePercent": 2.383037763237287
+          },
+          {
+            "name": "stringify_string",
+            "source": "devalue/src/utils.js",
+            "durationMs": 289.333,
+            "activePercent": 2.235886388814703
+          },
+          {
+            "name": "relative",
+            "source": "node:path",
+            "durationMs": 281.917,
+            "activePercent": 2.1785775665944587
+          },
+          {
+            "name": "__init",
+            "source": "wrangler/wrangler-dist/cli.js",
+            "durationMs": 256.166,
+            "activePercent": 1.9795808728251085
+          },
+          {
+            "name": "normalizeString",
+            "source": "node:path",
+            "durationMs": 202.168,
+            "activePercent": 1.5622990791022484
+          },
+          {
+            "name": "resolve",
+            "source": "node:path",
+            "durationMs": 197.249,
+            "activePercent": 1.5242863907930009
+          },
+          {
+            "name": "wrappedHook",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/normalize-string-or-regex-BzTP-qJS.mjs",
+            "durationMs": 196.167,
+            "activePercent": 1.515924990355797
+          },
+          {
+            "name": "enter",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 155.458,
+            "activePercent": 1.2013369585645468
+          },
+          {
+            "name": "jsonParseAst",
+            "source": "@voidzero-dev/vite-plus-core/dist/rolldown/shared/parse-iOGTHQHs.mjs",
+            "durationMs": 153.874,
+            "activePercent": 1.1890962392553686
+          },
+          {
+            "name": "revisionModules",
+            "source": "file://<repo>/content-query/packages/content-query/dist/build-B7cfaihb.mjs",
+            "durationMs": 147.292,
+            "activePercent": 1.1382323412168511
+          },
+          {
+            "name": "normalizePath",
+            "source": "chokidar/index.js",
+            "durationMs": 141.833,
+            "activePercent": 1.0960466804158382
+          },
+          {
+            "name": "",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 133.791,
+            "activePercent": 1.0339003011958812
+          },
+          {
+            "name": "read",
+            "source": "",
+            "durationMs": 130.208,
+            "activePercent": 1.0062118559403346
+          },
+          {
+            "name": "",
+            "source": "file://<repo>/content-query/packages/content-query/dist/build-B7cfaihb.mjs",
+            "durationMs": 129.25,
+            "activePercent": 0.9988086936308694
+          },
+          {
+            "name": "",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 126.293,
+            "activePercent": 0.9759578053750358
+          },
+          {
+            "name": "parse",
+            "source": "",
+            "durationMs": 121.417,
+            "activePercent": 0.9382774093197621
+          },
+          {
+            "name": "next",
+            "source": "yaml/dist/parse/parser.js",
+            "durationMs": 120.332,
+            "activePercent": 0.9298928257020485
+          },
+          {
+            "name": "setFsWatchListener",
+            "source": "chokidar/handler.js",
+            "durationMs": 118.583,
+            "activePercent": 0.9163770314648307
+          },
+          {
+            "name": "update",
+            "source": "",
+            "durationMs": 113.958,
+            "activePercent": 0.8806362948455444
+          },
+          {
+            "name": "k",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 108.416,
+            "activePercent": 0.8378092327170935
+          }
+        ],
+        "inclusive": [
+          {
+            "name": "#getOrCreateModuleJobAfterResolve",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "afterResolve",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "getOrCreateModuleJob",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "syncLink",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "link",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "ModuleJob",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "tracePromise",
+            "source": "node:diagnostics_channel",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "import",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "defaultImportModuleDynamicallyForModule",
+            "source": "node:internal/modules/esm/utils",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "importModuleDynamicallyCallback",
+            "source": "node:internal/modules/esm/utils",
+            "durationMs": 1614.501,
+            "activePercent": 12.476422705421527
+          },
+          {
+            "name": "_addToNodeFs",
+            "source": "chokidar/handler.js",
+            "durationMs": 1536.002,
+            "activePercent": 11.869803876475068
+          },
+          {
+            "name": "loadAndTranslate",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 1480.627,
+            "activePercent": 11.441881002898207
+          },
+          {
+            "name": "loadConfigFromBundledFile",
+            "source": "@voidzero-dev/vite-plus-core/dist/vite/node/chunks/node.js",
+            "durationMs": 1431.834,
+            "activePercent": 11.064822027359861
+          },
+          {
+            "name": "run",
+            "source": "node:internal/modules/esm/module_job",
+            "durationMs": 1295.418,
+            "activePercent": 10.0106364432179
+          },
+          {
+            "name": "evaluate",
+            "source": "",
+            "durationMs": 1231.002,
+            "activePercent": 9.512847191311314
+          },
+          {
+            "name": "loadWithHooks",
+            "source": "node:internal/modules/customization_hooks",
+            "durationMs": 1082.083,
+            "activePercent": 8.362041838531312
+          },
+          {
+            "name": "nextStep",
+            "source": "node:internal/modules/customization_hooks",
+            "durationMs": 1078.458,
+            "activePercent": 8.334028828748627
+          },
+          {
+            "name": "load",
+            "source": "file://<repo>/content-query/benchmarks/scripts/profile-hook.mjs",
+            "durationMs": 1060.167,
+            "activePercent": 8.192680977180332
+          },
+          {
+            "name": "_read",
+            "source": "readdirp/index.js",
+            "durationMs": 1052.792,
+            "activePercent": 8.135688991760388
+          },
+          {
+            "name": "#loadSync",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 982.625,
+            "activePercent": 7.5934575828165025
+          },
+          {
+            "name": "load",
+            "source": "node:internal/modules/esm/loader",
+            "durationMs": 982.625,
+            "activePercent": 7.5934575828165025
+          },
+          {
+            "name": "",
+            "source": "node:internal/modules/cjs/loader",
+            "durationMs": 955.002,
+            "activePercent": 7.379994584409033
+          },
+          {
+            "name": "wrapModuleLoad",
+            "source": "node:internal/modules/cjs/loader",
+            "durationMs": 955.002,
+            "activePercent": 7.379994584409033
+          },
+          {
+            "name": "loadEntry",
+            "source": "file://<repo>/content-query/packages/content-query/dist/glob-CES9G_er.mjs",
+            "durationMs": 947.666,
+            "activePercent": 7.323303980335718
+          }
+        ]
+      }
+    }
+  ]
+}

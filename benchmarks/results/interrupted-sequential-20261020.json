@@ -1,0 +1,279 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-20T04:44:32.401Z",
+  "repetitions": 3,
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 50000,
+    "copies": 0
+  },
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.3.0",
+    "cpu": "Apple M5",
+    "logicalCpus": 10,
+    "memoryBytes": 25769803776,
+    "vitePlus": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\n",
+    "chromium": "156.0.8078.4",
+    "revision": "0621349ee7d18d04e32069a36d4ea4421ce17ce1",
+    "dirty": true,
+    "lockfileSha256": "4124699dc039ebe02e7da114162d4c2c5af11c5c8b87f5f49e172dc70782804c",
+    "contentQueryArtifactsSha256": "fc104e63574fb1c3d01c6ce7b46ab4381e1226bc922a7de9943189e0776f9926",
+    "packages": {
+      "astro": {
+        "astro": "7.4.0",
+        "vite-plus": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
+        "@voidzero-dev/vite-plus-core": "1.3.0"
+      },
+      "vite-react": {
+        "react": "19.2.5",
+        "react-dom": "19.2.5",
+        "@content-collections/core": "0.15.3",
+        "@content-collections/vite": "0.3.1",
+        "@content-collections/markdown": "0.1.4",
+        "vite-plus": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
+        "@voidzero-dev/vite-plus-core": "0.1.16"
+      },
+      "nuxt": {
+        "nuxt": "4.6.2",
+        "vue": "3.5.44",
+        "@nuxt/content": "3.16.2",
+        "vite-plus": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
+        "@voidzero-dev/vite-plus-core": "1.3.0"
+      },
+      "void": {
+        "void": "1.1.12",
+        "@void/react": "1.1.12",
+        "react": "19.2.5",
+        "content-query": "0.0.0",
+        "vite-plus": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
+        "@voidzero-dev/vite-plus-core": "0.1.16"
+      },
+      "next": {
+        "next": "16.4.2",
+        "react": "19.2.5",
+        "react-dom": "19.2.5",
+        "content-query": "0.0.0",
+        "vite-plus": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7"
+      }
+    }
+  },
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-void-startup-cold.log",
+      "listenMs": 9822.509875,
+      "durationMs": 12501.134749999997
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-void-startup-warm.log",
+      "listenMs": 3627.3174579999977,
+      "durationMs": 4993.127457999995
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-void-build-cold.log",
+      "durationMs": 12890.103208,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-void-build-warm.log",
+      "durationMs": 13372.464708,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-astro-startup-cold.log",
+      "listenMs": 4827.629291999998,
+      "durationMs": 6277.079125000004
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-astro-startup-warm.log",
+      "listenMs": 2944.505959000002,
+      "durationMs": 3962.055416999996
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-astro-build-cold.log",
+      "durationMs": 6510.375832999998,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-astro-build-warm.log",
+      "durationMs": 6896.420707999991,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-vite-react-startup-cold.log",
+      "listenMs": 6750.619375000009,
+      "durationMs": 15939.073625000005
+    },
+    {
+      "app": "vite-react",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-vite-react-startup-warm.log",
+      "listenMs": 2991.1267090000038,
+      "durationMs": 11736.73408400001
+    },
+    {
+      "app": "vite-react",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp run --no-cache build",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-vite-react-build-cold.log",
+      "durationMs": 9293.252250000005,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "vite-react",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp run --no-cache build",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-vite-react-build-warm.log",
+      "durationMs": 11013.081000000006,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "nuxt",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec nuxt dev",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-nuxt-startup-cold.log",
+      "listenMs": 687.097207999992,
+      "durationMs": 20562.522832999995
+    },
+    {
+      "app": "nuxt",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec nuxt dev",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-nuxt-startup-warm.log",
+      "listenMs": 169.15083299999242,
+      "durationMs": 7176.785957999993
+    },
+    {
+      "app": "nuxt",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec nuxt generate",
+      "log": ".runs/2026-10-20T04-44-32-401Z/1-nuxt-build-cold.log",
+      "durationMs": 116360.02912500003,
+      "prerenderedPages": 10001
+    }
+  ],
+  "completedAt": "2026-10-20T04:51:05.883Z",
+  "error": "Stopped after a separate Void playground many-pages build benchmark started concurrently during the Nuxt warm build. Partial samples are archived and excluded from the final comparison.",
+  "hostObservations": [
+    {
+      "type": "processes",
+      "at": "2026-10-20T04:43:52.848Z",
+      "frameworkProcesses": [
+        "84353     1   0.0  0.0    18:16:17 /Users/yangshun/.nvm/versions/node/v24.14.0/bin/node /Users/yangshun/Developer/voidzero/voidpress/node_modules/.pnpm/next@16.4.2_@opentelemetry+api@1.9.1_@types+node@25.6.0_react-dom@19.2.5_react@19.2.5__react@19.2.5/node_modules/next/dist/telemetry/detached-flush.js dev /Users/yangshun/Developer/voidzero/voidpress/content-query/examples/next _events_75812_efa88ac2d7601196.json",
+        "91712 81455   0.0  0.1       00:23 /Users/yangshun/.vite-plus/package_manager/pnpm/12.11.2/pnpm/bin/pnpm.native build",
+        "91718 91712   0.0  0.0       00:23 sh -c trap 'if [ \"$?\" -eq 130 ]; then trap - INT; kill -s INT $$; fi; trap \"trap - INT; kill -s INT $$\" INT' INT; node scripts/generate.ts --if-missing && vp build",
+        "91720 91718   0.0  0.2       00:23 node /Users/yangshun/Developer/voidzero/void/playground/many-pages/node_modules/.bin/../../../../node_modules/.pnpm/vite-plus@1.3.0_@astrojs+compiler-rs@0.5.2_@types+node@26.6.5_@vitest+ui@5.0.5_esbuild@_0789b10ee8649f74b1159e68bd4bc3c6/node_modules/vite-plus/bin/vp build",
+        "91733 91720  50.2  1.3       00:23 /Users/yangshun/.nvm/versions/node/v24.14.0/bin/node /Users/yangshun/Developer/voidzero/void/node_modules/.pnpm/@voidzero-dev+vite-plus-core@1.3.0_@types+node@26.6.5_esbuild@0.28.2_jiti@2.7.0_sass-em_9a1ba1ae92d543d64afd123777e8bcc5/node_modules/@voidzero-dev/vite-plus-core/dist/vite/bin/vite.js build"
+      ]
+    },
+    {
+      "type": "host",
+      "at": "2026-10-20T04:43:52.858Z",
+      "summary": "Processes: 751 total, 12 running, 6 stuck, 733 sleeping, 7694 threads \n2026/10/20 12:43:52\nLoad Avg: 11.16, 14.73, 21.54 \nCPU usage: 58.39% user, 39.65% sys, 1.95% idle \nSharedLibs: 368M resident, 76M data, 70M linkedit.\nMemRegions: 2668256 total, 4145M resident, 85M private, 2429M shared.\nPhysMem: 23G used (5814M wired, 10G compressor), 427M unused.\nVM: 517T vsize, 5361M framework vsize, 635604464(0) swapins, 671355298(0) swapouts.\nNetworks: packets: 187609331/263G in, 98148839/128G out.\nDisks: 1046100716/18T read, 329726120/12T written.\n\n\n"
+    },
+    {
+      "type": "processes",
+      "at": "2026-10-20T04:46:25.954Z",
+      "frameworkProcesses": [
+        "93181 93174   0.0  0.3       02:10 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
+        "96503 96497 117.5  3.4       00:06 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/build.ts"
+      ]
+    },
+    {
+      "type": "processes",
+      "at": "2026-10-20T04:50:15.436Z",
+      "frameworkProcesses": [
+        " 2445 93181   0.0  0.2       01:02 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/node_modules/.bin/../vite-plus/bin/vp exec nuxt generate",
+        " 2453  2445  80.0  1.3       01:02 node /Users/yangshun/Developer/voidzero/voidpress/content-query/benchmarks/apps/nuxt/node_modules/.bin/../nuxt/bin/nuxt.mjs generate",
+        " 4099  3837   0.0  0.2       00:25 node /Users/yangshun/Developer/voidzero/void/playground/many-pages/node_modules/.bin/../../../../node_modules/.pnpm/vite-plus@1.3.0_@astrojs+compiler-rs@0.5.2_@types+node@26.6.5_@vitest+ui@5.0.5_esbuild@_0789b10ee8649f74b1159e68bd4bc3c6/node_modules/vite-plus/bin/vp build",
+        " 4107  4099  60.5  1.9       00:25 /Users/yangshun/.nvm/versions/node/v24.14.0/bin/node /Users/yangshun/Developer/voidzero/void/node_modules/.pnpm/@voidzero-dev+vite-plus-core@1.3.0_@types+node@26.6.5_esbuild@0.28.2_jiti@2.7.0_sass-em_9a1ba1ae92d543d64afd123777e8bcc5/node_modules/@voidzero-dev/vite-plus-core/dist/vite/bin/vite.js build",
+        "93181 93174   0.6  0.2       06:00 /Users/yangshun/.vite-plus/js_runtime/node/24.21.0/bin/node scripts/run.ts --apps void,astro,vite-react,nuxt,next --phase all --runs 3",
+        " 3834 81455   0.0  0.0       00:33 vp run --filter ./playground/many-pages bench:build --modes ssg",
+        " 3835  3834   0.0  0.2       00:33 /Users/yangshun/.nvm/versions/node/v24.14.0/bin/node /Users/yangshun/Developer/voidzero/void/node_modules/.pnpm/vite-plus@1.3.0_@astrojs+compiler-rs@0.5.2_@types+node@26.6.5_@vitest+ui@5.0.5_esbuild@_0789b10ee8649f74b1159e68bd4bc3c6/node_modules/vite-plus/dist/bin.js run --filter ./playground/many-pages bench:build --modes ssg",
+        " 3837  3835   0.0  0.2       00:33 /Users/yangshun/.nvm/versions/node/v24.14.0/bin/node scripts/build-benchmark.ts --modes ssg"
+      ]
+    }
+  ]
+}

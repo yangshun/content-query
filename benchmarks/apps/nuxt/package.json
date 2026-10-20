@@ -1,0 +1,21 @@
+{
+  "name": "@content-query/benchmark-nuxt",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp exec nuxt dev",
+    "build": "vp exec nuxt generate",
+    "preview": "node ../../shared/preview.ts --dir .output/public"
+  },
+  "dependencies": {
+    "@nuxt/content": "3.16.2",
+    "nuxt": "4.6.2",
+    "vue": "3.5.44"
+  },
+  "devDependencies": {
+    "typescript": "6.0.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.1.16",
+    "vite-plus": "0.1.16",
+    "zod": "4.6.7"
+  }
+}

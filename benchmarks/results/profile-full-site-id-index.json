@@ -1,0 +1,93 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-20T03:03:15.129Z",
+  "label": "full-site-id-index",
+  "mode": "timings",
+  "backend": "in-memory",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [51.67236328125, 43.06005859375, 28.6826171875],
+  "lockfileSha256": "4124699dc039ebe02e7da114162d4c2c5af11c5c8b87f5f49e172dc70782804c",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 50000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "47ff8d9084e495b3556b75f6e456ecaea23b802695c173bd936cb2f014aa7327",
+  "contentQueryArtifactsUnchanged": true,
+  "samples": [
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/full-site-id-index/1-build-cold/output.log",
+      "durationMs": 28567.374791,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/full-site-id-index/1-build-warm/output.log",
+      "durationMs": 17427.276542,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/full-site-id-index/2-build-cold/output.log",
+      "durationMs": 15239.710666000006,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/full-site-id-index/2-build-warm/output.log",
+      "durationMs": 17953.2825,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/full-site-id-index/3-build-cold/output.log",
+      "durationMs": 18271.603999999992,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/full-site-id-index/3-build-warm/output.log",
+      "durationMs": 28491.62383299999,
+      "prerenderedPages": 10001
+    }
+  ],
+  "completedAt": "2026-10-20T03:05:31.243Z",
+  "loadAverageAtEnd": [26.59814453125, 35.955078125, 27.93310546875]
+}
