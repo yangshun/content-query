@@ -46,6 +46,8 @@ The syntax comparison keeps controls, sample posts, both query styles, and a sha
 
 Public guides and homepage examples use standard Vite configuration and npm/npx commands.
 
+The Vite guide documents generated-output watcher exclusions, server-only production preparation, and payload source packing before bundling, including lazy loading and host output settings.
+
 From the repository root, using Node.js 24.21.0 and Vite+:
 
 ```sh

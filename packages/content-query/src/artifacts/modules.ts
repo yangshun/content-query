@@ -16,8 +16,11 @@ function directoryName(name: string): string {
     : `~${Buffer.from(name).toString("base64url")}`;
 }
 
-/** Creates portable ESM source with literal payload imports for files or virtual delivery. */
-export async function revisionModules(revision: PreparedRevision): Promise<Map<string, string>> {
+/** Creates portable ESM; build integrations can batch payload sources before a strict bundler runs. */
+export async function revisionModules(
+  revision: PreparedRevision,
+  { payloadChunkBytes = 0 }: { payloadChunkBytes?: number } = {},
+): Promise<Map<string, string>> {
   const modules = new Map<string, string>();
   const manifest = {
     version: ARTIFACT_VERSION,
@@ -30,22 +33,58 @@ export async function revisionModules(revision: PreparedRevision): Promise<Map<s
   for (const [name, collection] of Object.entries(revision.collections)) {
     const directory = `collections/${directoryName(name)}`;
     const payloads: string[] = [];
-    for (const [id, load] of collection.payloads) {
-      const payload = await load();
-      const encoded = encode(payload);
-      const key = digest([name, id, encoded]);
-      needsRenderer ||= payload.markdown !== undefined;
-      const filename = `${directory}/entries/${key}.js`;
-      const code = `export default ${JSON.stringify(encoded)};\n`;
+    const chunks: string[] = [];
+    let batch: [string, string][] = [];
+    let batchBytes = 0;
+    /** Retains collision checks for both individual payloads and batched source modules. */
+    function publishPayload(filename: string, code: string): void {
       if (modules.has(filename) && modules.get(filename) !== code) {
         throw new Error("Payload hash collision.");
       }
       modules.set(filename, code);
+    }
+    /** Emits one lazy source module without creating a dynamic-import entry per item. */
+    function flushBatch(): void {
+      if (!batch.length) {
+        return;
+      }
+      const key = digest([name, batch]);
+      const code = `export default { ${batch.map(([id, encoded]) => `[${JSON.stringify(id)}]: ${JSON.stringify(encoded)}`).join(",\n")} };\n`;
+      publishPayload(`${directory}/entries/${key}.js`, code);
+      const binding = `payloadChunk${chunks.length}`;
+      chunks.push(`const ${binding} = () => import(${JSON.stringify(`./entries/${key}.js`)});`);
+      for (const [id] of batch) {
+        payloads.push(`[${JSON.stringify(id)}]: loadPayload(${binding}, ${JSON.stringify(id)})`);
+      }
+      batch = [];
+      batchBytes = 0;
+    }
+    for (const [id, load] of collection.payloads) {
+      const payload = await load();
+      const encoded = encode(payload);
+      needsRenderer ||= payload.markdown !== undefined;
+      if (payloadChunkBytes) {
+        const bytes = Buffer.byteLength(`[${JSON.stringify(id)}]: ${JSON.stringify(encoded)},\n`);
+        if (batchBytes && batchBytes + bytes > payloadChunkBytes) {
+          flushBatch();
+        }
+        batch.push([id, encoded]);
+        batchBytes += bytes;
+        continue;
+      }
+      const key = digest([name, id, encoded]);
+      const filename = `${directory}/entries/${key}.js`;
+      const code = `export default ${JSON.stringify(encoded)};\n`;
+      publishPayload(filename, code);
       payloads.push(
         `[${JSON.stringify(id)}]: () => import(${JSON.stringify(`./entries/${key}.js`)})`,
       );
     }
-    const code = `export default { records: ${JSON.stringify(collection.records.map(encode))}, payloads: { ${payloads.join(",\n")} } };\n`;
+    flushBatch();
+    const loaders = chunks.length
+      ? `const loadPayload = (load, id) => () => load().then(module => ({ default: module.default[id] }));\n${chunks.join("\n")}\n`
+      : "";
+    const code = `${loaders}export default { records: ${JSON.stringify(collection.records.map(encode))}, payloads: { ${payloads.join(",\n")} } };\n`;
     const index = `index-${digest(code)}.js`;
     modules.set(`${directory}/${index}`, code);
     modules.set(
