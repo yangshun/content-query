@@ -1,0 +1,400 @@
+{
+  "diagnostic": "ContentQuery result detachment before and after direct copies of plain graphs, from three Void prerender replays.",
+  "method": "Worker CPU attribution from each replay's raw worker.cpuprofile, limited to frames in the ContentQuery server bundle and counting recursion once per sample, as in scripts/summarize-profile.ts. Output parity hashes index.html, every entries/*.html page, and every _void/pages navigation JSON file in sorted path order.",
+  "runs": {
+    "detach-baseline-20261020": {
+      "renderMs": 7384.802,
+      "pages": 10001,
+      "activeMs": 6617.862,
+      "functions": {
+        "detach": {
+          "inclusive": {
+            "ms": 753.063,
+            "activePercent": 11.379
+          },
+          "self": {
+            "ms": 45.982,
+            "activePercent": 0.695
+          }
+        },
+        "detachSelection": {
+          "inclusive": {
+            "ms": 164.736,
+            "activePercent": 2.489
+          },
+          "self": {
+            "ms": 46.247,
+            "activePercent": 0.699
+          }
+        },
+        "copyDirect": {
+          "inclusive": {
+            "ms": 0,
+            "activePercent": 0
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "encode": {
+          "inclusive": {
+            "ms": 377.883,
+            "activePercent": 5.71
+          },
+          "self": {
+            "ms": 2.074,
+            "activePercent": 0.031
+          }
+        },
+        "stringify": {
+          "inclusive": {
+            "ms": 387.167,
+            "activePercent": 5.85
+          },
+          "self": {
+            "ms": 41.547,
+            "activePercent": 0.628
+          }
+        },
+        "flatten": {
+          "inclusive": {
+            "ms": 477.357,
+            "activePercent": 7.213
+          },
+          "self": {
+            "ms": 293.664,
+            "activePercent": 4.437
+          }
+        },
+        "stringify_string": {
+          "inclusive": {
+            "ms": 141.296,
+            "activePercent": 2.135
+          },
+          "self": {
+            "ms": 50.727,
+            "activePercent": 0.767
+          }
+        },
+        "decode": {
+          "inclusive": {
+            "ms": 249.759,
+            "activePercent": 3.774
+          },
+          "self": {
+            "ms": 13.648,
+            "activePercent": 0.206
+          }
+        },
+        "parse": {
+          "inclusive": {
+            "ms": 240.323,
+            "activePercent": 3.631
+          },
+          "self": {
+            "ms": 189.434,
+            "activePercent": 2.862
+          }
+        },
+        "run": {
+          "inclusive": {
+            "ms": 924.667,
+            "activePercent": 13.972
+          },
+          "self": {
+            "ms": 30.683,
+            "activePercent": 0.464
+          }
+        },
+        "executeQuery": {
+          "inclusive": {
+            "ms": 413.329,
+            "activePercent": 6.246
+          },
+          "self": {
+            "ms": 153.218,
+            "activePercent": 2.315
+          }
+        },
+        "project": {
+          "inclusive": {
+            "ms": 183.711,
+            "activePercent": 2.776
+          },
+          "self": {
+            "ms": 16.356,
+            "activePercent": 0.247
+          }
+        }
+      }
+    },
+    "detach-fast-path-20261020": {
+      "renderMs": 8990.323,
+      "pages": 10001,
+      "activeMs": 7953.991,
+      "functions": {
+        "detach": {
+          "inclusive": {
+            "ms": 102.576,
+            "activePercent": 1.29
+          },
+          "self": {
+            "ms": 20.419,
+            "activePercent": 0.257
+          }
+        },
+        "detachSelection": {
+          "inclusive": {
+            "ms": 23.546,
+            "activePercent": 0.296
+          },
+          "self": {
+            "ms": 12.115,
+            "activePercent": 0.152
+          }
+        },
+        "copyDirect": {
+          "inclusive": {
+            "ms": 82.157,
+            "activePercent": 1.033
+          },
+          "self": {
+            "ms": 80.904,
+            "activePercent": 1.017
+          }
+        },
+        "encode": {
+          "inclusive": {
+            "ms": 0,
+            "activePercent": 0
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "stringify": {
+          "inclusive": {
+            "ms": 0,
+            "activePercent": 0
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "flatten": {
+          "inclusive": {
+            "ms": 0,
+            "activePercent": 0
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "stringify_string": {
+          "inclusive": {
+            "ms": 0,
+            "activePercent": 0
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "decode": {
+          "inclusive": {
+            "ms": 83.862,
+            "activePercent": 1.054
+          },
+          "self": {
+            "ms": 1.261,
+            "activePercent": 0.016
+          }
+        },
+        "parse": {
+          "inclusive": {
+            "ms": 79.824,
+            "activePercent": 1.004
+          },
+          "self": {
+            "ms": 66.272,
+            "activePercent": 0.833
+          }
+        },
+        "run": {
+          "inclusive": {
+            "ms": 212.84,
+            "activePercent": 2.676
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "executeQuery": {
+          "inclusive": {
+            "ms": 183.71,
+            "activePercent": 2.31
+          },
+          "self": {
+            "ms": 54.153,
+            "activePercent": 0.681
+          }
+        },
+        "project": {
+          "inclusive": {
+            "ms": 37.796,
+            "activePercent": 0.475
+          },
+          "self": {
+            "ms": 14.25,
+            "activePercent": 0.179
+          }
+        }
+      }
+    },
+    "detach-fast-path-repeat-20261020": {
+      "renderMs": 6144.612,
+      "pages": 10001,
+      "activeMs": 5354.962,
+      "functions": {
+        "detach": {
+          "inclusive": {
+            "ms": 97.348,
+            "activePercent": 1.818
+          },
+          "self": {
+            "ms": 2.537,
+            "activePercent": 0.047
+          }
+        },
+        "detachSelection": {
+          "inclusive": {
+            "ms": 8.673,
+            "activePercent": 0.162
+          },
+          "self": {
+            "ms": 3.971,
+            "activePercent": 0.074
+          }
+        },
+        "copyDirect": {
+          "inclusive": {
+            "ms": 94.811,
+            "activePercent": 1.771
+          },
+          "self": {
+            "ms": 89.739,
+            "activePercent": 1.676
+          }
+        },
+        "encode": {
+          "inclusive": {
+            "ms": 0,
+            "activePercent": 0
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "stringify": {
+          "inclusive": {
+            "ms": 0,
+            "activePercent": 0
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "flatten": {
+          "inclusive": {
+            "ms": 0,
+            "activePercent": 0
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "stringify_string": {
+          "inclusive": {
+            "ms": 0,
+            "activePercent": 0
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "decode": {
+          "inclusive": {
+            "ms": 129.42,
+            "activePercent": 2.417
+          },
+          "self": {
+            "ms": 0,
+            "activePercent": 0
+          }
+        },
+        "parse": {
+          "inclusive": {
+            "ms": 129.345,
+            "activePercent": 2.415
+          },
+          "self": {
+            "ms": 103.204,
+            "activePercent": 1.927
+          }
+        },
+        "run": {
+          "inclusive": {
+            "ms": 249.137,
+            "activePercent": 4.652
+          },
+          "self": {
+            "ms": 1.273,
+            "activePercent": 0.024
+          }
+        },
+        "executeQuery": {
+          "inclusive": {
+            "ms": 191.999,
+            "activePercent": 3.585
+          },
+          "self": {
+            "ms": 9.501,
+            "activePercent": 0.177
+          }
+        },
+        "project": {
+          "inclusive": {
+            "ms": 14.399,
+            "activePercent": 0.269
+          },
+          "self": {
+            "ms": 6.991,
+            "activePercent": 0.131
+          }
+        }
+      }
+    }
+  },
+  "outputParity": {
+    "files": 20002,
+    "htmlPages": 10001,
+    "navigationJsonFiles": 10001,
+    "bytes": 49971135,
+    "sha256": "ba02b4a635dc61888fffc195b1046833aa5f26085a991fa4bbcf0b1399fabeb1",
+    "byteIdentical": true,
+    "sourceRuns": [
+      "detach-baseline-20261020",
+      "detach-fast-path-20261020",
+      "detach-fast-path-repeat-20261020"
+    ]
+  }
+}

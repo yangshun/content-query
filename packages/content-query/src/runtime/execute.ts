@@ -149,14 +149,7 @@ function project(
   if (!plan.select && !plan.adjacent) {
     invalidQuery("Row-returning queries require select().");
   }
-  const result = detachSelection(
-    Object.fromEntries(
-      (plan.select ?? []).map((field) => [
-        field,
-        Object.hasOwn(record, field) ? record[field] : undefined,
-      ]),
-    ),
-  );
+  const result = detachSelection(record, plan.select ?? []);
   for (const [name, nested] of Object.entries(plan.with)) {
     const relation = revision.registry[plan.collection]!.relationships[name]!;
     if (
