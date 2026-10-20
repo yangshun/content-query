@@ -1,6 +1,7 @@
 # ContentQuery v1 features
 
 - Standard Schema metadata/computed validation and output inference, with grouped contextual errors.
+- Bundled Zod-backed content builders through `import { schema } from "content-query/schema"`, with chaining, primitive coercion, and provider-independent `schema.input`, `schema.output`, and `schema.infer` types. Consumers need no separate Zod installation; other Standard Schema validators remain supported, and deployed runtime JavaScript imports no validators.
 - Computed context includes the collection registry key and optional, typed loader source metadata. Built-in file loaders supply project-relative paths and multi-record keys; source-only edits participate in preparation cache invalidation. Existing Astro loaders remain compatible without supplying the ContentQuery metadata extension.
 - `content-query/computed` provides reusable `readingTime()`, `wordCount()`, and `excerpt()` computed definitions with Standard Schema result types. Captured-body defaults, typed async input selectors, Markdown/text/HTML extraction, configurable reading speed, Unicode-safe excerpt limits, and cancellation work during preparation; only results enter deployed query data.
 - Build-only root `content-query.config.{ts,mts,cts,js,mjs,cjs}` discovery, ambiguity errors, and an exact custom-path override; generated typings and Vite client guards follow the selected config. Source acquisition stays in preparation, with source-independent deployed queries and rendering.

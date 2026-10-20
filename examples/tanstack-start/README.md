@@ -1,5 +1,7 @@
 # ContentQuery + TanStack Start
 
+Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
+
 A small documentation site using native TanStack Start server data loading and portable ContentQuery content. The listing selects metadata only; detail pages explicitly render Markdown and select previous/next guides through `_adjacent`.
 
 ## Run locally

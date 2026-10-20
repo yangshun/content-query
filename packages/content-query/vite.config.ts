@@ -9,6 +9,7 @@ export default defineConfig({
       query: "src/query.ts",
       build: "src/build.ts",
       runtime: "src/runtime.ts",
+      schema: "src/schema.ts",
       internal: "src/internal.ts",
       "internal/markdown": "src/runtime/markdown.ts",
       vite: "src/vite.ts",

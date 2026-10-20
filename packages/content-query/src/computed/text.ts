@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import getReadingTime from "reading-time";
-import { z } from "zod";
+import { schema } from "../schema.ts";
 import type { ComputedContext } from "../collection/types.ts";
 import type { MaybePromise } from "../shared/types.ts";
 import { assertServerOnly } from "../shared/server-only.ts";
@@ -69,7 +69,11 @@ function textField<Data, Source, Value>(
 export function wordCount<Data = Record<string, unknown>, Source = unknown>(
   options: TextOptions<Data, Source> = {},
 ) {
-  return textField(z.number().int().nonnegative(), options, (text) => getReadingTime(text).words);
+  return textField(
+    schema.number().int().nonnegative(),
+    options,
+    (text) => getReadingTime(text).words,
+  );
 }
 
 /** Creates a numeric computed field estimating whole reading minutes, rounded up; empty text returns zero. */
@@ -80,7 +84,7 @@ export function readingTime<Data = Record<string, unknown>, Source = unknown>(
   if (!Number.isFinite(wordsPerMinute) || wordsPerMinute <= 0) {
     throw new TypeError("wordsPerMinute must be a finite positive number.");
   }
-  return textField(z.number().int().nonnegative(), options, (text) =>
+  return textField(schema.number().int().nonnegative(), options, (text) =>
     Math.ceil(getReadingTime(text, { wordsPerMinute }).minutes),
   );
 }
@@ -117,5 +121,5 @@ export function excerpt<Data = Record<string, unknown>, Source = unknown>(
   if (!Number.isSafeInteger(maxLength) || maxLength <= 0) {
     throw new TypeError("maxLength must be a positive safe integer.");
   }
-  return textField(z.string(), options, (text) => truncate(text, maxLength));
+  return textField(schema.string(), options, (text) => truncate(text, maxLength));
 }

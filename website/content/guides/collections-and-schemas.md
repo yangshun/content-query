@@ -11,14 +11,14 @@ A collection groups entries with shared metadata. Export your collections from `
 
 ```ts
 import { defineCollection } from "content-query";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 
 export const collections = {
   posts: defineCollection({
     source: "./content/posts",
-    schema: z.object({
-      title: z.string(),
-      draft: z.boolean().default(false),
+    schema: schema.object({
+      title: schema.string(),
+      draft: schema.boolean().default(false),
     }),
   }),
 };
@@ -26,7 +26,22 @@ export const collections = {
 
 ## Validation and types
 
-Schemas follow Standard Schema V1; these examples use Zod. Validation runs during preparation, and validated outputs determine the query types. Async validation is supported.
+ContentQuery includes Zod-backed builders through `content-query/schema`; no separate Zod installation is needed. The `schema` namespace supplies `object`, `string`, `number`, `boolean`, `bigint`, `date`, `array`, `enum`, `literal`, `union`, `record`, and `unknown`, plus primitive coercion through `schema.coerce`.
+
+Returned schemas support Zod's chaining methods, including `.optional()`, `.nullable()`, `.default()`, `.refine()`, and `.transform()`. Nested composition follows Zod's rules. Provider-level parsing utilities, error classes, and configuration are outside the namespace.
+
+Schemas follow Standard Schema V1, so other compatible validators also work for collection metadata and computed fields. Validation runs during preparation, and validated outputs determine the query types. Async validation is supported. Generated runtime JavaScript imports neither schemas nor Zod.
+
+Use `schema.input<Validator>` for the input type and `schema.output<Validator>` or `schema.infer<Validator>` for validated output. These type helpers accept any Standard Schema V1 provider:
+
+```ts
+const postSchema = schema.object({
+  title: schema.string(),
+  draft: schema.boolean().default(false),
+});
+type PostInput = schema.input<typeof postSchema>; // draft is optional.
+type Post = schema.infer<typeof postSchema>; // draft is boolean.
+```
 
 Each entry has a top-level `id`. Keep `id` out of the metadata schema, and use distinct names for source fields, [computed fields](/docs/computed-fields), and [relationships](/docs/relationships).
 

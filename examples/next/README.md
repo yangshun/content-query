@@ -1,5 +1,7 @@
 # ContentQuery x Next.js
 
+Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
+
 A small Next.js App Router documentation site in `content-query/examples/next`, backed by ContentQuery. It uses the same sample project-notebook guides as the Void example, with a homepage index, Markdown articles, ordered navigation, page metadata, and missing-guide handling.
 
 ## Development
@@ -35,7 +37,7 @@ Guide URLs use Next.js's default convention without trailing slashes, such as `/
 
 ## Content and routing
 
-- `content-query.config.ts` defines a Markdown collection with the string `source` shorthand with a Zod metadata schema.
+- `content-query.config.ts` defines a Markdown collection with the string `source` shorthand with bundled metadata schema builders.
 - `.content-query/` holds the generated ESM runtime and its inferred TypeScript declarations, including `CollectionKey`, `CollectionData`, and `Collections`. It is ignored by Git and regenerated automatically before compilation.
 - `package.json` maps `#content-query` to `./.content-query/server.js` through its `imports` field. Server Components use `import { content } from "#content-query"` at any directory depth, with inferred types from the adjacent generated declarations.
 - Queries are inline in `app/page.tsx`, `app/docs/layout.tsx`, and `app/docs/[...slug]/page.tsx`. Next.js's `server-only` marker prevents client components from importing these server modules.

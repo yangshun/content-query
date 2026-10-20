@@ -21,7 +21,6 @@
     "typescript": "^5.9.3",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "void": "catalog:",
-    "zod": "^4.3.6"
+    "void": "catalog:"
   }
 }

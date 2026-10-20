@@ -14,11 +14,11 @@ Import helpers from `content-query/computed` in your build-only configuration:
 ```ts
 import { defineCollection } from "content-query";
 import { excerpt, readingTime, wordCount } from "content-query/computed";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 
 const posts = defineCollection({
   source: "./content/posts",
-  schema: z.object({ title: z.string() }),
+  schema: schema.object({ title: schema.string() }),
   computed: {
     readingMinutes: readingTime({ wordsPerMinute: 200 }),
     wordCount: wordCount(),
@@ -56,15 +56,15 @@ For JSON, YAML, or CMS fields, use a synchronous or asynchronous `from` selector
 import { defineCollection } from "content-query";
 import { excerpt } from "content-query/computed";
 import { file } from "content-query/loaders";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 
-const articleSchema = z.object({ description: z.string() });
+const articleSchema = schema.object({ description: schema.string() });
 
 const articles = defineCollection({
   loader: file("./content/articles.json"),
   schema: articleSchema,
   computed: {
-    summary: excerpt<z.infer<typeof articleSchema>>({
+    summary: excerpt<schema.infer<typeof articleSchema>>({
       from: ({ data }) => data.description,
       format: "text",
       maxLength: 160,
@@ -86,7 +86,7 @@ Write a result schema and resolver for other derived values:
 ```ts
 computed: {
   upperTitle: {
-    schema: z.string(),
+    schema: schema.string(),
     resolve: ({ data }) => data.title.toUpperCase(),
   },
 }
@@ -107,11 +107,11 @@ For example, store the source location as queryable metadata:
 ```ts
 computed: {
   sourceFile: {
-    schema: z.string().optional(),
+    schema: schema.string().optional(),
     resolve: ({ source }) => source?.filePath,
   },
   entryKey: {
-    schema: z.string(),
+    schema: schema.string(),
     resolve: ({ collection, id }) => `${collection}/${id}`,
   },
 }
@@ -122,7 +122,7 @@ For a custom loader, declare its source metadata type once:
 ```ts
 import { defineCollection } from "content-query";
 import type { Loader } from "content-query/loaders";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 
 const cms: Loader<{ documentId: string; url: string }> = {
   name: "my-cms",
@@ -137,10 +137,10 @@ const cms: Loader<{ documentId: string; url: string }> = {
 
 const posts = defineCollection({
   loader: cms,
-  schema: z.object({ title: z.string() }),
+  schema: schema.object({ title: schema.string() }),
   computed: {
     canonicalUrl: {
-      schema: z.string().optional(),
+      schema: schema.string().optional(),
       resolve: ({ source }) => source?.url,
     },
   },

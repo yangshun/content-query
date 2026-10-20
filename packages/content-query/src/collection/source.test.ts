@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, test } from "vite-plus/test";
-import { z } from "zod";
+import { schema } from "../schema.ts";
 import { defineCollection } from "./define.ts";
 import { collectLoader } from "../../tests/helpers/loader.ts";
 import { projectFixture } from "../../tests/helpers/project.ts";
@@ -13,7 +13,7 @@ describe("collection source shorthand", () => {
     try {
       await writeFile(
         fixture.config,
-        `import {defineCollection} from "content-query"; import {z} from "zod"; export const collections={posts:defineCollection({source:"./content/posts",schema:z.object({title:z.string()})})};`,
+        `import {defineCollection} from "content-query"; import {schema} from "content-query/schema"; export const collections={posts:defineCollection({source:"./content/posts",schema:schema.object({title:schema.string()})})};`,
       );
       const session = await buildAtRoot(fixture.root, { backend: "in-memory" });
       try {
@@ -48,7 +48,7 @@ describe("collection source shorthand", () => {
         await writeFile(path.join(directory, filename), text);
         const collection = defineCollection({
           source: { type, directory },
-          schema: z.object({ title: z.string() }),
+          schema: schema.object({ title: schema.string() }),
         });
         expect(await collectLoader(collection.loader)).toMatchObject([
           { id: "entry", data: { title: "Example" } },
@@ -60,7 +60,7 @@ describe("collection source shorthand", () => {
   }
 
   test("rejects ambiguous and malformed sources", () => {
-    expect(() => defineCollection({ source: "", schema: z.object({}) })).toThrow();
+    expect(() => defineCollection({ source: "", schema: schema.object({}) })).toThrow();
     expect(() =>
       defineCollection({ source: { type: "unknown", directory: "." } } as never),
     ).toThrow();

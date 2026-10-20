@@ -377,7 +377,7 @@ assert.deepEqual(await content.query("posts").select("id", "title").all(), [
     await writeFile(
       path.join(exampleRoot, "content-query.config.ts"),
       `import { defineCollection } from "content-query";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 ${sourceToDataExample.schema}
 `,
     );
@@ -438,10 +438,10 @@ assert.deepEqual(posts, ${JSON.stringify(sourceToDataExample.data)});
       path.join(exampleRoot, "content-query.config.ts"),
       `
 import { defineCollection } from "content-query";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 ${computedExampleImports}
 const posts = ${postCollection}
-const authors = defineCollection({ source: { type: "json", directory: "./content/authors" }, schema: z.object({ name: z.string() }) });
+const authors = defineCollection({ source: { type: "json", directory: "./content/authors" }, schema: schema.object({ name: schema.string() }) });
 export const collections = { posts, authors, ${formatCollections.join(",\n")} };
 `,
     );

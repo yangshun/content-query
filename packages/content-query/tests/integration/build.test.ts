@@ -121,7 +121,7 @@ void checked;
     try {
       await writeFile(
         fixture.config,
-        `import{defineCollection}from"content-query";import{z}from"zod";export const collections={['__proto__']:defineCollection({loader:{name: "fixture", async load({store}) { store.set({id:'__proto__',data:{value:3},body:''}); }},schema:z.object({value:z.number()}),computed:{constructor:{schema:z.string(),resolve:()=>"computed"}}})};`,
+        `import{defineCollection}from"content-query";import { schema } from "content-query/schema";export const collections={['__proto__']:defineCollection({loader:{name: "fixture", async load({store}) { store.set({id:'__proto__',data:{value:3},body:''}); }},schema:schema.object({value:schema.number()}),computed:{constructor:{schema:schema.string(),resolve:()=>"computed"}}})};`,
       );
       await (await buildAtRoot(fixture.root, {})).dispose();
       const { stdout } = await execute(

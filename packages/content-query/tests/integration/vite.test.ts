@@ -177,8 +177,8 @@ describe("Vite preparation and server/client boundaries", () => {
         fixture.config,
         `import { defineCollection } from "content-query";
 import { file } from "content-query/loaders";
-import { z } from "zod";
-export const collections = { posts: defineCollection({loader:file("./content/values.json"),schema:z.object({value:z.coerce.bigint().min(10n)})}) };`,
+import { schema } from "content-query/schema";
+export const collections = { posts: defineCollection({loader:file("./content/values.json"),schema:schema.object({value:schema.coerce.bigint().min(10n)})}) };`,
       );
       await writeFile(
         path.join(fixture.root, "consumer.mjs"),

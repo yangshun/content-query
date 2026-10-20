@@ -1,5 +1,7 @@
 # ContentQuery + Angular
 
+Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
+
 A small documentation site using Angular Router, native `@angular/ssr`, and ContentQuery. Every guide has a dedicated `/docs/<id>/` URL, including nested IDs. The Node server renders the initial HTML; Angular hydrates it and handles subsequent navigation.
 
 ## Run locally

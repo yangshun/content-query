@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, test, vi } from "vite-plus/test";
-import { z } from "zod";
+import { schema } from "../schema.ts";
 import type { CollectionDefinition } from "../collection/types.ts";
 import { buildContent, type BuildContentOptions } from "../build.ts";
 import { buildAtRoot } from "./build.ts";
@@ -26,18 +26,18 @@ describe("content build entry points", () => {
   test("builds typed in-memory content from an explicit custom configuration path", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "content-query-public-build-"));
     const filename = path.join(root, "collections.ts");
-    const schema = z.object({ title: z.string() });
+    const metadata = schema.object({ title: schema.string() });
     type Registry = {
-      posts: CollectionDefinition<typeof schema, {}, {}> & { schema: typeof schema };
+      posts: CollectionDefinition<typeof metadata, {}, {}> & { schema: typeof metadata };
     };
     const library = new URL("../index.ts", import.meta.url);
-    const validator = new URL("../../node_modules/zod/index.js", import.meta.url);
+    const validator = new URL("../schema.ts", import.meta.url);
     try {
       await writeFile(
         filename,
         `import {defineCollection} from ${JSON.stringify(library.href)};
-import {z} from ${JSON.stringify(validator.href)};
-export const collections = {posts: defineCollection({loader: {name: "fixture", async load({store}) { store.set({id: "one", data: {title: "Standalone"}}); }}, schema: z.object({title: z.string()})})};`,
+import {schema} from ${JSON.stringify(validator.href)};
+export const collections = {posts: defineCollection({loader: {name: "fixture", async load({store}) { store.set({id: "one", data: {title: "Standalone"}}); }}, schema: schema.object({title: schema.string()})})};`,
       );
       const session = await buildContent<Registry>({ config: filename, backend: "in-memory" });
       try {

@@ -1,10 +1,10 @@
 import { defineCollection } from "content-query";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 import { markdownExample } from "./feature-example-data";
 
 /** Prepares the homepage's Markdown example with ContentQuery's actual renderer. */
 export const examples = defineCollection({
-  schema: z.object({ title: z.string() }),
+  schema: schema.object({ title: schema.string() }),
   loader: {
     name: "homepage-examples",
     async load(context) {

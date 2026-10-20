@@ -4,7 +4,6 @@ Outstanding tasks and future design notes. Implemented capabilities are document
 
 ## Next
 
-- [ ] Supply a standard schema util under `content-query/schema`.
 - [ ] Remove manual `onContentUpdate` plumbing.
 
 ## Future improvements

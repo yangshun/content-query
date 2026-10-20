@@ -9,6 +9,7 @@ Top-level `src/` files preserve the package entry points. Implementations live w
 ```text
 src/
   collection/     Collection definitions, schema inference, registry checks
+  schema/         Bundled content builders and Standard Schema inference helpers
   query/          Portable query plans, operators, fluent builders, query types
   runtime/        JavaScript execution, projection, relationships, bodies, rendering
   preparation/    Configuration, validation, source updates, sessions, watching
@@ -32,7 +33,7 @@ Declared `file()` and `glob()` inputs have their own subscriptions, including in
 
 Configuration reloads follow the config's evaluated module graph: the config file plus every module Jiti transpiles for it (TypeScript, and CommonJS `.js` inside ESM packages), including modules outside the application root. Editing other application modules neither reloads content nor discards prepared work. Natively loaded `.mjs`, `.cjs`, ESM `.js`, and JSON imports stay in Node's module cache, so a reload cannot observe them; restart the watch session after editing those. While a configuration fails to load, any JavaScript/TypeScript change retries it. Custom loaders can call `context.watcher.add()` for additional files and update their store in watcher callbacks. Glob collections reload only for files their patterns can match, so images, editor swap files, and excluded paths change nothing; removing a directory reloads conservatively.
 
-Application imports such as `content-query/query`, `content-query/computed`, `content-query/build`, and `content-query/vite` remain the supported API. The `content-query/internal` entries exist for generated modules and integration wiring.
+Application imports such as `content-query/schema`, `content-query/query`, `content-query/computed`, `content-query/build`, and `content-query/vite` remain the supported API. The `content-query/internal` entries exist for generated modules and integration wiring.
 
 ## Define collections
 
@@ -40,18 +41,22 @@ Application imports such as `content-query/query`, `content-query/computed`, `co
 // content-query.config.ts — build-only
 import { defineCollection } from "content-query";
 import { file } from "content-query/loaders";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 
 const authors = defineCollection({
   loader: file("./content/authors.json"),
-  schema: z.object({ name: z.string() }),
+  schema: schema.object({ name: schema.string() }),
 });
 
 const posts = defineCollection({
   source: "./content/posts", // A string selects Markdown by default.
-  schema: z.object({ title: z.string(), authorId: z.string(), draft: z.boolean().default(false) }),
+  schema: schema.object({
+    title: schema.string(),
+    authorId: schema.string(),
+    draft: schema.boolean().default(false),
+  }),
   computed: {
-    upperTitle: { schema: z.string(), resolve: ({ data }) => data.title.toUpperCase() },
+    upperTitle: { schema: schema.string(), resolve: ({ data }) => data.title.toUpperCase() },
   },
   relationships: {
     author: {
@@ -77,6 +82,27 @@ Custom loaders can declare `Loader<Source>` and attach `source` to their store e
 
 `glob()` supports Markdown and individual JSON/YAML/TOML records. Default IDs follow Astro's slug generation, raw `slug` override, and trailing `/index` removal. `generateId` overrides this policy. A captured Markdown body excludes frontmatter and the blank lines separating it from the content. `file()` reads multi-entry arrays or keyed objects and accepts an async custom parser. Built-in paths resolve from the application root.
 
+## Bundled schema builders
+
+Install only `content-query` and import `{ schema }` from `content-query/schema`. ContentQuery supplies Zod-backed `object`, `string`, `number`, `boolean`, `bigint`, `date`, `array`, `enum`, `literal`, `union`, `record`, and `unknown` builders, plus `coerce.string()`, `coerce.number()`, `coerce.boolean()`, `coerce.bigint()`, and `coerce.date()`.
+
+Returned schemas retain Zod's chaining methods, including `.optional()`, `.nullable()`, `.default()`, `.refine()`, and `.transform()`. Nested composition follows Zod's rules. The namespace exposes the selected builders, without provider-level parsing utilities, error classes, or configuration. Validation still uses Standard Schema; you can supply another compatible provider's schemas for collections and computed fields.
+
+The type-only helpers `schema.input<Validator>`, `schema.output<Validator>`, and `schema.infer<Validator>` work with any Standard Schema V1 provider. `infer` is an alias for validated output, including defaults and transforms:
+
+```ts
+import { schema } from "content-query/schema";
+
+const postSchema = schema.object({
+  title: schema.string(),
+  draft: schema.boolean().default(false),
+});
+type PostInput = schema.input<typeof postSchema>; // draft is optional.
+type Post = schema.infer<typeof postSchema>; // draft is boolean.
+```
+
+Builders run during preparation. Generated runtime JavaScript imports neither the schemas nor Zod.
+
 ## Reusable computed fields
 
 `content-query/computed` exports `readingTime()`, `wordCount()`, and `excerpt()`. They return ordinary `{ schema, resolve }` definitions with Standard Schema result types, and can sit alongside custom computed fields:
@@ -99,7 +125,7 @@ For structured data, type the selector from the collection schema. For example, 
 
 ```ts
 computed: {
-  summary: excerpt<z.infer<typeof articleSchema>>({
+  summary: excerpt<schema.infer<typeof articleSchema>>({
     from: ({ data }) => data.description,
     format: "text",
     maxLength: 160,
@@ -120,12 +146,12 @@ ContentQuery uses Astro’s named, store-writing content loader contract directl
 ```ts
 import { defineCollection } from "content-query";
 import { csvLoader } from "@ascorbic/csv-loader";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 
 export const collections = {
   authors: defineCollection({
     loader: csvLoader({ fileName: "./content/authors.csv", idField: "id" }),
-    schema: z.object({ name: z.string() }),
+    schema: schema.object({ name: schema.string() }),
   }),
 };
 ```

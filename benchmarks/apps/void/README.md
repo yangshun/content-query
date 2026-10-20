@@ -1,5 +1,7 @@
 # Void + ContentQuery benchmark app
 
+Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
+
 The workspace ContentQuery Vite plugin loads and validates `content/entries/*.md`. The homepage loader queries every title and description, and React renders a link for every item. `pages/entries/[id].server.ts` exports `getPrerenderPaths()` for the entire collection; each route queries its metadata and renders its own Markdown body.
 
 The static build produces `dist/client/index.html` and one `dist/client/entries/<id>.html` per entry: 10,001 content HTML pages. React receives selected metadata and rendered HTML through the native Void page loader.

@@ -10,7 +10,7 @@ Use `withContentQuery()` in an existing Next.js 16 App Router application. The a
 ## Install and define content
 
 ```sh
-npm install content-query zod
+npm install content-query
 ```
 
 Create `content-query.config.ts` and your content files at the application root. The [quick start](/docs/quick-start#define-a-collection) defines a `posts` collection you can use with the examples below.

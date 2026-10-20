@@ -10,7 +10,7 @@ This walkthrough uses the CLI so you can try ContentQuery without choosing a fra
 ## Install
 
 ```sh
-npm install content-query zod
+npm install content-query
 ```
 
 ## Define a collection
@@ -19,14 +19,14 @@ Create `content-query.config.ts` in your project root:
 
 ```ts
 import { defineCollection } from "content-query";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 
 export const collections = {
   posts: defineCollection({
     source: "./content/posts",
-    schema: z.object({
-      title: z.string(),
-      draft: z.boolean().default(false),
+    schema: schema.object({
+      title: schema.string(),
+      draft: schema.boolean().default(false),
     }),
   }),
 };

@@ -23,6 +23,7 @@
     "./next": "./dist/next.mjs",
     "./query": "./dist/query.mjs",
     "./runtime": "./dist/runtime.mjs",
+    "./schema": "./dist/schema.mjs",
     "./vite": "./dist/vite.mjs",
     "./package.json": "./package.json"
   },

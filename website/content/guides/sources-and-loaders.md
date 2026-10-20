@@ -20,7 +20,7 @@ import { file } from "content-query/loaders";
 
 const authors = defineCollection({
   loader: file("./content/authors.json"),
-  schema: z.object({ name: z.string() }),
+  schema: schema.object({ name: schema.string() }),
 });
 ```
 
