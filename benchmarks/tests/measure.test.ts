@@ -1,9 +1,16 @@
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { clearCaches, verifyStaticOutput } from "../scripts/measure.ts";
-import { apps, command } from "../scripts/config.ts";
+import {
+  apps,
+  appDirectory,
+  benchmarkRoot,
+  bundlerDependency,
+  command,
+  executable,
+} from "../scripts/config.ts";
 
 describe("cold application caches", () => {
   test("removes native framework caches while preserving dependencies and source content", async () => {
@@ -121,6 +128,40 @@ describe("full-site build validation", () => {
       } finally {
         await rm(root, { recursive: true, force: true });
       }
+    },
+  );
+});
+
+describe("application toolchains", () => {
+  test("resolves each app's own Vite+ CLI instead of whichever vp is first on PATH", () => {
+    for (const app of apps) {
+      expect(executable("/suite", app)).toBe(
+        path.join("/suite", "apps", app.id, "node_modules", ".bin", "vp"),
+      );
+    }
+    expect(executable(benchmarkRoot, apps[0])).not.toBe(
+      path.join(benchmarkRoot, "node_modules", ".bin", "vp"),
+    );
+  });
+
+  test("names the bundler dependency each package declares", () => {
+    expect(bundlerDependency({ dependencies: { "@voidzero-dev/vite-plus-core": "0.1.16" } })).toBe(
+      "@voidzero-dev/vite-plus-core",
+    );
+    expect(
+      bundlerDependency({ dependencies: { vite: "npm:@voidzero-dev/vite-plus-core@1.3.0" } }),
+    ).toBe("vite");
+    expect(bundlerDependency({ dependencies: { vite: "^8.3.4" } })).toBe("vite");
+    expect(bundlerDependency({})).toBe("vite");
+  });
+
+  test.skipIf(process.platform === "win32").each(apps)(
+    "$id runs the vite-plus package recorded in the report",
+    async (app) => {
+      const shim = await readFile(executable(benchmarkRoot, app), "utf8");
+      // pnpm shims execute the sibling package, so the CLI is the app's installed vite-plus.
+      expect(shim).toContain('"$basedir/../vite-plus/bin/vp"');
+      await access(path.join(appDirectory(benchmarkRoot, app), "node_modules/vite-plus/bin/vp"));
     },
   );
 });

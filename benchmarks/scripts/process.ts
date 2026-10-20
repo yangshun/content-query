@@ -187,19 +187,20 @@ export async function waitForListening(
 
 /** Runs a build to completion, killing its process tree on failure or timeout. */
 export async function runCommand(
+  executable: string,
   arguments_: string[],
   cwd: string,
   log: string,
   timeout: number,
 ): Promise<number> {
-  const process_ = await startProcess("vp", arguments_, cwd, log);
+  const process_ = await startProcess(executable, arguments_, cwd, log);
   try {
     const result = await withTimeout(process_.closed, timeout, "Command");
     if (result.error || result.code !== 0) {
       throw (
         result.error ??
         new Error(
-          `Command failed (${result.code}): vp ${arguments_.join(" ")}\n${process_.output()}`,
+          `Command failed (${result.code}): ${executable} ${arguments_.join(" ")}\n${process_.output()}`,
         )
       );
     }

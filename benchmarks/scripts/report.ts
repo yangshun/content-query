@@ -1,6 +1,7 @@
 import type { Corpus } from "./generate.ts";
 import { stripVTControlCharacters } from "node:util";
 import { apps, workload } from "./config.ts";
+import type { SettleOptions } from "./host.ts";
 import type { Sample } from "./measure.ts";
 
 export type Report = {
@@ -27,8 +28,56 @@ export type Report = {
     contentQueryArtifactsSha256: string;
     packages: Record<string, Record<string, string>>;
   };
+  /** Measurement controls; absent from reports recorded before they existed. */
+  control?: {
+    seed: number;
+    /** Application IDs in the order measured, one list per repetition. */
+    orders: string[][];
+    settle: SettleOptions;
+    /** Whether Spotlight indexed new files under the applications directory; `null` if unknown. */
+    spotlightIndexesApps: boolean | null;
+  };
   samples: Sample[];
 };
+
+function percent(fraction: number): string {
+  return `${(fraction * 100).toFixed(0)}%`;
+}
+
+/** Describes app ordering, the pre-sample settle gate, and samples that started on a busy host. */
+function renderControl(report: Report): string[] {
+  const control = report.control;
+  if (!control) {
+    return ["Measurement controls were not recorded for this run."];
+  }
+  const { threshold, windows, windowMs, timeoutMs } = control.settle;
+  const observed = report.samples.flatMap((sample) => (sample.host ? [sample.host] : []));
+  const unsettled = report.samples.filter((sample) => sample.host && !sample.host.settled);
+  const idle = statistics(observed.map((host) => host.idle));
+  const waited = statistics(observed.map((host) => host.waitedMs));
+  const lines = [
+    `App order was shuffled independently for each repetition with seed \`${control.seed}\`:`,
+    "",
+    ...control.orders.map((order, index) => `${index + 1}. ${order.join(", ")}`),
+    "",
+    `Before every sample, the runner waited until host CPU was at least ${percent(threshold)} idle, averaged over ${windows} consecutive ${windowMs / 1_000}-second windows, for up to ${timeoutMs / 1_000} seconds. ${observed.length - unsettled.length}/${observed.length} samples started on a settled host.${idle && waited ? ` Median idle before a sample: ${percent(idle.median)} (${percent(idle.min)}–${percent(idle.max)}); median wait: ${(waited.median / 1_000).toFixed(1)} s (maximum ${(waited.max / 1_000).toFixed(1)} s).` : ""}`,
+    "",
+    control.spotlightIndexesApps === null
+      ? "Spotlight indexing of application output could not be determined."
+      : control.spotlightIndexesApps
+        ? "Spotlight indexed new files under the applications directory during this run. Indexing competes with stacks in proportion to the files they write; add the directory to Spotlight's privacy list to exclude it."
+        : "Spotlight did not index new files under the applications directory during this run.",
+  ];
+  if (unsettled.length) {
+    lines.push("", "Samples that started before the host settled:", "");
+    for (const sample of unsettled) {
+      lines.push(
+        `- ${sample.app}, ${sample.phase}, ${sample.cache}, repetition ${sample.repetition}: ${percent(sample.host!.idle)} idle; load average ${sample.host!.loadAverage.map((value) => value.toFixed(2)).join(", ")}.`,
+      );
+    }
+  }
+  return lines;
+}
 
 /** Summarizes only supplied successful values, retaining an honest empty result for failures. */
 export function statistics(
@@ -113,14 +162,19 @@ export function renderReport(report: Report): string {
     "",
     "## Method",
     "",
-    "- Three cold/warm pairs by default. Only one framework and measurement type (startup or build) runs at a time, rotating app order between repetitions. Each server, build, and validation preview is shut down before the next sample starts. No Vite task-result cache is used.",
+    "- Three cold/warm pairs by default, all six stacks in one run. Only one framework and measurement type (startup or build) runs at a time, in a seeded random app order per repetition. Each server, build, and validation preview is shut down before the next sample starts. No Vite task-result cache is used.",
+    "- Before every sample, the runner waits for host CPU to become idle, so background work triggered by earlier samples, such as file indexing of tens of thousands of emitted pages, does not overlap the next measurement. Host state before each sample is recorded in the raw results.",
     "- Cold means application content/framework/build and local dependency-optimizer caches are removed. OS filesystem caches remain warm, especially because the inputs are hardlinked. This is not a machine cold-boot benchmark.",
     "- Startup uses a prelaunched Chromium with a fresh browser context and page. Timing begins immediately before spawning the dev command. TCP readiness does not request the app. Content usability verifies every homepage title, description, and item link, then directly loads the first and last articles and verifies their own metadata and rendered Markdown.",
     "- Build timing ends at successful command completion, including content processing, bundling, route enumeration, and all item prerendering. Outside the build timer, validation audits every emitted item HTML file and the complete homepage, then serves and checks the output in Chromium. A client shell, missing page, or article with another item's body fails validation and excludes the sample.",
     "- Dependency installation, ContentQuery package compilation, corpus generation, browser launch, cache cleanup, and shutdown are excluded from timings. Startup timeout: five minutes; build timeout: ten minutes.",
     "- Inputs are plain Markdown with no images, code fences, or custom plugins. Native content processing defaults are retained. Nuxt uses Node's native SQLite connector.",
     "- Astro uses getStaticPaths(), Nuxt uses nuxt generate with link crawling, Void uses getPrerenderPaths(), Next.js uses generateStaticParams() with output: export, and TanStack Start uses its native prerender link crawler. Vite + React uses a small Vite SSR/SSG build script; both browser and server compilation and rendering every page are included in its build timer.",
-    "- Results compare complete application stacks under this workspace's Vite+ configuration. Next.js uses its native Turbopack bundler; Vite-based stacks inherit the workspace dependency overrides. All apps produce a full static content site; their JavaScript hydration, data payloads, content artifacts, and build machinery differ. ContentQuery's Next.js adapter uses generated artifacts; its Vite adapter defaults to in-memory storage.",
+    "- Results compare complete application stacks under this workspace's Vite+ configuration. Next.js uses its native Turbopack bundler; Vite-based stacks inherit the workspace dependency overrides. Every command runs through the app's own Vite+ CLI, so each stack uses the toolchain version it declares. All apps produce a full static content site; their JavaScript hydration, data payloads, content artifacts, and build machinery differ. ContentQuery's Next.js adapter uses generated artifacts; its Vite adapter defaults to in-memory storage.",
+    "",
+    "## Order and host load",
+    "",
+    ...renderControl(report),
     "",
     "## Environment",
     "",

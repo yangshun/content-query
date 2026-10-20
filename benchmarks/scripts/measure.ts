@@ -10,9 +10,11 @@ import {
   buildTimeout,
   cacheDirectories,
   command,
+  executable,
   startupTimeout,
 } from "./config.ts";
 import { entryNumber } from "./generate.ts";
+import type { HostState } from "./host.ts";
 import {
   availablePort,
   runCommand,
@@ -34,6 +36,8 @@ export type Sample = {
   log: string;
   error?: string;
   prerenderedPages?: number;
+  /** Host CPU state observed immediately before the timer started. */
+  host?: HostState;
 };
 
 /** Clears only known generated paths; dependencies, source files, and OS caches remain. */
@@ -140,17 +144,21 @@ export async function measureStartup(
   preview = false,
 ): Promise<{ durationMs: number; listenMs: number }> {
   const context = await browser.newContext();
-  const page = await context.newPage();
+  const errors: string[] = [];
+  const openPage = async () => {
+    const opened = await context.newPage();
+    opened.on("pageerror", (error) => errors.push(error.message));
+    return opened;
+  };
+  let page = await openPage();
   const port = await availablePort();
   const process_ = await startProcess(
-    "vp",
+    executable(root, app),
     command(app, preview ? "preview" : "dev", port),
     appDirectory(root, app),
     log,
   );
   const deadline = process_.started + startupTimeout;
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
   try {
     const listenMs = await waitForListening(port, process_, deadline);
     while (performance.now() < deadline) {
@@ -196,6 +204,10 @@ export async function measureStartup(
         ) {
           throw cause;
         }
+        // A navigation aborted by the app's own reload, such as Astro's after its client connects,
+        // can leave the page unable to navigate again; retry from a fresh page in the same context.
+        await page.close();
+        page = await openPage();
         await sleep(50);
       }
     }
@@ -236,6 +248,7 @@ export async function measureSample(
       Object.assign(sample, await measureStartup(browser, app, root, count, log));
     } else {
       sample.durationMs = await runCommand(
+        executable(root, app),
         command(app, "build"),
         appDirectory(root, app),
         log,
