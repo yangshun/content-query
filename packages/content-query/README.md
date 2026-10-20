@@ -32,7 +32,7 @@ Declared `file()` and `glob()` inputs have their own subscriptions, including in
 
 Configuration reloads follow the config's evaluated module graph: the config file plus every module Jiti transpiles for it (TypeScript, and CommonJS `.js` inside ESM packages), including modules outside the application root. Editing other application modules neither reloads content nor discards prepared work. Natively loaded `.mjs`, `.cjs`, ESM `.js`, and JSON imports stay in Node's module cache, so a reload cannot observe them; restart the watch session after editing those. While a configuration fails to load, any JavaScript/TypeScript change retries it. Custom loaders can call `context.watcher.add()` for additional files and update their store in watcher callbacks. Glob collections reload only for files their patterns can match, so images, editor swap files, and excluded paths change nothing; removing a directory reloads conservatively.
 
-Application imports such as `content-query/query`, `content-query/build`, and `content-query/vite` remain the supported API. The `content-query/internal` entries exist for generated modules and integration wiring.
+Application imports such as `content-query/query`, `content-query/computed`, `content-query/build`, and `content-query/vite` remain the supported API. The `content-query/internal` entries exist for generated modules and integration wiring.
 
 ## Define collections
 
@@ -76,6 +76,40 @@ Computed resolvers receive the registry key `collection`, entry `id`, validated 
 Custom loaders can declare `Loader<Source>` and attach `source` to their store entries. `defineCollection()` infers that metadata type for resolvers independently of schema-validated `data`. Source metadata is detached for every resolver, must contain supported data values, and stays out of deployed artifacts unless returned by a computed field. Untyped loaders expose `unknown` source metadata, which must be narrowed before accessing fields.
 
 `glob()` supports Markdown and individual JSON/YAML/TOML records. Default IDs follow Astro's slug generation, raw `slug` override, and trailing `/index` removal. `generateId` overrides this policy. A captured Markdown body excludes frontmatter and the blank lines separating it from the content. `file()` reads multi-entry arrays or keyed objects and accepts an async custom parser. Built-in paths resolve from the application root.
+
+## Reusable computed fields
+
+`content-query/computed` exports `readingTime()`, `wordCount()`, and `excerpt()`. They return ordinary `{ schema, resolve }` definitions with Standard Schema result types, and can sit alongside custom computed fields:
+
+```ts
+import { excerpt, readingTime, wordCount } from "content-query/computed";
+
+computed: {
+  readingMinutes: readingTime({ wordsPerMinute: 200 }),
+  wordCount: wordCount(),
+  excerpt: excerpt({ maxLength: 160 }),
+}
+```
+
+Reading time is a whole number of minutes rounded up, defaulting to 200 words per minute. Word count uses the `reading-time` package's estimated word boundaries, including its CJK handling. Excerpts are normalized plain text, defaulting to at most 160 Unicode graphemes including a trailing `…` when shortened. They prefer whole words and preserve emoji and combining characters. Empty or absent text produces `0` or `""`.
+
+`TextOptions<Data, Source>` supplies `format: "markdown" | "text" | "html"` (default `"markdown"`) and optional `from(context)` for synchronous or asynchronous text selection. Omit `from` to use the captured body. Markdown extraction retains prose, code, and image alternatives while dropping syntax and link destinations. HTML extraction decodes entities and separates blocks, skips comments and head/script/style/template/noscript/hidden content, and does not evaluate CSS. Text mode preserves literal markup and entities. Whitespace is normalized in every format.
+
+For structured data, type the selector from the collection schema. For example, alongside `schema: articleSchema`:
+
+```ts
+computed: {
+  summary: excerpt<z.infer<typeof articleSchema>>({
+    from: ({ data }) => data.description,
+    format: "text",
+    maxLength: 160,
+  }),
+}
+```
+
+Supply loader metadata as the second type argument when selecting from `source`. `ReadingTimeOptions<Data, Source>` adds finite positive `wordsPerMinute`; `ExcerptOptions<Data, Source>` adds positive-safe-integer `maxLength`. Bad options fail at declaration time. Selectors must return a string or `undefined`; failures become normal contextual preparation diagnostics, and helpers honor the resolver's abort signal.
+
+Results become ordinary typed fields for selection, filtering, and sorting. Helpers run during preparation, including with `retainBody: false`; deployed queries import neither these helpers nor their text-processing dependencies. Text helpers use a Markdown parser without initializing syntax highlighting. See the [computed fields guide](../../website/content/guides/computed-fields.md) for complete configurations and queries.
 
 ## Astro-compatible content loaders
 

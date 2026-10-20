@@ -364,6 +364,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
     "content-query:server",
     "./.content-query/server.js",
     "content-query/query",
+    "content-query/computed",
     "./content-query.config.ts",
     "./content-query.config.mts",
     "./content-query.config.cts",

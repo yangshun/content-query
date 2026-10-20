@@ -4,6 +4,7 @@ export default defineConfig({
   pack: {
     entry: {
       index: "src/index.ts",
+      computed: "src/computed.ts",
       loaders: "src/loaders.ts",
       query: "src/query.ts",
       build: "src/build.ts",

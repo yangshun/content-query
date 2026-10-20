@@ -394,6 +394,16 @@ Computed fields run during preparation and become selectable, filterable, and so
 
 `defineCollection(...)` remains the inference boundary for source metadata and computed results. There is no v1 `deferred` group or query `.resolve(...)` method. Application-defined on-demand processing is ordinary server code; the built-in Markdown renderer has its own explicit runtime operation and fixed result contract.
 
+### Reusable computed text fields
+
+Status: reading time, word count, and excerpt helpers implemented on October 19, 2026. Queryable headings and table-of-contents helpers remain deferred.
+
+`content-query/computed` exports `readingTime(options?)`, `wordCount(options?)`, and `excerpt(options?)` as ordinary `{ schema, resolve }` computed definitions with Standard Schema output types. Field names remain application-owned. Reading time returns whole minutes rounded up, with a default speed of 200 words per minute. Word count follows the `reading-time` package's estimated word boundaries. Excerpts return plain text with a default maximum of 160 graphemes, including a trailing ellipsis, preserving complete Unicode graphemes and preferring word boundaries.
+
+All helpers default to `readBody()` and Markdown input. A typed `from(context)` selector can return text or a promise from metadata, loader source metadata, or another captured input. `format: "text" | "markdown" | "html"` controls extraction. Markdown syntax and link destinations are removed while code and image alternatives remain. HTML extraction decodes entities, separates blocks, and excludes comments and head/script/style/template/noscript/hidden elements without executing scripts or evaluating CSS. Text mode preserves literal syntax. Whitespace is normalized; undefined input is empty, and other non-string inputs fail with ordinary computed-field diagnostics.
+
+Custom selectors use explicit `Data` and optional `Source` type arguments; the surrounding collection object does not contextually infer nested helper arguments. Reading speed must be finite and positive; excerpt length must be a positive safe integer. Helpers observe cancellation around asynchronous input selection. They run during preparation even when raw bodies are not publicly retained, require no syntax highlighter, and add no helper/config/parser imports to deployed query graphs.
+
 ### Collection authoring and build-only configuration
 
 Status: agreed on October 18, 2026. This supersedes the earlier proposal that production could import combined or loader-free shared collection definitions.
@@ -1322,11 +1332,11 @@ A collection-wide context changes invalidation: one edit can affect every depend
 
 ### Built-in derived fields
 
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
+Status: reading time, word count, and excerpt helpers implemented on October 19, 2026. Other derived fields remain deferred beyond v1.
 
-Velite ships `s.toc()`, `s.excerpt()`, `s.metadata()` (reading time and word count), `s.slug()`, and `s.unique()`. ContentQuery computed fields can implement these with `readBody()`, but none are provided. Rendered headings are available only from `content.render()`, not from queries.
+`content-query/computed` exports `readingTime()`, `wordCount()`, and `excerpt()` as reusable computed definitions with Standard Schema results. Helpers support captured Markdown bodies and typed selectors for text/HTML fields. See the [implemented contract](#reusable-computed-text-fields).
 
-Candidate helpers are ordinary computed definitions exported from a library module, each with a Standard Schema result. Queryable headings or excerpts derived from rendered output would make computed preparation depend on Markdown compilation, which [guideline 8](#8-make-expensive-work-explicit) requires to be an explicit choice. Uniqueness across a collection depends on the [collection-wide context](#collection-wide-computed-context).
+Queryable headings, table of contents, slug helpers, and uniqueness helpers remain future work. Rendered headings are available only from `content.render()`. Any helper derived from rendered output must make its compilation cost explicit under [guideline 8](#8-make-expensive-work-explicit), and uniqueness across a collection depends on the [collection-wide context](#collection-wide-computed-context).
 
 ### Persistent preparation cache and benchmarks
 
