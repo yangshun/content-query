@@ -31,9 +31,33 @@ export async function writeChanged(
   }
 }
 
-/** Publishes a complete immutable module without overwriting any earlier revision's bytes. */
+/** Checks reusable immutable bytes, retaining corruption diagnostics instead of overwriting them. */
+async function existingImmutable(filename: string, source: string): Promise<boolean> {
+  let existing: string;
+  try {
+    existing = await readFile(filename, "utf8");
+  } catch (cause) {
+    if (cause && typeof cause === "object" && "code" in cause && cause.code === "ENOENT") {
+      return false;
+    }
+    throw cause;
+  }
+  if (existing !== source) {
+    throw new ContentError({
+      code: "artifact-error",
+      operation: "build",
+      source: filename,
+      message: "An immutable artifact key has conflicting bytes. Regenerate the output directory.",
+    });
+  }
+  return true;
+}
+
+/** Publishes into an existing directory without rewriting an earlier revision's immutable bytes. */
 async function writeImmutable(filename: string, source: string): Promise<void> {
-  await mkdir(path.dirname(filename), { recursive: true });
+  if (await existingImmutable(filename, source)) {
+    return;
+  }
   const temporary = `${filename}.tmp-${process.pid}-${randomUUID()}`;
   await writeFile(temporary, source);
   try {
@@ -43,15 +67,8 @@ async function writeImmutable(filename: string, source: string): Promise<void> {
       if (!cause || typeof cause !== "object" || !("code" in cause) || cause.code !== "EEXIST") {
         throw cause;
       }
-      if ((await readFile(filename, "utf8")) !== source) {
-        throw new ContentError({
-          code: "artifact-error",
-          operation: "build",
-          source: filename,
-          message:
-            "An immutable artifact key has conflicting bytes. Regenerate the output directory.",
-          cause,
-        });
+      if (!(await existingImmutable(filename, source))) {
+        throw cause;
       }
     }
   } finally {
@@ -118,7 +135,7 @@ export type WriteArtifactsOptions = {
   prune?: boolean;
 };
 
-/** Stages immutable modules before atomically switching the public server entry. */
+/** Stages modules with bounded I/O before atomically switching the public server entry. */
 export async function writeArtifacts(
   revision: PreparedRevision,
   outDir: string,
@@ -129,14 +146,29 @@ export async function writeArtifacts(
   await writeChanged(path.join(outDir, "package.json"), '{"type":"module","private":true}\n');
   await writeChanged(path.join(outDir, "server.d.ts"), contentDeclarations(outDir, config));
   await writeChanged(path.join(outDir, "types.d.ts"), virtualDeclarations(outDir, config));
-  for (const [filename, code] of modules) {
-    if (filename !== "server.js") {
-      if (immutableModule.test(`/${filename}`)) {
-        await writeImmutable(path.join(outDir, filename), code);
-      } else {
-        await writeChanged(path.join(outDir, filename), code);
+  const staged = [...modules].filter(([filename]) => filename !== "server.js");
+  const directories = new Set(
+    staged.map(([filename]) => path.dirname(path.join(outDir, filename))),
+  );
+  await Promise.all(
+    [...directories].map(async (directory) => mkdir(directory, { recursive: true })),
+  );
+  const pending = staged.values();
+  const outcomes = await Promise.allSettled(
+    Array.from({ length: Math.min(16, staged.length) }, async () => {
+      for (const [filename, code] of pending) {
+        signal?.throwIfAborted();
+        if (immutableModule.test(`/${filename}`)) {
+          await writeImmutable(path.join(outDir, filename), code);
+        } else {
+          await writeChanged(path.join(outDir, filename), code);
+        }
       }
-    }
+    }),
+  );
+  const failure = outcomes.find((outcome) => outcome.status === "rejected");
+  if (failure?.status === "rejected") {
+    throw failure.reason;
   }
   await writeChanged(path.join(outDir, "server.js"), modules.get("server.js")!, signal);
   // Watch sessions keep superseded modules for operations pinned to earlier revisions.

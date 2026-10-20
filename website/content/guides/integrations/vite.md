@@ -22,6 +22,8 @@ Server modules import `content` from `content-query:server`. Include `.content-q
 
 ## Development updates
 
+The plugin excludes generated content artifacts from Vite's watcher and preserves your configured ignores. It watches authored sources and configuration separately, so publishing a large collection does not trigger application file events for every generated payload.
+
 Vite watches source and configuration changes. Connect the browser-safe `onContentUpdate()` subscription from `content-query:client` to your framework's data refresh:
 
 ```ts
@@ -35,3 +37,9 @@ const unsubscribe = onContentUpdate(async () => {
 `refreshPageData()` stands for your router's refresh function. Register it in your framework's lifecycle hook, and unsubscribe on cleanup. The production subscription is a no-op.
 
 See the [framework guides](/docs/integrations/frameworks) for the server boundaries and refresh methods used by the examples.
+
+## Production builds
+
+Content preparation runs in server environments. Client compilation still enforces the server import boundary and does not repeat content loading or Markdown compilation.
+
+Before bundling, the plugin packs server payloads into lazy source modules targeting 128 KiB. This also avoids per-item facade modules in hosts that require strict entry signatures. Default metadata queries do not import bodies; rendering one entry can load neighboring payloads in its module. Your output and chunking settings continue to control the final bundle. Standalone generated artifacts remain ordinary per-item ESM modules.

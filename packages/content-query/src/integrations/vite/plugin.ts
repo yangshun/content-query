@@ -11,6 +11,7 @@ import type { ContentState, PreparedRevision } from "../../runtime/revision.ts";
 import type { ContentError } from "../../shared/errors.ts";
 
 import { clientEnvironment, physicalPath, forbidden } from "./client-boundary.ts";
+import { withinDirectory } from "../../shared/paths.ts";
 import {
   facade,
   preparedFacade,
@@ -142,7 +143,9 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
             config.server.watch !== null,
         },
         (state) => {
-          void changed(state).catch(deliveryFailed);
+          if (config.command === "serve") {
+            void changed(state).catch(deliveryFailed);
+          }
         },
       );
       session = prepared;
@@ -189,6 +192,17 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
     configResolved(resolved) {
       config = resolved;
       building ||= resolved.command === "build";
+      if (resolved.server.watch !== null) {
+        const ignored = resolved.server.watch?.ignored;
+        const output = path.resolve(resolved.root, options.outDir ?? "./.content-query");
+        resolved.server.watch = {
+          ...resolved.server.watch,
+          ignored: [
+            ...(ignored === undefined ? [] : Array.isArray(ignored) ? ignored : [ignored]),
+            (filename) => withinDirectory(output, path.resolve(filename)),
+          ],
+        };
+      }
     },
     async configureServer(viteServer) {
       server = viteServer;
@@ -197,9 +211,14 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
       await ensureSession();
     },
     async buildStart() {
+      if (config.command === "build" && clientEnvironment(this, config)) {
+        return;
+      }
       const prepared = await ensureSession();
-      if (config.command === "build" && options.backend === "in-memory") {
-        modules = await revisionModules(sessionInternals(prepared).state.revision!);
+      if (config.command === "build") {
+        modules = await revisionModules(sessionInternals(prepared).state.revision!, {
+          payloadChunkBytes: 128 * 1024,
+        });
       }
     },
     resolveId(source, importer, resolveOptions) {
@@ -227,9 +246,8 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
         return `${virtualPrefix}${path.posix.normalize(path.posix.join(path.posix.dirname(importer.slice(virtualPrefix.length)), source))}`;
       }
       if (
-        config.command === "serve" &&
         physicalPath(source, config, importer) ===
-          path.resolve(config.root, options.outDir ?? "./.content-query", "server.js")
+        path.resolve(config.root, options.outDir ?? "./.content-query", "server.js")
       ) {
         return `${virtualPrefix}server.js`;
       }
@@ -255,9 +273,6 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
           return modules.get("server.js");
         }
         return modules.get(id.slice(virtualPrefix.length));
-      }
-      if (options.backend !== "in-memory" && id === `${virtualPrefix}server.js`) {
-        return `export { content } from ${JSON.stringify(path.resolve(config.root, options.outDir ?? "./.content-query", "server.js"))};`;
       }
       return modules.get(id.slice(virtualPrefix.length));
     },
