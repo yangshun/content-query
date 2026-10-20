@@ -30,6 +30,10 @@ Vite production builds prepare content only for server graphs. Before bundling, 
 
 The Vite plugin defaults to in-memory preparation with virtual modules and bundled production output. Standalone artifact publication requires `backend: "generated"` in Vite; the CLI, standalone build API, and Next.js adapter retain generated storage by default.
 
+The Next.js adapter distinguishes the detached telemetry helper from the application lifecycle. That helper can evaluate development configuration without preparing content or leaving a watch session alive after the application exits.
+
+If a declared file or glob base directory is initially missing, its own metadata is also polled to recover a lost ancestor creation notification and restore native source subscriptions. This does not poll every file in a collection or change generated-output exclusions.
+
 Checked on October 18, 2026 against [Astro content collections](https://docs.astro.build/en/guides/content-collections/) 7.x, [Content Collections](https://www.content-collections.dev/) (`@content-collections/core` 0.15.3), and [Velite](https://velite.js.org/) 0.4.0, with 1.0.0-alpha.3 in progress. Claims about other libraries come from their documentation. Direct loader compatibility is additionally exercised with the published `@ascorbic/csv-loader` 2.0.3 and Astro 7.4.0 types, including live CSV edits and a generated consumer that blocks Astro/loader imports at runtime. That loader’s declared Astro peer range remains 4/5; the fixture verifies its actual behavior against the current public contract.
 
 | Concern                | ContentQuery                                                                            | Astro                                                   | Content Collections                                   | Velite                                              |
@@ -55,7 +59,7 @@ Per-entry computed context includes the collection registry key, entry ID, valid
 
 ### Where ContentQuery is ahead
 
-1. **Querying.** The others return arrays and leave filtering, sorting, and pagination to application code; Content Collections documents that it does not provide sorting. ContentQuery provides typed operators, deterministic ordering with ID tie-breakers, pagination, and counts. Its query plan is separate from JavaScript execution, so a SQLite backend can share the contract.
+1. **Querying.** The others return arrays and leave filtering, sorting, and pagination to application code; Content Collections documents that it does not provide sorting. ContentQuery provides typed operators, deterministic ordering with ID tie-breakers, pagination, and counts. Equality-constrained ID queries use a lazy index per collection revision for repeated detail-page lookups. Its query plan is separate from JavaScript execution, so a SQLite backend can share the contract.
 2. **Relationships.** Declared forward and inverse relationships, authored ID arrays, per-scope selection, filtering, ordering, and pagination, plus preparation-time rejection of dangling or ambiguous references. Astro's `reference()` stores IDs that pages resolve one call at a time, with no inverse lookups. Content Collections joins inside `transform` against untransformed documents. Velite has no relationship model.
 3. **Payload separation.** Listing queries never load bodies, HTML, or a compiler, and projection is mandatory. Content Collections and Velite place compiled content in the same generated document as metadata, so importing a collection imports every body. Astro separates `render()` but still returns full entry data.
 4. **Portable, server-only output.** Generated output is ordinary ESM that runs without Vite, sources, or `content-query.config`. The Vite plugin rejects direct and transitive client imports. Astro is framework-bound, Content Collections needs a `writer` hook to add `server-only`, and Velite emits importable JSON without a boundary.
@@ -67,7 +71,7 @@ Per-entry computed context includes the collection registry key, entry ID, valid
 
 ### Gaps
 
-Ordered roughly by impact on a documentation site such as VoidPress. Each gap has a note under [future extensions](./PLAN.md#future-extensions).
+Ordered roughly by impact on a documentation site such as VoidPress. Each gap has a note under [future extensions](./TODO.md#future-extensions).
 
 1. **Fixed Markdown pipeline.** [`renderMarkdown()`](../packages/content-query/src/runtime/markdown.ts) hardcodes markdown-exit options and GitHub Light/Dark Shiki themes, and accepts no plugins. Astro, `@content-collections/markdown`, and Velite all accept remark/rehype plugins, which documentation sites use for callouts, math, code block titles, and link handling. Library-owned processing is deliberate because deployed rendering cannot replay application callbacks. Eager compilation (`deferRender: false`) runs at build time, so build-only plugins or serializable options could fit that boundary.
 2. **Assets and images.** Authored image and link URLs pass through unchanged, so relative images in Markdown need application handling. Astro provides `image()` and optimization. Velite's `s.image()` and `s.file()` copy, hash, and measure assets and generate blur placeholders.
@@ -77,7 +81,7 @@ Ordered roughly by impact on a documentation site such as VoidPress. Each gap ha
 6. **Persistent caching and evidence.** The preparation cache lives for one session ([`session.ts`](../packages/content-query/src/preparation/session.ts)), so every cold build repeats all work. Astro persists its data store, digests, and loader `meta` between builds; Content Collections memoizes transforms with `cache()`. Astro and Velite publish scale claims, while ContentQuery has no benchmark.
 7. **Singletons.** Content Collections has `defineSingleton()` and Velite has `single: true`. ContentQuery's `file()` treats a top-level object as keyed entries, so site settings need a wrapper entry and `first()`.
 8. **Remaining Astro host dependencies.** Content loaders now use the native named `load(context)`/store contract directly, with `schema`, `createSchema()`, `parseData()`, Markdown, digests, logger/config helpers, session metadata, and development watcher callbacks. No wrapper is needed. Full Astro configuration, persistent stores, integration hooks, component modules, image imports, and framework-specific deferred rendering remain separate capabilities. Unsupported rendering imports fail explicitly; compatibility is tested rather than claimed for every package.
-9. **Live collections.** Astro live loaders fetch per request and return cache hints. ContentQuery defers this; see the [future notes](./PLAN.md#live-collections-and-runtime-source-loading).
+9. **Live collections.** Astro live loaders fetch per request and return cache hints. ContentQuery defers this; see the [future notes](./TODO.md#live-collections-and-runtime-source-loading).
 10. **Host and editor integration.** Content Collections ships Next.js, Remix, Solid Start, and Vinxi adapters; ContentQuery has Vite, the CLI, and a Next.js configuration wrapper with managed development watching. Astro generates JSON Schemas for data-file IntelliSense. ContentQuery exposes entry types only through `QueryData<typeof collections.posts>`.
 11. **Ergonomics.** Every query is async and must select fields, and a relationship declaration needs five keys where Astro uses `reference("authors")`. Those choices buy payload control and integrity, but the simplest page is more verbose than `import { allPosts } from "content-collections"`.
 

@@ -47,4 +47,4 @@ Keep the [website](./website/README.md) current when core changes affect public 
 - [Features](./docs/FEATURES.md)
 - [Design and contracts](./docs/PLAN.md)
 - [Library comparisons](./docs/COMPARISONS.md)
-- [Planned work](./docs/TODO.md)
+- [Planned work](./docs/TODO.md), including build-time transforms and a public preparation cache helper.

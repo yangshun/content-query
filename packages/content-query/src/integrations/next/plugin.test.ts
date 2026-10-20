@@ -51,6 +51,29 @@ describe("withContentQuery", () => {
     expect(build).not.toHaveBeenCalled();
   });
 
+  test.each([
+    "/next/dist/telemetry/detached-flush.js",
+    "C:\\next\\dist\\telemetry\\detached-flush.js",
+  ])("only evaluates configuration in Next's telemetry helper %s", async (entrypoint) => {
+    const argv = process.argv;
+    const listeners = process.listeners("SIGTERM");
+    const config: NextConfig = { trailingSlash: true };
+    const configured = vi.fn(async () => config);
+    try {
+      process.argv = [process.execPath, entrypoint];
+      for (const phase of [PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_BUILD]) {
+        expect(await withContentQuery(configured)(phase, context)).toBe(config);
+        expect(configured).toHaveBeenLastCalledWith(phase, context);
+      }
+      expect(build).not.toHaveBeenCalled();
+      expect(publish).not.toHaveBeenCalled();
+      expect(dispose).not.toHaveBeenCalled();
+      expect(process.listeners("SIGTERM")).toEqual(listeners);
+    } finally {
+      process.argv = argv;
+    }
+  });
+
   test("waits for initial generation and shares one pending watcher across config evaluations", async () => {
     let complete!: (value: ContentSession) => void;
     build.mockReturnValueOnce(new Promise((resolve) => (complete = resolve)));

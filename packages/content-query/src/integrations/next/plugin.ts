@@ -105,6 +105,7 @@ async function startDevelopment(root: string, options: NextContentOptions): Prom
 /**
  * Builds content before Next compiles, retaining one managed watcher during `next dev`.
  * Import the generated server entry from Server Components; Next's HMR observes its updates.
+ * Next's detached telemetry helper evaluates configuration without starting content sessions.
  * @param nextConfig Existing object, promise, or phase-aware Next.js configuration.
  * @param options Optional content configuration file and generated output directory.
  * @returns An asynchronous Next.js configuration function that owns the content lifecycle.
@@ -118,6 +119,10 @@ export function withContentQuery(
     const config = await (typeof nextConfig === "function"
       ? nextConfig(phase, context)
       : nextConfig);
+    // Next's detached telemetry process also loads development config and must exit naturally.
+    if (process.argv[1]?.replaceAll("\\", "/").endsWith("/telemetry/detached-flush.js")) {
+      return config;
+    }
     if (phase === PHASE_DEVELOPMENT_SERVER) {
       await startDevelopment(root, options);
     } else if (phase === PHASE_PRODUCTION_BUILD) {

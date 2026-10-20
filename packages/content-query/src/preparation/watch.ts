@@ -1,5 +1,5 @@
 import path from "node:path";
-import { realpathSync } from "node:fs";
+import { realpathSync, watchFile, unwatchFile, type Stats } from "node:fs";
 import { access } from "node:fs/promises";
 import { watch, type FSWatcher } from "chokidar";
 import { builtinLoader, builtinPath } from "../loaders/descriptor.ts";
@@ -139,7 +139,8 @@ export async function watchSources(
         path.join(options.root, ".content-query"),
         ...(options.output ? [options.output] : []),
       ];
-      const external = watch(await watchAncestor(target), {
+      const ancestor = await watchAncestor(target);
+      const external = watch(ancestor, {
         ignoreInitial: true,
         awaitWriteFinish,
         ignored: (filename) =>
@@ -147,6 +148,19 @@ export async function watchSources(
           outputRoots.some((output) => withinDirectory(output, filename)),
       });
       register(() => external.close());
+      if (ancestor !== target && !outputRoots.some((output) => withinDirectory(output, target))) {
+        /** Recovers a missing declared path even if the ancestor's creation event is lost. */
+        function recheck(current: Stats, previous: Stats): void {
+          if (current.nlink === 0 && previous.nlink === 0) {
+            return;
+          }
+          external.add(target);
+          options.invalidated(name);
+        }
+        // Poll only the declared file or base directory, never every file in a glob collection.
+        watchFile(target, { interval: 100, persistent: false }, recheck);
+        register(() => unwatchFile(target, recheck));
+      }
       external.on("all", (event, filename) => {
         if (affectsSnapshot(builtin, target, event, filename)) {
           options.invalidated(name);

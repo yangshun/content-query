@@ -5,6 +5,29 @@ import { matches } from "./filter.ts";
 import { relationKey } from "./relationships.ts";
 import type { PreparedRevision, QueryRecord } from "./revision.ts";
 
+const recordIndexes = new WeakMap<readonly QueryRecord[], ReadonlyMap<string, QueryRecord>>();
+
+/** Narrows root ID-equality queries using one lazy index per immutable collection revision. */
+function queryCandidates(records: readonly QueryRecord[], plan: QueryPlan): readonly QueryRecord[] {
+  const equality = plan.filters.find(
+    (expression) =>
+      expression.kind === "predicate" &&
+      expression.field === "id" &&
+      expression.operator === "eq" &&
+      typeof expression.value === "string",
+  );
+  if (equality?.kind !== "predicate" || typeof equality.value !== "string") {
+    return records;
+  }
+  let index = recordIndexes.get(records);
+  if (!index) {
+    index = new Map(records.map((record) => [record.id, record]));
+    recordIndexes.set(records, index);
+  }
+  const record = index.get(equality.value);
+  return record ? [record] : [];
+}
+
 /** Classifies nullish and unordered special values for direction-independent placement. */
 function sortGroup(value: unknown): number {
   return value == null
@@ -183,14 +206,14 @@ export async function executeQuery(
     invalidQuery(`Unknown collection "${plan.collection}".`);
   }
   if (terminal === "count") {
-    return collection.records.filter((record) =>
+    return queryCandidates(collection.records, plan).filter((record) =>
       plan.filters.every((expression) => matches(record, expression)),
     ).length;
   }
   if (!plan.select && !plan.adjacent) {
     invalidQuery("Row-returning queries require select().");
   }
-  const records = pageRecords(collection.records, plan);
+  const records = pageRecords(queryCandidates(collection.records, plan), plan);
   const scopes: ProjectionScopes = new WeakMap();
   return terminal === "first"
     ? records[0]

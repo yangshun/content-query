@@ -28,6 +28,31 @@ export function NextWorkflow() {
   );
 }
 
+function AngularWorkflow() {
+  return (
+    <div className="standalone-workflow">
+      <div className="workflow-setup">
+        <CodeExample
+          label="Build with Angular CLI"
+          code="npx content-query build && ng build"
+          language="shellscript"
+        />
+        <CodeExample
+          label="Develop in two terminals"
+          code={"# Terminal 1\nnpx content-query build --watch\n\n# Terminal 2\nng serve"}
+          language="shellscript"
+        />
+      </div>
+      <CodeExample
+        label="src/server.ts (Angular SSR)"
+        code={
+          'import { content } from "../.content-query/server.js";\n\napp.get("/api/posts", async (_request, response) => {\n  const posts = await content\n    .query("posts")\n    .select("id", "title")\n    .all();\n\n  response.json(posts);\n});'
+        }
+      />
+    </div>
+  );
+}
+
 function DevelopmentAnimation() {
   const [playback, setPlayback] = useState({ step: 0, playing: false });
   useEffect(() => {
@@ -104,9 +129,12 @@ function DevelopmentAnimation() {
 }
 
 export function WorkflowsExample() {
-  const [workflow, setWorkflow] = useState<"vite" | "next" | "standalone">("vite");
+  const [workflow, setWorkflow] = useState<"vite" | "next" | "angular" | "standalone">("vite");
   return (
-    <div className="feature-example" aria-label="Vite, Next.js, and standalone workflows example">
+    <div
+      className="feature-example"
+      aria-label="Vite, Next.js, Angular, and standalone workflows example"
+    >
       <div className="workflow-switch">
         <Choices
           label="Content workflow"
@@ -115,6 +143,7 @@ export function WorkflowsExample() {
           options={[
             { value: "vite", label: "Vite development" },
             { value: "next", label: "Next.js development" },
+            { value: "angular", label: "Angular development" },
             { value: "standalone", label: "Standalone build" },
           ]}
         />
@@ -123,6 +152,8 @@ export function WorkflowsExample() {
         <DevelopmentAnimation />
       ) : workflow === "next" ? (
         <NextWorkflow />
+      ) : workflow === "angular" ? (
+        <AngularWorkflow />
       ) : (
         <div className="standalone-workflow">
           <CodeExample

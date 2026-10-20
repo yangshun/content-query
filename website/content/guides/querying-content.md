@@ -40,6 +40,8 @@ const samePublished = await content.findMany("posts", {
 
 Combine predicates with `and`, `or`, and `not`, or object `AND`, `OR`, and `NOT`. See the [operator reference](/docs/reference/queries-and-operators) for comparisons, string matching, arrays, and presence checks.
 
+For detail pages, `.where((fields) => eq(fields.id, id))` and object `where: { id }` use a lazy ID index for the current collection revision. Repeated lookups avoid scanning every entry. Other filters and query options still apply, and development updates use the new revision's records.
+
 ## Sorting, pagination, and counts
 
 Use `.orderBy("title").offset(0).limit(10)` or object options `orderBy: { title: "asc" }, offset: 0, limit: 10`. IDs break ordering ties deterministically.

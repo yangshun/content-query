@@ -30,4 +30,6 @@ Here, `defineCollection` and `z` use the imports from [collections and schemas](
 
 Built-in paths resolve from the application root. Default IDs derive from relative filenames, with a frontmatter `slug` override and trailing `/index` removal.
 
+During development, a declared file or glob directory can be created after watching starts. Initially missing paths retain a metadata polling fallback to recover if their parent's creation notification is lost; ContentQuery then subscribes to the discovered content normally. Files inside a glob collection are not individually polled.
+
 ContentQuery also accepts native Astro-compatible content loaders. Custom loaders implement `load(context)` and write entries into `context.store`. See the [collection and loader reference](/docs/reference/collections-and-loaders).
