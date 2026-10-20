@@ -74,6 +74,8 @@ The adapter waits for the initial content build, then watches content and collec
 
 Invalid metadata or configuration appears in Next.js's development overlay. Correcting the input publishes a valid runtime and allows the page to recover. The adapter reuses its watch session when Next.js evaluates the configuration again and closes it on shutdown.
 
+Next.js's detached telemetry helper can also evaluate development configuration. The adapter skips content preparation in that helper, so it exits without leaving a watcher running after the application shuts down.
+
 After the first successful content build, startup removes obsolete generated collection modules and development runtime entries left by previous runs. Invalid startup content delays cleanup until corrected. Revisions created during the current session remain available until the next successful startup or production build, so restarting the development server reclaims older files.
 
 Your application owns route discovery and missing-entry handling. For collection-driven routes, query IDs in `generateStaticParams()` and handle missing entries in the page. The repository's `content-query/examples/next/` example exercises added, renamed, and removed content routes.

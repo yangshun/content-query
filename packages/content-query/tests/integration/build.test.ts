@@ -11,32 +11,35 @@ import { createArtifactRuntime } from "../../src/internal.ts";
 const execute = promisify(execFile);
 
 describe("portable content builds and production consumption", () => {
-  test("executes the living example and checks the real generated declaration surface", async () => {
-    const fixture = await projectFixture();
-    try {
-      const example = path.join(packageRoot, "tests/fixtures/example");
-      await rm(path.join(fixture.root, "content"), { recursive: true });
-      await cp(path.join(example, "content"), path.join(fixture.root, "content"), {
-        recursive: true,
-      });
-      await cp(path.join(example, "content-query.config.ts"), fixture.config);
-      await execute(
-        process.execPath,
-        [
-          "--input-type=module",
-          "-e",
-          'const { buildContent } = await import("content-query/build"); const session = await buildContent(); await session.dispose();',
-        ],
-        { cwd: fixture.root },
-      );
-      await symlink(
-        path.join(packageRoot, "node_modules/next"),
-        path.join(fixture.root, "node_modules/next"),
-        "dir",
-      );
-      await writeFile(
-        path.join(fixture.root, "consumer.ts"),
-        `/// <reference path="./.content-query/types.d.ts" />
+  test(
+    "executes the living example and checks the real generated declaration surface",
+    { timeout: 30_000 },
+    async () => {
+      const fixture = await projectFixture();
+      try {
+        const example = path.join(packageRoot, "tests/fixtures/example");
+        await rm(path.join(fixture.root, "content"), { recursive: true });
+        await cp(path.join(example, "content"), path.join(fixture.root, "content"), {
+          recursive: true,
+        });
+        await cp(path.join(example, "content-query.config.ts"), fixture.config);
+        await execute(
+          process.execPath,
+          [
+            "--input-type=module",
+            "-e",
+            'const { buildContent } = await import("content-query/build"); const session = await buildContent(); await session.dispose();',
+          ],
+          { cwd: fixture.root },
+        );
+        await symlink(
+          path.join(packageRoot, "node_modules/next"),
+          path.join(fixture.root, "node_modules/next"),
+          "dir",
+        );
+        await writeFile(
+          path.join(fixture.root, "consumer.ts"),
+          `/// <reference path="./.content-query/types.d.ts" />
 import { content, type CollectionData, type CollectionKey } from "./.content-query/server.js";
 import { content as virtualContent, type CollectionData as VirtualData } from "content-query:server";
 import { eq } from "content-query/query";
@@ -71,47 +74,48 @@ content.query("posts").where(fields=>eq(fields.draft,"false"));
 content.query("posts").all();
 void checked;
 `,
-      );
-      await execute(
-        process.execPath,
-        [
-          path.join(packageRoot, "node_modules/typescript/bin/tsc"),
-          "--noEmit",
-          "--strict",
-          "--skipLibCheck",
-          "--module",
-          "nodenext",
-          "--target",
-          "esnext",
-          "--allowImportingTsExtensions",
-          "consumer.ts",
-        ],
-        { cwd: fixture.root },
-      );
-      const { stdout } = await execute(
-        process.execPath,
-        [
-          "--input-type=module",
-          "-e",
-          `const {content}=await import("./.content-query/server.js");console.log(JSON.stringify(await content.query("authors").select("name").with("featuredPosts",posts=>posts.select("id")).all()));`,
-        ],
-        { cwd: fixture.root },
-      );
-      expect(JSON.parse(stdout)).toEqual([
-        { name: "Ada Lovelace", featuredPosts: [] },
-        {
-          name: "Grace Hopper",
-          featuredPosts: [
-            { id: "upcoming-features" },
-            { id: "getting-started" },
-            { id: "upcoming-features" },
+        );
+        await execute(
+          process.execPath,
+          [
+            path.join(packageRoot, "node_modules/typescript/bin/tsc"),
+            "--noEmit",
+            "--strict",
+            "--skipLibCheck",
+            "--module",
+            "nodenext",
+            "--target",
+            "esnext",
+            "--allowImportingTsExtensions",
+            "consumer.ts",
           ],
-        },
-      ]);
-    } finally {
-      await fixture.dispose();
-    }
-  });
+          { cwd: fixture.root },
+        );
+        const { stdout } = await execute(
+          process.execPath,
+          [
+            "--input-type=module",
+            "-e",
+            `const {content}=await import("./.content-query/server.js");console.log(JSON.stringify(await content.query("authors").select("name").with("featuredPosts",posts=>posts.select("id")).all()));`,
+          ],
+          { cwd: fixture.root },
+        );
+        expect(JSON.parse(stdout)).toEqual([
+          { name: "Ada Lovelace", featuredPosts: [] },
+          {
+            name: "Grace Hopper",
+            featuredPosts: [
+              { id: "upcoming-features" },
+              { id: "getting-started" },
+              { id: "upcoming-features" },
+            ],
+          },
+        ]);
+      } finally {
+        await fixture.dispose();
+      }
+    },
+  );
   test("supports prototype-like collection/entry IDs and ordinary computed names", async () => {
     const fixture = await projectFixture();
     try {

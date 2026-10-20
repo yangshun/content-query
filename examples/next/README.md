@@ -18,6 +18,8 @@ Open [localhost:3000](http://localhost:3000). `vp run` executes the Next.js scri
 
 After the first successful content build, startup removes obsolete collection modules and `next-dev-*.js` entries from previous runs while preserving the new snapshot. Invalid startup content delays cleanup until corrected. Later edits retain revisions for the rest of that session; restarting the server reclaims previous-run files. Repeated Next.js configuration evaluation reuses the session without cleaning again.
 
+The adapter skips content preparation when Next's detached telemetry helper reads the development configuration. This lets the helper exit without leaving a content watcher behind after the application shuts down.
+
 ## Production
 
 ```sh

@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { NodeFsHandler } from "chokidar/handler.js";
 import { describe, expect, test, vi } from "vite-plus/test";
 import { z } from "zod";
 import { defineCollection } from "../collection/define.ts";
@@ -14,6 +15,57 @@ function settle(): Promise<void> {
 }
 
 describe("source watching", () => {
+  test("recovers a missing source directory when its ancestor creation event is lost", async () => {
+    const root = await realpath(await mkdtemp(path.join(os.tmpdir(), "content-query-watch-gap-")));
+    const base = path.join(root, "dist/content");
+    const filename = path.join(base, "post.md");
+    // Preserve the original method and rebind it to each watcher below.
+    // oxlint-disable-next-line typescript-eslint/unbound-method
+    const subscribeDirectory = NodeFsHandler.prototype._watchWithNodeFs;
+    let ancestorSubscriptions = 0;
+    const ancestorEvents = vi
+      .spyOn(NodeFsHandler.prototype, "_watchWithNodeFs")
+      .mockImplementation(function (
+        this: NodeFsHandler,
+        ...arguments_: Parameters<typeof subscribeDirectory>
+      ) {
+        if (path.resolve(arguments_[0]) === root) {
+          ancestorSubscriptions++;
+          // Reproduce an ancestor notification lost before newly created children are discovered.
+          return subscribeDirectory.call(this, arguments_[0], () => undefined);
+        }
+        return subscribeDirectory.apply(this, arguments_);
+      });
+    let session: Awaited<ReturnType<typeof createSession>> | undefined;
+    try {
+      session = await createSession({
+        root,
+        config: "unused",
+        outDir: ".content-query",
+        registry: {
+          posts: defineCollection({
+            loader: glob({ pattern: "*.md", base }),
+            schema: z.object({ title: z.string() }),
+          }),
+        },
+        watch: true,
+      });
+      const listing = session.content.query("posts").select("title");
+      await mkdir(base, { recursive: true });
+      await writeFile(filename, "---\ntitle: First\n---\n");
+      await vi.waitFor(async () => expect(await listing.all()).toEqual([{ title: "First" }]), {
+        timeout: 3_000,
+      });
+      expect(ancestorSubscriptions).toBeGreaterThan(0);
+      await writeFile(filename, "---\ntitle: Edited\n---\n");
+      await vi.waitFor(async () => expect(await listing.all()).toEqual([{ title: "Edited" }]));
+    } finally {
+      await session?.dispose();
+      ancestorEvents.mockRestore();
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   test("excludes generated output even when it matches a declared source glob", async () => {
     const root = await realpath(
       await mkdtemp(path.join(os.tmpdir(), "content-query-output-watch-")),
@@ -55,7 +107,7 @@ describe("source watching", () => {
     }
   });
   for (const failure of ["syntax", "invalid-loader"] as const) {
-    test(`keeps a ${failure} configuration failure active through content edits`, async () => {
+    test(`keeps configuration failures active through content edits: ${failure}`, async () => {
       const fixture = await projectFixture();
       const original = await readFile(fixture.config, "utf8");
       const session = await createSession<{
@@ -81,17 +133,25 @@ describe("source watching", () => {
             timeout: 3_000,
           },
         );
-        const error = internal.state.error;
+        const error = {
+          code: "source-error",
+          diagnostics: internal.state.error?.diagnostics,
+        };
         const previous = internal.state.revision;
+        // A config write can emit another notification after its first failure is observable.
+        internal.invalidate();
+        await internal.idle();
         await writeFile(
           fixture.postPath,
           "---\ntitle: Edited during failure\nauthorId: ada\ndate: 2026-01-01\n---\n# Edited\n",
         );
         await settle();
         await internal.idle();
-        expect(internal.state.error).toBe(error);
+        expect(internal.state.error).toMatchObject(error);
         expect(internal.state.revision).toBe(previous);
-        await expect(session.content.readBody("posts", "getting-started")).rejects.toBe(error);
+        await expect(session.content.readBody("posts", "getting-started")).rejects.toMatchObject(
+          error,
+        );
         await writeFile(fixture.config, original);
         await vi.waitFor(
           async () => expect(await listing.first()).toEqual({ title: "Edited during failure" }),

@@ -34,19 +34,7 @@ V1 has no generic `deferred: { field: { schema, resolve } }` declarations and no
 
 Locale and version are ordinary fields. Routing, translation fallback, navigation, HTML insertion, and publication policy belong to VoidPress or the consuming application. The Markdown helper produces rendering data rather than a framework component. Applications provide publicly accessible asset URLs; asset discovery, copying, optimization, and URL rewriting are outside this library's scope.
 
-### Deferred beyond v1
-
-- Generic user-defined deferred fields and query `.resolve(...)`; see [future extension notes](#generic-deferred-fields).
-- Lazy source-body callbacks and public multi-operation snapshot scopes, including `withSnapshot()`; see [future notes](#lazy-source-bodies-and-cross-operation-snapshots).
-- Built-in search.
-- Cursor pagination; v1 uses limit and offset.
-- General-purpose joins and implicit recursive relationship loading.
-- Parent filtering through relationships, composite matching, and automatic linking-collection traversal; see [future notes](#advanced-relationship-queries).
-- CMS-specific adapters; custom loaders are the initial extension point.
-- Live collections and request-time source loading; see [future extension notes](#live-collections-and-runtime-source-loading).
-- Browser querying.
-- Rich component compilation; ordinary application-owned processing and rendering are the initial extension points. See [future notes](#mdx-and-component-content).
-- Configurable Markdown processing, asset and image handling, collection-wide computed context, built-in derived fields, persistent preparation caching, singletons, additional host integrations and editor tooling, and lighter authoring ergonomics; see [future extensions](#future-extensions).
+Outstanding work and future design notes are tracked in [TODO.md](./TODO.md).
 
 ## Design guidelines
 
@@ -416,7 +404,7 @@ The production entry imports the collection manifest, prepared query data, captu
 
 Applications provide one registry; integrations or the build command produce the server entry. There is no second application-maintained registry or mandatory `content.runtime.ts`. Production runtime initialization consumes prepared artifacts or explicitly embedded prepared state. Follow the agreed [build API and generated server entry](#build-api-and-defaults); runtime adapter factories are private implementation details.
 
-No runtime-safe definition split, arbitrary function serialization, closure extraction, or bundler-specific removal of config properties is required for v1. Generic deferred resolvers are a [future extension](#generic-deferred-fields), not a reason to reintroduce production config imports.
+No runtime-safe definition split, arbitrary function serialization, closure extraction, or bundler-specific removal of config properties is required for v1. Generic deferred resolvers are a [future extension](./TODO.md#generic-deferred-fields), not a reason to reintroduce production config imports.
 
 ### Computed resolver context
 
@@ -634,7 +622,7 @@ Array predicates have the following edge-case behavior:
 | Array holes                             | Ignore holes during membership checks. An explicit `undefined` element remains a value and participates in equality checks. |
 | Duplicate candidates                    | Duplicate candidates do not require duplicate elements; `arrayContainsAll` tests membership rather than multiplicity.       |
 
-Rich values remain storable and selectable under the [data-value contract](#supported-data-values). Map/set-specific filters, binary or other rich-value filtering, regular-expression matching, and deep object equality are [future extensions](#future-extensions).
+Rich values remain storable and selectable under the [data-value contract](#supported-data-values). Map/set-specific filters, binary or other rich-value filtering, regular-expression matching, and deep object equality are [future extensions](./TODO.md#future-extensions).
 
 ### Field presence and undefined
 
@@ -716,7 +704,7 @@ Loader-provided `rendered.html` is usable independently of a raw body. This supp
 
 Rendering rejects invalid collection names with `invalid-query`, missing entries with `entry-not-found`, and existing entries without usable output or a supported rendering path with `not-renderable`. Failure to load a prepared payload is `artifact-error`; failure while compiling Markdown is `render-error`. Use the shared [error contract](#errors-and-diagnostics), preserving underlying causes. An absent raw body is independently a valid `undefined` value, not a missing-body error. A successful render includes HTML and headings from one revision. No per-output lazy projection or promise of headings-only parsing is made.
 
-Each terminal query pins one consistent revision for selected parent and related data at execution start. Each body access/render operation likewise pins one revision at its start. Existing operations finish against that revision even when a new revision is published or later preparation fails; retain their required payloads until completion. Genuine I/O or rendering failures still reject. New operations use the latest published revision or reject with the current preparation failure. A metadata query followed by rendering is two operations and can observe different revisions during development; passing an ID does not pin the earlier revision. Production v1 uses immutable prepared content. A public `withSnapshot()` scope or cross-operation entry-handle lifetime is not part of v1; see [future notes](#lazy-source-bodies-and-cross-operation-snapshots).
+Each terminal query pins one consistent revision for selected parent and related data at execution start. Each body access/render operation likewise pins one revision at its start. Existing operations finish against that revision even when a new revision is published or later preparation fails; retain their required payloads until completion. Genuine I/O or rendering failures still reject. New operations use the latest published revision or reject with the current preparation failure. A metadata query followed by rendering is two operations and can observe different revisions during development; passing an ID does not pin the earlier revision. Production v1 uses immutable prepared content. A public `withSnapshot()` scope or cross-operation entry-handle lifetime is not part of v1; see [future notes](./TODO.md#lazy-source-bodies-and-cross-operation-snapshots).
 
 Explicit `content.readBody(...)` and `content.render(...)` operations remain separate from selected query results. A caller needs neither operation for metadata queries, and rendering does not require calling `readBody()` first. Applications can process retrieved text in ordinary server functions with application-owned validation/caching; those functions are not extracted from `content-query.config`. This intentionally differs from Astro’s full-entry lookup while preserving its optional raw-body value semantics.
 
@@ -909,7 +897,7 @@ Computed resolvers receive source inputs through their context and must not disc
 
 If processing needs a snippet, template, or another source file, its acquisition belongs to the loader. Incorporate the contents into supplied `data` or `body` and keep them consistent with the entry revision. Additional dependency changes must enter the loader/integration invalidation path; reading a file does not automatically register it. Custom loaders register callbacks on the supplied development watcher and add any external source dependencies to it. V1 adds no separate public dependency-declaration API, managed `readInput()`, or generic dependency graph. Integrations keep their filesystem watcher wiring private.
 
-Loaders capture body strings and any supplied rendered HTML during preparation; v1 has no source-reading body callbacks. The renderer may read packaged inputs lazily through a backend, but it must not invoke source loaders or depend on original paths. Live source loading is a [future extension](#live-collections-and-runtime-source-loading), not a reason to import v1 collection configuration during SSR.
+Loaders capture body strings and any supplied rendered HTML during preparation; v1 has no source-reading body callbacks. The renderer may read packaged inputs lazily through a backend, but it must not invoke source loaders or depend on original paths. Live source loading is a [future extension](./TODO.md#live-collections-and-runtime-source-loading), not a reason to import v1 collection configuration during SSR.
 
 ### Loader lifecycle
 
@@ -937,6 +925,12 @@ Core creates filesystem subscriptions before loading sources. Custom loaders reg
 Completed loader stores are captured privately as immutable source snapshots. These snapshots are an implementation detail, not a second public loader API. Retain candidate snapshots when computed-field or cross-collection reference validation fails so corrections can recover against all accepted edits. Publish only a fully validated revision, with no partial store, computed, or relationship state visible to new operations. Existing pinned operations finish on their earlier revision.
 
 Production preparation runs loaders without watchers. Deployed querying/rendering imports neither loaders nor configuration; it consumes prepared metadata and captured payloads. Live loaders, Astro integration hooks, component-module imports, optimized images, and Astro-specific deferred module rendering remain outside this contract. Unsupported module/image imports fail rather than silently producing incomplete output. `renderMarkdown()` uses the library’s portable pipeline and returns HTML/headings.
+
+#### Astro loader compatibility
+
+Status: native build-time content loader compatibility implemented on October 18, 2026; see [loader lifecycle](#loader-lifecycle). The previous proposal for an explicit adapter is superseded.
+
+The loader contract, context helpers, default/dynamic schemas, stores, and watcher updates are native. The published CSV loader is tested directly, including typed consumers, live file edits, and deployed querying that forbids preparation dependencies. Remaining differences concern persistent metadata, generated dynamic schema declarations, full Astro configuration and integrations, image/module processing, live loaders, and Astro-specific rendering. These are documented limitations rather than a claim that every Astro integration can run.
 
 ### Preparation and production rendering
 
@@ -1224,7 +1218,7 @@ Status: implemented with these v1 defaults, agreed on October 18, 2026. Follow A
 | Caching                   | Keep cached values internal and revision-aware; return detached selected values and rendering metadata. Cross-process/build persistence or sharing is not a v1 guarantee; expose no new public cache settings. Private reuse can evolve without changing behavior.                                                                                                                                                             |
 | Internal mechanics        | Hash choice, codec embedding, private module exports, query representation/indexes, and host hooks are implementer-owned choices. Retain candidate source state separately from published content, publish only complete valid revisions, and retain old payloads for pinned operations. Queue/coalescing and cleanup must preserve these rules.                                                                               |
 
-These defaults close the routine API/scope questions. Implement the selected contracts without treating remaining helper signatures or private mechanisms as approval gates. The future extensions below remain deferred.
+These defaults close the routine API/scope questions. Implement the selected contracts without treating remaining helper signatures or private mechanisms as approval gates. Future extensions remain deferred and are tracked in [TODO.md](./TODO.md#future-extensions).
 
 ## Conformance scenarios
 
@@ -1247,140 +1241,9 @@ These cases belong in the redesigned implementation's shared tests. The shared c
 | Superseded generated modules             | One-shot preparation removes collection modules its revision no longer references and keeps unrelated files. Watch sessions retain superseded modules for pinned operations.                                                                                                                                                               |
 | Rendering collection names               | Every registered collection is accepted by the typed render API. An existing entry without supplied output or a supported rendering path rejects with `not-renderable`, as in the authors fixture.                                                                                                                                         |
 
-## Future extensions
-
-- **Richer filtering:** map/set-specific filters, binary and other rich-value filtering, regular expressions, and deep object equality remain outside v1. These values can still be stored and selected under the supported data-value contract.
-
-### Advanced relationship queries
-
-Status: deferred beyond v1 on October 18, 2026.
-
-Parent predicates based on related data, composite multi-field matching, and automatic traversal through linking collections need separate query and declaration contracts. No `exists`, composite-key, or `through` public syntax is selected. Applications can explicitly query declared links and request bounded nested relationships in v1. General-purpose joins remain a separate future capability.
-
-### Lazy source bodies and cross-operation snapshots
-
-Status: deferred beyond v1 on October 18, 2026.
-
-Lazy source-reader callbacks would require pinning or verifying external source versions and defining stale-read errors, retry policy, cancellation, and lifecycle behavior. V1 loaders instead capture optional body strings. Revisit source laziness only if a concrete source makes its acquisition cost worthwhile; prepared backend payload loading can remain lazy independently.
-
-Public multi-operation scopes such as the proposed `withSnapshot()` would need revision retention, body/output pinning, cleanup, and rules for builders or handles escaping the scope. V1 guarantees consistency per operation and documents that separate development operations can observe different revisions. Immutable production artifacts do not require this additional API.
-
-Neither extension should reintroduce `content-query.config` imports, original source paths, arbitrary callback extraction, or automatic replay of application callbacks in deployed SSR.
-
-### Generic deferred fields
-
-Status: removed from v1 and deferred on October 18, 2026. No `deferred` declaration group or query `.resolve(...)` is part of v1.
-
-The earlier proposal allowed arbitrary `{ schema, resolve }` fields requested after filtering/pagination. This could provide typed processed projections and central output validation/caching, but it also requires packaging application callbacks, validators, captured dependencies, and cache/invalidation rules for SSR. Ordinary data generation does not serialize closures or isolate them from loader imports.
-
-Revisit only with an explicit runtime-module contract that preserves build-only `content-query.config`, sound input/result typing, revision consistency, errors/cancellation, and cross-backend behavior. Shared intermediate processing and any dependency graph belong to that future design. Do not treat function extraction, `memo()`, or a loader-free runtime definitions module as implicit v1 mechanisms.
-
-V1 lazy body access and the library-owned Markdown renderer remain available independently. Other custom processing belongs to ordinary application-owned server modules, with application-owned validation and caching.
-
-### Live collections and runtime source loading
-
-Status: deferred beyond v1, agreed on October 17, 2026. No live-collection API, loading-policy syntax, or separate configuration file is approved.
-
-A future extension could fetch current CMS or API content during SSR, such as an article from Contentful, without rebuilding the site. In v1, applications can fetch live data directly in server-rendering functions or server routes and use ordinary validation and processing utilities. A collection layer is useful when those consumers also need shared collection validation, querying, relationships, and processing; live fetching alone does not require one.
-
-Two approaches remain open:
-
-| Approach                         | Behavior                                                                                                                   | Design implications                                                                                                                                                                                                                           |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Refresh prepared content         | Run loaders at runtime, validate inputs, prepare computed fields, and publish a revision for the existing query runtime.   | Can retain the prepared-store query contract. Full-snapshot refreshes may fetch and process an entire collection; freshness, refresh scope, and runtime-writable storage need design.                                                         |
-| Query a remote provider directly | Give a runtime loader a query or entry lookup and return matching entries without first preparing the complete collection. | Requires a query-aware loader contract, supported-operation rules, and decisions about computed-field filtering, pagination, relationships, and validation over partial datasets. It is not provided by the current snapshot-loader contract. |
-
-Loading policy and storage backend are separate decisions. A remote source may be loaded during a build or at runtime. Runtime loading can use an in-memory store or another backend that supports updates; generated deployment artifacts must not be assumed writable. The v1 guarantee that prepared content works without original sources remains the default; a future live policy would explicitly depend on runtime source availability.
-
-Keep the source-acquisition/processing boundary in either approach: loaders acquire inputs and computed processing or built-in rendering derives values from those inputs. A future live policy would need an explicit runtime source module and configuration contract; it must not silently make v1 `content-query.config` part of the deployed import graph.
-
-Before implementation, define freshness and caching, invalidation or explicit refresh, request isolation and credential handling, concurrent refresh behavior, revision consistency across entries and collections, error and stale-data policies, and the interaction with static generation. Decide whether the existing collection/query APIs can cover the chosen model or whether separate live APIs and configuration entry points are warranted; no separation is required merely to run a loader during SSR.
-
-Reference: [Astro's live collections](https://docs.astro.build/en/guides/content-collections/#live-content-collections) use separate APIs and loaders that return request-time data directly. The [original proposal](https://github.com/withastro/roadmap/discussions/1137) explicitly excluded updating its content-layer store. That is a different contract from refreshing prepared content and is a reference for the second approach, not an API decision for this library. Astro live loaders also return cache hints (`tags` and `lastModified`) that applications pass to `Astro.cache.set()` or response headers. A ContentQuery live design should decide whether freshness metadata belongs in runtime results.
-
-### Configurable Markdown processing
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-The built-in renderer uses fixed markdown-exit options and GitHub Light/Dark Shiki themes, and accepts no extensions. Astro, Content Collections, and Velite accept remark/rehype plugins and highlighter settings. Documentation sites use these for callouts, math, code block titles, and link handling.
-
-Eager compilation (`deferRender: false`) already runs during the build, so build-only extensions could apply without entering the deployed import graph. `deferRender: true` packages the renderer, so extensions would need serializable settings or module references that generated runtime code imports directly, never functions extracted from `content-query.config`. markdown-exit uses a markdown-it token pipeline rather than unified, so the design must choose between markdown-it-style plugins, a unified pipeline, or a curated set of built-in options.
-
-Before implementation, define the extension contract, how settings participate in invalidation and revision consistency, how `headings` stays consistent with HTML heading IDs when extensions change headings, and whether extensions are allowed with `deferRender: true`.
-
-### Assets and images
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-Authored image and link URLs pass through unchanged, and [application-owned behavior](#application-owned-behavior) keeps asset discovery, copying, optimization, and URL rewriting outside this library. Relative images in Markdown therefore break unless the application handles them. Astro provides an `image()` schema helper with optimization and resolves relative Markdown images. Velite's `s.image()` and `s.file()` copy, hash, and measure assets and generate blur placeholders.
-
-Moving this boundary would need an asset reference value under the [supported data values](#supported-data-values), path resolution relative to the source entry, asset emission through the host bundler or a portable output directory, consistent Markdown reference rewriting for eager and deferred rendering, and watch invalidation when an asset changes. Image optimization could remain an integration concern even if discovery and URL resolution move into preparation.
-
-### MDX and component content
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-Rendering returns framework-independent HTML. Astro supports MDX and Markdoc with component mapping. Content Collections offers `@content-collections/mdx` and bundler-compiled static imports through `createDefaultImport()`. Velite compiles `s.mdx()` to function-body code.
-
-Component content conflicts with framework independence and with packaging rules that exclude application callbacks. One candidate is an entry field that records a typed module reference to the source file, so the host bundler compiles it and `content.render()` stays unchanged for HTML content. Define how references are typed, how component modules cross the [server/client boundary](#4-enforce-the-serverclient-boundary) when pages import them, and how headings are extracted without a framework renderer.
-
-### Collection-wide computed context
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-`ComputedContext` exposes one entry's `collection`, `id`, optional loader-defined `source`, `data`, `readBody()`, and `signal`. Per-tag counts and sidebar order require application queries after preparation. Previous/next entries are available through the query-time `_adjacent` projection and fluent `selectAdjacent()`. Content Collections exposes `documents()` and `collection.documents()` in `transform`, and Velite's `prepare` hook receives every collection. [TODO.md](./TODO.md) keeps ordering files such as `meta.json` parked.
-
-A collection-wide context changes invalidation: one edit can affect every dependent computed value, possibly across collections. Define whether the context exposes validated metadata only or earlier computed results, how dependency cycles are rejected, how cross-collection reads relate to declared relationships, and how watch updates recompute dependents. Query-time helpers for adjacent entries in a sorted scope are an alternative that avoids preparation dependencies.
-
-### Built-in derived fields
-
-Status: reading time, word count, and excerpt helpers implemented on October 19, 2026. Other derived fields remain deferred beyond v1.
-
-`content-query/computed` exports `readingTime()`, `wordCount()`, and `excerpt()` as reusable computed definitions with Standard Schema results. Helpers support captured Markdown bodies and typed selectors for text/HTML fields. See the [implemented contract](#reusable-computed-text-fields).
-
-Queryable headings, table of contents, slug helpers, and uniqueness helpers remain future work. Rendered headings are available only from `content.render()`. Any helper derived from rendered output must make its compilation cost explicit under [guideline 8](#8-make-expensive-work-explicit), and uniqueness across a collection depends on the [collection-wide context](#collection-wide-computed-context).
-
-### Persistent preparation cache and benchmarks
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-The preparation cache lives for one session, so every cold build reloads, validates, computes, and compiles all content again. Astro persists its data store, entry digests, and loader `meta` between builds. Content Collections memoizes transforms with `cache()`. Astro and Velite publish scale claims; ContentQuery has no benchmark.
-
-[Guideline 9](#9-prioritize-correctness-over-caching) requires that removing a cache affects only performance. Persistent keys must cover source content, loader identity, schema and resolver code, library version, and renderer settings. Resolver code identity is the hard part because computed functions can import arbitrary modules. Establish benchmarks at representative sizes before choosing a cache layout, and decide whether loaders get a persistent `meta` store for sync tokens.
-
-### Singletons
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-Content Collections provides `defineSingleton()` and Velite provides `single: true` for one-record sources such as site settings. `file()` treats a top-level object as keyed entries, so a settings file needs a wrapper entry and a `first()` query.
-
-Define whether a singleton is a collection with exactly one entry and a fixed ID or a separate registry kind with its own runtime accessor, how it interacts with relationships and field selection, and whether a missing optional file yields `undefined`, as in Content Collections.
-
-### Astro loader compatibility
-
-Status: native build-time content loader compatibility implemented on October 18, 2026; see [loader lifecycle](#loader-lifecycle). The previous proposal for an explicit adapter is superseded.
-
-The loader contract, context helpers, default/dynamic schemas, stores, and watcher updates are native. The published CSV loader is tested directly, including typed consumers, live file edits, and deployed querying that forbids preparation dependencies. Remaining differences concern persistent metadata, generated dynamic schema declarations, full Astro configuration and integrations, image/module processing, live loaders, and Astro-specific rendering. These are documented limitations rather than a claim that every Astro integration can run.
-
-### Host integrations and editor tooling
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-V1 ships the CLI and a Vite plugin. Generated output works with other hosts, which must enforce the server-only boundary themselves, and a dedicated Next.js integration is outside v1. Content Collections ships Next.js, Remix, Solid Start, and Vinxi adapters.
-
-Astro generates a JSON Schema per collection for data-file IntelliSense, and Content Collections exports named entry types through `typeName`. ContentQuery now generates `CollectionKey`, `CollectionData<"posts">`, and `Collections` aliases alongside the server entry and Vite facade, in addition to `QueryData<typeof collections.posts>`. Standard Schema validation does not expose JSON Schema, but `@standard-schema/spec` 1.1 defines a companion `StandardJSONSchemaV1` interface that providers can implement. [TODO.md](./TODO.md) keeps schema generation parked; named data types are implemented.
-
-### Authoring ergonomics
-
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
-
-Every query is async and must select fields. A relationship declaration needs `collection`, `type`, `from`, `to`, and `referenceSide`, while Astro uses `reference("authors")` inside the schema. These choices buy payload control and relationship integrity, but the simplest page is more verbose than importing `allPosts` from Content Collections.
-
-Candidates that keep [explicit field selection](#3-require-explicit-field-selection) include relationship shorthands with defaults such as `to: "id"`, a schema-level reference helper that declares the relationship, and adjacent-entry lookups in a sorted scope. An implicit select-all or a synchronous array export would contradict the design guidelines and needs a separate decision.
-
 ## Approved query and authoring additions
 
-Status: implemented October 18, 2026. These additions preserve the original loader, projection, runtime, and backend contracts. The [package guide](../packages/content-query/README.md#object-queries-and-adjacent-entries) contains complete callsites and the [TODO list](./TODO.md) separates completed scope from parked work.
+Status: implemented October 18, 2026. These additions preserve the original loader, projection, runtime, and backend contracts. The [package guide](../packages/content-query/README.md#object-queries-and-adjacent-entries) contains complete callsites and the [TODO list](./TODO.md) tracks outstanding work and future design notes.
 
 - `defineCollection({ source: "./content/posts", schema })` is shorthand for the built-in Markdown glob loader. Explicit source objects require `type` (`markdown`, `json`, `yaml`, or `toml`) and `directory`; optional include patterns and body/ID policies reuse glob behavior. `source` and `loader` are mutually exclusive.
 - `content.findMany`, `findFirst`, and `count` accept object options. Their compiler and fluent builders share checked clauses, expression operators, normalized plans, and the pinned-revision executor. Relationships remain explicitly selected; a relationship-only projection also counts as selection in both APIs. Singular scopes cannot order or paginate. `findFirst` returns `undefined`; count operates before pagination. Conformance tests compare plan structure and results across both backends and type-check equivalent consumer projections.
@@ -1389,7 +1252,7 @@ Status: implemented October 18, 2026. These additions preserve the original load
 - Vite's server facade is `content-query:server`. The browser-safe `content-query:client` module exports `onContentUpdate`, serializes revalidation callbacks, coalesces edits, cleans up subscriptions, and becomes a production no-op. Successful publication updates server modules before notifying clients. Subscribed routers refresh their data; clients without a bridge retain full-document reload fallback. Void's root bridge flushes cached data and refreshes with preserved state/scroll. Production compiler servers with watching disabled do not start content watchers. Runtime Markdown dependencies are optimized before initial server rendering to avoid optimizer-induced reloads.
 - Real Void, React Router, TanStack Start, Next.js, and SvelteKit examples retain framework-owned routes, data loading, metadata, and HTML. Production integration tests exercise metadata-only indexes, rendered details, selected neighbors, nested routes, and source-independent output. Next.js uses `withContentQuery()` from `content-query/next`: one deduplicated development session publishes generated ESM for Next HMR, including body-only edits and recoverable error entries; production awaits a successful one-shot build and disposes it before compilation.
 
-Schema generation, file-based ordering, typed href helpers, and source-relative image emission remain parked. Link/route/publication policy remains application-owned.
+Link/route/publication policy remains application-owned.
 
 ## Living end-to-end example
 

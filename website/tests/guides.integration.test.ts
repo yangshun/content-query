@@ -170,6 +170,7 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     expect(html).toContain('href="/docs/quick-start"');
     expect(html).toContain("Play demo");
     expect(html).toContain("Next.js development");
+    expect(html).toContain("Angular development");
     expect(html).toContain("Exclude drafts");
     expect(html).toContain('class="home-flow-diagram"');
     expect(html).toContain("Pause animation");

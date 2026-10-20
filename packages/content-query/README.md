@@ -191,6 +191,8 @@ const { html, headings } = await content.render("posts", posts[0]!.id);
 
 Builders are immutable and reusable. `all()` and `first()` require selection; `count()` counts filtered parents before pagination and does not require selection. Selected optional properties remain own properties with value `undefined`. Returned graphs and headings are detached from internal state. Queries never load bodies, rendered HTML, or a compiler.
 
+Queries constrained by ID equality, such as `.where((fields) => eq(fields.id, id))` or `where: { id }`, use a lazily built index for the current immutable collection revision. Repeated detail-page lookups avoid scanning the entire collection. Additional filters, selection, ordering, pagination, counts, and independent adjacency scopes retain their normal semantics. Development revisions receive their own index.
+
 Filtering uses structured expressions from `content-query/query`: scalar equality/comparison/choice operators, literal string matching, scalar-array membership, absence checks, and boolean composition. See the [operator matrix](../../docs/PLAN.md#filtering). Sorting uses deterministic Unicode code-point order and ID tie-breakers, with nullish/unordered special values last. Pagination accepts nonnegative safe integers.
 
 Relationships support forward/inverse fields, authored ID arrays, explicit reference ownership, and nested fluent queries. Every requested scope selects its own fields. Many scopes support per-parent ordering/pagination; singular scopes support filtering and return `null` if their target is excluded. Preparation rejects dangling/ambiguous authored references and invalid singular cardinality. Array references preserve order and duplicates; inverse membership is distinct.
@@ -303,6 +305,8 @@ export default withContentQuery({ trailingSlash: true });
 
 `withContentQuery(nextConfig?, options?)` accepts a Next.js configuration object, promise, or phase-aware function. `NextContentOptions` exposes `config` (an exact configuration file) and `outDir` (generated output), resolved relative to the application directory where the wrapper is created. Defaults are automatic configuration discovery and `.content-query/`. The adapter uses generated storage, awaits initial generation, and owns one development watch session per application. Repeated configuration evaluation reuses that session; changing content locations closes the predecessor. Shutdown closes owned sessions. Production builds await a successful one-shot build and dispose it before Next compiles; server-only phases do not start generation.
 
+Next's detached telemetry helper also evaluates development configuration. The adapter preserves that configuration without starting a content session, allowing the helper to exit without leaving a watcher behind.
+
 The wrapper preserves the application's Next.js settings. For static exports, the example selects `output: "export"` outside development so Next's static-parameter checks do not interfere with added or removed development routes.
 
 Add an application-local alias in `package.json`:
@@ -350,10 +354,16 @@ Vite transports development diagnostics with the same value codec as prepared da
 
 Native content loaders update a private collection store through `load(context)` and development watcher callbacks. Complete store revisions pass through metadata, computed-field, and relationship validation before atomic publication. Candidate edits that reach preparation remain available for cross-collection recovery. Additional source reads belong to loaders; computed fields process validated metadata and captured `readBody()` text.
 
-SQLite, live collections, generic deferred fields, browser querying, advanced joins, configurable Markdown processing, assets, MDX, and the other [future extensions](../../docs/PLAN.md#future-extensions) remain future work. Routing, locale fallback, navigation, public URLs, and access policy belong to applications.
+SQLite, live collections, generic deferred fields, browser querying, advanced joins, configurable Markdown processing, assets, MDX, and the other [future extensions](../../docs/TODO.md#future-extensions) remain future work. Routing, locale fallback, navigation, public URLs, and access policy belong to applications.
 
 See [FEATURES.md](../../docs/FEATURES.md), [COMPARISONS.md](../../docs/COMPARISONS.md), and the normative [PLAN.md](../../docs/PLAN.md), including its [end-to-end example](../../docs/PLAN.md#living-end-to-end-example).
 
 ## Development checks
 
 From this package directory, run `vp check` and `vp test run --coverage`. The suite covers every documented value of the PLAN.md living example (`tests/integration/living-example.test.ts`; update it with the plan), typed consumer callsites, both backends, generated consumers without source files, watch recovery, concurrent publication, CLI behavior, and Vite integration. Coverage requires at least 90% statements/lines, 85% branches, and 90% functions. The repository's `vp test run` also exercises the migrated VoidPress app. The root formatter configuration ignores `dist/` and `coverage/` output.
+
+Watch recovery tests repeat configuration notifications and check stable error codes and diagnostics, preserved revisions, and rejected reads through content edits before verifying recovery from a corrected configuration.
+
+Declared files or glob base directories that are missing when watching starts retain a metadata polling fallback for that one path. It restores native subscriptions when a parent-directory creation event is lost; glob contents are not individually polled. The fallback is released with the session.
+
+The living-example declaration and published Astro-loader consumer checks launch TypeScript and fresh Node processes. They use explicit 30-second deadlines to accommodate compiler startup under coverage or system load; ordinary tests retain the default deadline and all consumer assertions remain enabled.
