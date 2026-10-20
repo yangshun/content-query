@@ -16,7 +16,7 @@ describe("loader source metadata through public package exports", () => {
         fixture.config,
         `import { defineCollection } from "content-query";
 import { file, glob, type Loader } from "content-query/loaders";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 const cms: Loader<{documentId:string;url:string;secret:string}> = {
   name: "typed-cms",
   async load({store}) {
@@ -26,18 +26,18 @@ const cms: Loader<{documentId:string;url:string;secret:string}> = {
 export const collections = {
   posts: defineCollection({
     loader: glob({base:"./content/posts",pattern:"*.md",generateId:()=>"custom-id"}),
-    computed: {sourceFile:{schema:z.string().optional(),resolve:({source})=>source?.filePath}},
+    computed: {sourceFile:{schema:schema.string().optional(),resolve:({source})=>source?.filePath}},
   }),
   authors: defineCollection({
     loader: file("./content/authors.json"),
-    computed: {recordKey:{schema:z.string().optional(),resolve:({source})=>source?.key}},
+    computed: {recordKey:{schema:schema.string().optional(),resolve:({source})=>source?.key}},
   }),
   remote: defineCollection({
     loader: cms,
-    schema: z.object({title:z.string()}),
+    schema: schema.object({title:schema.string()}),
     computed: {
       url: {
-        schema:z.string(),
+        schema:schema.string(),
         resolve: ({data,source}) => {
           const title: string = data.title;
           if (!source) { return title; }

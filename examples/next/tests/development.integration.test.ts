@@ -164,8 +164,8 @@ describe("Next.js development content integration", () => {
         await writeFile(
           config,
           originalConfig.replace(
-            "title: z.string()",
-            "title: z.string().transform((title) => `Configured ${title}`)",
+            "title: schema.string()",
+            "title: schema.string().transform((title) => `Configured ${title}`)",
           ),
         );
         await vi.waitFor(async () => {

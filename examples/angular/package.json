@@ -29,7 +29,6 @@
     "concurrently": "10.0.6",
     "content-query": "workspace:*",
     "typescript": "^6.0.2",
-    "vite-plus": "catalog:",
-    "zod": "^4.3.6"
+    "vite-plus": "catalog:"
   }
 }

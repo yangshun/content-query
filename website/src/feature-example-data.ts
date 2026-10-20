@@ -18,9 +18,9 @@ export const sourceToDataExample = {
   schema: `export const collections = {
   posts: defineCollection({
     source: "./content/posts",
-    schema: z.object({
-      title: z.string(),
-      draft: z.boolean(),
+    schema: schema.object({
+      title: schema.string(),
+      draft: schema.boolean(),
     }),
   }),
 };`,
@@ -114,10 +114,10 @@ export function queryExampleType(options: QueryExampleOptions) {
 
 export const collectionExampleCode = `defineCollection({
   source: "./content/posts",
-  schema: z.object({
-    title: z.string(),
-    draft: z.boolean(),
-    authorId: z.string(),
+  schema: schema.object({
+    title: schema.string(),
+    draft: schema.boolean(),
+    authorId: schema.string(),
   }),
 });`;
 

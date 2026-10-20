@@ -1,5 +1,7 @@
 # ContentQuery website
 
+Collection configs, executable examples, and published guides use `{ schema }` from `content-query/schema`. The quick start installs only ContentQuery. The collections guide documents the selected Zod-backed builders, chaining, inference helpers, and support for other Standard Schema V1 providers.
+
 The [computed fields guide](./content/guides/computed-fields.md) covers collection names and optional, typed loader source metadata, with file and CMS examples that make those values queryable. It distinguishes the ContentQuery metadata extension from Astro's standard entry fields and explains source-only updates and digest behavior.
 
 The guide also documents `readingTime()`, `wordCount()`, and `excerpt()` from `content-query/computed`: body defaults, typed async selectors, text/Markdown/HTML formats, empty input, Unicode excerpt limits, and build-only processing. The homepage computed-fields example uses these helpers, and its displayed imports and configuration execute in the integration suite.

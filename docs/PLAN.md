@@ -130,7 +130,7 @@ Define entry identity, loader inputs, validated data, computed query fields, bui
 
 Status: Standard Schema is the public validation contract, agreed on October 17, 2026. TypeScript query-field checks without a complete runtime field catalog are agreed on October 18, 2026. These rules define the v1 implementation contract.
 
-Accept [Standard Schema V1](https://standardschema.dev/) schemas for collection source metadata and computed field results. Zod is one compatible provider used in the living example; the public schema contract must not require Zod types or a particular validation library.
+Accept [Standard Schema V1](https://standardschema.dev/) schemas for collection source metadata and computed field results. The public validation contract must not require Zod types or a particular validation library. ContentQuery supplies selected Zod-backed builders through `import { schema } from "content-query/schema"`; consumers need no separate Zod installation. Builder results retain Zod's chaining methods, while `schema.input`, `schema.output`, and `schema.infer` use Standard Schema's provider-independent inference. See the [bundled builder API](../packages/content-query/README.md#bundled-schema-builders).
 
 | Concern         | Rule                                                                                                                                                                                                                         |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -425,7 +425,7 @@ Resolvers must not mutate shared data, acquire original sources independently, o
 
 Status: forward/inverse mappings and fluent loading agreed on October 17, 2026; explicit reference ownership, optionality, singular query behavior, and ID-array rules agreed on October 18, 2026. These describe the redesign, not the current implementation.
 
-Declare relationships separately from source validation using plain objects. A post keeps `authorId: z.string()` in its source schema and declares:
+Declare relationships separately from source validation using plain objects. A post keeps `authorId: schema.string()` in its source schema and declares:
 
 ```ts
 relationships: {
@@ -484,7 +484,7 @@ Status: preparation-time integrity agreed on October 17, 2026; ownership, absenc
 | A one relationship has multiple underlying matches                                                | Fail preparation. A nested filter or query limit cannot hide this invalid cardinality.                     |
 | A valid singular target is excluded by a nested filter                                            | Return `null` and retain the parent. This is a query result, not broken source integrity.                  |
 
-Use the owning field's validated output type to infer forward-reference optionality. For example, `authorId: z.string()` is required; `authorId: z.string().nullable().optional()` permits absence. No separate optionality flag is required. A schema that fills in a default may produce a required output even when its raw input can omit the field. Runtime preparation works with validated values; it does not require Zod-specific schema inspection.
+Use the owning field's validated output type to infer forward-reference optionality. For example, `authorId: schema.string()` is required; `authorId: schema.string().nullable().optional()` permits absence. No separate optionality flag is required. A schema that fills in a default may produce a required output even when its raw input can omit the field. Runtime preparation works with validated values; it does not require Zod-specific schema inspection.
 
 `referenceSide` identifies which collection owns those values even for inverse-only declarations. Validate every supplied reference in that owning collection against the complete opposite collection. An author with no posts is valid; a post's supplied `authorId` pointing to a missing author is invalid. Optionality allows an omitted link rather than a dangling link. Every supplied ID in an array is checked, including repeated IDs.
 
@@ -1268,15 +1268,15 @@ Keep all source loading, schemas, and computed functions in build-only `content-
 
 ```ts
 // content-query.config.ts — development/build preparation only.
-import { z } from "zod";
+import { schema } from "content-query/schema";
 import { defineCollection } from "content-query";
 import { file, glob } from "content-query/loaders";
 
 const authors = defineCollection({
   loader: file("./content/authors.json"),
-  schema: z.object({
-    name: z.string().min(1),
-    featuredPostIds: z.array(z.string()).default([]),
+  schema: schema.object({
+    name: schema.string().min(1),
+    featuredPostIds: schema.array(schema.string()).default([]),
   }),
   relationships: {
     posts: {
@@ -1303,13 +1303,13 @@ const posts = defineCollection({
     retainBody: true, // Default: retain publicly accessible raw text.
     deferRender: false, // Default: eager compilation for production SSR.
   }),
-  schema: z.object({
-    title: z.string().min(1),
-    subtitle: z.string().nullable().optional(),
-    locale: z.string(),
-    authorId: z.string(),
-    publishedAt: z.coerce.date(),
-    draft: z.boolean().default(false),
+  schema: schema.object({
+    title: schema.string().min(1),
+    subtitle: schema.string().nullable().optional(),
+    locale: schema.string(),
+    authorId: schema.string(),
+    publishedAt: schema.coerce.date(),
+    draft: schema.boolean().default(false),
   }),
   relationships: {
     author: {
@@ -1322,7 +1322,7 @@ const posts = defineCollection({
   },
   computed: {
     slug: {
-      schema: z.string(),
+      schema: schema.string(),
       resolve: ({ id }) => id,
     },
   },
@@ -1758,10 +1758,10 @@ If a post supplies `authorId: missing-author`, preparation fails even if a query
 In an independent optional-author variation, change only the validated source field:
 
 ```ts
-authorId: z.string().nullable().optional(),
+authorId: schema.string().nullable().optional(),
 ```
 
-The mapping needs no optionality flag. An omitted, undefined, or null author ID then returns `author: null`; an actually supplied missing ID still fails preparation. The unfiltered result type becomes `author: { name: string } | null`. The main fixture retains required `authorId: z.string()` and its non-null unfiltered author type.
+The mapping needs no optionality flag. An omitted, undefined, or null author ID then returns `author: null`; an actually supplied missing ID still fails preparation. The unfiltered result type becomes `author: { name: string } | null`. The main fixture retains required `authorId: schema.string()` and its non-null unfiltered author type.
 
 A query can also filter a required singular reference:
 

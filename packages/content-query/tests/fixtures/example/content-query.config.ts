@@ -1,13 +1,13 @@
 // content-query.config.ts — development/build preparation only.
-import { z } from "zod";
+import { schema } from "content-query/schema";
 import { defineCollection } from "content-query";
 import { file, glob } from "content-query/loaders";
 
 const authors = defineCollection({
   loader: file("./content/authors.json"),
-  schema: z.object({
-    name: z.string().min(1),
-    featuredPostIds: z.array(z.string()).default([]),
+  schema: schema.object({
+    name: schema.string().min(1),
+    featuredPostIds: schema.array(schema.string()).default([]),
   }),
   relationships: {
     posts: {
@@ -34,13 +34,13 @@ const posts = defineCollection({
     retainBody: true, // Default: retain publicly accessible raw text.
     deferRender: false, // Default: eager compilation for production SSR.
   }),
-  schema: z.object({
-    title: z.string().min(1),
-    subtitle: z.string().nullable().optional(),
-    locale: z.string(),
-    authorId: z.string(),
-    publishedAt: z.coerce.date(),
-    draft: z.boolean().default(false),
+  schema: schema.object({
+    title: schema.string().min(1),
+    subtitle: schema.string().nullable().optional(),
+    locale: schema.string(),
+    authorId: schema.string(),
+    publishedAt: schema.coerce.date(),
+    draft: schema.boolean().default(false),
   }),
   relationships: {
     author: {
@@ -53,7 +53,7 @@ const posts = defineCollection({
   },
   computed: {
     slug: {
-      schema: z.string(),
+      schema: schema.string(),
       resolve: ({ id }) => id,
     },
   },

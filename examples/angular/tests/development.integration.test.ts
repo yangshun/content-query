@@ -53,8 +53,8 @@ describe("Angular CLI development content integration", () => {
       await writeFile(
         configuration,
         originalConfiguration.replace(
-          "title: z.string()",
-          "title: z.string().transform((title) => `Configured ${title}`)",
+          "title: schema.string()",
+          "title: schema.string().transform((title) => `Configured ${title}`)",
         ),
       );
       await vi.waitFor(async () => {

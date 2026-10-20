@@ -21,7 +21,6 @@
     "svelte-check": "^4.4.0",
     "typescript": "^6.0.2",
     "vite": "catalog:",
-    "vite-plus": "catalog:",
-    "zod": "^4.3.6"
+    "vite-plus": "catalog:"
   }
 }

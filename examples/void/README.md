@@ -1,5 +1,7 @@
 # ContentQuery x Void
 
+Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
+
 A minimal Void + React documentation app in `content-query/examples/void`, backed by one ContentQuery collection. The guides describe a fictional project notebook and serve as sample content.
 
 ## Setup and development
@@ -30,7 +32,7 @@ Void uses static output. The build prerenders `/` and the three `/docs/<guide-id
 
 ## How it fits together
 
-- `content-query.config.ts` defines the `guides` collection with `source: "./content/guides"` (Markdown by default) and a Zod metadata schema. `contentQuery()` uses its default in-memory backend, delivering virtual modules during development and bundling content for production. Use `contentQuery({ backend: "generated" })` only when standalone runtime files are also needed.
+- `content-query.config.ts` defines the `guides` collection with `source: "./content/guides"` (Markdown by default) and bundled metadata schema builders. `contentQuery()` uses its default in-memory backend, delivering virtual modules during development and bundling content for production. Use `contentQuery({ backend: "generated" })` only when standalone runtime files are also needed.
 - `pages/index.server.ts` queries the homepage index directly, explicitly selecting metadata and sorting by `order`.
 - `pages/docs/layout.tsx` owns the persistent sidebar, reading its own metadata from `middleware/01.docs.ts` through Void shared data. The article loader does not fetch or pass sidebar entries.
 - `pages/docs/[...slug].server.ts` queries guide metadata and independent sibling navigation with fluent `.selectAdjacent()`, calls `content.render()` for the requested guide only, and handles missing-guide 404s. Its `getPrerenderPaths()` queries collection IDs when invoked. Queries run inside functions, not at route-module initialization.

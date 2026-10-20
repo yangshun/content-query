@@ -27,11 +27,11 @@ describe("published Astro loaders in real consumers", () => {
           `
 import { defineCollection } from "content-query";
 import { csvLoader } from "@ascorbic/csv-loader";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 export const collections = {
   authors: defineCollection({
     loader: csvLoader({fileName:"./authors.csv",idField:"id"}),
-    schema: z.object({name:z.string().transform(name=>name+"!")}),
+    schema: schema.object({name:schema.string().transform(name=>name+"!")}),
   }),
 };
 `,

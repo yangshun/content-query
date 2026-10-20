@@ -1,12 +1,12 @@
 import { defineCollection } from "content-query";
-import { z } from "zod";
+import { schema } from "content-query/schema";
 
 const guides = defineCollection({
   source: "./content/guides",
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    order: z.number(),
+  schema: schema.object({
+    title: schema.string(),
+    description: schema.string(),
+    order: schema.number(),
   }),
 });
 

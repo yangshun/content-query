@@ -34,9 +34,9 @@ describe("computed helpers through public package exports", () => {
           `import {defineCollection} from "content-query";
 import {excerpt, readingTime, wordCount} from "content-query/computed";
 import {file, glob, type Loader} from "content-query/loaders";
-import {z} from "zod";
-const articleSchema = z.object({description:z.string(),html:z.string()});
-type Article = z.infer<typeof articleSchema>;
+import { schema } from "content-query/schema";
+const articleSchema = schema.object({description:schema.string(),html:schema.string()});
+type Article = schema.infer<typeof articleSchema>;
 const cms: Loader<{text:string}> = {
   name:"cms",
   async load({store}) {store.set({id:"one",data:{},source:{text:"Loaded metadata"}});},
@@ -44,7 +44,7 @@ const cms: Loader<{text:string}> = {
 export const collections = {
   posts: defineCollection({
     loader:glob({base:"./content/posts",pattern:"*.md",retainBody:false,deferRender:true}),
-    schema:z.object({title:z.string()}),
+    schema:schema.object({title:schema.string()}),
     computed:{readingMinutes:readingTime(),words:wordCount(),summary:excerpt({maxLength:16})},
   }),
   articles: defineCollection({
@@ -192,8 +192,8 @@ try {await buildContent({backend:"in-memory"});} catch(error) {console.log(JSON.
         `import {defineCollection} from "content-query";
 import {wordCount,excerpt} from "content-query/computed";
 import {glob} from "content-query/loaders";
-import {z} from "zod";
-export const collections={posts:defineCollection({loader:glob({base:"./content/posts",pattern:"*.md",deferRender:true}),schema:z.object({title:z.string()}),computed:{words:wordCount(),summary:excerpt<{title:string}>({from:({data})=>data.title,format:"text"})}})};
+import { schema } from "content-query/schema";
+export const collections={posts:defineCollection({loader:glob({base:"./content/posts",pattern:"*.md",deferRender:true}),schema:schema.object({title:schema.string()}),computed:{words:wordCount(),summary:excerpt<{title:string}>({from:({data})=>data.title,format:"text"})}})};
 `,
       );
       session = await buildAtRoot(fixture.root, { watch: true, backend: "in-memory" });

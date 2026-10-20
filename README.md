@@ -4,6 +4,8 @@ Typed, framework-independent content collections, queries, and rendering. Conten
 
 The standalone CLI uses CAC and provides `--help`, command-specific help, `--version`, and short aliases for configuration, output directory, and watch mode.
 
+Import `{ schema }` from `content-query/schema` for bundled Zod-backed content builders and provider-independent inference helpers. Consumers install only ContentQuery; collections and computed fields also accept other Standard Schema V1 validators.
+
 Build-only helpers from `content-query/computed` add typed reading time, word count, and excerpt fields. They use captured Markdown by default or explicitly selected text/HTML from structured files and custom loaders. See the [computed fields guide](./website/content/guides/computed-fields.md).
 
 This directory groups the project for a future standalone repository:

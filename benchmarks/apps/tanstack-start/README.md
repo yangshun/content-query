@@ -1,5 +1,7 @@
 # TanStack Start + ContentQuery benchmark app
 
+Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
+
 This app pins Vite+ 1.3.0, matching the workspace's existing TanStack Start example. The raw report records its resolved toolchain separately from the other stacks.
 
 The homepage lists all 10,000 titles and descriptions with links. Each article renders its own metadata and Markdown body. Inline TanStack Start server functions query ContentQuery; content imports stay inside their handlers, so the runtime and article collection remain on the server.
