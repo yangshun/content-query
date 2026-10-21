@@ -17,7 +17,4 @@ jobs:
       - run: vp install --frozen-lockfile
       - run: vp run build
       - run: vp run check
-      - run: vp run --filter @voidpress/content-query-sveltekit check
-      - run: vp exec --filter @content-query/benchmarks playwright install --with-deps chromium
       - run: vp test run --coverage
-      - run: vp run build:website

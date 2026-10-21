@@ -13,7 +13,7 @@ From the repository root, use Node.js 24.21.0 and Vite+:
 ```sh
 vp install --frozen-lockfile
 vp run --filter content-query build
-vp run --filter @voidpress/content-query-angular dev
+vp run --filter @content-query/example-angular dev
 ```
 
 The development command builds content once, then runs `content-query build --watch` alongside `ng serve`. Content publications update the generated server entry, which Angular CLI watches as a server dependency. Angular rebuilds and reloads the page after metadata, body, added/deleted guide, and configuration changes. Validation failures appear in the terminal; the last valid generated content remains available until corrected. Stopping development stops both processes.
@@ -23,8 +23,8 @@ Angular CLI manages its own build and development server. This example uses the 
 ## Build and serve
 
 ```sh
-vp run --filter @voidpress/content-query-angular build
-vp run --filter @voidpress/content-query-angular start
+vp run --filter @content-query/example-angular build
+vp run --filter @content-query/example-angular start
 ```
 
 The build runs `content-query build` before `ng build`. Deploy `dist/angular/` and the production dependencies, then run `node dist/angular/server/server.mjs`; `PORT` defaults to 4000. Set Angular's `NG_ALLOWED_HOSTS` environment variable to your deployment hostname; localhost is configured for local use. This example requires a Node server. Its compiled server bundles the prepared content, so deployment does not need `content/`, `content-query.config.ts`, or `.content-query/`.

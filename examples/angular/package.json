@@ -1,5 +1,5 @@
 {
-  "name": "@voidpress/content-query-angular",
+  "name": "@content-query/example-angular",
   "version": "0.0.0",
   "private": true,
   "type": "module",

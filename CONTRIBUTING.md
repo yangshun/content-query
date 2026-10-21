@@ -8,12 +8,13 @@ From this repository root, use Node.js 24.21.0 and Vite+. The repository owns it
 vp install --frozen-lockfile
 vp run build
 vp run check
-vp exec --filter @content-query/benchmarks playwright install chromium
 vp test run
 vp test run --coverage
 ```
 
-Run `vp fmt` to format files or `vp lint` for linting alone. `vp check` combines formatting, linting, and type checks. `vp run check` first generates ContentQuery declarations and framework types for a clean checkout; use `vp check` directly afterward. Installation builds the library so local CLI links work immediately. The pre-commit hook runs `vp staged`, and GitHub Actions runs the checks, SvelteKit diagnostics, tests with coverage, and website build. Package coverage must remain above 90% for statements, lines, and functions, and 85% for branches.
+`vp run check` builds the library and prepares consumer declarations and framework types before running workspace formatting, linting, and TypeScript checks. Preparation includes SvelteKit diagnostics. Use the built-in `vp check` directly after preparation. Run `vp fmt` to format workspace files or `vp lint` for linting alone.
+
+Installation builds the library so local CLI links work immediately, and the integration suite rebuilds it before exercising consumers. The pre-commit hook runs `vp staged`. GitHub Actions builds the library, checks the workspace, and runs tests with coverage, including framework examples, the website, and benchmark unit tests. Browser tests for benchmark apps are opt-in through `vp test run --config benchmarks/vite.browser.config.ts`; see the [benchmark setup](./benchmarks/README.md) for Chromium installation. Performance measurements remain manual. Package coverage must remain above 90% for statements, lines, and functions, and 85% for branches. Cloudflare Workers Builds handles the website build and deployment separately.
 
 ## Development
 
@@ -68,7 +69,7 @@ Unit tests stay beside their owning modules. Query plans are independent of Java
 
 ## Development checks
 
-From `packages/content-query/`, run `vp check` and `vp test run --coverage`. The suite covers every documented value of the PLAN.md living example (`tests/integration/living-example.test.ts`; update it with the plan), typed consumer callsites, both backends, generated consumers without source files, watch recovery, concurrent publication, CLI behavior, and Vite integration. Coverage requires at least 90% statements/lines, 85% branches, and 90% functions. The repository's `vp test run` also exercises all framework examples, benchmarks, and the website. VoidPress verifies its consumers in its own repository. The root formatter configuration ignores `dist/` and `coverage/` output.
+From `packages/content-query/`, run `vp check` and `vp test run --coverage`. The suite covers every documented value of the PLAN.md living example (`tests/integration/living-example.test.ts`; update it with the plan), typed consumer callsites, both backends, generated consumers without source files, watch recovery, concurrent publication, CLI behavior, and Vite integration. Coverage requires at least 90% statements/lines, 85% branches, and 90% functions. The repository's `vp test run` also exercises all framework examples, benchmark unit tests, and the website. VoidPress verifies its consumers in its own repository. The root formatter configuration ignores `dist/` and `coverage/` output.
 
 Watch recovery tests repeat configuration notifications and check stable error codes and diagnostics, preserved revisions, and rejected reads through content edits before verifying recovery from a corrected configuration.
 
