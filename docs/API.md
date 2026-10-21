@@ -1,0 +1,371 @@
+# ContentQuery API and usage
+
+A framework-independent content collection library with typed queries, field projection, relationships, captured bodies, and Markdown rendering. Content builds run during development or your application's build. Production consumes prepared content without loading source files or importing collection configuration.
+
+Application imports such as `content-query/schema`, `content-query/query`, `content-query/computed`, `content-query/build`, and `content-query/vite` remain the supported API. The `content-query/internal` entries exist for generated modules and integration wiring.
+
+## Define collections
+
+```ts
+// content-query.config.ts — build-only
+import { defineCollection } from "content-query";
+import { file } from "content-query/loaders";
+import { schema } from "content-query/schema";
+
+const authors = defineCollection({
+  loader: file("./content/authors.json"),
+  schema: schema.object({ name: schema.string() }),
+});
+
+const posts = defineCollection({
+  source: "./content/posts", // A string selects Markdown by default.
+  schema: schema.object({
+    title: schema.string(),
+    authorId: schema.string(),
+    draft: schema.boolean().default(false),
+  }),
+  computed: {
+    upperTitle: { schema: schema.string(), resolve: ({ data }) => data.title.toUpperCase() },
+  },
+  relationships: {
+    author: {
+      collection: "authors",
+      type: "one",
+      from: "authorId",
+      to: "id",
+      referenceSide: "from",
+    },
+  },
+});
+
+export const collections = { authors, posts };
+```
+
+A string `source` scans a directory recursively for Markdown. For an explicit format, use `source: { type: "markdown", directory: "./content/posts" }`; `"json"`, `"yaml"`, and `"toml"` select individual record files instead. The object form also accepts `include` (one pattern or an array, including exclusions), `generateId`, `retainBody`, and `deferRender`. These are the same built-in glob loader semantics. Use `loader` for multi-record files, custom parsing, or external loaders. Specify exactly one of `source` and `loader`.
+
+Any Standard Schema V1 provider can validate collection metadata and computed results. Async validators/resolvers are supported. Validated outputs determine query types and are stored without rerunning transforms at runtime. Collection schemas are optional: an explicit schema overrides the loader’s `schema` or asynchronous `createSchema()` default. Loader defaults also support Zod 3 and Zod 4, including core schemas. Declare a collection schema when you need precise static field inference; dynamically discovered loader schemas provide named fields with `unknown` values.
+
+Computed resolvers receive the registry key `collection`, entry `id`, validated `data`, optional loader-defined `source` metadata, captured `readBody()` text, and cancellation `signal`. `glob()` and collection `source` shorthand provide `{ filePath }`; multi-record `file()` adds the original record `key` (a keyed-object property or array index, as a string). Paths use forward slashes and are relative to the application root, preserving the original filename independently of custom IDs. Access optional metadata with `source?.filePath` or a presence check. Context metadata becomes queryable only when explicitly returned by a computed field.
+
+Custom loaders can declare `Loader<Source>` and attach `source` to their store entries. `defineCollection()` infers that metadata type for resolvers independently of schema-validated `data`. Source metadata is detached for every resolver, must contain supported data values, and stays out of deployed artifacts unless returned by a computed field. Untyped loaders expose `unknown` source metadata, which must be narrowed before accessing fields.
+
+`glob()` supports Markdown and individual JSON/YAML/TOML records. Default IDs follow Astro's slug generation, raw `slug` override, and trailing `/index` removal. `generateId` overrides this policy. A captured Markdown body excludes frontmatter and the blank lines separating it from the content. `file()` reads multi-entry arrays or keyed objects and accepts an async custom parser. Built-in paths resolve from the application root.
+
+Glob acquisition keeps at most 64 file reads outstanding, preserving source ordering, aggregated diagnostics, and cancellation without opening the entire collection at once.
+
+## Bundled schema builders
+
+Import `{ schema }` from `content-query/schema`; no separate Zod dependency is needed. ContentQuery supplies Zod-backed `object`, `string`, `number`, `boolean`, `bigint`, `date`, `array`, `enum`, `literal`, `union`, `record`, and `unknown` builders, plus `coerce.string()`, `coerce.number()`, `coerce.boolean()`, `coerce.bigint()`, and `coerce.date()`.
+
+Returned schemas retain Zod's chaining methods, including `.optional()`, `.nullable()`, `.default()`, `.refine()`, and `.transform()`. Nested composition follows Zod's rules. The namespace exposes the selected builders, without provider-level parsing utilities, error classes, or configuration. Validation still uses Standard Schema; you can supply another compatible provider's schemas for collections and computed fields.
+
+The type-only helpers `schema.input<Validator>`, `schema.output<Validator>`, and `schema.infer<Validator>` work with any Standard Schema V1 provider. `infer` is an alias for validated output, including defaults and transforms:
+
+```ts
+import { schema } from "content-query/schema";
+
+const postSchema = schema.object({
+  title: schema.string(),
+  draft: schema.boolean().default(false),
+});
+type PostInput = schema.input<typeof postSchema>; // draft is optional.
+type Post = schema.infer<typeof postSchema>; // draft is boolean.
+```
+
+Builders run during preparation. Generated runtime JavaScript imports neither the schemas nor Zod.
+
+## Reusable computed fields
+
+`content-query/computed` exports `readingTime()`, `wordCount()`, and `excerpt()`. They return ordinary `{ schema, resolve }` definitions with Standard Schema result types, and can sit alongside custom computed fields:
+
+```ts
+import { excerpt, readingTime, wordCount } from "content-query/computed";
+
+computed: {
+  readingMinutes: readingTime({ wordsPerMinute: 200 }),
+  wordCount: wordCount(),
+  excerpt: excerpt({ maxLength: 160 }),
+}
+```
+
+Reading time is a whole number of minutes rounded up, defaulting to 200 words per minute. Word count uses the `reading-time` package's estimated word boundaries, including its CJK handling. Excerpts are normalized plain text, defaulting to at most 160 Unicode graphemes including a trailing `…` when shortened. They prefer whole words and preserve emoji and combining characters. Empty or absent text produces `0` or `""`.
+
+`TextOptions<Data, Source>` supplies `format: "markdown" | "text" | "html"` (default `"markdown"`) and optional `from(context)` for synchronous or asynchronous text selection. Omit `from` to use the captured body. Markdown extraction retains prose, code, and image alternatives while dropping syntax and link destinations. HTML extraction decodes entities and separates blocks, skips comments and head/script/style/template/noscript/hidden content, and does not evaluate CSS. Text mode preserves literal markup and entities. Whitespace is normalized in every format.
+
+For structured data, type the selector from the collection schema. For example, alongside `schema: articleSchema`:
+
+```ts
+computed: {
+  summary: excerpt<schema.infer<typeof articleSchema>>({
+    from: ({ data }) => data.description,
+    format: "text",
+    maxLength: 160,
+  }),
+}
+```
+
+Supply loader metadata as the second type argument when selecting from `source`. `ReadingTimeOptions<Data, Source>` adds finite positive `wordsPerMinute`; `ExcerptOptions<Data, Source>` adds positive-safe-integer `maxLength`. Bad options fail at declaration time. Selectors must return a string or `undefined`; failures become normal contextual preparation diagnostics, and helpers honor the resolver's abort signal.
+
+Results become ordinary typed fields for selection, filtering, and sorting. Helpers run during preparation, including with `retainBody: false`; deployed queries import neither these helpers nor their text-processing dependencies. Text helpers use a Markdown parser without initializing syntax highlighting. See the [computed fields guide](../website/content/guides/computed-fields.md) for complete configurations and queries.
+
+## Astro-compatible content loaders
+
+The named loader interface and standard entry fields remain Astro-compatible. Optional entry `source` metadata and its TypeScript generic are ContentQuery extensions: existing Astro loaders need no changes, and Astro's own store does not retain this extension. The standard `filePath` field remains available for diagnostics independently of source metadata. Store reads keep the standard shape, so custom source metadata read directly from the store remains `unknown`.
+
+ContentQuery uses Astro’s named, store-writing content loader contract directly. Pass an existing loader package to `defineCollection()` without a wrapper:
+
+```ts
+import { defineCollection } from "content-query";
+import { csvLoader } from "@ascorbic/csv-loader";
+import { schema } from "content-query/schema";
+
+export const collections = {
+  authors: defineCollection({
+    loader: csvLoader({ fileName: "./content/authors.csv", idField: "id" }),
+    schema: schema.object({ name: schema.string() }),
+  }),
+};
+```
+
+Custom loaders implement `name` and asynchronous `load(context)`, which updates `context.store` and returns no entries:
+
+```ts
+import type { Loader } from "content-query";
+
+const notices: Loader = {
+  name: "notices",
+  async load(context) {
+    const id = "status";
+    const data = await context.parseData({ id, data: { title: "All systems operational" } });
+    context.store.clear();
+    context.store.set({ id, data, digest: context.generateDigest(data) });
+  },
+};
+```
+
+The context supplies `collection`, `store`, `meta`, `logger`, `config`, `parseData()`, `generateDigest()`, `renderMarkdown()`, and an optional development `watcher`. ContentQuery also supplies an optional load-attempt `signal`. Store entries use Astro’s `filePath` for source diagnostics, alongside `id`, `data`, optional raw `body`, optional rendered HTML, and optional `digest`. Matching digests skip replacements. Store and string-valued metadata are isolated by collection and preparation session; neither persists between cold builds.
+
+Use `parseData()` before `store.set()` to validate and transform metadata. ContentQuery recognizes those parsed objects so preparation does not run transforms twice. Preparation still validates direct store writes. IDs remain top-level query fields: source schema outputs cannot redeclare `id` or overlap computed fields and relationships.
+
+In development, register callbacks on `context.watcher` and call `watcher.add()` for dependencies outside the application root. Complete asynchronous watcher callbacks publish their store changes together, and failures block new content operations until corrected. Filesystem edits can also retry a failed initial load that has not installed its own listeners yet. Configuration reloads and disposal remove loader-owned listeners. The previous `load({ signal })` snapshot return value and separate `watch({ update, invalidate })` API are replaced by this native store contract.
+
+`config` supplies root/source/public/output/cache directory URLs, `base`, `site`, and `output`. Export an optional `loaderConfig` object alongside `collections` to override settings or supply additional configuration a loader reads. These values configure loaders; they do not configure application routing or start Astro integrations. Accessing an unavailable setting produces an explicit error.
+
+Compatibility covers build-time content loaders. The built-in `glob()` and `file()` loaders use the same context. Astro integration hooks, live loaders, component modules, optimized image imports, and Astro-specific deferred rendering require additional host functionality and are not supported. Unsupported module/image entries fail explicitly. `context.renderMarkdown()` uses ContentQuery’s portable renderer and returns HTML/headings. Third-party packages may require Astro as their own dependency or peer; ContentQuery itself does not import Astro at runtime. The published `@ascorbic/csv-loader` is covered by watch-mode, generated-consumer, and type-checking tests.
+
+## Build and query
+
+```sh
+vp exec content-query build
+vp exec content-query build --watch
+vp exec content-query --help
+vp exec content-query build --help
+vp exec content-query --version
+```
+
+The CLI uses CAC for commands, options, and generated help/version output. `-c`, `-o`, and `-w` are aliases for `--config`, `--out-dir`, and `--watch`; value options accept both `--option value` and `--option=value`. Help and version requests work without loading collection configuration or building content.
+
+Defaults are automatic config discovery, `--backend generated`, and `--out-dir ./.content-query`. Unknown options, repeated build options, missing values, invalid backends, and extra positional arguments fail. The command is `build`; the former `prepare` command is no longer accepted. Git-ignore `.content-query/`; generated runtime artifacts and Vite declarations share this directory directly, without a nested `generated/` directory.
+
+The CLI, standalone API, and Vite integration discover exactly one `content-query.config.{ts,mts,cts,js,mjs,cjs}` file at the application root. Examples use `.ts`; both ES module and CommonJS configurations are supported. Missing or multiple matching files produce a configuration error. Use `--config` on the CLI or the `config` option in `buildContent()`/Vite to select an exact filename or location, bypassing discovery. An explicit path never falls back to another config. Configurations export the named `collections` registry; JSON, YAML, and JSX/TSX are not discovered.
+
+```ts
+import { content } from "./.content-query/server.js";
+import { eq } from "content-query/query";
+
+const posts = await content
+  .select("id", "title")
+  .from("posts")
+  .where((fields) => eq(fields.draft, false))
+  .with("author", (author) => author.select("name"))
+  .orderBy("title")
+  .limit(20);
+
+const body = await content.readBody("posts", posts[0]!.id);
+const { html, headings } = await content.render("posts", posts[0]!.id);
+```
+
+Start fluent queries with `content.select(...fields).from(collection)`; `from()` is available only after `select()`. Builders are immutable and reusable. Await them directly, or call `all()` / `execute()` for an array and `first()` for one entry or `undefined`. `content.select().from("posts")` returns all prepared metadata. `count()` counts filtered parents before pagination. Selected optional properties remain own properties with value `undefined`. Returned graphs and headings are detached from internal state. Queries never load bodies, rendered HTML, or a compiler.
+
+Queries constrained by ID equality, such as `.where((fields) => eq(fields.id, id))` or `where: { id }`, use a lazily built index for the current immutable collection revision. Repeated detail-page lookups avoid scanning the entire collection. Additional filters, selection, ordering, pagination, counts, and independent adjacency scopes retain their normal semantics. Development revisions receive their own index.
+
+Detachment copies a result directly when it contains only primitives, plain objects, dense arrays, and dates. This covers typical field selections and `render()` output, including long HTML strings. A result containing any other value, such as a `Map` or an array hole, is detached as a whole through the devalue round trip. Repeated references, cycles, mutation isolation, and the supported-value rules are the same on both paths.
+
+Filtering uses structured expressions from `content-query/query`: scalar equality/comparison/choice operators, literal string matching, scalar-array membership, absence checks, and boolean composition. See the [operator matrix](./PLAN.md#filtering). Sorting uses deterministic Unicode code-point order and ID tie-breakers, with nullish/unordered special values last. Pagination accepts nonnegative safe integers.
+
+Relationships support forward/inverse fields, authored ID arrays, explicit reference ownership, and nested fluent queries. Each fluent relationship scope selects its own fields; relational scopes may default to all metadata. Many scopes support per-parent ordering/pagination; singular scopes support filtering and return `null` if their target is excluded. Preparation rejects dangling/ambiguous authored references and invalid singular cardinality. Array references preserve order and duplicates; inverse membership is distinct.
+
+## Relational queries and adjacent entries
+
+The collection-scoped relational and SQL-ordered fluent APIs compile to the same normalized query plan and use the same executor, value semantics, validation, and revision pinning:
+
+```ts
+const posts = await content.query.posts.findMany({
+  where: { draft: false, title: { contains: "guide" } },
+  columns: { id: true, title: true },
+  with: { author: { columns: { name: true } } },
+  orderBy: { title: "asc" },
+  limit: 20,
+});
+const first = await content.query.posts.findFirst({ columns: { id: true } });
+const count = await content.count("posts", { where: { draft: false } });
+```
+
+`findFirst()` returns `undefined` when no entry matches. Omit `columns` to return all prepared metadata. Use `columns: { title: true }` to include fields, `{ draft: false }` to exclude fields, or `{}` for no scalar fields. If any column is `true`, only `true` columns are returned. Default and exclusion projections preserve stored property presence; explicit inclusions create every selected property. Request related entries through `with`; `true` includes all related metadata, nested options narrow it, and `false` omits the relationship. Singular relationships cannot order or paginate. Count ignores pagination, matching fluent `.count()`.
+
+Relational filters support scalar shorthand and `eq`, `ne`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `like`, `ilike`, `notLike`, `notIlike`, `contains`, `startsWith`, `endsWith`, `arrayContains`, `arrayOverlaps`, `arrayContained`, `isNull`, `isNotNull`, `isUndefined`, and `isMissing`, subject to field types. Compose them with query-level or field-level `AND`, `OR`, and `NOT`. Presence predicates accept booleans. `like` uses `%` and `_` wildcards; `ilike` also ignores case. The literal string helpers remain case-sensitive. `where: { author: { name: "Ada" } }` filters parents by related entries; `author: true` and `false` test relationship existence. `where: { RAW: (fields) => eq(fields.AND, value) }` accepts structured expressions for reserved field names, rather than SQL text.
+
+Select previous/next entries without loading bodies:
+
+```ts
+// Shorthand: neighbors expose IDs within the filtered/ordered result before pagination.
+await content.query.posts.findMany({
+  where: { draft: false },
+  orderBy: { title: "asc" },
+  adjacent: true,
+  columns: { title: true },
+});
+await content.select("title").from("posts").orderBy("title").selectAdjacent().all();
+
+// A detail lookup needs an independent sibling scope, separate from its ID filter.
+const post = await content.query.posts.findFirst({
+  where: { id: currentId },
+  adjacent: {
+    where: { draft: false },
+    orderBy: { title: "asc" },
+    columns: { id: true, title: true },
+  },
+  columns: { title: true },
+});
+const same = await content
+  .select("title")
+  .from("posts")
+  .where((fields) => eq(fields.id, currentId))
+  .selectAdjacent((siblings) =>
+    siblings
+      .where((fields) => eq(fields.draft, false))
+      .orderBy("title")
+      .select("id", "title"),
+  )
+  .first();
+```
+
+Both return `_adjacent: { previous, next }`, with `null` at boundaries or when the current entry is outside the sibling scope. The fluent `.selectAdjacent(options)` overload retains its explicit `{ where?, orderBy?, select }` scope; relational `adjacent` uses `{ where?, orderBy?, columns?, with? }`. Sibling scopes select their own neighbor fields and cannot paginate or recursively select adjacency, including through relationships. `_adjacent` is a reserved field name. Stable ID tie-breakers apply in both APIs.
+
+`content-query/query` exports `QueryOptions<Registry, Name>` (also named `RelationalQueryOptions`), `CountOptions<Registry, Name>`, `RelationalWhere`, and `RelationalQueryResult` for typed helpers. Use `satisfies QueryOptions<...>` to validate reusable options while retaining literal column selections.
+
+The five top-level content operations are `select`, `query`, `count`, `readBody`, and `render`. This replaces callable `content.query("posts")` and root `content.findMany("posts", options)` / `findFirst`. Migrate fluent calls to `content.select(...).from("posts")`, and object calls to `content.query.posts.findMany({ columns, with, ... })` / `findFirst`.
+
+## Backends and Vite
+
+The Vite plugin defaults to `backend: "in-memory"`: `contentQuery()` serves virtual modules in development, bundles prepared content for production, and writes only `.content-query/types.d.ts`. Use `contentQuery({ backend: "generated" })` to also publish standalone runtime artifacts. The standalone CLI, `buildContent()`, and Next.js adapter continue to default to generated storage.
+
+Artifact publication reuses unchanged immutable files and stages new modules with bounded parallel I/O before switching the public entry. Conflicting bytes still fail publication, and older revisions retain their immutable payloads.
+
+The generated backend writes collection indexes and separate lazy item payloads, with versioned devalue encoding. Immutable content-addressed modules keep old operations consistent; stable entry/index aliases expose the latest complete publication. A new watch session removes obsolete collection modules from previous runs after its first successful publication. Invalid startup content delays cleanup until the first valid publication. Later updates retain superseded modules for the rest of that session, so restarting reclaims files from earlier runs. One-shot builds (the CLI without `--watch`, `buildContent`, and Vite builds) also remove generated collection modules their revision no longer references, leaving other files in place. Each output directory belongs to one host; start a new session or one-shot build after previous consumers stop. Only `server.js` and its declarations are application imports.
+
+The in-memory backend writes no backend content artifacts. `buildContent()` accepts `BuildContentOptions` (`config`, `backend`, `outDir`, and `watch`) from `content-query/build` and returns a `ContentSession` with `content` and asynchronous `dispose()`. Build diagnostics report `operation: "build"`. Direct use binds the registry through an erased type import:
+
+```ts
+import { buildContent } from "content-query/build";
+import type { collections } from "./content-query.config";
+
+const session = await buildContent<typeof collections>({ backend: "in-memory" });
+try {
+  const titles = await session.content.select("title").from("posts").all();
+} finally {
+  await session.dispose();
+}
+```
+
+Omitting the generic is valid for build-only calls and exposes no registered query keys. `watch` defaults to `false`. Watch sessions subscribe before loading, return after the first content attempt even if it fails, reject reads while content is invalid, and recover automatically. Configuration/import or subscription-setup failures reject initialization and clean up. Newer builds supersede obsolete work without requiring user code to honor its signal. Already-started operations finish on their pinned revision.
+
+A failed configuration reload keeps new operations in the error state until configuration loading, subscription setup, and content validation succeed. Content edits cannot clear that failure using an older registry. Replacement subscriptions are staged before taking over, and failed setup releases its partial subscriptions while keeping the previous configuration's subscriptions available for recovery.
+
+```ts
+// vite.config.ts
+import { defineConfig } from "vite-plus";
+import { contentQuery } from "content-query/vite";
+
+export default defineConfig({ plugins: [contentQuery()] });
+```
+
+Server modules import `content` from `content-query:server` with either backend. Vite owns watching, preparation, invalidation, error display, and cleanup. Its `.content-query/types.d.ts` binds the facade to the configured registry; include that file in the application's TypeScript project. Remove handwritten ambient bindings when using the generated declarations. Both `content-query:server` and the physical server entry export the type-only aliases `CollectionKey`, `CollectionData<"posts">` (metadata plus computed fields and ID), and `Collections` (a map from collection keys to queryable data types). Include `.content-query/**/*.d.ts` in `tsconfig.json`; run `vp exec content-query build` before an initial type check without starting Vite. With generated storage, the default directory also contains `server.js`, `server.d.ts`, `manifest.js`, `package.json`, and `collections/`. A fresh in-memory Vite setup emits only `types.d.ts`; standalone in-memory preparation writes no files. Standalone generated preparation also writes `types.d.ts` beside the server entry. Custom `outDir` values relocate backend artifacts while the Vite declaration stays in `.content-query/`. `content-query:server` is a virtual module supplied by Vite; other bundlers import the physical generated entry.
+
+Generated output is ordinary ESM for Node or another bundler; it does not require Vite. The Vite integration rejects direct/transitive client imports, including the physical generated server entry. It recognizes package files by the installed package's location and `node_modules/content-query` paths, so an application directory named `content-query` is unaffected. Other hosts must enforce equivalent server-only boundaries. Runtime guards provide a fallback. The [Next.js example](../examples/next/README.md) uses the optional Next.js adapter, server-only queries, and App Router static generation.
+
+Vite excludes generated artifacts from its file watcher while preserving application watcher settings. Production content preparation runs for server environments, so client compilation does not repeat source loading and Markdown rendering. Before bundling, Vite packs payload sources into lazy modules targeting 128 KiB each, including when the host requires strict entry signatures. Default metadata queries still load no bodies; rendering an entry can load neighboring payloads in its module. Host output and chunking settings continue to control the final bundle. Standalone generated artifacts retain individual immutable item modules.
+
+Development prepares initial content before Vite starts listening; server module loads also await that preparation. Closing a server before it listens releases its content session. Development uses the same bounded payload batches and shares concurrent serialization of a revision. Large metadata indexes and payload batches use gzip/base64 when that saves at least ten percent. A portable decoder restores metadata synchronously and expands each payload batch once on first access; failed payload loads can be retried. The underlying value codec still preserves rich metadata, heading aliases, special entry IDs, and detached results. Small or incompressible data stays uncompressed.
+
+## Next.js
+
+```ts
+// next.config.ts
+import { withContentQuery } from "content-query/next";
+
+export default withContentQuery({ trailingSlash: true });
+```
+
+`withContentQuery(nextConfig?, options?)` accepts a Next.js configuration object, promise, or phase-aware function. `NextContentOptions` exposes `config` (an exact configuration file) and `outDir` (generated output), resolved relative to the application directory where the wrapper is created. Defaults are automatic configuration discovery and `.content-query/`. The adapter uses generated storage, awaits initial generation, and owns one development watch session per application. Repeated configuration evaluation reuses that session; changing content locations closes the predecessor. Shutdown closes owned sessions. Production builds await a successful one-shot build and dispose it before Next compiles; server-only phases do not start generation.
+
+Next's detached telemetry helper also evaluates development configuration. The adapter preserves that configuration without starting a content session, allowing the helper to exit without leaving a watcher behind.
+
+The wrapper preserves the application's Next.js settings. For static exports, the example selects `output: "export"` outside development so Next's static-parameter checks do not interfere with added or removed development routes.
+
+Add an application-local alias in `package.json`:
+
+```json
+{
+  "imports": {
+    "#content-query": "./.content-query/server.js"
+  }
+}
+```
+
+Server Components use the same import at every directory depth:
+
+```ts
+import "server-only";
+import { content } from "#content-query";
+```
+
+The alias resolves to the generated server entry and its inferred declarations. If you customize `outDir`, update the alias target to match.
+
+Next's module graph observes published changes, including body-only edits, and refreshes route data through its normal HMR behavior. Validation and configuration failures publish a contextual error entry so server consumers fail visibly; correcting the input republishes the runtime. The application owns routing and should use Next's `server-only` marker around content consumers. Next.js is an optional peer dependency used only by this adapter. Each development publication uses a fresh immutable `next-dev-*.js` runtime entry, including when content returns to an earlier revision, so Next invalidates cached modules reliably. The first successful publication removes entries from previous runs while preserving the new runtime. Later publications retain entries for the rest of the session; repeated configuration evaluation reuses that session without cleaning again. A successful one-shot Next.js build removes all development entries after publishing the ordinary server entry.
+
+## Development updates
+
+Filesystem watching waits briefly for settled writes before reloading sources, including external sources. This coalesces partial writes and preserves rapid invalid-edit/correction recovery.
+
+Declared `file()` and `glob()` inputs have their own subscriptions, including inputs under directories such as `dist/` and `coverage/` that the general project watcher ignores. Watches are ready before loading and cover later creation of missing inputs. Glob exclusions still apply. ContentQuery's generated output is excluded from source watching to prevent reload loops.
+
+Configuration reloads follow the config's evaluated module graph: the config file plus every module Jiti transpiles for it (TypeScript, and CommonJS `.js` inside ESM packages), including modules outside the application root. Editing other application modules neither reloads content nor discards prepared work. Natively loaded `.mjs`, `.cjs`, ESM `.js`, and JSON imports stay in Node's module cache, so a reload cannot observe them; restart the watch session after editing those. While a configuration fails to load, any JavaScript/TypeScript change retries it. Custom loaders can call `context.watcher.add()` for additional files and update their store in watcher callbacks. Glob collections reload only for files their patterns can match, so images, editor swap files, and excluded paths change nothing; removing a directory reloads conservatively.
+
+Declared files or glob base directories that are missing when watching starts retain a metadata polling fallback for that one path. It restores native subscriptions when a parent-directory creation event is lost; glob contents are not individually polled. The fallback is released with the session.
+
+`content-query:client` exports `onContentUpdate(callback)`, a browser-safe Vite subscription. Register the host router's asynchronous data revalidation and return the unsubscribe function from the framework's lifecycle hook. Revalidation is serialized and rapid edits are coalesced. The production module is a no-op and includes no content runtime.
+
+The Void example and docs app clear the router cache and call `router.refresh({ replace: true, preserveState: true, preserveScroll: true })` from a root component effect. React Router calls `revalidator.revalidate()`, TanStack Start calls `router.invalidate()`, and SvelteKit calls `refreshAll()`. Successful edits update prepared server modules before notifying browsers. Clients without a subscription retain full-document reload as a fallback. Preparation errors still reach Vite's error overlay. Server startup and dependency optimization can still cause framework-owned reloads. Next.js uses `withContentQuery()` and generated-module HMR. The native Angular example runs `content-query build --watch` alongside Angular CLI; generated server imports trigger Angular rebuilds and page reloads.
+
+The examples use native framework loaders/server functions and keep routing and HTML presentation in the application: [Void](../examples/void/README.md), [React Router](../examples/react-router/README.md), [TanStack Start](../examples/tanstack-start/README.md), [Next.js](../examples/next/README.md), [SvelteKit](../examples/sveltekit/README.md), and [Angular](../examples/angular/README.md).
+
+## Body and rendering policy
+
+`readBody(collection, id)` accepts any registered collection and returns retained text or `undefined`. Missing entries reject. It never reads original sources. Custom loaders can provide optional text and `rendered: { html, metadata?: { headings? } }`; a generic body string alone does not imply Markdown.
+
+Markdown defaults to `retainBody: true` and `deferRender: false`. Production preparation compiles eagerly and packages HTML/headings for lazy loading. `deferRender: true` packages captured input and the library-owned renderer. Development compiles on explicit rendering. Disabling public retention still preserves private input needed by deferred rendering. Built-in HTML includes matching unique heading IDs and syntax-highlighted fenced code. Headings carry IDs only; permalink anchors and other heading presentation are application-owned. Authored image/link URLs remain application-owned and are not rewritten or copied.
+
+`content.render()` returns HTML and headings, with no framework components or user-defined runtime resolvers. Separate query/render operations may observe different development revisions. Production content is immutable.
+
+## Errors and extension points
+
+Import `ContentError` from `content-query/runtime`. Its stable `code`, context, `issues`, `cause`, and grouped `diagnostics` distinguish validation, source, reference, query, artifact, rendering, and entry-lookup failures. Source read/parse failures name their collection and file (`source`), include the parser's message, and report every failing file together. Preparation also reports every dangling or ambiguous reference with its value, skipping relationship checks only for collections that already failed. Unsupported stored values report a structured field `path`. See the [error contract](./PLAN.md#errors-and-diagnostics).
+
+Vite transports development diagnostics with the same value codec as prepared data, preserving BigInt validation constraints, supported native values, and graph references. Error causes retain their names, messages, stacks, and nested causes in isolated runtimes. Invalid initial content remains recoverable, and asynchronous delivery failures are reported through Vite's logger and error display.
+
+Native content loaders update a private collection store through `load(context)` and development watcher callbacks. Complete store revisions pass through metadata, computed-field, and relationship validation before atomic publication. Candidate edits that reach preparation remain available for cross-collection recovery. Additional source reads belong to loaders; computed fields process validated metadata and captured `readBody()` text.
+
+SQLite, live collections, generic deferred fields, browser querying, advanced joins, configurable Markdown processing, assets, MDX, and the other [future extensions](./TODO.md#future-improvements) remain future work. Routing, locale fallback, navigation, public URLs, and access policy belong to applications.
+
+See [FEATURES.md](./FEATURES.md), [COMPARISONS.md](./COMPARISONS.md), and the normative [PLAN.md](./PLAN.md), including its [end-to-end example](./PLAN.md#living-end-to-end-example).
