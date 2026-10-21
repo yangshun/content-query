@@ -82,6 +82,8 @@ Custom loaders can declare `Loader<Source>` and attach `source` to their store e
 
 `glob()` supports Markdown and individual JSON/YAML/TOML records. Default IDs follow Astro's slug generation, raw `slug` override, and trailing `/index` removal. `generateId` overrides this policy. A captured Markdown body excludes frontmatter and the blank lines separating it from the content. `file()` reads multi-entry arrays or keyed objects and accepts an async custom parser. Built-in paths resolve from the application root.
 
+Glob acquisition keeps at most 64 file reads outstanding, preserving source ordering, aggregated diagnostics, and cancellation without opening the entire collection at once.
+
 ## Bundled schema builders
 
 Install only `content-query` and import `{ schema }` from `content-query/schema`. ContentQuery supplies Zod-backed `object`, `string`, `number`, `boolean`, `bigint`, `date`, `array`, `enum`, `literal`, `union`, `record`, and `unknown` builders, plus `coerce.string()`, `coerce.number()`, `coerce.boolean()`, `coerce.bigint()`, and `coerce.date()`.
