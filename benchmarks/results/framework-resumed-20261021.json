@@ -1,0 +1,719 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-21T03:15:45.170Z",
+  "repetitions": 3,
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.3.0",
+    "cpu": "Apple M5",
+    "logicalCpus": 10,
+    "memoryBytes": 25769803776,
+    "vitePlus": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.4\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7\n\nEnvironment:\n  Package manager  pnpm v10.28.1\n  Node.js          v24.21.0 (VP_NODE_VERSION)\n",
+    "chromium": "156.0.8078.4",
+    "revision": "f89c9901745ee1d37b8efd11851988ffcd72db9b",
+    "dirty": true,
+    "lockfileSha256": "1cd9c6068cfd180103c137c08011c70e01f2103a158d5eb5cdfaabcfe9c9605e",
+    "contentQueryArtifactsSha256": "453769f7d14da55d1ba2a3c9c8e77186b10343b9114d928df5827014b761c290",
+    "voidBuild": {
+      "directory": "../../voidzero/void/packages/void",
+      "sha256": "07915e66216273d57fc37ba5f987f640d9ca32f254df078f9aa48b7e225efe2d",
+      "reactDirectory": "../../voidzero/void/packages/react",
+      "reactSha256": "14e2915395116c95a3e2f64e6185b7e1bf251b56decadadbca55d879d0119953",
+      "revision": "333e0a89b5a29154d52062bfc6dd66365b97e861",
+      "dirty": false
+    },
+    "packages": {
+      "astro": {
+        "astro": "7.4.0",
+        "vite-plus": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
+        "@voidzero-dev/vite-plus-core": "1.3.0"
+      },
+      "vite-react": {
+        "react": "19.2.5",
+        "react-dom": "19.2.5",
+        "@content-collections/core": "0.15.3",
+        "@content-collections/vite": "0.3.1",
+        "@content-collections/markdown": "0.1.4",
+        "vite-plus": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
+        "@voidzero-dev/vite-plus-core": "0.1.16"
+      },
+      "nuxt": {
+        "nuxt": "4.6.2",
+        "vue": "3.5.44",
+        "@nuxt/content": "3.16.2",
+        "vite-plus": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7",
+        "@voidzero-dev/vite-plus-core": "1.3.0"
+      },
+      "void": {
+        "void": "1.1.12",
+        "@void/react": "1.1.12",
+        "react": "19.2.5",
+        "content-query": "0.0.0",
+        "vite-plus": "1.3.0",
+        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v1.3.0\n\nTools:\n  vite             v8.3.4\n  rolldown         v1.2.14\n  vitest           v5.0.5\n  oxfmt            v0.73.0\n  oxlint           v1.88.0\n  oxlint-tsgolint  v7.0.2004\n  tsdown           v0.23.1",
+        "@voidzero-dev/vite-plus-core": "1.3.0"
+      },
+      "next": {
+        "next": "16.4.2",
+        "react": "19.2.5",
+        "react-dom": "19.2.5",
+        "content-query": "0.0.0",
+        "vite-plus": "0.1.16",
+        "toolchain": "VITE+ - The Unified Toolchain for the Web\n\nvp v0.0.0\n\nLocal vite-plus:\n  vite-plus  v0.1.16\n\nTools:\n  vite             v8.0.5\n  rolldown         v1.0.0-rc.13\n  vitest           v4.1.2\n  oxfmt            v0.43.0\n  oxlint           v1.58.0\n  oxlint-tsgolint  v0.20.0\n  tsdown           v0.21.7"
+      },
+      "tanstack-start": {
+        "@tanstack/react-start": "1.169.3",
+        "@tanstack/react-router": "1.170.45",
+        "react": "19.2.5",
+        "react-dom": "19.2.5",
+        "content-query": "0.0.0",
+        "vite-plus": "1.3.0",
+        "toolchain": "vp v1.3.0\n\nLocal vite-plus:\n  vite-plus  v1.3.0\n\nTools:\n  vite             v8.3.4\n  rolldown         v1.2.14\n  vitest           v5.0.5\n  oxfmt            v0.73.0\n  oxlint           v1.88.0\n  oxlint-tsgolint  v7.0.2004\n  tsdown           v0.23.1",
+        "@voidzero-dev/vite-plus-core": "1.3.0"
+      }
+    }
+  },
+  "control": {
+    "seed": 2026102137,
+    "orders": [
+      ["void", "tanstack-start", "astro"],
+      ["tanstack-start", "astro", "void"],
+      ["astro", "void", "tanstack-start"]
+    ],
+    "settle": {
+      "threshold": 0.8,
+      "windows": 3,
+      "windowMs": 1000,
+      "timeoutMs": 180000
+    },
+    "spotlightIndexesApps": false
+  },
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-void-startup-cold.log",
+      "listenMs": 2510.560666999998,
+      "durationMs": 3493.6325419999994,
+      "host": {
+        "settled": true,
+        "waitedMs": 19019.590292,
+        "idle": 0.8047377482143451,
+        "loadAverage": [5.189453125, 7.46044921875, 6.607421875]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-void-startup-warm.log",
+      "listenMs": 2119.7976250000065,
+      "durationMs": 2785.0041250000068,
+      "host": {
+        "settled": true,
+        "waitedMs": 16017.013542,
+        "idle": 0.8088943214571355,
+        "loadAverage": [4.3447265625, 7.12158203125, 6.50537109375]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-void-build-cold.log",
+      "durationMs": 6709.320707999999,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 35036.64587499999,
+        "idle": 0.8046181786991325,
+        "loadAverage": [4.1318359375, 6.74560546875, 6.3916015625]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-void-build-warm.log",
+      "durationMs": 7494.463624999989,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 7008.928749999992,
+        "idle": 0.8560345233530436,
+        "loadAverage": [4.43408203125, 6.68994140625, 6.37841796875]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-tanstack-start-startup-cold.log",
+      "listenMs": 2073.1631669999915,
+      "durationMs": 3052.826457999996,
+      "host": {
+        "settled": true,
+        "waitedMs": 43040.69091599999,
+        "idle": 0.8153953089878884,
+        "loadAverage": [4.15380859375, 6.2822265625, 6.248046875]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-tanstack-start-startup-warm.log",
+      "listenMs": 1528.3865000000224,
+      "durationMs": 2229.6983330000076,
+      "host": {
+        "settled": true,
+        "waitedMs": 5005.916583000013,
+        "idle": 0.8243421697488719,
+        "loadAverage": [4.38134765625, 6.2939453125, 6.25244140625]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-tanstack-start-build-cold.log",
+      "durationMs": 6492.498124999984,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.893584000005,
+        "idle": 0.8062875393349227,
+        "loadAverage": [4.9111328125, 6.3720703125, 6.27978515625]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-tanstack-start-build-warm.log",
+      "durationMs": 8137.124125000002,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 13013.047208999982,
+        "idle": 0.8194732990981032,
+        "loadAverage": [5.396484375, 6.38525390625, 6.28759765625]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-astro-startup-cold.log",
+      "listenMs": 2360.3377080000064,
+      "durationMs": 3506.129499999981,
+      "host": {
+        "settled": true,
+        "waitedMs": 18019.758124999993,
+        "idle": 0.8002426459192424,
+        "loadAverage": [4.91357421875, 6.205078125, 6.22509765625]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-astro-startup-warm.log",
+      "listenMs": 1917.0662500000035,
+      "durationMs": 2683.496791999991,
+      "host": {
+        "settled": true,
+        "waitedMs": 4003.924958000018,
+        "idle": 0.8126482403992608,
+        "loadAverage": [4.6796875, 6.115234375, 6.19287109375]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-astro-build-cold.log",
+      "durationMs": 4392.336833999987,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.970541000017,
+        "idle": 0.8554770262462704,
+        "loadAverage": [4.625, 6.080078125, 6.1796875]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/1-astro-build-warm.log",
+      "durationMs": 5909.036625000008,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.2177919999813,
+        "idle": 0.8413452430014111,
+        "loadAverage": [4.5830078125, 6.02685546875, 6.1591796875]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-tanstack-start-startup-cold.log",
+      "listenMs": 1645.8304159999825,
+      "durationMs": 2429.4692499999655,
+      "host": {
+        "settled": true,
+        "waitedMs": 10010.308709000004,
+        "idle": 0.8305263974951789,
+        "loadAverage": [4.87841796875, 6.0244140625, 6.15576171875]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-tanstack-start-startup-warm.log",
+      "listenMs": 1504.3592499999795,
+      "durationMs": 2316.4183750000084,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.5393330000225,
+        "idle": 0.8429208570442261,
+        "loadAverage": [4.7275390625, 5.97412109375, 6.13720703125]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-tanstack-start-build-cold.log",
+      "durationMs": 5622.897291000001,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.1832080000313,
+        "idle": 0.802963070746002,
+        "loadAverage": [5.0693359375, 6.02392578125, 6.15380859375]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-tanstack-start-build-warm.log",
+      "durationMs": 7323.874584000034,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 5005.024709000019,
+        "idle": 0.8076544822639963,
+        "loadAverage": [5.802734375, 6.14990234375, 6.19677734375]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-astro-startup-cold.log",
+      "listenMs": 2203.756374999997,
+      "durationMs": 3119.566292000003,
+      "host": {
+        "settled": true,
+        "waitedMs": 42045.895709000004,
+        "idle": 0.8131890877664114,
+        "loadAverage": [6.8876953125, 6.53369140625, 6.34423828125]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-astro-startup-warm.log",
+      "listenMs": 2026.1563329999917,
+      "durationMs": 3174.212583000015,
+      "host": {
+        "settled": true,
+        "waitedMs": 3001.264124999987,
+        "idle": 0.8303788307873142,
+        "loadAverage": [7.216796875, 6.607421875, 6.37109375]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-astro-build-cold.log",
+      "durationMs": 4217.355333000014,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.375875000027,
+        "idle": 0.8358603680774387,
+        "loadAverage": [6.79541015625, 6.53759765625, 6.3486328125]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-astro-build-warm.log",
+      "durationMs": 5293.6570000000065,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.9922500000102,
+        "idle": 0.8312038774864954,
+        "loadAverage": [6.8115234375, 6.544921875, 6.35205078125]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-void-startup-cold.log",
+      "listenMs": 2617.8257919999887,
+      "durationMs": 3518.217042000033,
+      "host": {
+        "settled": true,
+        "waitedMs": 5004.694166000001,
+        "idle": 0.8242367901638433,
+        "loadAverage": [8.25244140625, 6.8896484375, 6.478515625]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-void-startup-warm.log",
+      "listenMs": 2044.7028329999885,
+      "durationMs": 2687.592875000031,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.2989579999703,
+        "idle": 0.8124277420143553,
+        "loadAverage": [7.67138671875, 6.79150390625, 6.4462890625]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-void-build-cold.log",
+      "durationMs": 5156.721707999997,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 4004.2108749999898,
+        "idle": 0.8471411557295715,
+        "loadAverage": [7.6171875, 6.794921875, 6.44921875]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/2-void-build-warm.log",
+      "durationMs": 6718.307749999978,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.6630000000005,
+        "idle": 0.8381175496532972,
+        "loadAverage": [6.8330078125, 6.65283203125, 6.40234375]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-astro-startup-cold.log",
+      "listenMs": 2237.503209000046,
+      "durationMs": 3283.2090420000022,
+      "host": {
+        "settled": true,
+        "waitedMs": 23024.604792000027,
+        "idle": 0.8034867303960856,
+        "loadAverage": [7.82373046875, 6.95849609375, 6.5234375]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec astro dev --ignore-lock",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-astro-startup-warm.log",
+      "listenMs": 2060.7164579999517,
+      "durationMs": 3199.128915999958,
+      "host": {
+        "settled": true,
+        "waitedMs": 7007.372208999994,
+        "idle": 0.8194599297432207,
+        "loadAverage": [7.30908203125, 6.876953125, 6.4990234375]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-astro-build-cold.log",
+      "durationMs": 4075.519417000003,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 5003.848875000025,
+        "idle": 0.812773204914123,
+        "loadAverage": [6.95361328125, 6.81494140625, 6.4814453125]
+      }
+    },
+    {
+      "app": "astro",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp exec astro build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-astro-build-warm.log",
+      "durationMs": 5762.670500000007,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3001.2530419999966,
+        "idle": 0.8080937389439002,
+        "loadAverage": [6.7392578125, 6.771484375, 6.4697265625]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-void-startup-cold.log",
+      "listenMs": 2433.933333000052,
+      "durationMs": 3224.9299580000225,
+      "host": {
+        "settled": true,
+        "waitedMs": 5006.103624999989,
+        "idle": 0.8400221816814036,
+        "loadAverage": [6.544921875, 6.72900390625, 6.4580078125]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-void-startup-warm.log",
+      "listenMs": 2031.6321670000325,
+      "durationMs": 2648.2026250000345,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.8957079999964,
+        "idle": 0.8604594676443207,
+        "loadAverage": [6.5810546875, 6.7333984375, 6.4609375]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-void-build-cold.log",
+      "durationMs": 5211.869583999971,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3004.0212920000195,
+        "idle": 0.8447002666833457,
+        "loadAverage": [6.103515625, 6.62646484375, 6.42578125]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-void-build-warm.log",
+      "durationMs": 6570.5157500000205,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.746125000005,
+        "idle": 0.8639711460845545,
+        "loadAverage": [6.81591796875, 6.76513671875, 6.4755859375]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-tanstack-start-startup-cold.log",
+      "listenMs": 1701.029749999987,
+      "durationMs": 2535.534250000026,
+      "host": {
+        "settled": true,
+        "waitedMs": 22026.844915999973,
+        "idle": 0.8156585766098065,
+        "loadAverage": [7.00634765625, 6.81689453125, 6.50390625]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-tanstack-start-startup-warm.log",
+      "listenMs": 1603.2639169999165,
+      "durationMs": 2359.272916999995,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.731541999965,
+        "idle": 0.8186267474708453,
+        "loadAverage": [6.54345703125, 6.7236328125, 6.47412109375]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-tanstack-start-build-cold.log",
+      "durationMs": 5264.209916999913,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.730332999956,
+        "idle": 0.8086499201035048,
+        "loadAverage": [6.25927734375, 6.66162109375, 6.45361328125]
+      }
+    },
+    {
+      "app": "tanstack-start",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/2026-10-21T03-15-45-170Z/3-tanstack-start-build-warm.log",
+      "durationMs": 7323.448291999986,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.068250000011,
+        "idle": 0.8535139969533603,
+        "loadAverage": [5.75146484375, 6.54052734375, 6.41259765625]
+      }
+    }
+  ],
+  "contentQueryArtifactsUnchanged": true,
+  "completedAt": "2026-10-21T03:24:34.805Z"
+}

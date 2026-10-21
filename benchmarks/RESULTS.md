@@ -1,12 +1,14 @@
 # ContentQuery full-site benchmarks
 
-Run: 2026-10-21T00:29:02.703Z. Completed: 2026-10-21T00:36:47.490Z.
+Run: 2026-10-21T03:15:45.170Z. Completed: 2026-10-21T03:24:34.805Z.
 
 10,000 unique Markdown entries, 10,368,894 bytes total, shared across benchmark apps (60000 hardlinks, 0 copies). Corpus SHA-256: `643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914`.
 
 Workload: `full-index-and-prerendered-articles`. Each homepage lists every title and description with a link. Every entry has a dedicated prerendered article: 10,001 content HTML pages per successful build. Native error pages and auxiliary assets are additional output.
 
 Selected stacks: Astro collections, Void + ContentQuery, TanStack Start + ContentQuery.
+
+Void and its React adapter use the saved local optimization branch at `333e0a89`, identified by the package fingerprints below. The original published dependency links were restored after the run.
 
 Validation: 36/36 recorded samples passed. 18/18 recorded production builds emitted and verified every content HTML page. Failed samples are excluded from timing summaries.
 
@@ -20,17 +22,17 @@ Seconds, shown as median (minimum–maximum; successful samples / requested samp
 
 | Stack                         |          Content usable |        Production build |
 | ----------------------------- | ----------------------: | ----------------------: |
-| Void + ContentQuery           | 4.10 (4.02–4.17; n=3/3) | 5.17 (5.16–5.83; n=3/3) |
-| Astro collections             | 3.41 (3.19–3.46; n=3/3) | 4.10 (3.86–4.28; n=3/3) |
-| TanStack Start + ContentQuery | 2.70 (2.69–3.27; n=3/3) | 5.29 (4.86–5.60; n=3/3) |
+| Void + ContentQuery           | 3.49 (3.22–3.52; n=3/3) | 5.21 (5.16–6.71; n=3/3) |
+| Astro collections             | 3.28 (3.12–3.51; n=3/3) | 4.22 (4.08–4.39; n=3/3) |
+| TanStack Start + ContentQuery | 2.54 (2.43–3.05; n=3/3) | 5.62 (5.26–6.49; n=3/3) |
 
 ### Warm
 
 | Stack                         |          Content usable |        Production build |
 | ----------------------------- | ----------------------: | ----------------------: |
-| Void + ContentQuery           | 3.17 (3.15–3.18; n=3/3) | 6.22 (5.86–6.41; n=3/3) |
-| Astro collections             | 3.26 (2.94–3.52; n=3/3) | 5.42 (4.87–6.45; n=3/3) |
-| TanStack Start + ContentQuery | 2.54 (2.37–2.68; n=3/3) | 7.16 (6.43–7.64; n=3/3) |
+| Void + ContentQuery           | 2.69 (2.65–2.79; n=3/3) | 6.72 (6.57–7.49; n=3/3) |
+| Astro collections             | 3.17 (2.68–3.20; n=3/3) | 5.76 (5.29–5.91; n=3/3) |
+| TanStack Start + ContentQuery | 2.32 (2.23–2.36; n=3/3) | 7.32 (7.32–8.14; n=3/3) |
 
 ## Method
 
@@ -46,13 +48,13 @@ Seconds, shown as median (minimum–maximum; successful samples / requested samp
 
 ## Order and host load
 
-App order was shuffled independently for each repetition with seed `2026102103`:
+App order was shuffled independently for each repetition with seed `2026102137`:
 
-1. tanstack-start, void, astro
-2. void, astro, tanstack-start
-3. astro, tanstack-start, void
+1. void, tanstack-start, astro
+2. tanstack-start, astro, void
+3. astro, void, tanstack-start
 
-Before every sample, the runner waited until host CPU was at least 80% idle, averaged over 3 consecutive 1-second windows, for up to 180 seconds. 36/36 samples started on a settled host. Median idle before a sample: 82% (80%–86%); median wait: 5.0 s (maximum 45.0 s).
+Before every sample, the runner waited until host CPU was at least 80% idle, averaged over 3 consecutive 1-second windows, for up to 180 seconds. 36/36 samples started on a settled host. Median idle before a sample: 82% (80%–86%); median wait: 4.0 s (maximum 43.0 s).
 
 Spotlight did not index new files under the applications directory during this run.
 
@@ -61,16 +63,14 @@ Spotlight did not index new files under the applications directory during this r
 - Node: v24.21.0; Chromium: 156.0.8078.4.
 - System: darwin arm64, OS 25.3.0.
 - CPU: Apple M5; 10 logical CPUs; 24.0 GiB RAM.
-- Git revision: `2bbf6b5a9cea6e4424629dc56861e66e43a74bf2`; uncommitted changes: true.
-- Lockfile SHA-256: `af4f7203061411dfdec7c43ae4296c5e81cc25cdeb7a553afa845d3e3d5a4a6f`.
-- Built ContentQuery JavaScript SHA-256: `4555c466b87b713367e6b646c4d9cc0540ceb24d7fc69c422c62d2c977f9ee52`; unchanged during measurement: true.
-- Built Void JavaScript SHA-256: `6b4533b89c5780e07d43bd974c0265f31e7891213f3ec81f8861a79883d19533`; package directory: `../../../void/packages/void`. Source revision: `09703fb408b170bd30aba71f316bf8a3d7de183a`; uncommitted package changes: true.
-- Built @void/react JavaScript SHA-256: `9a54c226743500678a71eaa7e2d8dce2b0613903126b883876727c0562e0a165`; package directory: `../../../void/packages/react`.
+- Git revision: `f89c9901745ee1d37b8efd11851988ffcd72db9b`; uncommitted changes: true.
+- Lockfile SHA-256: `1cd9c6068cfd180103c137c08011c70e01f2103a158d5eb5cdfaabcfe9c9605e`.
+- Built ContentQuery JavaScript SHA-256: `453769f7d14da55d1ba2a3c9c8e77186b10343b9114d928df5827014b761c290`; unchanged during measurement: true.
+- Built Void JavaScript SHA-256: `07915e66216273d57fc37ba5f987f640d9ca32f254df078f9aa48b7e225efe2d`; package directory: `../../voidzero/void/packages/void`. Source revision: `333e0a89b5a29154d52062bfc6dd66365b97e861`; uncommitted package changes: false.
+- Built @void/react JavaScript SHA-256: `14e2915395116c95a3e2f64e6185b7e1bf251b56decadadbca55d879d0119953`; package directory: `../../voidzero/void/packages/react`.
 
 ```text
-VITE+ - The Unified Toolchain for the Web
-
-vp v0.0.0
+vp v1.3.0
 
 Local vite-plus:
   vite-plus  v0.1.16
@@ -78,11 +78,15 @@ Local vite-plus:
 Tools:
   vite             v8.0.5
   rolldown         v1.0.0-rc.13
-  vitest           v4.1.2
+  vitest           v4.1.4
   oxfmt            v0.43.0
   oxlint           v1.58.0
   oxlint-tsgolint  v0.20.0
   tsdown           v0.21.7
+
+Environment:
+  Package manager  pnpm v10.28.1
+  Node.js          v24.21.0 (VP_NODE_VERSION)
 ```
 
 ## Versions and output
