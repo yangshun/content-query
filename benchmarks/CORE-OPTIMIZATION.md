@@ -1,12 +1,38 @@
 # ContentQuery core optimization
 
-Optimization is paused at the user's request before updating from main. The requested goal remains open. The latest complete application comparison wins three of the eight individual comparisons. Further core and framework changes have passed focused validation and isolated measurements, but have not yet completed a new matched application comparison.
+Optimization resumed in the standalone repository at `~/Developer/content-query`. The target is comparable cold/warm startup and production-build medians to Astro and TanStack Start: the same general range, with no fixed percentage cutoff or requirement to win. The completed comparison below meets that criterion with the saved local Void optimizations. Further optimization is not needed for this target.
 
-The checkpoint branch is `codex/content-query-performance` in both repositories. The companion Void checkpoint is commit `333e0a89`; the benchmark app links that sibling checkout. The ContentQuery checkpoint has been reapplied above main's query API update (`d83dba9`), adapting added test fixtures to the new API and retaining relationship-filter scope in the single-candidate query path. The companion Void checkout was not changed during this integration. Optimization remains paused; rebuild the linked packages and repeat the matched three-stack comparison on resumption before claiming a win.
+The standalone ContentQuery checkpoint is `c9549b0`, retained by the extraction at `c093eab`. The companion Void checkpoint remains on `codex/content-query-performance` at `333e0a89`. The current framework comparison temporarily linked that checkout's built Void and React packages, then restored the published dependency links. The workspace still defaults to published framework packages. This resumed assessment added no production-code changes.
 
-## Application comparison
+## Resumed standalone comparison
 
-The latest [report](./results/framework-followup-20261021-RESULTS.md) and [raw samples](./results/framework-followup-20261021.json) contain three repetitions with seed `2026102103`. The app order is balanced across the repetitions. Only one framework and measurement runs at a time. All 36 samples passed, all 18 builds verified every one of the 10,001 content pages, and every sample met the 80% idle gate. The compiled ContentQuery, Void, and React adapter fingerprints stayed unchanged. Both ContentQuery applications use the optimized package.
+The completed [local-framework comparison](./results/framework-resumed-20261021-RESULTS.md) and [raw data](./results/framework-resumed-20261021.json) measure the standalone workspace at `f89c990` with Void checkpoint `333e0a89`. Three repetitions use seed `2026102137`, chosen before timing solely for balanced application positions. All 36 samples passed browser/content checks and the 80% host-idle gate; all 18 builds verified every one of the 10,001 content HTML pages. The built ContentQuery, Void, and React fingerprints stayed unchanged. Concurrent installs, builds, and tests were stopped before measurement.
+
+Median seconds:
+
+| Stack                                | Cold startup | Warm startup | Cold build | Warm build |
+| ------------------------------------ | -----------: | -----------: | ---------: | ---------: |
+| Void + ContentQuery, local framework |         3.49 |         2.69 |       5.21 |       6.72 |
+| Astro collections                    |         3.28 |         3.17 |       4.22 |       5.76 |
+| TanStack Start + ContentQuery        |         2.54 |         2.32 |       5.62 |       7.32 |
+
+All four Void medians are in the same general range as both comparison stacks. Cold startup and builds remain slower than Astro, while warm startup is faster. Builds are faster than TanStack in this run. The goal does not require winning those individual comparisons or meeting a percentage cutoff. The host gate samples load before each measurement and cannot rule out later contention; three samples per median describe this machine and workload.
+
+The separate [published-package baseline](./results/relocated-published-20261021-RESULTS.md) and [raw data](./results/relocated-published-20261021.json) measure the relocated workspace at `c093eab`. It used the same corpus and balanced seed, with all 36 samples settled and passing and all 18 builds validating 10,001 content pages. Its ContentQuery fingerprint matches the local-framework run; only documentation changed between the two recorded repository revisions.
+
+| Stack                                    | Cold startup | Warm startup | Cold build | Warm build |
+| ---------------------------------------- | -----------: | -----------: | ---------: | ---------: |
+| Void + ContentQuery, published framework |         3.48 |         2.72 |       7.29 |       9.31 |
+| Astro collections                        |         3.14 |         2.98 |       4.20 |       5.54 |
+| TanStack Start + ContentQuery            |         2.47 |         2.37 |       5.39 |       6.46 |
+
+Published Void builds retain a larger gap. The local-framework results describe the saved optimization branch, not a published release. Differences between these separate runs do not isolate any single optimization.
+
+The [interrupted local-framework run](./results/framework-resumed-interrupted-20261021.json) completed 27 samples before a concurrent installation recreated shared dependencies. It is excluded and was not pooled into either complete comparison. After coordination with the README task, the fresh run completed all 36 measurements. The latest report now contains that completed local-framework comparison.
+
+## Historical application comparison
+
+The pre-extraction [report](./results/framework-followup-20261021-RESULTS.md) and [raw samples](./results/framework-followup-20261021.json) contain three repetitions with seed `2026102103`. The app order is balanced across the repetitions. Only one framework and measurement runs at a time. All 36 samples passed, all 18 builds verified every one of the 10,001 content pages, and every sample met the 80% idle gate. The compiled ContentQuery, Void, and React adapter fingerprints stayed unchanged. Both ContentQuery applications use the optimized package.
 
 Median seconds:
 
@@ -39,7 +65,7 @@ vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmar
 - Portable runtime dependencies are bundled into the package's ESM output. Shiki and its JavaScript regex engine load only when rendering the first fenced code block. Plain Markdown does not import the highlighter.
 - Base64 decoding copies bytes with a loop instead of a callback per byte. An isolated decoder comparison improved from 111 to 88 milliseconds; this is not an application startup measurement.
 
-The [package README](../packages/content-query/README.md), [feature list](../docs/FEATURES.md), [comparison notes](../docs/COMPARISONS.md), and [Vite guide](../website/content/guides/integrations/vite.md) describe the behavior. Standalone generated output retains individual payload modules.
+The [API reference](../docs/API.md), [feature list](../docs/FEATURES.md), [comparison notes](../docs/COMPARISONS.md), and [Vite guide](../website/content/guides/integrations/vite.md) describe the behavior. Standalone generated output retains individual payload modules.
 
 ## Attribution
 
@@ -74,7 +100,7 @@ The retained changes share directory creation, publish page files with bounded a
 
 The React adapter also interleaves the document's text shell with React's existing render stream directly, removing two wrapper streams per page. Backpressure, cancellation, deferred shells, and hydration data remain covered. An [isolated renderer check](./results/profile-react-shell-20261021.json) produced identical HTML for all 10,000 representative pages in every sample. Separate and interleaved trials had variable timings on the busy host; they do not establish an application speedup. The experimental app links both Void packages and uses Vite+ 1.3, matching the local framework's toolchain. New reports identify the adapter's compiled code separately.
 
-The output changes passed 38 focused tests and workspace typechecking, followed by 30 native/Node integration tests (three environment-dependent cases skipped). The React stream changes passed nine focused tests. All six benchmark stacks passed development and production checks in the harness; a harness regression also verifies relocated toolchain shims. Broader framework verification is in progress.
+The output changes passed 38 focused tests and workspace typechecking, followed by 30 native/Node integration tests (three environment-dependent cases skipped). The React stream changes passed nine focused tests. All six benchmark stacks passed development and production checks in the harness; a harness regression also verifies relocated toolchain shims. Final framework verification is recorded below.
 
 An [uninstrumented writer comparison](./results/profile-renderer-output-comparison-20261021.json) verified all 20,002 HTML and navigation files with the same ordered SHA-256 as the earlier parity check. Both completed samples missed the idle gate (53–54% idle), so their timings are diagnostic. The remaining repetitions were stopped. An experimental full build also verified all 10,001 pages at 48% host idle; it is not a controlled comparison and its remaining warm trial was stopped.
 
@@ -84,16 +110,16 @@ The newer [identity transport experiment](./results/profile-identity-transport-2
 
 An [interleaved concurrency experiment](./results/profile-concurrency-timings-20261021.json) found that 16 render workers were slower than four: median 2.922 versus 2.756 seconds, with identical output. Concurrency stays at four. A [lazy Worker entry experiment](./results/profile-lazy-worker-entry-20261021.json) changed cold/warm startup medians from 3.172/2.683 to 3.123/2.642 seconds. That small difference mostly moved work from server startup into the first request; the entry change was not retained.
 
-The [React environment experiment](./results/profile-react-env-deps-20261021.json) scopes client and Worker dependencies separately and removes forced optimization in the unused Node SSR environment. Three interleaved cold/warm pairs per variant passed the host and browser checks. Startup medians changed from 3.362/2.781 to 3.047/2.693 seconds; all samples, including a 4.951-second cold control, remain recorded. This change is retained in the companion Void branch. It is not yet included in the matched comparison above.
+The [React environment experiment](./results/profile-react-env-deps-20261021.json) scopes client and Worker dependencies separately and removes forced optimization in the unused Node SSR environment. Three interleaved cold/warm pairs per variant passed the host and browser checks. Startup medians changed from 3.362/2.781 to 3.047/2.693 seconds; all samples, including a 4.951-second cold control, remain recorded. This change is retained in the companion Void branch. It is included in the resumed local-framework comparison; the historical comparison predates it.
 
 The [benchmark README](./README.md#profile-void-and-content-query) documents ordinary and replacement-renderer replays. Full logs and CPU profiles remain under the ignored `.runs/profiles/` directory.
 
 ## Verification
 
-The latest package coverage run passed all 405 tests in 43 files: 92.83% statements, 92.89% lines, 88.70% branches, and 94.65% functions, exceeding its thresholds. Tests cover compact and incompressible content through actual emitted ESM, rich metadata, Unicode and NUL text, heading aliases, detached results, prototype-like IDs, lazy shared imports, retry behavior, isolated development updates, read concurrency, query parity, initial preparation lifecycle, shared watcher subscriptions, and ignored descendants. A fresh Node process verifies that plain Markdown imports no Shiki modules. Native Worker and Chromium checks verify deferred fenced Markdown in development and production.
+The pre-extraction package coverage run passed all 405 tests in 43 files: 92.83% statements, 92.89% lines, 88.70% branches, and 94.65% functions, exceeding its thresholds. Tests cover compact and incompressible content through actual emitted ESM, rich metadata, Unicode and NUL text, heading aliases, detached results, prototype-like IDs, lazy shared imports, retry behavior, isolated development updates, read concurrency, query parity, initial preparation lifecycle, shared watcher subscriptions, and ignored descendants. A fresh Node process verifies that plain Markdown imports no Shiki modules. Native Worker and Chromium checks verify deferred fenced Markdown in development and production.
 
 An earlier complete workspace run passed all 820 tests with four workers. After integration above main's query API update, the complete workspace run passed all 890 tests in 83 files with four workers, and `vp check` passed formatting for 676 files and lint/type checks for 406 files. The new regression verifies relationship-filter scope after ID narrowing in both development and encoded runtimes. The lockfile was reconciled through Vite+ and passed a frozen offline install. Two existing five-second integration checks timed out under higher parallelism and passed in isolation; both also passed in the complete runs. The report regression ensures an unrequested framework is omitted instead of being labeled failed or pending. The development-serialization regression checks each immutable revision separately, allowing legitimate filesystem-triggered replacement revisions.
 
-Void's affected test run passed 10,738 tests with 31 skipped; one existing five-second CLI timeout passed in isolation. Workspace typechecking passed all 33 projects. Final full-suite verification remains outstanding for the newest transport change.
+The resumed standalone ContentQuery suite passed all 618 tests in 64 files. The final `vp run --no-cache check` passed formatting for 488 files and lint/type checks for 287 files. All 73 relative links in the updated benchmark documents resolve. Void's final full-suite run passed 14,038 tests with 31 skipped and one dashboard hydration failure. That dashboard test served a stale prebuilt client; rebuilding the local admin bundle resolved it, and all 123 tests in that file then passed. No source changes were required. Workspace typechecking passed all 33 projects. The full suite was not repeated after the isolated rebuild and rerun.
 
-The checkpoint's latest transport and React optimizer changes passed 37 unit tests, ten native Worker development checks, five Node development checks, and typechecking across all 33 projects. Void's commit hooks also passed formatting and linting. These focused checks do not replace the pending final complete suites.
+The checkpoint's latest transport and React optimizer changes passed 37 unit tests, ten native Worker development checks, five Node development checks, and typechecking across all 33 projects. Void's commit hooks also passed formatting and linting. The final complete-suite results above supersede the earlier pending status.
