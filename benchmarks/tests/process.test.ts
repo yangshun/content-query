@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -6,6 +6,37 @@ import { describe, expect, test, vi } from "vite-plus/test";
 import { environment, startProcess, TimeoutError, withTimeout } from "../scripts/process.ts";
 
 describe("process deadlines and cleanup", () => {
+  test.skipIf(process.platform === "win32")(
+    "resolves a relocated bin shim before it computes relative dependency paths",
+    async () => {
+      const root = await mkdtemp(path.join(os.tmpdir(), "content-query-linked-bin-"));
+      const original = path.join(root, "original");
+      const fixture = path.join(root, "fixture");
+      await mkdir(path.join(original, ".bin"), { recursive: true });
+      await mkdir(fixture);
+      await writeFile(path.join(original, "entry.mjs"), "console.log('source-owned-toolchain')\n");
+      await writeFile(
+        path.join(original, ".bin/vp"),
+        '#!/bin/sh\nbasedir=$(dirname "$0")\nexec node "$basedir/../entry.mjs"\n',
+        { mode: 0o755 },
+      );
+      await symlink(path.join(original, ".bin"), path.join(fixture, ".bin"));
+      const command = await startProcess(
+        path.join(fixture, ".bin/vp"),
+        [],
+        fixture,
+        path.join(root, "output.log"),
+      );
+      try {
+        expect((await command.closed).code).toBe(0);
+        expect(command.output()).toContain("source-owned-toolchain");
+      } finally {
+        await command.stop();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
+
   test("does not leak test-runner flags into real framework processes", () => {
     expect(environment.VITEST).toBeUndefined();
     expect(environment.NODE_ENV).toBeUndefined();

@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createWriteStream } from "node:fs";
-import { mkdir } from "node:fs/promises";
+import { mkdir, realpath } from "node:fs/promises";
 import { createConnection, createServer } from "node:net";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -60,11 +60,13 @@ export async function startProcess(
   log: string,
 ) {
   await mkdir(path.dirname(log), { recursive: true });
+  // A fixture can symlink .bin; resolve the shim before it computes paths from $0.
+  const resolvedExecutable = path.isAbsolute(executable) ? await realpath(executable) : executable;
   const output = createWriteStream(log);
   let tail = "";
   let running = true;
   const started = performance.now();
-  const child = spawn(executable, arguments_, {
+  const child = spawn(resolvedExecutable, arguments_, {
     cwd,
     env: environment,
     detached: process.platform !== "win32",
