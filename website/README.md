@@ -30,7 +30,7 @@ All guides are prerendered at `/docs/<guide-id>`. The sidebar and previous/next 
 
 ## Homepage examples
 
-The homepage hero pairs its introduction with an animated content-flow diagram on the right, stacking them on smaller screens. `src/content-flow.tsx` illustrates files becoming posts and authors, with animated associations connecting posts to their authors before content reaches the application. A subtle dashed frame fits the node rows with equal padding on every side and space before the labels below it. Post and author text use neutral colors. It includes a pause control and a static reduced-motion presentation.
+The homepage hero pairs its introduction with an animated content-flow diagram on the right, stacking them on smaller screens. `src/content-flow.tsx` illustrates files becoming posts and authors, with posts in a top row and authors in a separate bottom row. Vertical animated associations show their relationships before content reaches the application. A subtle dashed frame fits the node rows with equal padding on every side and space before the labels below it. Post and author text use neutral colors. It includes a pause control and a static reduced-motion presentation.
 
 Nine examples start with the complete source-to-data flow, followed by query syntax, typed queries, relationships, flexible sources, typed collections, computed fields, Markdown rendering, and Vite, Next.js, Angular, or standalone workflows. Each heading and description sits above a full-width, bordered example. Homepage sections are separated by spacing without horizontal divider lines. Each component owns its layout and content, sharing only small display and control primitives. There is no shared layout component imposing the same stages on every feature.
 
