@@ -9,6 +9,7 @@
 - Loader stores, inherited schemas and dynamic schema factories, collection-schema precedence, parsed-data reuse, digests, session metadata, logger/config helpers, portable Markdown rendering, and transactional asynchronous watcher callbacks.
 - SQL-ordered `content.select(...fields).from(collection)` fluent queries with native await, and Drizzle-style `content.query.posts.findMany()` / `findFirst()` relational queries over shared normalized plans. Typed `columns` inclusion/exclusion, nested `with`, default metadata selection, object/relation predicates, stable sorting, pagination, and counts share both backends.
 - Revision-scoped lazy ID indexes for equality-constrained root queries in both runtime backends, avoiding repeated collection scans while preserving filtering, projection, pagination, count, and adjacency semantics.
+- Single-record queries avoid redundant default sorting while retaining explicit ordering validation.
 - Markdown folder `source` shorthand and explicit Markdown/JSON/YAML/TOML source objects alongside native loaders.
 - Relational `adjacent` and fluent `selectAdjacent()` projections under `_adjacent`, default ID neighbors, independent filtered/ordered sibling scopes, and typed nested neighbor selection.
 - Generated `CollectionKey`, `CollectionData`, and `Collections` aliases for physical and `content-query:server` entries.

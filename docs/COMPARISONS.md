@@ -28,6 +28,8 @@ Astro, Nuxt Content, Content Collections, and Drizzle informed the original API 
 
 Vite production builds prepare content only for server graphs. Before bundling, they pack item payloads into lazy source modules targeting 128 KiB, while standalone artifacts retain one immutable module per payload. This avoids per-item facades in hosts with strict entry signatures. Default metadata queries avoid payload loading in both cases; a bundled body read can also load neighboring payloads in its module. Host output settings continue to control the final bundle. Generated publication reuses unchanged files and uses bounded parallel I/O, and Vite's watcher excludes generated output.
 
+Single-record queries skip redundant default sorting; explicit ordering still validates sortable fields.
+
 ## Astro, Content Collections, and Velite
 
 The Vite plugin defaults to in-memory preparation with virtual modules and bundled production output. Standalone artifact publication requires `backend: "generated"` in Vite; the CLI, standalone build API, and Next.js adapter retain generated storage by default.
