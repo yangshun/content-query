@@ -1,4 +1,15 @@
-import { cp, mkdir, mkdtemp, readdir, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  realpath,
+  rename,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import { chromium, type Browser } from "playwright";
 import { afterAll, beforeAll, describe, expect, test } from "vite-plus/test";
@@ -129,4 +140,67 @@ describe.sequential("native benchmark apps with isolated content", () => {
     },
     180_000,
   );
+
+  test("void loads deferred highlighted Markdown through its real Worker runtime", async () => {
+    const app = apps.find((candidate) => candidate.id === "void")!;
+    const directory = appDirectory(root, app);
+    await clearCaches(directory);
+    await writeFile(
+      path.join(directory, "content-query.config.ts"),
+      `import {defineCollection} from "content-query";
+import {glob} from "content-query/loaders";
+import {schema} from "content-query/schema";
+export const collections = {entries: defineCollection({
+  loader: glob({pattern: "**/*.md", base: "./content/entries", deferRender: true}),
+  schema: schema.object({title: schema.string(), description: schema.string(), order: schema.number()}),
+})};`,
+    );
+    const filename = path.join(directory, "content/entries/entry-00001.md");
+    // Replace the fixture's hard link so the other application fixtures stay independent.
+    await writeFile(
+      `${filename}.test`,
+      `${await readFile(filename, "utf8")}\n\`\`\`js\nconst highlighted = 42;\n\`\`\`\n`,
+    );
+    await rename(`${filename}.test`, filename);
+    const port = await availablePort();
+    const server = await startProcess(
+      executable(root, app),
+      command(app, "dev", port),
+      directory,
+      path.join(root, "void-deferred-markdown.log"),
+    );
+    const context = await browser.newContext();
+    try {
+      await waitForListening(port, server, performance.now() + 30_000);
+      const page = await context.newPage();
+      const errors: string[] = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.goto(`http://127.0.0.1:${port}/entries/entry-00001`);
+      await verifyArticle(page, 1, 30_000);
+      const code = await page.waitForSelector("article pre.shiki code");
+      expect(await code?.textContent()).toContain("const highlighted = 42;");
+      await page.reload();
+      await verifyArticle(page, 1, 30_000);
+      expect(errors).toEqual([]);
+    } finally {
+      await context.close();
+      await server.stop();
+    }
+    await clearCaches(directory);
+    const built = await measureSample(
+      browser,
+      app,
+      root,
+      count,
+      "build",
+      "cold",
+      1,
+      path.join(root, "void-deferred-build.log"),
+    );
+    expect(built.status, built.error).toBe("success");
+    expect(built.prerenderedPages).toBe(count + 1);
+    expect(
+      await readFile(path.join(directory, "dist/client/entries/entry-00001.html"), "utf8"),
+    ).toMatch(/<pre[^>]+class="[^"]*shiki/);
+  }, 180_000);
 });

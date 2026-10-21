@@ -1,23 +1,25 @@
 import MarkdownExit from "markdown-exit";
 import GithubSlugger from "github-slugger";
-import { createJavaScriptRegexEngine } from "@shikijs/engine-javascript";
-import { bundledLanguages, createHighlighter } from "shiki";
 import type { ContentRenderResult } from "./types.ts";
 
-let highlighter: ReturnType<typeof createHighlighter> | undefined;
+let highlighting: Promise<typeof import("shiki")> | undefined;
+let highlighter: ReturnType<(typeof import("shiki"))["createHighlighter"]> | undefined;
 // Parser rules and linkifier expressions are reusable; tokens, environments, and slugs are per call.
 const markdown = new MarkdownExit({ html: true, linkify: true });
 markdown.renderer.rules.fence = async (allTokens, index) => {
   const token = allTokens[index]!;
   const requested = token.info.trim().split(/\s+/)[0] || "text";
+  const { bundledLanguages, createHighlighter } = await (highlighting ??= import("shiki"));
   const language = Object.hasOwn(bundledLanguages, requested)
     ? (requested as keyof typeof bundledLanguages)
     : "text";
-  highlighter ??= createHighlighter({
-    engine: createJavaScriptRegexEngine(),
-    themes: ["github-light", "github-dark"],
-    langs: [],
-  });
+  highlighter ??= import("@shikijs/engine-javascript").then(({ createJavaScriptRegexEngine }) =>
+    createHighlighter({
+      engine: createJavaScriptRegexEngine(),
+      themes: ["github-light", "github-dark"],
+      langs: [],
+    }),
+  );
   const instance = await highlighter;
   if (language !== "text" && !instance.getLoadedLanguages().includes(language)) {
     await instance.loadLanguage(language);
