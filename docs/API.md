@@ -284,11 +284,13 @@ A failed configuration reload keeps new operations in the error state until conf
 
 ```ts
 // vite.config.ts
-import { defineConfig } from "vite-plus";
+import { defineConfig } from "vite";
 import { contentQuery } from "content-query/vite";
 
 export default defineConfig({ plugins: [contentQuery()] });
 ```
+
+The Vite integration supports Vite 8 and uses its public types. Vite and Next.js are optional peers; standalone builds and queries require neither framework.
 
 Server modules import `content` from `content-query:server` with either backend. Vite owns watching, preparation, invalidation, error display, and cleanup. Its `.content-query/types.d.ts` binds the facade to the configured registry; include that file in the application's TypeScript project. Remove handwritten ambient bindings when using the generated declarations. Both `content-query:server` and the physical server entry export the type-only aliases `CollectionKey`, `CollectionData<"posts">` (metadata plus computed fields and ID), and `Collections` (a map from collection keys to queryable data types). Include `.content-query/**/*.d.ts` in `tsconfig.json`; run `vp exec content-query build` before an initial type check without starting Vite. With generated storage, the default directory also contains `server.js`, `server.d.ts`, `manifest.js`, `package.json`, and `collections/`. A fresh in-memory Vite setup emits only `types.d.ts`; standalone in-memory preparation writes no files. Standalone generated preparation also writes `types.d.ts` beside the server entry. Custom `outDir` values relocate backend artifacts while the Vite declaration stays in `.content-query/`. `content-query:server` is a virtual module supplied by Vite; other bundlers import the physical generated entry.
 

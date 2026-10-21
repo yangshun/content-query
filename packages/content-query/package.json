@@ -1,15 +1,24 @@
 {
   "name": "content-query",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Typed, framework-independent content collections, queries, and rendering.",
+  "homepage": "https://github.com/yangshun/content-query#readme",
+  "bugs": {
+    "url": "https://github.com/yangshun/content-query/issues"
+  },
   "license": "MIT",
   "author": "Yangshun Tay",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangshun/content-query.git",
+    "directory": "packages/content-query"
+  },
   "bin": {
     "content-query": "./dist/cli.mjs"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "type": "module",
   "types": "./dist/index.d.mts",
@@ -25,11 +34,29 @@
     "./query": "./dist/query.mjs",
     "./runtime": "./dist/runtime.mjs",
     "./schema": "./dist/schema.mjs",
-    "./vite": "./dist/vite.mjs",
+    "./vite": {
+      "types": "./src/vite.ts",
+      "default": "./dist/vite.mjs"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": "./dist/index.mjs",
+      "./build": "./dist/build.mjs",
+      "./cli": "./dist/cli.mjs",
+      "./computed": "./dist/computed.mjs",
+      "./internal": "./dist/internal.mjs",
+      "./internal/markdown": "./dist/internal/markdown.mjs",
+      "./loaders": "./dist/loaders.mjs",
+      "./next": "./dist/next.mjs",
+      "./query": "./dist/query.mjs",
+      "./runtime": "./dist/runtime.mjs",
+      "./schema": "./dist/schema.mjs",
+      "./vite": "./dist/vite.mjs",
+      "./package.json": "./package.json"
+    }
   },
   "scripts": {
     "build": "vp pack",
@@ -69,14 +96,17 @@
   },
   "peerDependencies": {
     "next": "^16.0.0",
-    "vite-plus": "*"
+    "vite": "^8.0.0"
   },
   "peerDependenciesMeta": {
     "next": {
       "optional": true
     },
-    "vite-plus": {
+    "vite": {
       "optional": true
     }
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

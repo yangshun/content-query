@@ -9,6 +9,8 @@ This walkthrough uses the CLI so you can try ContentQuery without choosing a fra
 
 ## Install
 
+Requires Node.js 22.12 or later.
+
 ```sh
 npm install content-query
 ```

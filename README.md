@@ -14,7 +14,13 @@ Use it with your existing framework. Your application owns its routes, layouts, 
 
 ## Usage
 
-With ContentQuery available in your project, define `content-query.config.ts`:
+Requires Node.js 22.12 or later. Install ContentQuery:
+
+```sh
+npm install content-query
+```
+
+Define `content-query.config.ts`:
 
 ```ts
 import { defineCollection } from "content-query";
@@ -34,7 +40,7 @@ export const collections = {
 Add Markdown files with `title` frontmatter under `content/posts/`, then build:
 
 ```sh
-vp exec content-query build
+npx content-query build
 ```
 
 Query the generated module from server code:
@@ -52,6 +58,8 @@ const posts = await content
 
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
 
+The Vite integration supports Vite 8, and the Next.js integration supports Next.js 16. Both integrations are optional; standalone builds and queries require neither framework.
+
 ## Documentation
 
 - [Quick start](./website/content/guides/quick-start.md)
@@ -62,3 +70,5 @@ Add `.content-query/` to `.gitignore`. Follow the quick start for a complete wal
 ## Contributing
 
 See the [contributor guide](./CONTRIBUTING.md) for setup, development, and checks. For performance measurements, see the [benchmark suite](./benchmarks/README.md) and [results](./benchmarks/RESULTS.md).
+
+Released under the [MIT license](./LICENSE).

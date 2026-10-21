@@ -74,6 +74,14 @@ Watch recovery tests repeat configuration notifications and check stable error c
 
 The living-example declaration and published Astro-loader consumer checks launch TypeScript and fresh Node processes. They use explicit 30-second deadlines to accommodate compiler startup under coverage or system load; ordinary tests retain the default deadline and all consumer assertions remain enabled.
 
+The packed-package integration tests unpack the actual npm tarball into isolated consumers, verify its exports, license, and documentation links, type-check the Vite integration without Vite+ installed, and query/render generated content after removing authored sources. Vite+ remains the development toolchain; published Vite declarations reference the optional Vite 8 peer. The npm package supports Node.js 22.12 or later, while contributor tooling uses the version in `.node-version`.
+
+The local Vite export uses source types so workspace development shares its existing Vite+ types. Every runtime export still resolves built JavaScript. Vite+ generates `publishConfig` exports for the published declarations; npm tarballs contain only built entry points. This keeps workspace development and ordinary Vite consumers on their respective host types without exposing TypeScript sources to application builds.
+
+To inspect a release tarball after building, run `vp pm pack --filter content-query --out /tmp/content-query.tgz`. Keep the root and package `LICENSE` files identical so both the repository and npm distribution include the MIT license.
+
+Publish approved releases through `vp pm publish --filter content-query --access public` so the package manager applies the generated `publishConfig` entry points. Verify the packed consumer tests, full checks, coverage, and website build before publishing.
+
 ## Documentation
 
 Keep the [website](./website/README.md) current when core changes affect public APIs, features, or behavior.

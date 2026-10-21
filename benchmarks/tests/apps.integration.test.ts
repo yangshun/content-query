@@ -66,6 +66,25 @@ describe.sequential("native benchmark apps with isolated content", () => {
       const dependencies = path.join(destination, "node_modules");
       await mkdir(dependencies);
       for (const dependency of await readdir(path.join(original, "node_modules"))) {
+        if (dependency === ".bin") {
+          const binaries = path.join(dependencies, dependency);
+          await mkdir(binaries);
+          for (const binary of await readdir(path.join(original, "node_modules/.bin"))) {
+            const executable = await realpath(path.join(original, "node_modules/.bin", binary));
+            // pnpm launchers contain paths relative to their original .bin directory.
+            await writeFile(
+              path.join(binaries, binary),
+              `#!/usr/bin/env node
+import { spawnSync } from "node:child_process";
+const result = spawnSync(${JSON.stringify(executable)}, process.argv.slice(2), { stdio: "inherit" });
+if (result.error) { throw result.error; }
+process.exit(result.status ?? 1);
+`,
+              { mode: 0o755 },
+            );
+          }
+          continue;
+        }
         if ([".cache", ".vite", ".vite-temp", ".astro"].includes(dependency)) {
           continue;
         }

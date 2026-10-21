@@ -5,7 +5,7 @@ section: integrations
 order: 40
 ---
 
-Add the ContentQuery plugin alongside your framework's plugins:
+Requires Vite 8. Add the ContentQuery plugin alongside your framework's plugins:
 
 ```ts
 import { contentQuery } from "content-query/vite";

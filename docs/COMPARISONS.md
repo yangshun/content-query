@@ -34,6 +34,8 @@ Glob acquisition bounds outstanding reads to 64, retaining sorted complete snaps
 
 ## Astro, Content Collections, and Velite
 
+ContentQuery's npm distribution supports Node.js 22.12 or later. Vite 8 and Next.js 16 are optional peers for their respective integrations; standalone consumers need neither. Published Vite declarations reference Vite's public types, while the repository develops and builds with Vite+.
+
 The Vite plugin defaults to in-memory preparation with virtual modules and bundled production output. Standalone artifact publication requires `backend: "generated"` in Vite; the CLI, standalone build API, and Next.js adapter retain generated storage by default.
 
 The Next.js adapter distinguishes the detached telemetry helper from the application lifecycle. That helper can evaluate development configuration without preparing content or leaving a watch session alive after the application exits.
