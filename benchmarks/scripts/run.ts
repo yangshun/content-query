@@ -172,10 +172,10 @@ export async function runBenchmark(options: {
   const spotlight = await spotlightIndexes(path.join(benchmarkRoot, "apps"));
   if (spotlight) {
     console.warn(
-      "Spotlight indexes application output; add content-query/benchmarks/apps to Spotlight's privacy list for cleaner timings.",
+      "Spotlight indexes application output; add benchmarks/apps to Spotlight's privacy list for cleaner timings.",
     );
   }
-  const repository = path.resolve(benchmarkRoot, "../..");
+  const repository = path.resolve(benchmarkRoot, "..");
   const [version, revision, status, lockfile] = await Promise.all([
     execute("vp", ["--version"], { cwd: repository }),
     execute("git", ["rev-parse", "HEAD"], { cwd: repository }),

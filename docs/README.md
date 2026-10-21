@@ -6,6 +6,7 @@
 - [Library comparisons](./COMPARISONS.md)
 - [Planned work](./TODO.md)
 - [Framework examples](../examples/README.md)
+- [Repository history and extraction](./HISTORY.md)
 
 The published package retains its consumer-facing README in `packages/content-query/`. Project-wide design documents live here.
 

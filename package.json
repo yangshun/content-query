@@ -1,0 +1,22 @@
+{
+  "name": "content-query-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vp run --filter content-query build",
+    "build:examples": "vp run build && vp run --filter './examples/*' build",
+    "build:website": "vp run build && vp run --filter @content-query/website build",
+    "check": "vp run check:prepare && vp check",
+    "check:prepare": "vp run build && node scripts/prepare-checks.mjs",
+    "dev": "vp run --filter content-query dev",
+    "prepare": "vp config && vp run build"
+  },
+  "devDependencies": {
+    "@tanstack/router-generator": "1.167.45",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=24.21.0"
+  },
+  "packageManager": "pnpm@10.28.1"
+}

@@ -19,7 +19,7 @@ vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmar
 
 Use the [benchmark runner](../../README.md#run-the-comparison) for controlled cold/warm measurements. Generated content, `.content-query/`, `.void/`, deployment metadata, and output directories are ignored by Git.
 
-The current framework experiments link `void` and `@void/react` to sibling packages at `../../../../../void/packages/{void,react}` and use Vite+ 1.3 to match their toolchain. Build both packages with that repository's Vite+ workflow before running this app. The comparison records fingerprints of the built framework and adapter plus the source revision; manifest versions alone do not identify unpublished local builds. See the [Void follow-up](../../CORE-OPTIMIZATION.md#authorized-void-follow-up) for validation and measurement limits.
+The default app uses the published `void` and `@void/react` versions pinned in this repository's workspace catalog, so no sibling Void checkout is required. Earlier framework experiments used local Void builds; their recorded measurements remain historical. Temporarily link local builds only for an explicit framework experiment. The comparison records fingerprints of the built framework and adapter plus the source revision; manifest versions alone do not identify unpublished local builds. See the [Void follow-up](../../CORE-OPTIMIZATION.md#authorized-void-follow-up) for validation and measurement limits.
 
 The app uses ContentQuery's default in-memory Vite backend, writing only declarations under `.content-query/` and bundling production payloads with the app. Set `CONTENT_QUERY_BENCH_BACKEND=generated` to additionally publish standalone runtime artifacts.
 

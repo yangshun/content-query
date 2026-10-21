@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test, vi } from "vite-plus/test";
 
 const appRoot = fileURLToPath(new URL("../", import.meta.url));
-const repositoryRoot = fileURLToPath(new URL("../../../../", import.meta.url));
+const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
 /** Creates an isolated app inside the monorepo so Turbopack can resolve its workspace packages. */
 async function developmentFixture() {

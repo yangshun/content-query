@@ -4,8 +4,8 @@ The common stylesheet, browser navigation helper, and static production test uti
 
 The local copies are hardlinked to these common files in the current workspace. Git records ordinary file contents, so a fresh checkout contains independent copies. Keep those copies synchronized when updating a shared file; `shared-files.test.ts` checks their parity.
 
-From the enclosing VoidPress repository root, run:
+From the ContentQuery repository root, run:
 
 ```sh
-vp test content-query/examples/shared
+vp test examples/shared
 ```

@@ -395,7 +395,7 @@ See [FEATURES.md](../../docs/FEATURES.md), [COMPARISONS.md](../../docs/COMPARISO
 
 ## Development checks
 
-From this package directory, run `vp check` and `vp test run --coverage`. The suite covers every documented value of the PLAN.md living example (`tests/integration/living-example.test.ts`; update it with the plan), typed consumer callsites, both backends, generated consumers without source files, watch recovery, concurrent publication, CLI behavior, and Vite integration. Coverage requires at least 90% statements/lines, 85% branches, and 90% functions. The repository's `vp test run` also exercises the migrated VoidPress app. The root formatter configuration ignores `dist/` and `coverage/` output.
+From this package directory, run `vp check` and `vp test run --coverage`. The suite covers every documented value of the PLAN.md living example (`tests/integration/living-example.test.ts`; update it with the plan), typed consumer callsites, both backends, generated consumers without source files, watch recovery, concurrent publication, CLI behavior, and Vite integration. Coverage requires at least 90% statements/lines, 85% branches, and 90% functions. The repository's `vp test run` also exercises all framework examples, benchmarks, and the website. VoidPress verifies its consumers in its own repository. The package remains private until publication. The root formatter configuration ignores `dist/` and `coverage/` output.
 
 Watch recovery tests repeat configuration notifications and check stable error codes and diagnostics, preserved revisions, and rejected reads through content edits before verifying recovery from a corrected configuration.
 

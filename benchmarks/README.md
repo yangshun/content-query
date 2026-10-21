@@ -49,7 +49,7 @@ The previous [composite report](./results/composite-20261020-RESULTS.md) and its
 - **Each app's own toolchain:** every command runs through the app's `node_modules/.bin/vp`, so each stack uses the Vite+ version it declares, and the versions table records the CLI that actually ran. A bare `vp` would resolve to whichever binary is first on PATH; under `vp run`, that is this benchmark package's pinned `vite-plus`, whose development server does not serve TanStack Start routes.
 - **Randomized order:** each repetition measures the apps in an independent random order derived from `--seed`. The seed and every order are recorded, so a run can be reproduced and no stack always follows the same predecessor.
 - **Quiet host:** before every sample, the runner waits until host CPU is at least 80% idle, averaged over three consecutive one-second windows, for up to 180 seconds. It records the idle fraction, wait, and load average with each sample, and the report lists samples that started before the host settled. The gate checks only before a sample; it cannot exclude contention that begins during one.
-- **Spotlight:** at startup, the runner writes a probe file under `apps/` and records whether Spotlight indexes it. Builds emit 10,000 to 20,000 files, and indexing them competes with the timed process in proportion to each stack's output. On current macOS, `.metadata_never_index` marker files are ignored for ordinary folders; folders ending in `.noindex`, hidden folders, and Spotlight's privacy list are excluded. Before a comparison run, add `content-query/benchmarks/apps` to Spotlight's privacy list or disable indexing with `sudo mdutil -a -i off` (restore it with `sudo mdutil -a -i on`), and quit applications that watch the repository, such as Git clients.
+- **Spotlight:** at startup, the runner writes a probe file under `apps/` and records whether Spotlight indexes it. Builds emit 10,000 to 20,000 files, and indexing them competes with the timed process in proportion to each stack's output. On current macOS, `.metadata_never_index` marker files are ignored for ordinary folders; folders ending in `.noindex`, hidden folders, and Spotlight's privacy list are excluded. Before a comparison run, add `benchmarks/apps` to Spotlight's privacy list or disable indexing with `sudo mdutil -a -i off` (restore it with `sudo mdutil -a -i on`), and quit applications that watch the repository, such as Git clients.
 
 The [previous in-memory samples](./results/full-site-in-memory.json) and [Void rerun after Next.js stopped](./results/profile-void-no-next-20261020.json) remain archived. The [original report](./results/full-site-generated-RESULTS.md) preserves the generated-backend Void measurements. To collect Void-only timings after rebuilding ContentQuery while preserving the comparison report:
 
@@ -126,7 +126,7 @@ vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmar
 ## Validation
 
 ```sh
-vp env exec --node 24.21.0 -- vp test content-query/benchmarks
+vp env exec --node 24.21.0 -- vp test benchmarks
 vp env exec --node 24.21.0 -- vp check
 vp env exec --node 24.21.0 -- vp test
 ```

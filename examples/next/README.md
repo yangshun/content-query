@@ -4,7 +4,7 @@ Server metadata queries use `content.select(...fields).from(collection)`. The re
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
-A small Next.js App Router documentation site in `content-query/examples/next`, backed by ContentQuery. It uses the same sample project-notebook guides as the Void example, with a homepage index, Markdown articles, ordered navigation, page metadata, and missing-guide handling.
+A small Next.js App Router documentation site in `examples/next`, backed by ContentQuery. It uses the same sample project-notebook guides as the Void example, with a homepage index, Markdown articles, ordered navigation, page metadata, and missing-guide handling.
 
 ## Development
 

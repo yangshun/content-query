@@ -28,7 +28,7 @@ Queries are inline in native route loaders. `app/routes/docs.tsx` fetches IDs/ti
 
 Development subscribes to `content-query:client` and calls `useRevalidator().revalidate()` after publication. The generated `content-query:server` types include `CollectionKey`, `CollectionData`, and `Collections`; there is no handwritten declaration file. `source: "./content/guides"` defaults to Markdown. The production output is `build/client/`.
 
-Run `vp test run content-query/examples/react-router/tests` from the repository root to build an isolated copy, add a nested guide, and verify ordered metadata, Markdown, and previous/next links after deleting the source files.
+Run `vp test run examples/react-router/tests` from the repository root to build an isolated copy, add a nested guide, and verify ordered metadata, Markdown, and previous/next links after deleting the source files.
 
 The fixture invokes the installed React Router CLI by its physical path so pnpm's relative executable shims also work with the fixture's symlinked dependencies.
 
