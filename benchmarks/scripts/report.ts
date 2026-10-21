@@ -110,6 +110,8 @@ function format(values: number[], expected: number): string {
 
 /** Produces a self-contained results table with workload, cache, environment, and failure context. */
 export function renderReport(report: Report): string {
+  const requested = report.control ? new Set(report.control.orders.flat()) : undefined;
+  const selectedApps = apps.filter((app) => !requested || requested.has(app.id));
   const passed = report.samples.filter((sample) => sample.status === "success");
   const builds = report.samples.filter((sample) => sample.phase === "build");
   const verifiedBuilds = builds.filter(
@@ -125,6 +127,8 @@ export function renderReport(report: Report): string {
     `${report.corpus.entries.toLocaleString("en-US")} unique Markdown entries, ${report.corpus.bytes.toLocaleString("en-US")} bytes total, shared across benchmark apps (${report.corpus.hardlinks} hardlinks, ${report.corpus.copies} copies). Corpus SHA-256: \`${report.corpus.sha256}\`.`,
     "",
     `Workload: \`${report.workload}\`. Each homepage lists every title and description with a link. Every entry has a dedicated prerendered article: ${(report.corpus.entries + 1).toLocaleString("en-US")} content HTML pages per successful build. Native error pages and auxiliary assets are additional output.`,
+    "",
+    `Selected stacks: ${selectedApps.map((app) => app.label).join(", ")}.`,
     ...(report.samples.length
       ? [
           "",
@@ -149,6 +153,9 @@ export function renderReport(report: Report): string {
     );
     for (const id of timingOrder) {
       const app = apps.find((candidate) => candidate.id === id)!;
+      if (requested && !requested.has(id)) {
+        continue;
+      }
       const selected = report.samples.filter(
         (sample) => sample.app === app.id && sample.cache === cache && sample.status === "success",
       );
@@ -170,7 +177,7 @@ export function renderReport(report: Report): string {
     "",
     "## Method",
     "",
-    "- Three cold/warm pairs by default, all six stacks in one run. Only one framework and measurement type (startup or build) runs at a time, in a seeded random app order per repetition. Each server, build, and validation preview is shut down before the next sample starts. No Vite task-result cache is used.",
+    `- Three cold/warm pairs by default; ${selectedApps.length} requested stacks in this run. Only one framework and measurement type (startup or build) runs at a time, in a seeded random app order per repetition. Each server, build, and validation preview is shut down before the next sample starts. No Vite task-result cache is used.`,
     "- Before every sample, the runner waits for host CPU to become idle, so background work triggered by earlier samples, such as file indexing of tens of thousands of emitted pages, does not overlap the next measurement. Host state before each sample is recorded in the raw results.",
     "- Cold means application content/framework/build and local dependency-optimizer caches are removed. OS filesystem caches remain warm, especially because the inputs are hardlinked. This is not a machine cold-boot benchmark.",
     "- Startup uses a prelaunched Chromium with a fresh browser context and page. Timing begins immediately before spawning the dev command. TCP readiness does not request the app. Content usability verifies every homepage title, description, and item link, then directly loads the first and last articles and verifies their own metadata and rendered Markdown.",
@@ -212,7 +219,7 @@ export function renderReport(report: Report): string {
     "| Stack | Resolved packages | Normal output | Command |",
     "| --- | --- | --- | --- |",
   );
-  for (const app of apps) {
+  for (const app of selectedApps) {
     const versions = Object.entries(report.environment.packages[app.id] ?? {})
       .filter(([name]) => name !== "toolchain")
       .map(([name, version]) => `${name}@${version}`)

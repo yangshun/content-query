@@ -58,6 +58,26 @@ function fixture(): Report {
 }
 
 describe("timing summaries", () => {
+  test("omits unrequested stacks while retaining pending samples for requested stacks", () => {
+    const report = fixture();
+    report.control = {
+      seed: 2026,
+      orders: [["astro", "void"]],
+      settle: { threshold: 0.8, windows: 3, windowMs: 1_000, timeoutMs: 180_000 },
+      spotlightIndexesApps: false,
+    };
+    const markdown = renderReport(report);
+    const coldTable = markdown.split("### Cold\n")[1]!.split("### Warm\n")[0]!;
+    expect(coldTable.split("\n").filter((line) => line.startsWith("| "))).toHaveLength(4);
+    expect(coldTable).toContain("Void + ContentQuery | Failed / pending");
+    expect(coldTable).toContain("Astro collections");
+    expect(markdown).toContain("2 requested stacks in this run");
+    expect(markdown).not.toContain("| TanStack Start + ContentQuery |");
+    expect(markdown).not.toContain("| Nuxt Content |");
+    expect(markdown).not.toContain("| Next.js + ContentQuery |");
+    expect(markdown).not.toContain("| Vite + React + Content Collections |");
+  });
+
   test("computes median and range without mutating measurements", () => {
     const values = [3_000, 1_000, 2_000];
     expect(statistics(values)).toEqual({ median: 2_000, min: 1_000, max: 3_000, count: 3 });
