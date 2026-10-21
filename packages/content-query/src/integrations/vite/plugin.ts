@@ -225,11 +225,14 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
         };
       }
     },
-    async configureServer(viteServer) {
+    configureServer(viteServer) {
       server = viteServer;
       server.ws.on("content-query:subscribe", (_data, client) => refreshClients.add(client));
       server.ws.on("content-query:unsubscribe", (_data, client) => refreshClients.delete(client));
-      await ensureSession();
+      // Vite configures plugins sequentially. Start preparation here so it can overlap the
+      // remaining hooks; buildStart and module loads still await it before serving content.
+      // Observe rejection now while leaving the initialization hook to report startup errors.
+      void ensureSession().catch(() => {});
     },
     async buildStart() {
       if (config.command === "build" && clientEnvironment(this, config)) {
@@ -307,6 +310,8 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
     },
     async closeBundle() {
       server = undefined;
+      // createServer() can be closed before listen() starts the client build hooks.
+      await starting?.catch(() => undefined);
       await session?.dispose();
       (globalThis as BridgeGlobal)[bridgeSymbol]?.delete(bridgeKey);
     },
