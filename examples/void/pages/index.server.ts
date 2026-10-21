@@ -5,8 +5,8 @@ export const prerender = true;
 
 export const loader = defineHandler(async () => {
   const guides = await content
-    .query("guides")
     .select("id", "title", "description")
+    .from("guides")
     .orderBy("order")
     .all();
 

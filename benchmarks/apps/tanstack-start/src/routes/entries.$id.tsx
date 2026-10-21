@@ -5,9 +5,9 @@ const getEntry = createServerFn({ method: "GET" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
     const { content } = await import("content-query:server");
-    const entry = await content.findFirst("entries", {
+    const entry = await content.query.entries.findFirst({
       where: { id },
-      select: { id: true, title: true, description: true },
+      columns: { id: true, title: true, description: true },
     });
     if (!entry) {
       throw notFound();

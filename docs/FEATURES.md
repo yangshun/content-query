@@ -7,10 +7,10 @@
 - Build-only root `content-query.config.{ts,mts,cts,js,mjs,cjs}` discovery, ambiguity errors, and an exact custom-path override; generated typings and Vite client guards follow the selected config. Source acquisition stays in preparation, with source-independent deployed queries and rendering.
 - Markdown, JSON, YAML, TOML, and native Astro-compatible named content loaders with matching built-in identities. Existing content loader packages can be passed directly to collections; no adapter API is required.
 - Loader stores, inherited schemas and dynamic schema factories, collection-schema precedence, parsed-data reuse, digests, session metadata, logger/config helpers, portable Markdown rendering, and transactional asynchronous watcher callbacks.
-- Equivalent immutable fluent and Prisma-style object queries over shared normalized plans, mandatory field selection, typed operators, stable sorting, pagination, and counts.
+- SQL-ordered `content.select(...fields).from(collection)` fluent queries with native await, and Drizzle-style `content.query.posts.findMany()` / `findFirst()` relational queries over shared normalized plans. Typed `columns` inclusion/exclusion, nested `with`, default metadata selection, object/relation predicates, stable sorting, pagination, and counts share both backends.
 - Revision-scoped lazy ID indexes for equality-constrained root queries in both runtime backends, avoiding repeated collection scans while preserving filtering, projection, pagination, count, and adjacency semantics.
 - Markdown folder `source` shorthand and explicit Markdown/JSON/YAML/TOML source objects alongside native loaders.
-- `_adjacent` and fluent `selectAdjacent()` projections, default ID neighbors, independent filtered/ordered sibling scopes, and typed nested neighbor selection.
+- Relational `adjacent` and fluent `selectAdjacent()` projections under `_adjacent`, default ID neighbors, independent filtered/ordered sibling scopes, and typed nested neighbor selection.
 - Generated `CollectionKey`, `CollectionData`, and `Collections` aliases for physical and `content-query:server` entries.
 - Browser-safe `content-query:client` update subscriptions with serialized router revalidation and full-reload fallback; Void preserves component state and scroll.
 - Forward/inverse relationships, explicit reference ownership, authored arrays, nested selection, and per-parent pagination.

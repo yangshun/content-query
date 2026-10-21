@@ -8,6 +8,8 @@ Import `{ schema }` from `content-query/schema` for bundled Zod-backed content b
 
 Build-only helpers from `content-query/computed` add typed reading time, word count, and excerpt fields. They use captured Markdown by default or explicitly selected text/HTML from structured files and custom loaders. See the [computed fields guide](./website/content/guides/computed-fields.md).
 
+Server queries use SQL-ordered `content.select(...fields).from(collection)` or relational `content.query.posts.findMany({ columns, with, where })` / `findFirst()`. Default selections include all prepared metadata; bodies and rendered HTML remain separate operations.
+
 This directory groups the project for a future standalone repository:
 
 ```text

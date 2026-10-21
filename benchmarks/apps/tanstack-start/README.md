@@ -1,5 +1,7 @@
 # TanStack Start + ContentQuery benchmark app
 
+Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
+
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
 This app pins Vite+ 1.3.0, matching the workspace's existing TanStack Start example. The raw report records its resolved toolchain separately from the other stacks.

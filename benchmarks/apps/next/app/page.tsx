@@ -4,8 +4,8 @@ import { content } from "#content-query";
 
 export default async function HomePage() {
   const entries = await content
-    .query("entries")
     .select("id", "title", "description")
+    .from("entries")
     .orderBy("order")
     .all();
   if (!entries.length) {

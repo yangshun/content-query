@@ -74,7 +74,7 @@ Outstanding tasks and future design notes. Implemented capabilities are document
 
 Status: deferred beyond v1 on October 18, 2026.
 
-Parent predicates based on related data, composite multi-field matching, and automatic traversal through linking collections need separate query and declaration contracts. No `exists`, composite-key, or `through` public syntax is selected. Applications can explicitly query declared links and request bounded nested relationships in v1. General-purpose joins remain a separate future capability.
+Relational parent predicates over declared relationships are implemented through `where: { author: { name: "Ada" } }` and relationship existence booleans. Composite multi-field matching and automatic traversal through linking collections still need separate query and declaration contracts. No composite-key or `through` public syntax is selected. Applications can query declared links and request bounded nested relationships in v1. General-purpose joins remain a separate future capability.
 
 ### Schema generation and inference
 
@@ -96,9 +96,9 @@ Define whether a singleton is a collection with exactly one entry and a fixed ID
 
 Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
 
-Every query is async and must select fields. A relationship declaration needs `collection`, `type`, `from`, `to`, and `referenceSide`, while Astro uses `reference("authors")` inside the schema. These choices buy payload control and relationship integrity, but the simplest page is more verbose than importing `allPosts` from Content Collections.
+Queries default to all prepared metadata through `content.select().from("posts")` or `content.query.posts.findMany()`, with optional field projection. A relationship declaration still needs `collection`, `type`, `from`, `to`, and `referenceSide`, while Astro uses `reference("authors")` inside the schema. Simplifying those declarations could retain relationship integrity with less authoring overhead.
 
-Candidates that keep [explicit field selection](./PLAN.md#3-require-explicit-field-selection) include relationship shorthands with defaults such as `to: "id"` and a schema-level reference helper that declares the relationship. An implicit select-all or a synchronous array export would contradict the design guidelines and needs a separate decision.
+Candidates that retain [metadata/body separation](./PLAN.md#3-keep-metadata-projection-separate-from-bodies) include relationship shorthands with defaults such as `to: "id"` and a schema-level reference helper that declares the relationship. Default metadata selection is implemented; a synchronous array export remains a separate API decision.
 
 ### CMS-specific adapters
 

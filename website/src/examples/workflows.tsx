@@ -13,7 +13,7 @@ export const nextWorkflowExample = {
     'import { withContentQuery } from "content-query/next";\n\nexport default withContentQuery({\n  trailingSlash: true,\n});',
   packageJson: '{\n  "imports": {\n    "#content-query": "./.content-query/server.js"\n  }\n}',
   query:
-    'import "server-only";\nimport { content } from "#content-query";\n\nconst posts = await content\n  .query("posts")\n  .select("id", "title")\n  .all();',
+    'import "server-only";\nimport { content } from "#content-query";\n\nconst posts = await content.select("id", "title").from("posts")\n  .all();',
 };
 
 export function NextWorkflow() {
@@ -46,7 +46,7 @@ function AngularWorkflow() {
       <CodeExample
         label="src/server.ts (Angular SSR)"
         code={
-          'import { content } from "../.content-query/server.js";\n\napp.get("/api/posts", async (_request, response) => {\n  const posts = await content\n    .query("posts")\n    .select("id", "title")\n    .all();\n\n  response.json(posts);\n});'
+          'import { content } from "../.content-query/server.js";\n\napp.get("/api/posts", async (_request, response) => {\n  const posts = await content.select("id", "title").from("posts")\n    .all();\n\n  response.json(posts);\n});'
         }
       />
     </div>
@@ -164,7 +164,7 @@ export function WorkflowsExample() {
           <CodeExample
             label="Import the generated runtime"
             code={
-              'import { content } from "./.content-query/server.js";\n\nconst posts = await content\n  .query("posts")\n  .select("title")\n  .all();'
+              'import { content } from "./.content-query/server.js";\n\nconst posts = await content.select("title").from("posts")\n  .all();'
             }
           />
         </div>

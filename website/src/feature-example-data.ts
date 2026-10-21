@@ -24,9 +24,7 @@ export const sourceToDataExample = {
     }),
   }),
 };`,
-  query: `const posts = await content
-  .query("posts")
-  .select("title", "draft")
+  query: `const posts = await content.select("title", "draft").from("posts")
   .all();`,
   data: [{ title: "Hello, world", draft: false }],
 } as const;
@@ -69,37 +67,37 @@ export function queryExamplePosts(options: QueryExampleOptions) {
   );
 }
 
-/** Shows equivalent fluent or Prisma-style code for the current preview controls. */
+/** Shows equivalent fluent or relational code for the current preview controls. */
 export function queryExampleCode(
   options: QueryExampleOptions,
-  syntax: "fluent" | "prisma-style" = "fluent",
+  syntax: "fluent" | "relational" = "fluent",
 ) {
-  if (syntax === "prisma-style") {
+  if (syntax === "relational") {
     return [
-      'const posts = await content.findMany("posts", {',
+      "const posts = await content.query.posts.findMany({",
       ...(options.excludeDrafts ? ["  where: { draft: false },"] : []),
       options.fields === "title-and-draft"
-        ? "  select: { title: true, draft: true },"
-        : "  select: { title: true },",
+        ? "  columns: { title: true, draft: true },"
+        : "  columns: { title: true },",
       ...(options.sort === "id-asc"
         ? []
-        : [`  orderBy: [{ title: "${options.sort === "title-desc" ? "desc" : "asc"}" }],`]),
+        : [`  orderBy: { title: "${options.sort === "title-desc" ? "desc" : "asc"}" },`]),
       ...(options.limit === null ? [] : [`  limit: ${options.limit},`]),
       "});",
     ].join("\n");
   }
   const lines = [
     "const posts = await content",
-    '  .query("posts")',
-    ...(options.excludeDrafts ? ["  .where((fields) => eq(fields.draft, false))"] : []),
     options.fields === "title-and-draft" ? '  .select("title", "draft")' : '  .select("title")',
+    '  .from("posts")',
+    ...(options.excludeDrafts ? ["  .where((fields) => eq(fields.draft, false))"] : []),
     ...(options.sort === "id-asc"
       ? []
       : [options.sort === "title-desc" ? '  .orderBy("title", "desc")' : '  .orderBy("title")']),
     ...(options.limit === null ? [] : [`  .limit(${options.limit})`]),
-    "  .all();",
+    ";",
   ];
-  return lines.join("\n");
+  return lines.slice(0, -1).join("\n") + ";";
 }
 
 /** Formats expected query result types for checks against generated declarations. */
@@ -167,10 +165,8 @@ export const relationshipExampleCode = `relationships: {
   },
 }`;
 
-export const relationshipQueryCode = `const posts = await content
-  .query("posts")
+export const relationshipQueryCode = `const posts = await content.select("title").from("posts")
   .where((fields) => eq(fields.authorId, "ada"))
-  .select("title")
   .with("author", (author) => author.select("name"))
   .all();`;
 

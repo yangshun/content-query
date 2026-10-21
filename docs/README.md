@@ -13,4 +13,6 @@ Bundled builders from `content-query/schema` are implemented. The [collections a
 
 The [computed fields guide](../website/content/guides/computed-fields.md) covers reusable reading time, word count, and excerpt helpers from `content-query/computed`, including typed selectors for structured text and HTML.
 
+The [querying guide](../website/content/guides/querying-content.md) covers SQL-ordered fluent queries and collection-scoped relational queries, including default metadata selection, `columns`, `with`, and filters.
+
 `PLAN.md` documents the implemented v1 contracts and living example. `TODO.md` starts with an index grouped by area, followed by a flat list of H3 sections for outstanding tasks and future design notes. Completed capabilities are listed in `FEATURES.md`.

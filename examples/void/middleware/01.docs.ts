@@ -9,8 +9,8 @@ export type NavigationShared = {
 export default defineMiddleware(async (context, next) => {
   if (context.req.path.startsWith("/docs/")) {
     const guideNavigation = await content
-      .query("guides")
       .select("id", "title")
+      .from("guides")
       .orderBy("order")
       .all();
     const shared = context.get("shared");

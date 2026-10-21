@@ -2,21 +2,17 @@ import { error } from "@sveltejs/kit";
 import { content } from "content-query:server";
 
 export async function entries() {
-  return (await content.findMany("guides", { select: { id: true } })).map(({ id }) => ({
+  return (await content.query.guides.findMany({ columns: { id: true } })).map(({ id }) => ({
     slug: id,
   }));
 }
 
 export async function load({ params }: { params: { slug: string } }) {
   const id = params.slug.replace(/\/$/, "");
-  const guide = await content.findFirst("guides", {
+  const guide = await content.query.guides.findFirst({
     where: { id },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      _adjacent: { orderBy: { order: "asc" }, select: { id: true, title: true } },
-    },
+    adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
+    columns: { id: true, title: true, description: true },
   });
   if (!guide) {
     error(404, "Guide not found");

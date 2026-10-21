@@ -12,11 +12,19 @@ function predicate(
   if (!field || typeof field.name !== "string" || !field.name) {
     invalidQuery("A filter must reference a query field.");
   }
-  if (["in-array", "not-in-array", "array-contains-any", "array-contains-all"].includes(operator)) {
+  if (
+    [
+      "in-array",
+      "not-in-array",
+      "array-contains-any",
+      "array-contains-all",
+      "array-contained",
+    ].includes(operator)
+  ) {
     if (!Array.isArray(value) || !value.every(isScalar)) {
       invalidQuery("Choice arguments must be arrays of scalar values.");
     }
-  } else if (["contains", "starts-with", "ends-with"].includes(operator)) {
+  } else if (["contains", "starts-with", "ends-with", "like", "ilike"].includes(operator)) {
     if (typeof value !== "string") {
       invalidQuery("String predicates require a string argument.");
     }
@@ -169,9 +177,12 @@ export function validateExpression(expression: Expression): void {
       "contains",
       "starts-with",
       "ends-with",
+      "like",
+      "ilike",
       "array-contains",
       "array-contains-any",
       "array-contains-all",
+      "array-contained",
       "is-null",
       "is-undefined",
       "is-missing",
@@ -180,6 +191,15 @@ export function validateExpression(expression: Expression): void {
       invalidQuery("Unknown filter operator.");
     }
     predicate(expression.operator, { name: expression.field }, expression.value);
+  } else if (expression.kind === "relation") {
+    if (
+      [expression.collection, expression.field, expression.target].some(
+        (name) => typeof name !== "string" || !name,
+      )
+    ) {
+      invalidQuery("Relationship filters require registered collection and relationship names.");
+    }
+    validateExpression(expression.expression);
   } else if (
     ["and", "or", "not"].includes(expression.kind) &&
     Array.isArray(expression.expressions)

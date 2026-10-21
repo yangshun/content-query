@@ -4,7 +4,10 @@ import { describe, expect, test } from "vite-plus/test";
 import { HighlightedCode, type CodeLanguage } from "../src/highlighted-code";
 
 const examples: { language: CodeLanguage; code: string }[] = [
-  { language: "typescript", code: 'const posts = await content\n  .query("posts")\n  .all();\n' },
+  {
+    language: "typescript",
+    code: 'const posts = await content.select().from("posts")\n  .all();\n',
+  },
   {
     language: "markdown",
     code: "---\ntitle: Hello, world\ndraft: false\n---\n\n## Hello\n\n```ts\nconst draft = false;\n```",
@@ -29,7 +32,7 @@ describe("homepage code highlighting", () => {
   test("preserves operation and error highlights across syntax tokens", () => {
     const html = renderToStaticMarkup(
       createElement(HighlightedCode, {
-        code: 'content\n  .query("posts")\n  .select("title", "drafft");',
+        code: 'content.select("title", "drafft").from("posts");',
         language: "typescript",
         highlight: [".select("],
         invalid: true,

@@ -41,7 +41,7 @@ describe("loader-provided computed source metadata", () => {
       watch: true,
     });
     try {
-      expect(await session.content.query("posts").select("url").first()).toEqual({ url: "/first" });
+      expect(await session.content.select("url").from("posts").first()).toEqual({ url: "/first" });
       expect(
         context!.store.set({
           id: "one",
@@ -58,7 +58,7 @@ describe("loader-provided computed source metadata", () => {
         digest: "second",
       });
       await sessionInternals(session).idle();
-      expect(await session.content.query("posts").select("url").first()).toEqual({
+      expect(await session.content.select("url").from("posts").first()).toEqual({
         url: "/second",
       });
       expect(resolve).toHaveBeenCalledTimes(2);
@@ -72,7 +72,7 @@ describe("loader-provided computed source metadata", () => {
       expect(resolve).toHaveBeenCalledTimes(2);
       context!.store.set({ id: "one", data: { title: "Fixed" } });
       await sessionInternals(session).idle();
-      expect(await session.content.query("posts").select("title", "url").first()).toEqual({
+      expect(await session.content.select("title", "url").from("posts").first()).toEqual({
         title: "Fixed",
         url: undefined,
       });
@@ -116,7 +116,7 @@ describe("loader-provided computed source metadata", () => {
       watch: false,
     });
     try {
-      expect(await session.content.query("posts").select("changed", "original").first()).toEqual({
+      expect(await session.content.select("changed", "original").from("posts").first()).toEqual({
         changed: "Changed",
         original: "Original",
       });

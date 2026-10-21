@@ -22,12 +22,11 @@ export {
 } from "./query/operators.ts";
 export type { Expression } from "./query/plan.ts";
 export type {
-  Field,
-  Fields,
-  Where,
-  QueryOptions,
-  CountOptions,
-  Selection,
-  SelectionResult,
-  Adjacent,
-} from "./query/types.ts";
+  RelationalQueries,
+  RelationalQueryOptions,
+  RelationalQueryOptions as QueryOptions,
+  RelationalCountOptions as CountOptions,
+  RelationalQueryResult,
+  RelationalWhere,
+} from "./query/relational-types.ts";
+export type { Field, Fields, Where, Selection, SelectionResult, Adjacent } from "./query/types.ts";

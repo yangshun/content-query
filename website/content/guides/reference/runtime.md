@@ -7,14 +7,17 @@ order: 53
 
 ## Content operations
 
-| Method                           | Result                                                       |
-| -------------------------------- | ------------------------------------------------------------ |
-| `query(collection)`              | Immutable fluent query builder                               |
-| `findMany(collection, options)`  | Selected entries                                             |
-| `findFirst(collection, options)` | Selected entry or `undefined`                                |
-| `count(collection, options)`     | Filtered entry count before pagination                       |
-| `readBody(collection, id)`       | Retained text or `undefined`; missing entries reject         |
-| `render(collection, id)`         | `{ html, headings }`; missing or unrenderable entries reject |
+| Property or method            | Purpose                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `select(...fields)`           | Starts a fluent query; `.from(collection)` binds its collection. No arguments selects all prepared metadata. |
+| `query`                       | Collection namespace: `query.posts.findMany(options?)` and `query.posts.findFirst(options?)`.                |
+| `count(collection, options?)` | Filtered parent count before pagination.                                                                     |
+| `readBody(collection, id)`    | Retained text or `undefined`; missing entries reject.                                                        |
+| `render(collection, id)`      | `{ html, headings }`; missing or unrenderable entries reject.                                                |
+
+Await a fluent builder directly or call `.all()` / `.execute()` to return an array. `.first()` returns one entry or `undefined`; `.count()` returns the matching parent count. `from()` is available only after `select()`.
+
+The relational namespace uses `columns`, `with`, `where`, `orderBy`, `limit`, `offset`, and `adjacent` options. Omitting `columns` returns all prepared metadata. Relationships, bodies, and rendered output remain explicit requests.
 
 ## Generated types
 

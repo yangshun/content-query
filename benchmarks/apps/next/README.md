@@ -1,5 +1,7 @@
 # Next.js + ContentQuery benchmark app
 
+Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
+
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
 Next.js App Router Server Components query the workspace ContentQuery collection. The homepage lists every title and description with a link. `app/entries/[id]/page.tsx` uses `generateStaticParams()` to enumerate every entry, then renders each entry's own metadata and Markdown body. Missing entries return a 404.

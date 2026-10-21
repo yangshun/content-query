@@ -134,7 +134,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
     }
     test("projects only selected fields, preserving own undefined and query immutability", async () => {
       const { content, session } = await setup();
-      const base = content.query("posts");
+      const base = content.select().from("posts");
       const first = base
         .where((fields) => eq(fields.id, "first"))
         .select("id", "optional", "upper");
@@ -149,68 +149,78 @@ for (const backend of ["in-memory", "encoded"] as const) {
       const { content } = await setup();
       expect(
         await content
-          .query("posts")
+          .select()
+          .from("posts")
           .where((fields) => isMissing(fields.optional))
           .count(),
       ).toBe(1);
       expect(
         await content
-          .query("posts")
+          .select()
+          .from("posts")
           .where((fields) => isUndefined(fields.optional))
           .count(),
       ).toBe(2);
       expect(
         await content
-          .query("posts")
+          .select()
+          .from("posts")
           .where((fields) => isNull(fields.optional))
           .count(),
       ).toBe(1);
       expect(
         await content
-          .query("posts")
+          .select()
+          .from("posts")
           .where((fields) => contains(fields.title, "%_"))
           .count(),
       ).toBe(1);
       expect(
         await content
-          .query("posts")
+          .select()
+          .from("posts")
           .where((fields) => and(gt(fields.score, 1), not(eq(fields.score, NaN))))
           .count(),
       ).toBe(1);
       expect(
         await content
-          .query("posts")
+          .select()
+          .from("posts")
           .where((fields) => inArray(fields.id, []))
           .count(),
       ).toBe(0);
       expect(
         await content
-          .query("posts")
+          .select()
+          .from("posts")
           .where((fields) => notInArray(fields.id, []))
           .count(),
       ).toBe(3);
       expect(
         await content
-          .query("posts")
+          .select()
+          .from("posts")
           .where((fields) => or(arrayContains(fields.tags, "a"), arrayContainsAny(fields.tags, [])))
           .count(),
       ).toBe(1);
       expect(
         await content
-          .query("posts")
+          .select()
+          .from("posts")
           .where((fields) => arrayContainsAll(fields.tags, []))
           .count(),
       ).toBe(3);
       expect(
         await content
-          .query("posts")
+          .select()
+          .from("posts")
           .where((fields) => eq(fields.date, new Date(NaN)))
           .count(),
       ).toBe(1);
     });
     test("sorts deterministically, pages after filtering, and counts before pagination", async () => {
       const { content } = await setup();
-      const base = content.query("posts").select("id").orderBy("score", "desc");
+      const base = content.select("id").from("posts").orderBy("score", "desc");
       expect(await base.all()).toEqual([{ id: "second" }, { id: "first" }, { id: "third" }]);
       expect(await base.offset(1).limit(1).all()).toEqual([{ id: "first" }]);
       expect(await base.offset(100).limit(0).count()).toBe(3);
@@ -223,8 +233,8 @@ for (const backend of ["in-memory", "encoded"] as const) {
       const { content } = await setup();
       expect(
         await content
-          .query("posts")
           .select("id")
+          .from("posts")
           .with("author", (author) => author.select("name"))
           .all(),
       ).toEqual([
@@ -234,8 +244,8 @@ for (const backend of ["in-memory", "encoded"] as const) {
       ]);
       expect(
         await content
-          .query("authors")
           .select("name")
+          .from("authors")
           .with("posts", (posts) => posts.select("title").orderBy("score", "desc").limit(1))
           .all(),
       ).toEqual([
@@ -244,8 +254,8 @@ for (const backend of ["in-memory", "encoded"] as const) {
       ]);
       expect(
         await content
-          .query("posts")
           .select("id")
+          .from("posts")
           .with("author", (author) =>
             author.select("name").where((fields) => eq(fields.name, "nobody")),
           )
@@ -255,14 +265,14 @@ for (const backend of ["in-memory", "encoded"] as const) {
     test("preserves forward-array order and duplicates, but inverse membership is distinct", async () => {
       const { content } = await setup();
       const result = await content
-        .query("authors")
         .select("name")
+        .from("authors")
         .with("featuredPosts", (posts) => posts.select("id"))
         .first();
       expect(result?.featuredPosts).toEqual([{ id: "second" }, { id: "first" }, { id: "second" }]);
       const sorted = await content
-        .query("authors")
         .select("name")
+        .from("authors")
         .with("featuredPosts", (posts) => posts.select("id").orderBy("id"))
         .first();
       expect(sorted?.featuredPosts).toEqual([{ id: "first" }, { id: "second" }, { id: "second" }]);
@@ -303,8 +313,8 @@ describe("prepared values and errors", () => {
       registry,
     });
     const selected = await session.content
-      .query("values")
       .select("__proto__" as "id")
+      .from("values")
       .first();
     expect(Object.hasOwn(selected!, "__proto__")).toBe(true);
     expect(Reflect.get(selected!, "__proto__")).toBeUndefined();
@@ -426,7 +436,7 @@ describe("prepared values and errors", () => {
       watch: false,
       registry,
     });
-    const result = (await session.content.query("values").select("left", "right").first())! as {
+    const result = (await session.content.select("left", "right").from("values").first())! as {
       left: typeof shared;
       right: typeof shared;
     };
@@ -435,7 +445,7 @@ describe("prepared values and errors", () => {
     expect(0 in (result.left.hole as unknown[])).toBe(false);
     (result.left.date as Date).setTime(900);
     (result.left.bytes as Uint8Array)[0] = 9;
-    const again = (await session.content.query("values").select("left").first())!
+    const again = (await session.content.select("left").from("values").first())!
       .left as typeof shared;
     expect((again.date as Date).getTime()).toBe(0);
     expect((again.bytes as Uint8Array)[0]).toBe(1);
@@ -740,16 +750,21 @@ describe("prepared values and errors", () => {
 /** Type-only consumer checks: invalid calls must fail without weakening result inference. */
 function checkTypes(content: Content<ReturnType<typeof fixture>>) {
   // @ts-expect-error Registered collection names are required.
-  content.query("missing");
-  // @ts-expect-error Selection is mandatory for row-returning methods.
-  content.query("posts").all();
+  content.select().from("missing");
+  void content.select().from("posts").all();
   // @ts-expect-error Field names come from schema outputs and computed fields.
-  content.query("posts").select("typo");
-  // @ts-expect-error String predicates are unavailable for numeric fields.
-  content.query("posts").where((fields) => contains(fields.score, "2"));
-  // @ts-expect-error Operator arguments retain their field type.
-  content.query("posts").where((fields) => eq(fields.score, "2"));
-  const selected = content.query("posts").select("id");
+  content.select("typo").from("posts");
+  content
+    .select()
+    .from("posts")
+    // @ts-expect-error String predicates are unavailable for numeric fields.
+    .where((fields) => contains(fields.score, "2"));
+  content
+    .select()
+    .from("posts")
+    // @ts-expect-error Operator arguments retain their field type.
+    .where((fields) => eq(fields.score, "2"));
+  const selected = content.select("id").from("posts");
   // @ts-expect-error Nested relationships need their own selection.
   selected.with("author", (author) => author);
   // @ts-expect-error Singular builders have no pagination.

@@ -42,8 +42,8 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
       const session = await buildContent<Registry>({ config: filename, backend: "in-memory" });
       try {
         const selected: { title: string } | undefined = await session.content
-          .query("posts")
           .select("title")
+          .from("posts")
           .first();
         expect(selected).toEqual({
           title: "Standalone",
@@ -155,7 +155,7 @@ ${declaration}`,
           posts: CollectionDefinition<undefined, {}, {}>;
         }>(root, {});
         try {
-          expect(await session.content.query("posts").select("title").first()).toEqual({
+          expect(await session.content.select("title").from("posts").first()).toEqual({
             title: "Discovered",
           });
           expect(await readFile(path.join(root, ".content-query/server.d.ts"), "utf8")).toContain(

@@ -4,14 +4,10 @@ import { navigateContentLink } from "../navigation";
 
 export async function loader({ params }: { params: Record<string, string | undefined> }) {
   const id = (params["*"] ?? "").replace(/\/$/, "");
-  const guide = await content.findFirst("guides", {
+  const guide = await content.query.guides.findFirst({
     where: { id },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      _adjacent: { orderBy: { order: "asc" }, select: { id: true, title: true } },
-    },
+    adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
+    columns: { id: true, title: true, description: true },
   });
   if (!guide) {
     throw new Response("Guide not found", { status: 404 });

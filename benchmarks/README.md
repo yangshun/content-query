@@ -1,5 +1,7 @@
 # Content benchmarks
 
+The three ContentQuery apps use the current SQL-ordered `content.select(...fields).from(collection)` and collection-scoped `content.query.entries.findFirst({ columns, where })` APIs. Query fields, filters, ordering, and workload remain the same across the API migration. Recorded timing reports retain their original measurements.
+
 Six applications build a full static site from the same 10,000 Markdown entries using native content integrations:
 
 | App                                               | Content integration                                             | Production output                                 |

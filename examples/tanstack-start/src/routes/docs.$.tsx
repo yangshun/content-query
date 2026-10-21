@@ -6,14 +6,10 @@ const getGuide = createServerFn({ method: "GET" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
     const { content } = await import("content-query:server");
-    const guide = await content.findFirst("guides", {
+    const guide = await content.query.guides.findFirst({
       where: { id },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        _adjacent: { orderBy: { order: "asc" }, select: { id: true, title: true } },
-      },
+      adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
+      columns: { id: true, title: true, description: true },
     });
     if (!guide) {
       throw notFound();

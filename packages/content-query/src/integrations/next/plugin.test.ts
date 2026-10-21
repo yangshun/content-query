@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/tes
 import { PHASE_DEVELOPMENT_SERVER, PHASE_PRODUCTION_BUILD } from "next/constants.js";
 import type { NextConfig } from "next";
 import { buildAtRoot } from "../../preparation/build.ts";
-import type { ContentSession } from "../../preparation/session.ts";
 import { withContentQuery } from "./plugin.ts";
 import { publishDevelopment } from "./publication.ts";
 
@@ -22,7 +21,7 @@ const context = { defaultConfig: {} as NextConfig };
 const build = vi.mocked(buildAtRoot);
 const publish = vi.mocked(publishDevelopment);
 const dispose = vi.fn(async () => {});
-const session = { dispose } as unknown as ContentSession;
+const session = { dispose } as unknown as Awaited<ReturnType<typeof buildAtRoot>>;
 
 describe("withContentQuery", () => {
   beforeEach(() => {
@@ -75,7 +74,7 @@ describe("withContentQuery", () => {
   });
 
   test("waits for initial generation and shares one pending watcher across config evaluations", async () => {
-    let complete!: (value: ContentSession) => void;
+    let complete!: (value: typeof session) => void;
     build.mockReturnValueOnce(new Promise((resolve) => (complete = resolve)));
     const config = { trailingSlash: true };
     const first = withContentQuery(config)(PHASE_DEVELOPMENT_SERVER, context);

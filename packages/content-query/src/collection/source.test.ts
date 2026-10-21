@@ -19,8 +19,8 @@ describe("collection source shorthand", () => {
       try {
         expect(
           await session.content
-            .query("posts" as never)
             .select("title" as never)
+            .from("posts" as never)
             .all(),
         ).toEqual([{ title: "Getting started" }]);
         expect((await session.content.render("posts" as never, "getting-started")).html).toContain(

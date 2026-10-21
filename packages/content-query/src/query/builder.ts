@@ -50,7 +50,11 @@ export function createBuilder(
           "select() requires distinct prepared fields and can be called once per scope.",
         );
       }
-      return branch({ select: checkedFields(registry, plan.collection, fields) });
+      return branch({
+        select: checkedFields(registry, plan.collection, fields),
+        allFields: undefined,
+        exclude: undefined,
+      });
     },
     where(configure: (fields: object) => Expression) {
       if (typeof configure !== "function") {
@@ -152,6 +156,13 @@ export function createBuilder(
       }
       return run(plan, "all");
     },
+    /** Executes a selected root query, matching direct await behavior. */
+    execute() {
+      if (!root) {
+        invalidQuery("Nested builders have no terminal methods.");
+      }
+      return run(plan, "all");
+    },
     first() {
       if (!root) {
         invalidQuery("Nested builders have no terminal methods.");
@@ -165,6 +176,15 @@ export function createBuilder(
       return run(plan, "count");
     },
   };
+  if (root && hasSelection(plan)) {
+    // oxlint-disable-next-line unicorn/no-thenable -- Fluent queries intentionally execute when awaited.
+    Object.defineProperty(builder, "then", {
+      value: (
+        fulfilled: Parameters<Promise<unknown>["then"]>[0],
+        rejected: Parameters<Promise<unknown>["then"]>[1],
+      ) => run(plan, "all").then(fulfilled, rejected),
+    });
+  }
   /** Checks pagination before creating an independent branch. */
   function pagination(key: "limit" | "offset", value: number): unknown {
     if (!allowPagination || plan[key] !== undefined) {

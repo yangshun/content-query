@@ -67,18 +67,18 @@ describe("built-in loaders", () => {
         watch: false,
       });
       try {
-        expect(await session.content.query("posts").select("id", "location").first()).toEqual({
+        expect(await session.content.select("id", "location").from("posts").first()).toEqual({
           id: "custom-id",
           location: { collection: "posts", source: { filePath: "content/posts/Intro.md" } },
         });
-        expect(await session.content.query("authors").select("id", "location").first()).toEqual({
+        expect(await session.content.select("id", "location").from("authors").first()).toEqual({
           id: "ada",
           location: {
             collection: "authors",
             source: { filePath: "content/authors#team.json", key: "ada" },
           },
         });
-        expect(await session.content.query("remote").select("id", "location").all()).toEqual([
+        expect(await session.content.select("id", "location").from("remote").all()).toEqual([
           {
             id: "custom-source",
             location: { collection: "remote", source: { url: "https://example.com/document" } },
@@ -110,12 +110,12 @@ describe("built-in loaders", () => {
       watch: true,
     });
     try {
-      expect(await session.content.query("posts").select("title").first()).toEqual({
+      expect(await session.content.select("title").from("posts").first()).toEqual({
         title: "External",
       });
       await writeFile(path.join(external, "post.md"), "---\ntitle: Changed outside root\n---\n");
       await vi.waitFor(async () =>
-        expect(await session.content.query("posts").select("title").first()).toEqual({
+        expect(await session.content.select("title").from("posts").first()).toEqual({
           title: "Changed outside root",
         }),
       );
@@ -298,7 +298,7 @@ describe("built-in loaders", () => {
           watch: false,
         });
         expect(await session.content.readBody("posts", "post")).toBeUndefined();
-        expect((await session.content.query("posts").select("raw").first())?.raw).toContain(
+        expect((await session.content.select("raw").from("posts").first())?.raw).toContain(
           "## Hello",
         );
         expect((await session.content.render("posts", "post")).headings).toEqual([
@@ -327,13 +327,17 @@ describe("built-in loaders", () => {
       watch: true,
     });
     try {
-      expect(await session.content.query("posts").count()).toBe(0);
+      expect(await session.content.select().from("posts").count()).toBe(0);
       expect(warn).toHaveBeenCalled();
       await mkdir(path.join(root, "later"));
       await writeFile(path.join(root, "later/new.md"), "---\ntitle: New\n---\n");
-      await vi.waitFor(async () => expect(await session.content.query("posts").count()).toBe(1));
+      await vi.waitFor(async () =>
+        expect(await session.content.select().from("posts").count()).toBe(1),
+      );
       await rm(path.join(root, "later/new.md"));
-      await vi.waitFor(async () => expect(await session.content.query("posts").count()).toBe(0));
+      await vi.waitFor(async () =>
+        expect(await session.content.select().from("posts").count()).toBe(0),
+      );
       await sessionInternals(session).idle();
     } finally {
       await session.dispose();
