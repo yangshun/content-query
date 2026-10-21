@@ -130,7 +130,7 @@ Define entry identity, loader inputs, validated data, computed query fields, bui
 
 Status: Standard Schema is the public validation contract, agreed on October 17, 2026. TypeScript query-field checks without a complete runtime field catalog are agreed on October 18, 2026. These rules define the v1 implementation contract.
 
-Accept [Standard Schema V1](https://standardschema.dev/) schemas for collection source metadata and computed field results. The public validation contract must not require Zod types or a particular validation library. ContentQuery supplies selected Zod-backed builders through `import { schema } from "content-query/schema"`; consumers need no separate Zod installation. Builder results retain Zod's chaining methods, while `schema.input`, `schema.output`, and `schema.infer` use Standard Schema's provider-independent inference. See the [bundled builder API](../packages/content-query/README.md#bundled-schema-builders).
+Accept [Standard Schema V1](https://standardschema.dev/) schemas for collection source metadata and computed field results. The public validation contract must not require Zod types or a particular validation library. ContentQuery supplies selected Zod-backed builders through `import { schema } from "content-query/schema"`; consumers need no separate Zod installation. Builder results retain Zod's chaining methods, while `schema.input`, `schema.output`, and `schema.infer` use Standard Schema's provider-independent inference. See the [bundled builder API](./API.md#bundled-schema-builders).
 
 | Concern         | Rule                                                                                                                                                                                                                         |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -404,7 +404,7 @@ The production entry imports the collection manifest, prepared query data, captu
 
 Applications provide one registry; integrations or the build command produce the server entry. There is no second application-maintained registry or mandatory `content.runtime.ts`. Production runtime initialization consumes prepared artifacts or explicitly embedded prepared state. Follow the agreed [build API and generated server entry](#build-api-and-defaults); runtime adapter factories are private implementation details.
 
-No runtime-safe definition split, arbitrary function serialization, closure extraction, or bundler-specific removal of config properties is required for v1. Generic deferred resolvers are a [future extension](./TODO.md#generic-deferred-fields), not a reason to reintroduce production config imports.
+No runtime-safe definition split, arbitrary function serialization, closure extraction, or bundler-specific removal of config properties is required for v1. Generic deferred resolvers are a [future extension](./TODO.md#future-improvements), not a reason to reintroduce production config imports.
 
 ### Computed resolver context
 
@@ -622,7 +622,7 @@ Array predicates have the following edge-case behavior:
 | Array holes                             | Ignore holes during membership checks. An explicit `undefined` element remains a value and participates in equality checks. |
 | Duplicate candidates                    | Duplicate candidates do not require duplicate elements; `arrayContainsAll` tests membership rather than multiplicity.       |
 
-Rich values remain storable and selectable under the [data-value contract](#supported-data-values). Map/set-specific filters, binary or other rich-value filtering, regular-expression matching, and deep object equality are [future extensions](./TODO.md#future-extensions).
+Rich values remain storable and selectable under the [data-value contract](#supported-data-values). Map/set-specific filters, binary or other rich-value filtering, regular-expression matching, and deep object equality are [future extensions](./TODO.md#future-improvements).
 
 ### Field presence and undefined
 
@@ -1218,7 +1218,7 @@ Status: implemented with these v1 defaults, agreed on October 18, 2026. Follow A
 | Caching                   | Keep cached values internal and revision-aware; return detached selected values and rendering metadata. Cross-process/build persistence or sharing is not a v1 guarantee; expose no new public cache settings. Private reuse can evolve without changing behavior.                                                                                                                                                             |
 | Internal mechanics        | Hash choice, codec embedding, private module exports, query representation/indexes, and host hooks are implementer-owned choices. Retain candidate source state separately from published content, publish only complete valid revisions, and retain old payloads for pinned operations. Queue/coalescing and cleanup must preserve these rules.                                                                               |
 
-These defaults close the routine API/scope questions. Implement the selected contracts without treating remaining helper signatures or private mechanisms as approval gates. Future extensions remain deferred and are tracked in [TODO.md](./TODO.md#future-extensions).
+These defaults close the routine API/scope questions. Implement the selected contracts without treating remaining helper signatures or private mechanisms as approval gates. Future extensions remain deferred and are tracked in [TODO.md](./TODO.md#future-improvements).
 
 ## Conformance scenarios
 
@@ -1243,7 +1243,7 @@ These cases belong in the redesigned implementation's shared tests. The shared c
 
 ## Approved query and authoring additions
 
-Status: implemented October 18, 2026. These additions share the loader, runtime, and backend contracts. Metadata projection supports all prepared fields by default or explicit subsets. The [package guide](../packages/content-query/README.md#relational-queries-and-adjacent-entries) contains complete callsites and the [TODO list](./TODO.md) tracks outstanding work and future design notes.
+Status: implemented October 18, 2026. These additions share the loader, runtime, and backend contracts. Metadata projection supports all prepared fields by default or explicit subsets. The [package guide](./API.md#relational-queries-and-adjacent-entries) contains complete callsites and the [TODO list](./TODO.md) tracks outstanding work and future design notes.
 
 - `defineCollection({ source: "./content/posts", schema })` is shorthand for the built-in Markdown glob loader. Explicit source objects require `type` (`markdown`, `json`, `yaml`, or `toml`) and `directory`; optional include patterns and body/ID policies reuse glob behavior. `source` and `loader` are mutually exclusive.
 - `content.select(...fields).from(collection)` is the only fluent root entry. `content.query.<collection>.findMany()` and `findFirst()` use Drizzle-style `columns`, `with`, `where`, and `orderBy` options; `content.count(collection, options)` counts matching parents before pagination. Omitted `columns` returns all prepared metadata, false-only columns exclude fields, and `{}` selects no scalars. Included relationships use nested options or `true` for all related metadata. Their compilers share checked clauses, normalized plans, and the pinned-revision executor. Singular scopes cannot order or paginate. `findFirst` returns `undefined`. Conformance tests compare both backends and type-check consumer projections.

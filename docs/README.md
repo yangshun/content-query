@@ -1,14 +1,16 @@
 # ContentQuery documentation
 
-- [Package API and usage](../packages/content-query/README.md)
+- [Quick start](../website/content/guides/quick-start.md)
+- [API and usage](./API.md)
 - [Features](./FEATURES.md)
 - [Design and contracts](./PLAN.md)
 - [Library comparisons](./COMPARISONS.md)
 - [Planned work](./TODO.md)
 - [Framework examples](../examples/README.md)
+- [Contributing](../CONTRIBUTING.md)
 - [Repository history and extraction](./HISTORY.md)
 
-The published package retains its consumer-facing README in `packages/content-query/`. Project-wide design documents live here.
+The root and package READMEs introduce ContentQuery. Detailed package usage and behavior contracts live in `API.md`; contributor setup and maintenance instructions live in `CONTRIBUTING.md` at the repository root.
 
 Bundled builders from `content-query/schema` are implemented. The [collections and schemas guide](../website/content/guides/collections-and-schemas.md) covers the selected builders, provider-independent input/output inference, and support for other Standard Schema V1 validators.
 
