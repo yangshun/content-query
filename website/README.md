@@ -18,6 +18,8 @@ A Void + React website based on [`../examples/void`](../examples/void), styled t
 
 The header has no bottom divider and leaves 2.5rem before page content, reduced to 2rem on small screens. Hero action buttons use compact padding and text sizes.
 
+The header and footer link to the [ContentQuery repository](https://github.com/yangshun/content-query). The footer credits [Yangshun Tay](https://github.com/yangshun), and the header navigation wraps on narrow screens.
+
 The sidebar follows the reader's workflow: Getting started, Defining content, Querying, Rendering, Integrations, and Reference. These pages introduce ContentQuery's current APIs with concise examples. Query filtering, selection, pagination, related entries, and adjacency share one guide; Markdown rendering and body policies share another. Expand those into separate pages as the content grows. Development content updates remain enabled.
 
 The querying guide documents revision-scoped ID indexes for fluent and object detail-page queries, including additional filters and development freshness.
