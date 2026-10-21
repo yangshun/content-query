@@ -4,7 +4,7 @@ Server metadata queries use `content.select(...fields).from(collection)`. The re
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
-A minimal Void + React documentation app in `content-query/examples/void`, backed by one ContentQuery collection. The guides describe a fictional project notebook and serve as sample content.
+A minimal Void + React documentation app in `examples/void`, backed by one ContentQuery collection. The guides describe a fictional project notebook and serve as sample content.
 
 ## Setup and development
 
@@ -18,7 +18,7 @@ vp run --filter @voidpress/content-query-basic dev
 
 `void` and `@void/react` use `catalog:` references to the matching `1.1.12` pins in the root `pnpm-workspace.yaml`.
 
-Build the workspace ContentQuery package before starting the app because its exports point at `content-query/packages/content-query/dist/`. The dev server watches Markdown and updates metadata and rendered bodies after edits. `src/content-updates.tsx` subscribes to `content-query:client` and refreshes Void loader data while preserving component state and scroll; the surrounding application remains mounted.
+Build the workspace ContentQuery package before starting the app because its exports point at `packages/content-query/dist/`. The dev server watches Markdown and updates metadata and rendered bodies after edits. `src/content-updates.tsx` subscribes to `content-query:client` and refreshes Void loader data while preserving component state and scroll; the surrounding application remains mounted.
 
 ## Production build
 

@@ -10,12 +10,12 @@ Build-only helpers from `content-query/computed` add typed reading time, word co
 
 Server queries use SQL-ordered `content.select(...fields).from(collection)` or relational `content.query.posts.findMany({ columns, with, where })` / `findFirst()`. Default selections include all prepared metadata; bodies and rendered HTML remain separate operations.
 
-This directory groups the project for a future standalone repository:
+This standalone Vite+ repository contains the complete ContentQuery project:
 
 ```text
 content-query/
   packages/
-    content-query/  Published package, source, tests, and API guide
+    content-query/  Library source, tests, and API guide (private until publication)
   examples/
     angular/
     void/
@@ -32,16 +32,22 @@ content-query/
 
 ## Development
 
-ContentQuery currently belongs to the enclosing VoidPress workspace. From that repository root, use Node.js 24.21.0 and Vite+:
+From this repository root, use Node.js 24.21.0 and Vite+. The repository owns its workspace configuration, dependency catalog, lockfile, formatting, type-aware linting, TypeScript checks, tests, and package builds:
 
 ```sh
 vp install --frozen-lockfile
-vp run --filter content-query build
-vp check
-vp test content-query
+vp run build
+vp run check
+vp exec --filter @content-query/benchmarks playwright install chromium
+vp test run
+vp test run --coverage
 ```
 
-Run `vp test` from the enclosing repository root to also verify VoidPress consumers. Each [example](./examples/README.md) documents its own development and production commands. Examples keep local styles and helpers so they can be copied independently; common copies live in `examples/shared/`.
+Run `vp fmt` to format files or `vp lint` for linting alone. `vp check` combines formatting, linting, and type checks. `vp run check` first generates ContentQuery declarations and framework types for a clean checkout; use `vp check` directly afterward. Installation builds the library so local CLI links work immediately. The pre-commit hook runs `vp staged`, and GitHub Actions runs the checks, SvelteKit diagnostics, tests with coverage, and website build. Package coverage must remain above 90% for statements, lines, and functions, and 85% for branches.
+
+Use `vp run dev` to watch the library build. In another terminal, run `vp run --filter @content-query/website dev` or an example's development command. `vp run build:website` builds the library before the website; `vp run build:examples` builds the library before all examples. Each [example](./examples/README.md) documents its own commands. Examples keep local styles and helpers so they can be copied independently; common copies live in `examples/shared/`.
+
+VoidPress checks this repository out as a Git submodule at `content-query/` and keeps `content-query/packages/*` in its workspace. Its `"content-query": "workspace:*"` dependency continues to resolve locally. Develop here or in the submodule checkout, commit ContentQuery changes first, then update VoidPress's submodule pin. The standalone checkout and the submodule are separate working trees; use Git commits to synchronize them. See [repository history](./docs/HISTORY.md) for the extraction boundary and original commit mapping.
 
 Keep the [website](./website/README.md) current when core changes affect public APIs, features, or behavior.
 

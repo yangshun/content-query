@@ -69,7 +69,7 @@ const report = {
   platform: `${os.platform()} ${os.arch()} ${os.release()}`,
   loadAverageAtStart: os.loadavg(),
   lockfileSha256: createHash("sha256")
-    .update(await readFile(path.resolve(benchmarkRoot, "../../pnpm-lock.yaml")))
+    .update(await readFile(path.resolve(benchmarkRoot, "../pnpm-lock.yaml")))
     .digest("hex"),
   corpus,
   contentQueryArtifactsSha256: await fingerprintArtifacts(),

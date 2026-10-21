@@ -14,7 +14,7 @@ The [Next.js guide](./content/guides/integrations/next.md) documents `withConten
 
 The Next.js and standalone guides describe cleanup of previous-run generated artifacts after the first successful startup publication and retention of revisions for the rest of a watch session.
 
-A Void + React website based on [`../examples/void`](../examples/void), styled to match the [VoidPress docs app](../../apps/docs). A compact header leads to a dedicated homepage at `/` and sidebar documentation starting at `/docs/introduction`. The dark background, lime accents, article typography, and compact previous/next text links are shared across the site. On small screens, the docs sidebar becomes a collapsible menu. Styles are local so the website can move with ContentQuery.
+A Void + React website based on [`../examples/void`](../examples/void), styled to match the [VoidPress docs app](https://github.com/yangshun/voidpress/tree/main/apps/docs). A compact header leads to a dedicated homepage at `/` and sidebar documentation starting at `/docs/introduction`. The dark background, lime accents, article typography, and compact previous/next text links are shared across the site. On small screens, the docs sidebar becomes a collapsible menu. Styles are local so the website can move with ContentQuery.
 
 The header has no bottom divider and leaves 2.5rem before page content, reduced to 2rem on small screens. Hero action buttons use compact padding and text sizes.
 

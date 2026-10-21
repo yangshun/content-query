@@ -104,7 +104,7 @@ vp env exec --node 24.21.0 -- vp run --no-cache --filter content-query build
 vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks profile --mode cpu --backend in-memory --label build-cpu --phase build
 vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks profile:summary .runs/profiles/build-cpu results/profile-build-attribution.json
 vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks profile --mode timings --backend in-memory --label build-timings --phase build --runs 3
-vp env exec --node 24.21.0 -- vp exec node content-query/benchmarks/scripts/profile-prerender.mjs --label worker-build
+vp env exec --node 24.21.0 -- vp exec node benchmarks/scripts/profile-prerender.mjs --label worker-build
 ```
 
 The last command requires a completed Void build; the detachment comparison ran `vp build` in `apps/void` after each package build. It replays the installed renderer against that built worker into a fresh ignored output directory. A Node load hook exposes the runner and enables its local inspector; a counter is added to the worker's ContentQuery query function in memory. Neither Void's source nor installed files are edited. It records worker CPU attribution, query candidates, filesystem calls, phase timings, and an audit of all 10,001 content HTML pages. Use a new label for every replay.

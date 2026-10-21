@@ -7,6 +7,7 @@ import { threadId } from "node:worker_threads";
 import ts from "typescript";
 
 if (!process.argv.includes("preview")) {
+  const contentQueryDist = new URL("../../packages/content-query/dist/", import.meta.url).href;
   const directory = process.env.CONTENT_QUERY_PROFILE_DIRECTORY;
   const started = performance.now();
   const spans = {};
@@ -65,7 +66,7 @@ if (!process.argv.includes("preview")) {
   registerHooks({
     load(url, context, next) {
       const result = next(url, context);
-      if (!url.includes("/content-query/packages/content-query/dist/") || !url.endsWith(".mjs")) {
+      if (!url.startsWith(contentQueryDist) || !url.endsWith(".mjs")) {
         return result;
       }
       if (result.source === undefined || result.source === null) {

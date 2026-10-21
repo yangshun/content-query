@@ -1,0 +1,14 @@
+node_modules
+dist
+.void
+.wrangler
+.agents
+.cursor
+*.tsbuildinfo
+.DS_Store
+coverage
+
+.content-query
+.react-router
+.svelte-kit
+routeTree.gen.ts

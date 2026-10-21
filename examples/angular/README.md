@@ -43,7 +43,7 @@ Styles and the browser navigation helper are local files, hardlinked to the comm
 ## Verify
 
 ```sh
-vp test run content-query/examples/angular/tests
+vp test run examples/angular/tests
 ```
 
 Tests build and run the real SSR application after removing source content and generated input files, verify nested guide routes and API projections, check 404 responses and browser bundle boundaries, and exercise the real development watcher.
