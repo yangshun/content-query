@@ -69,9 +69,9 @@ const {buildContent}=await import("content-query/build");
 const session=await buildContent({backend:${JSON.stringify(backend)}});
 try {
   console.log(JSON.stringify({
-    posts:await session.content.query("posts").select("readingMinutes","words","summary").all(),
-    articles:await session.content.query("articles").select("readingMinutes","words","summary").all(),
-    cms:await session.content.query("cms").select("words").all(),
+    posts:await session.content.select("readingMinutes", "words", "summary").from("posts").all(),
+    articles:await session.content.select("readingMinutes", "words", "summary").from("articles").all(),
+    cms:await session.content.select("words").from("cms").all(),
     retainedBody:await session.content.readBody("posts","getting-started"),
   }));
 } finally {await session.dispose();}
@@ -91,7 +91,7 @@ try {
             path.join(fixture.root, "consumer.ts"),
             `
 import {content, type CollectionData} from "./.content-query/server.js";
-const selected:Promise<{words:number;readingMinutes:number;summary:string}[]> = content.query("posts").select("words","readingMinutes","summary").all();
+const selected:Promise<{words:number;readingMinutes:number;summary:string}[]> = content.select("words", "readingMinutes", "summary").from("posts").all();
 const words:CollectionData<"articles">["words"] = 3;
 // @ts-expect-error Computed number fields do not become strings through generated declarations.
 const wrong:CollectionData<"posts">["readingMinutes"] = "one";
@@ -131,9 +131,9 @@ registerHooks({resolve(specifier,context,next){
 }});
 const {content}=await import("./.content-query/server.js");
 console.log(JSON.stringify({
-  posts:await content.query("posts").select("readingMinutes","words","summary").all(),
-  articles:await content.query("articles").select("readingMinutes","words","summary").all(),
-  cms:await content.query("cms").select("words").all(),
+  posts:await content.select("readingMinutes", "words", "summary").from("posts").all(),
+  articles:await content.select("readingMinutes", "words", "summary").from("articles").all(),
+  cms:await content.select("words").from("cms").all(),
 }));
 `,
             ],

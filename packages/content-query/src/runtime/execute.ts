@@ -42,10 +42,11 @@ function sortGroup(value: unknown): number {
 function pageRecords(
   records: readonly QueryRecord[],
   plan: QueryPlan,
+  revision: PreparedRevision,
   preserveOrder = false,
 ): QueryRecord[] {
   const filtered = records.filter((record) =>
-    plan.filters.every((expression) => matches(record, expression)),
+    plan.filters.every((expression) => matches(record, expression, revision, plan.collection)),
   );
   const order = plan.order.length
     ? [...plan.order]
@@ -104,6 +105,7 @@ function neighborScope(
   records: readonly QueryRecord[],
   preserveOrder: boolean,
   scopes: ProjectionScopes,
+  revision: PreparedRevision,
 ): NeighborScope {
   const selection = plan.adjacent!;
   const siblingPlan: QueryPlan =
@@ -111,6 +113,8 @@ function neighborScope(
       ? {
           ...plan,
           select: ["id"],
+          allFields: undefined,
+          exclude: undefined,
           with: {},
           adjacent: undefined,
           limit: undefined,
@@ -126,7 +130,7 @@ function neighborScope(
   let scope = candidates.get(records);
   if (!scope) {
     const unique = [...new Map(records.map((entry) => [entry.id, entry])).values()];
-    const ordered = pageRecords(unique, siblingPlan, selection === true && preserveOrder);
+    const ordered = pageRecords(unique, siblingPlan, revision, selection === true && preserveOrder);
     scope = {
       plan: siblingPlan,
       records: ordered,
@@ -146,10 +150,13 @@ function project(
   scopeRecords: readonly QueryRecord[],
   preserveScopeOrder = false,
 ): Record<string, unknown> {
-  if (!plan.select && !plan.adjacent) {
+  if (!plan.select && !plan.allFields && !plan.adjacent) {
     invalidQuery("Row-returning queries require select().");
   }
-  const result = detachSelection(record, plan.select ?? []);
+  const fields = plan.allFields
+    ? Object.keys(record).filter((field) => !plan.exclude?.includes(field))
+    : (plan.select ?? []);
+  const result = detachSelection(record, fields);
   for (const [name, nested] of Object.entries(plan.with)) {
     const relation = revision.registry[plan.collection]!.relationships[name]!;
     if (
@@ -163,7 +170,7 @@ function project(
     const candidates =
       revision.relations.get(relationKey(plan.collection, name))?.get(record.id) ?? [];
     const preserveOrder = relation.referenceSide === "from" && Array.isArray(record[relation.from]);
-    const selected = pageRecords(candidates, nested, preserveOrder).map((entry) =>
+    const selected = pageRecords(candidates, nested, revision, preserveOrder).map((entry) =>
       project(entry, nested, revision, scopes, candidates, preserveOrder),
     );
     Object.defineProperty(result, name, {
@@ -176,7 +183,7 @@ function project(
   if (plan.adjacent) {
     const candidates =
       plan.adjacent === true ? scopeRecords : revision.collections[plan.collection]!.records;
-    const scope = neighborScope(plan, candidates, preserveScopeOrder, scopes);
+    const scope = neighborScope(plan, candidates, preserveScopeOrder, scopes, revision);
     const index = scope.positions.get(record.id);
     const previous = index === undefined ? undefined : scope.records[index - 1];
     const next = index === undefined ? undefined : scope.records[index + 1];
@@ -200,13 +207,13 @@ export async function executeQuery(
   }
   if (terminal === "count") {
     return queryCandidates(collection.records, plan).filter((record) =>
-      plan.filters.every((expression) => matches(record, expression)),
+      plan.filters.every((expression) => matches(record, expression, revision, plan.collection)),
     ).length;
   }
-  if (!plan.select && !plan.adjacent) {
+  if (!plan.select && !plan.allFields && !plan.adjacent) {
     invalidQuery("Row-returning queries require select().");
   }
-  const records = pageRecords(queryCandidates(collection.records, plan), plan);
+  const records = pageRecords(queryCandidates(collection.records, plan), plan, revision);
   const scopes: ProjectionScopes = new WeakMap();
   return terminal === "first"
     ? records[0]

@@ -59,7 +59,7 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
       optimizeDeps: { noDiscovery: true },
     });
     ({ content } = await server.ssrLoadModule("content-query:server"));
-    const querySpy = vi.spyOn(content, "query");
+    const querySpy = vi.spyOn(content, "select");
     const renderSpy = vi.spyOn(content, "render");
     homeRoute = (await server.ssrLoadModule("/pages/index.server.ts")) as typeof homeRoute;
     guideRoute = (await server.ssrLoadModule(

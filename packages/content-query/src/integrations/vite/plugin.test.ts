@@ -162,7 +162,7 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
 const {content} = await import(${JSON.stringify(pathToFileURL(path.join(outDir, entry.fileName)).href)});
 const ids = ["0", "63", "__proto__"];
 const bodies = await Promise.all(ids.map(async id => { const body = await content.readBody("posts", id); return {prefix: body.slice(0, 16), length: body.length}; }));
-console.log(JSON.stringify({count: await content.query("posts").count(), bodies}));
+console.log(JSON.stringify({count: await content.select().from("posts").count(), bodies}));
 `,
           ],
           { cwd: fixture.root },

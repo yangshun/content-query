@@ -5,8 +5,8 @@ export const prerender = true;
 
 export const loader = defineHandler(async () => {
   const [count, entries] = await Promise.all([
-    content.query("entries").count(),
-    content.query("entries").select("id", "title", "description").orderBy("order").all(),
+    content.select().from("entries").count(),
+    content.select("id", "title", "description").from("entries").orderBy("order").all(),
   ]);
   const first = entries[0];
   if (!first) {

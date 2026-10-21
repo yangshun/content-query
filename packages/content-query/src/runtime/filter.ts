@@ -1,16 +1,66 @@
 import { compare, equal } from "../shared/values.ts";
 import type { Expression } from "../query/plan.ts";
+import { invalidQuery } from "../shared/errors.ts";
+import { relationKey } from "./relationships.ts";
+import type { PreparedRevision } from "./revision.ts";
+
+/** Matches SQL-style percent/underscore patterns without adopting database collation rules. */
+function matchesPattern(actual: unknown, pattern: string, insensitive: boolean): boolean {
+  if (typeof actual !== "string") {
+    return false;
+  }
+  let source = "";
+  let escaped = false;
+  for (const character of pattern) {
+    if (!escaped && character === "\\") {
+      escaped = true;
+      continue;
+    }
+    source +=
+      !escaped && character === "%"
+        ? ".*"
+        : !escaped && character === "_"
+          ? "."
+          : character.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    escaped = false;
+  }
+  if (escaped) {
+    source += "\\\\";
+  }
+  return new RegExp(`^${source}$`, insensitive ? "isu" : "su").exec(actual)?.[0] === actual;
+}
 
 /** Evaluates the portable expression tree using the agreed scalar semantics. */
-export function matches(record: Record<string, unknown>, expression: Expression): boolean {
+export function matches(
+  record: Record<string, unknown>,
+  expression: Expression,
+  revision?: PreparedRevision,
+  collection?: string,
+): boolean {
   if (expression.kind === "and") {
-    return expression.expressions.every((child) => matches(record, child));
+    return expression.expressions.every((child) => matches(record, child, revision, collection));
   }
   if (expression.kind === "or") {
-    return expression.expressions.some((child) => matches(record, child));
+    return expression.expressions.some((child) => matches(record, child, revision, collection));
   }
   if (expression.kind === "not") {
-    return !matches(record, expression.expressions[0]!);
+    return !matches(record, expression.expressions[0]!, revision, collection);
+  }
+  if (expression.kind === "relation") {
+    const relation =
+      revision &&
+      collection === expression.collection &&
+      revision.registry[collection]?.relationships[expression.field];
+    if (!revision || !relation || relation.collection !== expression.target) {
+      invalidQuery("Relationship filter no longer matches the prepared collection scope.");
+    }
+    const candidates =
+      revision.relations
+        .get(relationKey(expression.collection, expression.field))
+        ?.get(record.id as string) ?? [];
+    return candidates.some((candidate) =>
+      matches(candidate, expression.expression, revision, expression.target),
+    );
   }
   if (expression.kind !== "predicate") {
     return false;
@@ -38,6 +88,9 @@ export function matches(record: Record<string, unknown>, expression: Expression)
       return typeof actual === "string" && actual.startsWith(expected as string);
     case "ends-with":
       return typeof actual === "string" && actual.endsWith(expected as string);
+    case "like":
+    case "ilike":
+      return matchesPattern(actual, expected as string, expression.operator === "ilike");
     case "array-contains":
       return Array.isArray(actual) && actual.some((candidate) => equal(candidate, expected));
     case "array-contains-any":
@@ -49,6 +102,11 @@ export function matches(record: Record<string, unknown>, expression: Expression)
       return (
         Array.isArray(actual) &&
         (expected as unknown[]).every((candidate) => actual.some((item) => equal(item, candidate)))
+      );
+    case "array-contained":
+      return (
+        Array.isArray(actual) &&
+        actual.every((candidate) => (expected as unknown[]).some((item) => equal(candidate, item)))
       );
     default: {
       const order = compare(actual, expected);

@@ -3,8 +3,8 @@ import { createServerFn } from "@tanstack/react-start";
 
 const getNavigation = createServerFn({ method: "GET" }).handler(async () => {
   const { content } = await import("content-query:server");
-  return content.findMany("guides", {
-    select: { id: true, title: true },
+  return content.query.guides.findMany({
+    columns: { id: true, title: true },
     orderBy: { order: "asc" },
   });
 });

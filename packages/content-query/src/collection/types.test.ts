@@ -47,8 +47,10 @@ const invalidRegistry = { authors, posts: badTarget };
 
 /** Verifies the public inference boundary without executing preparation or invalid calls. */
 function check(content: Content<typeof registry>, invalid: Content<typeof invalidRegistry>) {
-  const object = content.findMany("posts", {
-    select: { subtitle: true, author: { select: { name: true } }, _adjacent: true },
+  const object = content.query.posts.findMany({
+    adjacent: true,
+    columns: { subtitle: true },
+    with: { author: { columns: { name: true } } },
   });
   expectTypeOf<Awaited<typeof object>>().toEqualTypeOf<
     {
@@ -57,9 +59,13 @@ function check(content: Content<typeof registry>, invalid: Content<typeof invali
       _adjacent: { previous: { id: string } | null; next: { id: string } | null };
     }[]
   >();
-  const adjacent = content.query("posts").selectAdjacent((siblings) => siblings.select("subtitle"));
+  const adjacent = content
+    .select("id")
+    .from("posts")
+    .selectAdjacent((siblings) => siblings.select("subtitle"));
   expectTypeOf<Awaited<ReturnType<typeof adjacent.first>>>().toEqualTypeOf<
     | {
+        id: string;
         _adjacent: {
           previous: { subtitle: string | undefined } | null;
           next: { subtitle: string | undefined } | null;
@@ -68,24 +74,30 @@ function check(content: Content<typeof registry>, invalid: Content<typeof invali
     | undefined
   >();
   // @ts-expect-error Object selection must reject unknown fields even alongside valid fields.
-  void content.findMany("posts", { select: { id: true, typo: true } });
+  void content.query.posts.findMany({ columns: { id: true, typo: true } });
   // @ts-expect-error Object predicates must reject unknown fields alongside valid predicates.
-  void content.findMany("posts", { where: { id: "a", typo: "b" }, select: { id: true } });
+  void content.query.posts.findMany({ where: { id: "a", typo: "b" }, columns: { id: true } });
   // @ts-expect-error Object filters preserve scalar argument types.
-  void content.findMany("posts", { where: { authorId: 1 }, select: { id: true } });
-  // @ts-expect-error Object queries require explicit projection.
-  void content.findMany("posts", { where: { id: "a" } });
-  void content.findMany("posts", {
-    // @ts-expect-error Recursive adjacency is prohibited in the object API.
-    select: { _adjacent: { select: { id: true, _adjacent: true } } },
+  void content.query.posts.findMany({ where: { authorId: 1 }, columns: { id: true } });
+  void content.query.posts.findMany({ where: { id: "a" } });
+  void content.query.posts.findMany({
+    // @ts-expect-error Adjacency cannot recurse through sibling scopes.
+    adjacent: { adjacent: true, columns: { id: true } },
+    columns: {},
   });
-  // @ts-expect-error Sibling queries have no pagination, including after chained clauses.
-  content.query("posts").selectAdjacent((siblings) => siblings.orderBy("id").limit(1).select("id"));
-  // @ts-expect-error Recursive adjacency is prohibited in the fluent API.
-  content.query("posts").selectAdjacent((siblings) => siblings.selectAdjacent().select("id"));
+  content
+    .select()
+    .from("posts")
+    // @ts-expect-error Sibling queries have no pagination, including after chained clauses.
+    .selectAdjacent((siblings) => siblings.orderBy("id").limit(1).select("id"));
+  content
+    .select()
+    .from("posts")
+    // @ts-expect-error Recursive adjacency is prohibited in the fluent API.
+    .selectAdjacent((siblings) => siblings.selectAdjacent().select("id"));
   // @ts-expect-error Sources and loaders are mutually exclusive.
   defineCollection({ source: ".", loader });
-  const selected = content.query("posts").select("subtitle");
+  const selected = content.select("subtitle").from("posts");
   expectTypeOf<
     keyof Awaited<ReturnType<typeof selected.all>>[number]
   >().toEqualTypeOf<"subtitle">();
@@ -93,15 +105,15 @@ function check(content: Content<typeof registry>, invalid: Content<typeof invali
     string | undefined
   >();
   const required = content
-    .query("posts")
     .select("id")
+    .from("posts")
     .with("author", (author) => author.select("name"));
   expectTypeOf<Awaited<ReturnType<typeof required.all>>[number]["author"]>().toEqualTypeOf<{
     name: string;
   }>();
   const filtered = content
-    .query("posts")
     .select("id")
+    .from("posts")
     .with("author", (author) => author.select("name").where((fields) => eq(fields.name, "Ada")));
   expectTypeOf<Awaited<ReturnType<typeof filtered.all>>[number]["author"]>().toEqualTypeOf<{
     name: string;
@@ -109,7 +121,7 @@ function check(content: Content<typeof registry>, invalid: Content<typeof invali
   // @ts-expect-error Complete-registry preparation checks target fields.
   void buildContent<typeof invalidRegistry>();
   // @ts-expect-error Generated/facade content cannot query an invalid registry.
-  invalid.query("posts");
+  invalid.select().from("posts");
   const base = { loader, schema: z.object({ authorId: z.string() }) };
   const wrongFrom = {
     author: { collection: "authors", type: "one", from: "typo", to: "id", referenceSide: "from" },

@@ -84,7 +84,9 @@ describe("ContentQuery website guide routes with the generated backend", () => {
   let startupRenders: number;
 
   beforeAll(async () => {
-    workspace = await realpath(await mkdtemp(path.join(os.tmpdir(), "content-query-website-test-")));
+    workspace = await realpath(
+      await mkdtemp(path.join(os.tmpdir(), "content-query-website-test-")),
+    );
     fixtureRoot = path.join(workspace, "app");
     await mkdir(fixtureRoot);
     for (const source of [
@@ -111,7 +113,7 @@ describe("ContentQuery website guide routes with the generated backend", () => {
       optimizeDeps: { noDiscovery: true },
     });
     ({ content } = await server.ssrLoadModule("content-query:server"));
-    const querySpy = vi.spyOn(content, "query");
+    const querySpy = vi.spyOn(content, "select");
     const renderSpy = vi.spyOn(content, "render");
     homeRoute = (await server.ssrLoadModule("/pages/index.server.ts")) as typeof homeRoute;
     guideRoute = (await server.ssrLoadModule(
@@ -159,7 +161,7 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     expect(html).toContain("From source to data");
     expect(html).toContain("Flexible type-safe query syntax");
     expect(html).toContain("Fluent");
-    expect(html).toContain("Object");
+    expect(html).toContain("Relational");
     expect(html).toContain('aria-label="Query operations"');
     expect(html).toContain("Select title only");
     expect(html).toContain('aria-label="Query sample posts"');
@@ -313,7 +315,7 @@ import configure from "./next.config.mjs";
 const config = await configure(PHASE_PRODUCTION_BUILD, { defaultConfig: {} });
 assert.equal(config.trailingSlash, true);
 const { content } = await import("#content-query");
-assert.deepEqual(await content.query("posts").select("id", "title").all(), [
+assert.deepEqual(await content.select("id", "title").from("posts").all(), [
   { id: "hello", title: "Hello ContentQuery" },
 ]);
 `,
@@ -459,7 +461,7 @@ export const collections = { posts, authors, ${formatCollections.join(",\n")} };
       }
     }
     const queryChecks = combinations.flatMap((options, index) =>
-      (["fluent", "prisma-style"] as const).map((syntax) => {
+      (["fluent", "relational"] as const).map((syntax) => {
         const resultName = `result${index}${syntax === "fluent" ? "Fluent" : "Object"}`;
         return `
 const ${resultName} = await (async () => {
@@ -472,7 +474,7 @@ assert.deepEqual(${resultName}, ${JSON.stringify(queryExamplePosts(options))});
     );
     const sourceChecks = sourceExamples.map(
       (source) =>
-        `assert.deepEqual(await content.query("${source.format}").select("id", "title", "draft", "authorId").first(), ${JSON.stringify(examplePosts[0])});`,
+        `assert.deepEqual(await content.select("id", "title", "draft", "authorId").from("${source.format}").first(), ${JSON.stringify(examplePosts[0])});`,
     );
     await writeFile(
       path.join(exampleRoot, "verify.mjs"),
@@ -482,8 +484,8 @@ import { content } from "./.content-query/server.js";
 import { eq } from "content-query/query";
 ${queryChecks.join("\n")}
 ${sourceChecks.join("\n")}
-assert.deepEqual(await content.query("posts").where((fields) => eq(fields.id, "hello-world")).select("readingMinutes").first(), { readingMinutes: 3 });
-const derived = await content.query("posts").select("wordCount", "excerpt").first();
+assert.deepEqual(await content.select("readingMinutes").from("posts").where((fields) => eq(fields.id, "hello-world")).first(), { readingMinutes: 3 });
+const derived = await content.select("wordCount", "excerpt").from("posts").first();
 assert.equal(derived.wordCount, 600);
 assert.equal(derived.excerpt.length, 160);
 assert.ok(derived.excerpt.endsWith("…"));
@@ -494,7 +496,7 @@ assert.deepEqual(posts, ${JSON.stringify(examplePosts.filter((post) => post.auth
     await execFileAsync(process.execPath, ["verify.mjs"], { cwd: exampleRoot });
 
     const typeChecks = (["title", "title-and-draft"] as const).flatMap((fields, index) =>
-      (["fluent", "prisma-style"] as const).map((syntax) => {
+      (["fluent", "relational"] as const).map((syntax) => {
         const options: QueryExampleOptions = {
           fields,
           excludeDrafts: false,
@@ -520,9 +522,9 @@ return actual;
 import { content } from "./.content-query/server.js";
 ${typeChecks.join("\n")}
 // @ts-expect-error The typed-query example deliberately misspells this field.
-content.query("posts").select("title", "drafft");
+content.select("title", "drafft").from("posts");
 // @ts-expect-error Object selection rejects the same misspelled field.
-content.findMany("posts", { select: { title: true, drafft: true } });
+content.query.posts.findMany({ columns: { title: true, drafft: true } });
 `,
     );
     await execFileAsync(

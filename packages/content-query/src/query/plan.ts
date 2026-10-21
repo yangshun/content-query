@@ -12,19 +12,25 @@ export type PredicateOperator =
   | "contains"
   | "starts-with"
   | "ends-with"
+  | "like"
+  | "ilike"
   | "array-contains"
   | "array-contains-any"
   | "array-contains-all"
+  | "array-contained"
   | "is-null"
   | "is-undefined"
   | "is-missing";
 export type Expression =
   | { kind: "predicate"; operator: PredicateOperator; field: string; value?: unknown }
+  | { kind: "relation"; collection: string; field: string; target: string; expression: Expression }
   | { kind: "and" | "or" | "not"; expressions: readonly Expression[] };
 
 export type QueryPlan = {
   collection: string;
   select?: readonly string[];
+  allFields?: boolean;
+  exclude?: readonly string[];
   filters: readonly Expression[];
   order: readonly { field: string; direction: "asc" | "desc" }[];
   limit?: number;
@@ -47,6 +53,10 @@ export function emptyPlan(collection: string): QueryPlan {
 /** Treats explicitly selected relationships and adjacency as row projections too. */
 export function hasSelection(plan: QueryPlan | undefined): plan is QueryPlan {
   return (
-    !!plan && (plan.select !== undefined || !!plan.adjacent || Object.keys(plan.with).length > 0)
+    !!plan &&
+    (plan.select !== undefined ||
+      !!plan.allFields ||
+      !!plan.adjacent ||
+      Object.keys(plan.with).length > 0)
   );
 }

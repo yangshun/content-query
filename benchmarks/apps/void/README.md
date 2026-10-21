@@ -1,5 +1,7 @@
 # Void + ContentQuery benchmark app
 
+Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
+
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
 The workspace ContentQuery Vite plugin loads and validates `content/entries/*.md`. The homepage loader queries every title and description, and React renders a link for every item. `pages/entries/[id].server.ts` exports `getPrerenderPaths()` for the entire collection; each route queries its metadata and renders its own Markdown body.

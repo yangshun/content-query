@@ -7,7 +7,7 @@ export default {
   async prerender() {
     const session = await buildContent<typeof collections>({ backend: "in-memory" });
     try {
-      const guides = await session.content.findMany("guides", { select: { id: true } });
+      const guides = await session.content.query.guides.findMany({ columns: { id: true } });
       return ["/", ...guides.map(({ id }) => `/docs/${id}/`)];
     } finally {
       await session.dispose();

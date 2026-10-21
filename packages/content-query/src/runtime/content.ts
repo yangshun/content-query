@@ -3,16 +3,10 @@ import { assertServerOnly } from "../shared/server-only.ts";
 import { detach } from "../shared/values.ts";
 import type { CollectionRegistry } from "../collection/types.ts";
 import type { InvalidRelationships } from "../collection/registry-types.ts";
-import { createBuilder } from "../query/builder.ts";
-import { emptyPlan } from "../query/plan.ts";
-import type {
-  Query,
-  QueryOptions,
-  CountOptions,
-  SelectionResult,
-  CheckedOptions,
-} from "../query/types.ts";
-import { objectPlan } from "../query/object.ts";
+import { createQueryNamespace, relationalPlan } from "../query/relational.ts";
+import type { RelationalQueries, RelationalCountOptions } from "../query/relational-types.ts";
+import type { SelectFrom } from "../query/select.ts";
+import { createSelect } from "../query/select.ts";
 import { normalizePlan } from "../query/normalize.ts";
 import { executeQuery } from "./execute.ts";
 import type { ContentState, ItemPayload, PreparedRevision, QueryRecord } from "./revision.ts";
@@ -20,29 +14,18 @@ import type { ContentRenderResult } from "./types.ts";
 
 assertServerOnly();
 type ContentMethods<Registry extends CollectionRegistry = {}> = {
-  query<Name extends keyof Registry & string>(collection: Name): Query<Registry, Name>;
-  /** Executes an explicitly selected object query through the shared runtime. */
-  findMany<
-    Name extends keyof Registry & string,
-    const Options extends QueryOptions<Registry, Name>,
-  >(
-    collection: Name,
-    options: Options & CheckedOptions<Registry, Name, NoInfer<Options>>,
-  ): Promise<SelectionResult<Registry, Name, Options["select"]>[]>;
-  /** Returns the first selected row, or undefined when its scope has no entries. */
-  findFirst<
-    Name extends keyof Registry & string,
-    const Options extends QueryOptions<Registry, Name>,
-  >(
-    collection: Name,
-    options: Options & CheckedOptions<Registry, Name, NoInfer<Options>>,
-  ): Promise<SelectionResult<Registry, Name, Options["select"]> | undefined>;
+  /** Starts a SQL-ordered fluent query; field names are checked against the collection in from(). */
+  select<const Keys extends readonly string[]>(...fields: Keys): SelectFrom<Registry, Keys>;
+  /** Collection-scoped relational queries with typed columns, relationships, and object filters. */
+  readonly query: RelationalQueries<Registry>;
   /** Counts matching entries before pagination, like the fluent count terminal. */
   count<Name extends keyof Registry & string>(
     collection: Name,
-    options?: CountOptions<Registry, Name>,
+    options?: RelationalCountOptions<Registry, Name>,
   ): Promise<number>;
+  /** Reads retained raw text separately from prepared metadata; missing entries reject. */
   readBody(collection: keyof Registry & string, id: string): Promise<string | undefined>;
+  /** Loads supplied output or renders captured Markdown, returning detached HTML and headings. */
   render(collection: keyof Registry & string, id: string): Promise<ContentRenderResult>;
 };
 export type Content<Registry extends CollectionRegistry = {}> =
@@ -161,24 +144,12 @@ export function createRuntime<Registry extends CollectionRegistry>(
   /** Reads the current registry without capturing a development revision in either API. */
   const registry = () => state.registry ?? state.revision?.registry ?? {};
   const runtime: ContentMethods<Registry> = {
-    query(collection) {
-      const registry = state.registry ?? state.revision?.registry ?? {};
-      if (!Object.hasOwn(registry, collection)) {
-        invalidQuery(`Unknown collection "${collection}".`);
-      }
-      return createBuilder(registry, run, emptyPlan(collection)) as Query<
-        Registry,
-        typeof collection
-      >;
+    select(...fields) {
+      return createSelect(registry, run, fields) as never;
     },
-    findMany(collection, options) {
-      return run(objectPlan(registry(), collection, options), "all") as never;
-    },
-    findFirst(collection, options) {
-      return run(objectPlan(registry(), collection, options), "first") as never;
-    },
+    query: createQueryNamespace(registry, run) as RelationalQueries<Registry>,
     count(collection, options = {}) {
-      return run(objectPlan(registry(), collection, options), "count") as Promise<number>;
+      return run(relationalPlan(registry(), collection, options), "count") as Promise<number>;
     },
     readBody(collection, id) {
       return pinned(state, async (revision) => (await loadPayload(revision, collection, id)).body);

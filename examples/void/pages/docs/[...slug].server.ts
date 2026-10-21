@@ -11,9 +11,9 @@ export const loader = defineHandler(async (context) => {
   }
 
   const guide = await content
-    .query("guides")
-    .where((fields) => eq(fields.id, id))
     .select("id", "title", "description")
+    .from("guides")
+    .where((fields) => eq(fields.id, id))
     .selectAdjacent((siblings) => siblings.orderBy("order").select("id", "title"))
     .first();
 
@@ -38,6 +38,6 @@ export const head = defineHead((_context, props: Props) => ({
 
 /** Queries the current collection instead of capturing entries during module initialization. */
 export async function getPrerenderPaths() {
-  const guides = await content.query("guides").select("id").orderBy("order").all();
+  const guides = await content.select("id").from("guides").orderBy("order").all();
   return guides.map((guide) => ({ slug: guide.id }));
 }

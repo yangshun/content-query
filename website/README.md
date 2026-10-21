@@ -1,5 +1,7 @@
 # ContentQuery website
 
+Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
+
 Collection configs, executable examples, and published guides use `{ schema }` from `content-query/schema`. The quick start installs only ContentQuery. The collections guide documents the selected Zod-backed builders, chaining, inference helpers, and support for other Standard Schema V1 providers.
 
 The [computed fields guide](./content/guides/computed-fields.md) covers collection names and optional, typed loader source metadata, with file and CMS examples that make those values queryable. It distinguishes the ContentQuery metadata extension from Astro's standard entry fields and explains source-only updates and digest behavior.

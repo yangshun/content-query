@@ -10,9 +10,9 @@ type GuideProps = { params: Promise<{ slug: string[] }> };
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  const guides = await content.findMany("guides", {
-    select: { id: true },
-    orderBy: [{ order: "asc" }],
+  const guides = await content.query.guides.findMany({
+    columns: { id: true },
+    orderBy: { order: "asc" },
   });
 
   return guides.map((guide) => ({ slug: guide.id.split("/") }));
@@ -20,9 +20,9 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: GuideProps): Promise<Metadata> {
   const { slug } = await params;
-  const guide = await content.findFirst("guides", {
+  const guide = await content.query.guides.findFirst({
     where: { id: slug.join("/") },
-    select: { title: true, description: true },
+    columns: { title: true, description: true },
   });
 
   if (!guide) {
@@ -35,14 +35,10 @@ export async function generateMetadata({ params }: GuideProps): Promise<Metadata
 export default async function GuidePage({ params }: GuideProps) {
   const { slug } = await params;
   const id = slug.join("/");
-  const guide = await content.findFirst("guides", {
+  const guide = await content.query.guides.findFirst({
     where: { id },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      _adjacent: { orderBy: { order: "asc" }, select: { id: true, title: true } },
-    },
+    adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
+    columns: { id: true, title: true, description: true },
   });
 
   if (!guide) {

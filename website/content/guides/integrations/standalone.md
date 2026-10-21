@@ -20,7 +20,7 @@ const session = await buildContent<typeof collections>({
 });
 
 try {
-  const posts = await session.content.query("posts").select("id", "title").all();
+  const posts = await session.content.select("id", "title").from("posts").all();
 } finally {
   await session.dispose();
 }

@@ -3,8 +3,8 @@ import { content } from "content-query:server";
 
 export async function loader() {
   return {
-    guides: await content.findMany("guides", {
-      select: { id: true, title: true },
+    guides: await content.query.guides.findMany({
+      columns: { id: true, title: true },
       orderBy: { order: "asc" },
     }),
   };

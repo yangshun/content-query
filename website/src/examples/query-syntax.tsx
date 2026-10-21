@@ -20,7 +20,7 @@ export function QuerySyntaxExample() {
   const posts = queryExamplePosts(options);
   const highlight = [
     ...(operations.filter ? [".where(", "where:"] : []),
-    ...(operations.select ? [".select(", "select:"] : []),
+    ...(operations.select ? [".select(", "columns:"] : []),
     ...(operations.sort ? [".orderBy(", "orderBy:"] : []),
     ...(operations.limit ? [".limit(", "limit:"] : []),
   ];
@@ -66,8 +66,8 @@ export function QuerySyntaxExample() {
         <div className="query-comparison-panel">
           <CodeExample label="Fluent" code={queryExampleCode(options)} highlight={highlight} />
           <CodeExample
-            label="Object"
-            code={queryExampleCode(options, "prisma-style")}
+            label="Relational"
+            code={queryExampleCode(options, "relational")}
             highlight={highlight}
           />
         </div>

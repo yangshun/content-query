@@ -38,6 +38,7 @@ type QueryInfo<
 > = {
   readonly [queryType]: { result: Result; selected: Selected; filtered: Filtered };
 };
+type Simplify<Value> = { [Key in keyof Value]: Value[Key] };
 type ResultOf<Configured> = Configured extends QueryInfo<infer Result> ? Result : never;
 type FilteredOf<Configured> =
   Configured extends QueryInfo<unknown, boolean, infer Filtered> ? Filtered : false;
@@ -50,15 +51,17 @@ type RelatedName<
   Registry extends CollectionRegistry,
   Relation extends Relationship,
 > = Relation["collection"] & keyof Registry & string;
-type RelationValue<
+/** Applies declared relationship cardinality, optional reference fields, and filtering to a result. */
+export type RelationshipResult<
   Definition,
   Relation extends Relationship,
-  Configured,
+  Result,
+  Filtered extends boolean = false,
 > = Relation["type"] extends "many"
-  ? ResultOf<Configured>[]
+  ? Result[]
   :
-      | ResultOf<Configured>
-      | (FilteredOf<Configured> extends true
+      | Result
+      | (Filtered extends true
           ? null
           : Relation["referenceSide"] extends "from"
             ? Relation["from"] extends keyof QueryData<Definition>
@@ -69,6 +72,12 @@ type RelationValue<
                   : never
               : null
             : null);
+type RelationValue<Definition, Relation extends Relationship, Configured> = RelationshipResult<
+  Definition,
+  Relation,
+  ResultOf<Configured>,
+  FilteredOf<Configured>
+>;
 export type Query<
   Registry extends CollectionRegistry,
   Name extends keyof Registry & string,
@@ -90,7 +99,15 @@ export type Query<
   ): Query<
     Registry,
     Name,
-    Result & { [Key in Keys[number]]-?: QueryData<Registry[Name]>[Key] },
+    {
+      [Key in
+        | Exclude<keyof Result, keyof QueryData<Registry[Name]>>
+        | Keys[number]]: Key extends Keys[number]
+        ? QueryData<Registry[Name]>[Key & keyof QueryData<Registry[Name]>]
+        : Key extends keyof Result
+          ? Result[Key]
+          : never;
+    },
     true,
     Many,
     Root,
@@ -216,8 +233,10 @@ export type Query<
     : {}) &
   (Root extends true
     ? {
-        all: Selected extends true ? () => Promise<Result[]> : never;
-        first: Selected extends true ? () => Promise<Result | undefined> : never;
+        all: Selected extends true ? () => Promise<Simplify<Result>[]> : never;
+        execute: Selected extends true ? () => Promise<Simplify<Result>[]> : never;
+        then: Selected extends true ? Promise<Simplify<Result>[]>["then"] : never;
+        first: Selected extends true ? () => Promise<Simplify<Result> | undefined> : never;
         count(): Promise<number>;
       }
     : {});

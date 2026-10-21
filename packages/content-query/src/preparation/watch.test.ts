@@ -50,7 +50,7 @@ describe("source watching", () => {
         },
         watch: true,
       });
-      const listing = session.content.query("posts").select("title");
+      const listing = session.content.select("title").from("posts");
       await mkdir(base, { recursive: true });
       await writeFile(filename, "---\ntitle: First\n---\n");
       await vi.waitFor(async () => expect(await listing.all()).toEqual([{ title: "First" }]), {
@@ -98,7 +98,7 @@ describe("source watching", () => {
       await settle();
       await sessionInternals(session).idle();
       expect(published).toHaveBeenCalledTimes(initial);
-      expect(await session.content.query("posts").select("title").all()).toEqual([
+      expect(await session.content.select("title").from("posts").all()).toEqual([
         { title: "First" },
       ]);
     } finally {
@@ -117,7 +117,7 @@ describe("source watching", () => {
         };
       }>({ root: fixture.root, config: fixture.config, outDir: ".content-query", watch: true });
       const internal = sessionInternals(session);
-      const listing = session.content.query("posts").select("title");
+      const listing = session.content.select("title").from("posts");
       try {
         const broken =
           failure === "syntax"
@@ -187,7 +187,7 @@ describe("source watching", () => {
           registry,
           watch: true,
         });
-        const listing = session.content.query("posts").select("title");
+        const listing = session.content.select("title").from("posts");
         try {
           await mkdir(base, { recursive: true });
           for (const title of ["First", "Edited"]) {
@@ -257,7 +257,7 @@ describe("source watching", () => {
         watch: true,
       });
       try {
-        const listing = session.content.query("posts").select("title");
+        const listing = session.content.select("title").from("posts");
         for (const title of ["First recovery", "Second recovery"]) {
           await writeFile(filename, JSON.stringify([{ id: "post", title: false }]));
           await vi.waitFor(
@@ -303,7 +303,7 @@ export const collections = {posts: {loader: {name: "fixture", async load({store}
         schema: z.ZodObject<{ title: z.ZodString }>;
       };
     }>({ root, config, outDir: ".content-query", watch: true, change: published });
-    const title = () => session.content.query("posts").select("title").first();
+    const title = () => session.content.select("title").from("posts").first();
     try {
       expect(await title()).toEqual({ title: "Local one" });
       const initial = published.mock.calls.length;
@@ -344,7 +344,7 @@ export const collections = {posts: {loader: {name: "fixture", async load({store}
         schema: z.ZodObject<{ title: z.ZodString }>;
       };
     }>({ root, config, outDir: ".content-query", watch: true });
-    const title = () => session.content.query("posts").select("title").first();
+    const title = () => session.content.select("title").from("posts").first();
     try {
       await writeFile(
         config,
@@ -391,7 +391,7 @@ export const collections = {posts: {loader: {name: "fixture", async load({store}
         watch: true,
         change: published,
       });
-      const titles = () => session.content.query("posts").select("title").all();
+      const titles = () => session.content.select("title").from("posts").all();
       try {
         // Finish any delayed events for the source written before subscription setup.
         await settle();

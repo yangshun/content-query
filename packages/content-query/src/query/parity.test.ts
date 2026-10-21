@@ -88,18 +88,19 @@ for (const encoded of [false, true]) {
     test("shares nested projection, filtering, tie-breaking, and pagination", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const object = await content.findMany("posts", {
+        const object = await content.query.posts.findMany({
           where: { draft: false, rank: { gte: 2 } },
-          select: { id: true, title: true, author: { select: { name: true } } },
-          orderBy: [{ rank: "desc" }],
+          columns: { id: true, title: true },
+          with: { author: { columns: { name: true } } },
+          orderBy: { rank: "desc" },
           offset: 1,
           limit: 1,
         });
         const fluent = await content
-          .query("posts")
+          .select("id", "title")
+          .from("posts")
           .where((fields) => operators.eq(fields.draft, false))
           .where((fields) => operators.gte(fields.rank, 2))
-          .select("id", "title")
           .with("author", (author) => author.select("name"))
           .orderBy("rank", "desc")
           .offset(1)
@@ -109,15 +110,19 @@ for (const encoded of [false, true]) {
         expect(fluent).toEqual(object);
         expect(
           await content
-            .query("posts")
+            .select("id")
+            .from("posts")
             .with("author", (author) => author.select("name"))
             .all(),
         ).toEqual(
-          await content.findMany("posts", { select: { author: { select: { name: true } } } }),
+          await content.query.posts.findMany({
+            columns: { id: true },
+            with: { author: { columns: { name: true } } },
+          }),
         );
         expect(await content.count("posts", { where: { draft: false }, limit: 0 })).toBe(3);
         expect(
-          await content.findFirst("posts", { where: { id: "missing" }, select: { id: true } }),
+          await content.query.posts.findFirst({ where: { id: "missing" }, columns: { id: true } }),
         ).toBeUndefined();
       } finally {
         await session.dispose();
@@ -139,7 +144,7 @@ for (const encoded of [false, true]) {
             ["a"],
           ],
           [
-            { tags: { hasSome: ["one"] } },
+            { tags: { arrayOverlaps: ["one"] } },
             (fields: operators.Fields<{ tags: string[] }>) =>
               operators.arrayContainsAny(fields.tags, ["one"]),
             ["a"],
@@ -161,8 +166,8 @@ for (const encoded of [false, true]) {
           ],
         ] as const;
         for (const [where, predicate, expected] of cases) {
-          const object = await content.findMany("posts", { where, select: { id: true } });
-          const fluent = await content.query("posts").where(predicate).select("id").all();
+          const object = await content.query.posts.findMany({ where, columns: { id: true } });
+          const fluent = await content.select("id").from("posts").where(predicate).all();
           expect(object.map((entry) => entry.id)).toEqual(expected);
           expect(fluent).toEqual(object);
         }
@@ -174,22 +179,26 @@ for (const encoded of [false, true]) {
     test("selects inherited adjacency before pagination with ID-only shorthand", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const object = await content.findMany("posts", {
+        const object = await content.query.posts.findMany({
           where: { draft: false },
-          select: { _adjacent: true },
-          orderBy: [{ rank: "asc" }],
+          adjacent: true,
+          columns: { id: true },
+          orderBy: { rank: "asc" },
           offset: 1,
           limit: 1,
         });
         const fluent = await content
-          .query("posts")
+          .select("id")
+          .from("posts")
           .where((fields) => operators.eq(fields.draft, false))
           .orderBy("rank")
           .offset(1)
           .limit(1)
           .selectAdjacent()
           .all();
-        expect(object).toEqual([{ _adjacent: { previous: { id: "a" }, next: { id: "c" } } }]);
+        expect(object).toEqual([
+          { id: "b", _adjacent: { previous: { id: "a" }, next: { id: "c" } } },
+        ]);
         expect(fluent).toEqual(object);
       } finally {
         await session.dispose();
@@ -199,21 +208,19 @@ for (const encoded of [false, true]) {
     test("uses an independent sibling scope for a single-entry lookup", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const object = await content.findFirst("posts", {
+        const object = await content.query.posts.findFirst({
           where: { id: "b" },
-          select: {
-            title: true,
-            _adjacent: {
-              where: { draft: false },
-              orderBy: [{ rank: "asc" }],
-              select: { id: true, title: true },
-            },
+          adjacent: {
+            where: { draft: false },
+            orderBy: { rank: "asc" },
+            columns: { id: true, title: true },
           },
+          columns: { title: true },
         });
         const fluent = await content
-          .query("posts")
-          .where((fields) => operators.eq(fields.id, "b"))
           .select("title")
+          .from("posts")
+          .where((fields) => operators.eq(fields.id, "b"))
           .selectAdjacent((siblings) =>
             siblings
               .where((fields) => operators.eq(fields.draft, false))
@@ -227,7 +234,7 @@ for (const encoded of [false, true]) {
         });
         expect(fluent).toEqual(object);
         expect(
-          await content.findFirst("posts", { where: { id: "a" }, select: { _adjacent: true } }),
+          await content.query.posts.findFirst({ where: { id: "a" }, adjacent: true, columns: {} }),
         ).toEqual({ _adjacent: { previous: null, next: null } });
       } finally {
         await session.dispose();

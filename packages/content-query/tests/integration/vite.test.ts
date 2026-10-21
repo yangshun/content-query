@@ -64,7 +64,11 @@ describe("Vite preparation and server/client boundaries", () => {
         () => expect(fallback.send).toHaveBeenCalledWith({ type: "full-reload" }),
         watcherWait,
       );
-      expect(sent).toHaveBeenCalledWith({ type: "custom", event: "content-query:update", data: {} });
+      expect(sent).toHaveBeenCalledWith({
+        type: "custom",
+        event: "content-query:update",
+        data: {},
+      });
       expect(subscribed.send).not.toHaveBeenCalledWith({ type: "full-reload" });
       unsubscribe({}, subscribed);
       await writeFile(
@@ -135,7 +139,7 @@ describe("Vite preparation and server/client boundaries", () => {
         throw new Error("Expected a runnable SSR environment.");
       }
       const { content } = await environment.runner.import("/consumer.mjs");
-      const listing = content.query("posts").select("title");
+      const listing = content.select("title").from("posts");
       expect(await listing.first()).toEqual({ title: "Getting started" });
       await writeFile(
         fixture.postPath,
@@ -202,7 +206,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
           throw new Error("Expected a runnable SSR environment.");
         }
         const { content } = await environment.runner.import("/consumer.mjs");
-        const listing = content.query("posts").select("value");
+        const listing = content.select("value").from("posts");
         await expect(listing.first()).rejects.toMatchObject({
           code: "validation-error",
           collection: "posts",
@@ -254,7 +258,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
       });
       try {
         const { content } = await server.ssrLoadModule("/consumer.mjs");
-        expect(await content.query("posts").select("title").first()).toEqual({
+        expect(await content.select("title").from("posts").first()).toEqual({
           title: "Getting started",
         });
         await writeFile(
@@ -263,7 +267,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         );
         await vi.waitFor(
           async () =>
-            expect(await content.query("posts").select("title").first()).toEqual({
+            expect(await content.select("title").from("posts").first()).toEqual({
               title: "Updated",
             }),
           watcherWait,
@@ -271,7 +275,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         await writeFile(fixture.postPath, "---\ntitle: false\n---\n");
         await vi.waitFor(
           async () =>
-            expect(content.query("posts").count()).rejects.toMatchObject({
+            expect(content.select().from("posts").count()).rejects.toMatchObject({
               code: "validation-error",
             }),
           watcherWait,
@@ -282,7 +286,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         );
         await vi.waitFor(
           async () =>
-            expect(await content.query("posts").select("title").first()).toEqual({
+            expect(await content.select("title").from("posts").first()).toEqual({
               title: "Fixed",
             }),
           watcherWait,
@@ -297,7 +301,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         );
         await vi.waitFor(
           async () =>
-            expect(await content.query("posts").select("upper").first()).toEqual({
+            expect(await content.select("upper").from("posts").first()).toEqual({
               upper: "Updated configuration",
             }),
           watcherWait,
@@ -351,7 +355,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
           [
             "--input-type=module",
             "-e",
-            `const {content}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, "dist/server.mjs")).href)}); console.log(await content.query("posts").count());console.log((await content.render("posts","getting-started")).headings.length);`,
+            `const {content}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, "dist/server.mjs")).href)}); console.log(await content.select().from("posts").count());console.log((await content.render("posts","getting-started")).headings.length);`,
           ],
           { cwd: fixture.root },
         );

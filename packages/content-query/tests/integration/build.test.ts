@@ -58,20 +58,21 @@ void session;
 const title: CollectionData<"posts">["title"] = "Example";
 const key: CollectionKey = "posts";
 const virtualTitle: VirtualData<"posts">["title"] = title;
-const object: Promise<{title:string;_adjacent:{previous:{id:string}|null;next:{id:string}|null}}[]> = virtualContent.findMany("posts", {select:{title:true,_adjacent:true}});
+const object: Promise<{title:string;_adjacent:{previous:{id:string}|null;next:{id:string}|null}}[]> = virtualContent.query.posts.findMany({ adjacent: true, columns: { title:true } });
 // @ts-expect-error Generated aliases only accept registered collection names.
 type Missing = CollectionData<"missing">;
 // @ts-expect-error Extra object selection fields remain errors through generated declarations.
-content.findMany("posts", {select:{id:true,typo:true}});
+content.query.posts.findMany({ columns: { id:true, typo:true } });
 void [title, key, virtualTitle, object];
-const query = content.query("posts").select("id","title").with("author",author=>author.select("name"));
+const query = content.select("id", "title").from("posts").with("author",author=>author.select("name"));
 const checked: Promise<{id:string;title:string;author:{name:string}}[]> = query.all();
 // @ts-expect-error Invalid fields must remain errors through generated declarations.
-content.query("posts").select("typo");
+content.select("typo").from("posts");
 // @ts-expect-error Field argument types are inferred from schema outputs.
-content.query("posts").where(fields=>eq(fields.draft,"false"));
-// @ts-expect-error Root selection is required through generated declarations too.
-content.query("posts").all();
+content.select().from("posts").where(fields=>eq(fields.draft,"false"));
+void content.select().from("posts").all();
+const direct: PromiseLike<{id:string;title:string}[]> = content.select("id", "title").from("posts");
+void direct;
 void checked;
 `,
         );
@@ -96,7 +97,7 @@ void checked;
           [
             "--input-type=module",
             "-e",
-            `const {content}=await import("./.content-query/server.js");console.log(JSON.stringify(await content.query("authors").select("name").with("featuredPosts",posts=>posts.select("id")).all()));`,
+            `const {content}=await import("./.content-query/server.js");console.log(JSON.stringify(await content.select("name").from("authors").with("featuredPosts",posts=>posts.select("id")).all()));`,
           ],
           { cwd: fixture.root },
         );
@@ -129,7 +130,7 @@ void checked;
         [
           "--input-type=module",
           "-e",
-          `const{content}=await import("./.content-query/server.js");const row=await content.query("__proto__").select("value","constructor").first();console.log(JSON.stringify([row.value,Object.hasOwn(row,"constructor"),row.constructor,await content.readBody("__proto__","__proto__")]));`,
+          `const{content}=await import("./.content-query/server.js");const row=await content.select("value", "constructor").from("__proto__").first();console.log(JSON.stringify([row.value,Object.hasOwn(row,"constructor"),row.constructor,await content.readBody("__proto__","__proto__")]));`,
         ],
         { cwd: fixture.root },
       );
@@ -178,7 +179,7 @@ void checked;
             "-e",
             `
 const {content} = await import(${JSON.stringify(pathToFileURL(path.join(generated, "server.js")).href)});
-const list = await content.query("posts").select("title","date","upper").with("author", author=>author.select("name")).all();
+const list = await content.select("title", "date", "upper").from("posts").with("author", author=>author.select("name")).all();
 const rendered = await content.render("posts","getting-started");
 console.log(JSON.stringify({list,body:await content.readBody("posts","getting-started"),rendered}));
 `,
@@ -211,7 +212,12 @@ console.log(JSON.stringify({list,body:await content.readBody("posts","getting-st
     const fixture = await projectFixture();
     try {
       const session = await buildAtRoot(fixture.root, { backend: "in-memory" });
-      expect(await session.content.query("posts" as never).count()).toBe(1);
+      expect(
+        await session.content
+          .select()
+          .from("posts" as never)
+          .count(),
+      ).toBe(1);
       expect(await readdir(fixture.root)).not.toContain(".content-query");
       await session.dispose();
     } finally {
@@ -232,7 +238,7 @@ console.log(JSON.stringify({list,body:await content.readBody("posts","getting-st
           "-e",
           `
 const {content}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, ".content-query/server.js")).href)});
-console.log(await content.query("posts").count());
+console.log(await content.select().from("posts").count());
 try { await content.readBody("posts","getting-started"); } catch(error) { console.log(error.code); }
 `,
         ],
@@ -404,7 +410,7 @@ try { await content.readBody("posts","getting-started"); } catch(error) { consol
         [
           "--input-type=module",
           "-e",
-          'const { content } = await import("./.content-query/server.js"); console.log(JSON.stringify(await content.query("posts").select("title").first()));',
+          'const { content } = await import("./.content-query/server.js"); console.log(JSON.stringify(await content.select("title").from("posts").first()));',
         ],
         { cwd: fixture.root },
       );

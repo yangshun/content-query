@@ -21,16 +21,27 @@ relationships: {
 
 ## Load related entries
 
-Select fields independently at every level:
+The fluent API selects fields independently at every level:
 
 ```ts
 const posts = await content
-  .query("posts")
   .select("id", "title")
+  .from("posts")
   .with("author", (author) => author.select("name"))
   .all();
 ```
 
+The relational API uses `with` and defaults to all metadata at each included level:
+
+```ts
+const posts = await content.query.posts.findMany({
+  columns: { id: true, title: true },
+  with: { author: { columns: { name: true } } },
+});
+```
+
+Use `with: { author: true }` for every prepared author field, or `false` to omit the relationship. A parent `where: { author: { name: "Ada" } }` filters posts by author; a `where` inside `with.author` filters only the included author.
+
 ContentQuery checks authored references during preparation. Dangling references, ambiguous matches, and invalid singular cardinality fail validation.
 
-Many relationships support per-parent filtering, ordering, and pagination. A singular relationship can be filtered and returns `null` when its target is excluded. See [querying related content](/docs/querying-content#related-content) for the equivalent object query.
+Many relationships support per-parent filtering, ordering, and pagination. A singular relationship can be filtered and returns `null` when its target is excluded. See [querying related content](/docs/querying-content#related-content) for the equivalent relational query.

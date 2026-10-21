@@ -56,7 +56,7 @@ describe("Next.js development publication", () => {
         [
           "--input-type=module",
           "-e",
-          'const { content } = await import("./.content-query/server.js"); console.log(JSON.stringify(await content.query("posts").select("title").first()));',
+          'const { content } = await import("./.content-query/server.js"); console.log(JSON.stringify(await content.select("title").from("posts").first()));',
         ],
         { cwd: fixture.root },
       );
