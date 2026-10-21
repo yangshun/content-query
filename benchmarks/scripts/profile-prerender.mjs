@@ -1,6 +1,7 @@
 import fs from "node:fs";
+import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
-import { registerHooks, syncBuiltinESMExports } from "node:module";
+import { registerHooks, stripTypeScriptTypes, syncBuiltinESMExports } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -8,11 +9,29 @@ import { apps, benchmarkRoot } from "./config.ts";
 import { verifyStaticOutput } from "./measure.ts";
 import { summarizeCpu } from "./summarize-profile.ts";
 
-const { values } = parseArgs({ options: { label: { type: "string", default: "prerender" } } });
+const { values } = parseArgs({
+  options: {
+    label: { type: "string", default: "prerender" },
+    renderer: { type: "string" },
+  },
+});
 if (!/^[a-z0-9][a-z0-9_-]*$/.test(values.label) || process.versions.node !== "24.21.0") {
   throw new Error("Use Node 24.21.0 and a lowercase, filesystem-safe --label.");
 }
 const appRoot = path.join(benchmarkRoot, "apps/void");
+const packageDir = await fs.promises.realpath(path.join(appRoot, "node_modules/void"));
+const distDir = path.join(packageDir, "dist");
+const distUrl = pathToFileURL(`${distDir}${path.sep}`).href;
+const rendererFile = values.renderer ? path.resolve(values.renderer) : undefined;
+const rendererSource = rendererFile ? await readFile(rendererFile, "utf8") : undefined;
+const renderer =
+  rendererFile && rendererSource !== undefined
+    ? {
+        file: path.relative(benchmarkRoot, rendererFile),
+        sha256: createHash("sha256").update(rendererSource).digest("hex"),
+        source: stripTypeScriptTypes(rendererSource),
+      }
+    : undefined;
 const outputRoot = path.join(benchmarkRoot, ".runs/profiles", values.label);
 const clientDir = path.join(outputRoot, "apps/void/dist/client");
 await mkdir(clientDir, { recursive: true });
@@ -60,8 +79,11 @@ if (plan.filters.some(expression => expression.kind === "predicate" && expressio
 registerHooks({
   load(url, context, next) {
     const result = next(url, context);
-    if (!url.includes("/node_modules/void/dist/") || !url.endsWith(".mjs") || !result.source) {
+    if (!url.startsWith(distUrl) || !url.endsWith(".mjs") || !result.source) {
       return result;
+    }
+    if (renderer && url.endsWith("/prerender-render.mjs")) {
+      return { ...result, source: renderer.source };
     }
     let source =
       typeof result.source === "string" ? result.source : new TextDecoder().decode(result.source);
@@ -146,8 +168,6 @@ async function inspectorConnection(url) {
   };
 }
 
-const packageDir = await fs.promises.realpath(path.join(appRoot, "node_modules/void"));
-const distDir = path.join(packageDir, "dist");
 const runnerFile = (await readdir(distDir)).find(
   (name) => name.startsWith("email-cloudflare-") && name.endsWith(".mjs"),
 );
@@ -274,6 +294,7 @@ try {
     label: values.label,
     diagnostic:
       "Prerender replay with worker CPU sampling and query counters; no bundling or CLI startup.",
+    ...(renderer ? { renderer: { file: renderer.file, sha256: renderer.sha256 } } : {}),
     node: process.version,
     corpus: manifest,
     phases,
