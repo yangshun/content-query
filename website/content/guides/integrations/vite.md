@@ -26,7 +26,7 @@ Server modules import `content` from `content-query:server`. Include `.content-q
 
 The plugin excludes generated content artifacts from Vite's watcher and preserves your configured ignores. It watches authored sources and configuration separately, so publishing a large collection does not trigger application file events for every generated payload.
 
-Concurrent delivery of a revision shares its serialization work.
+Development delivers payloads in the same bounded, lazy batches used for builds. Concurrent delivery of a revision shares its serialization work.
 
 Vite watches source and configuration changes. Connect the browser-safe `onContentUpdate()` subscription from `content-query:client` to your framework's data refresh:
 

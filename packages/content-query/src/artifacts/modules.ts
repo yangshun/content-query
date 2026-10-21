@@ -48,14 +48,14 @@ export async function revisionModules(
       if (!batch.length) {
         return;
       }
-      const key = digest([name, batch]);
-      const code = `export default { ${batch.map(([id, encoded]) => `[${JSON.stringify(id)}]: ${JSON.stringify(encoded)}`).join(",\n")} };\n`;
+      const source = JSON.stringify(Object.fromEntries(batch));
+      const value = `JSON.parse(${JSON.stringify(source)})`;
+      const code = `export default ${value};\n`;
+      const key = digest([name, code]);
       publishPayload(`${directory}/entries/${key}.js`, code);
-      const binding = `payloadChunk${chunks.length}`;
-      chunks.push(`const ${binding} = () => import(${JSON.stringify(`./entries/${key}.js`)});`);
-      for (const [id] of batch) {
-        payloads.push(`[${JSON.stringify(id)}]: loadPayload(${binding}, ${JSON.stringify(id)})`);
-      }
+      chunks.push(
+        `{ ids: ${JSON.stringify(batch.map(([id]) => id))}, load: () => import(${JSON.stringify(`./entries/${key}.js`)}) }`,
+      );
       batch = [];
       batchBytes = 0;
     }
@@ -81,10 +81,16 @@ export async function revisionModules(
       );
     }
     flushBatch();
-    const loaders = chunks.length
-      ? `const loadPayload = (load, id) => () => load().then(module => ({ default: module.default[id] }));\n${chunks.join("\n")}\n`
+    const recordSource = JSON.stringify(collection.records.map(encode));
+    const helpers = chunks.length ? ["createPayloadLoaders"] : [];
+    const loaders = helpers.length
+      ? `import { ${helpers.join(", ")} } from "content-query/internal";\n`
       : "";
-    const code = `${loaders}export default { records: ${JSON.stringify(collection.records.map(encode))}, payloads: { ${payloads.join(",\n")} } };\n`;
+    const loading = chunks.length
+      ? `createPayloadLoaders([${chunks.join(",\n")}])`
+      : `{ ${payloads.join(",\n")} }`;
+    const records = recordSource;
+    const code = `${loaders}export default { records: ${records}, payloads: ${loading} };\n`;
     const index = `index-${digest(code)}.js`;
     modules.set(`${directory}/${index}`, code);
     modules.set(
