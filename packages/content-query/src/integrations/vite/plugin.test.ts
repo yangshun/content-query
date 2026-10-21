@@ -6,11 +6,21 @@ import { promisify } from "node:util";
 import { build, createServer } from "vite-plus";
 import { describe, expect, test, vi } from "vite-plus/test";
 import { projectFixture } from "../../../tests/helpers/project.ts";
+import * as preparation from "../../preparation/build.ts";
 import { contentQuery } from "./plugin.ts";
 import * as virtualModules from "./modules.ts";
 
 const execute = promisify(execFile);
 vi.setConfig({ testTimeout: 20_000 });
+
+/** Creates a manually released gate for real Vite initialization and shutdown tests. */
+function preparationGate() {
+  let release!: () => void;
+  const promise = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  return { promise, resolve: release };
+}
 
 describe("Vite artifact watching", () => {
   test.each([".content-query", "generated[content]/bundle"])(
@@ -21,7 +31,7 @@ describe("Vite artifact watching", () => {
         root: fixture.root,
         configFile: false,
         plugins: [contentQuery({ backend: "generated", outDir })],
-        server: { watch: { ignored: /application-ignored/ } },
+        server: { middlewareMode: true, watch: { ignored: /application-ignored/ } },
         optimizeDeps: { noDiscovery: true },
       });
       const seen: string[] = [];
@@ -51,6 +61,118 @@ describe("Vite artifact watching", () => {
 });
 
 describe("Vite content preparation", () => {
+  test("overlaps later server hooks while preparing content before initialization completes", async () => {
+    const fixture = await projectFixture();
+    const key = `content-query-preparation:${fixture.root}`;
+    const release = preparationGate();
+    const events: string[] = [];
+    Reflect.set(process, Symbol.for(key), { release: release.promise, events });
+    // Release an old sequential implementation so a failure does not leave createServer hanging.
+    const timeout = setTimeout(() => release.resolve(), 1_000);
+    let server: Awaited<ReturnType<typeof createServer>> | undefined;
+    try {
+      await writeFile(
+        fixture.config,
+        `import {defineCollection} from "content-query";
+const barrier = process[Symbol.for(${JSON.stringify(key)})];
+export const collections = {posts: defineCollection({loader: {name: "fixture", async load({store}) {
+  await barrier.release;
+  store.set({id: "ready", data: {title: "Ready"}});
+  barrier.events.push("prepared");
+}}})};`,
+      );
+      server = await createServer({
+        root: fixture.root,
+        configFile: false,
+        plugins: [
+          contentQuery(),
+          {
+            name: "fixture:configure",
+            configureServer() {
+              events.push("configured");
+              release.resolve();
+            },
+          },
+        ],
+        server: { middlewareMode: true, ws: false, watch: null },
+        optimizeDeps: { noDiscovery: true },
+      });
+      expect(events).toEqual(["configured", "prepared"]);
+      const runtime = await server.ssrLoadModule("content-query:server");
+      expect(await runtime.content.count("posts")).toBe(1);
+    } finally {
+      clearTimeout(timeout);
+      release.resolve();
+      await server?.close();
+      Reflect.deleteProperty(process, Symbol.for(key));
+      await fixture.dispose();
+    }
+  });
+
+  test("disposes preparation when a server closes before listening", async () => {
+    const fixture = await projectFixture();
+    const key = `content-query-closing:${fixture.root}`;
+    const started = preparationGate();
+    const release = preparationGate();
+    Reflect.set(process, Symbol.for(key), { started: started.resolve, release: release.promise });
+    const original = preparation.buildAtRoot;
+    const disposed = vi.fn<() => Promise<void>>();
+    const build = vi.spyOn(preparation, "buildAtRoot").mockImplementation(async (...arguments_) => {
+      const session = await original(...arguments_);
+      session.dispose = disposed.mockImplementation(session.dispose.bind(session));
+      return session;
+    });
+    let server: Awaited<ReturnType<typeof createServer>> | undefined;
+    try {
+      await writeFile(
+        fixture.config,
+        `import {defineCollection} from "content-query";
+const barrier = process[Symbol.for(${JSON.stringify(key)})];
+export const collections = {posts: defineCollection({loader: {name: "fixture", async load({store}) {
+  barrier.started();
+  await barrier.release;
+  store.set({id: "ready", data: {title: "Ready"}});
+}}})};`,
+      );
+      server = await createServer({
+        root: fixture.root,
+        configFile: false,
+        plugins: [contentQuery()],
+        server: { ws: false, watch: null },
+        optimizeDeps: { noDiscovery: true },
+      });
+      await started.promise;
+      const closing = server.close();
+      release.resolve();
+      await closing;
+      expect(disposed).toHaveBeenCalled();
+    } finally {
+      release.resolve();
+      await server?.close();
+      build.mockRestore();
+      Reflect.deleteProperty(process, Symbol.for(key));
+      await fixture.dispose();
+    }
+  });
+
+  test("reports preparation failure before server initialization completes", async () => {
+    const fixture = await projectFixture();
+    try {
+      await rm(fixture.config);
+      await expect(
+        createServer({
+          root: fixture.root,
+          configFile: false,
+          plugins: [contentQuery()],
+          server: { middlewareMode: true, ws: false, watch: null },
+          optimizeDeps: { noDiscovery: true },
+        }),
+      ).rejects.toThrow("content-query.config");
+    } finally {
+      await fixture.dispose();
+    }
+  });
+
   test("serializes each development revision once across concurrent delivery and startup", async () => {
     const fixture = await projectFixture();
     const original = virtualModules.preparedModules;

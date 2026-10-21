@@ -1,0 +1,66 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-21T00:47:58.993Z",
+  "label": "framework-overlap-startup-20261021",
+  "mode": "cpu",
+  "backend": "in-memory",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [3.6044921875, 3.9501953125, 6.0859375],
+  "lockfileSha256": "af4f7203061411dfdec7c43ae4296c5e81cc25cdeb7a553afa845d3e3d5a4a6f",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "bc00cfffc8820f3b392f49344a9f73eab14446d90e4104dfd895a56d87ceae1b",
+  "voidArtifactsSha256": "6b4533b89c5780e07d43bd974c0265f31e7891213f3ec81f8861a79883d19533",
+  "reactArtifactsSha256": "9a54c226743500678a71eaa7e2d8dce2b0613903126b883876727c0562e0a165",
+  "reactArtifactsUnchanged": true,
+  "voidPackage": "../../../void/packages/void",
+  "voidArtifactsUnchanged": true,
+  "contentQueryArtifactsUnchanged": true,
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/framework-overlap-startup-20261021/1-startup-cold/output.log",
+      "listenMs": 4205.163583,
+      "durationMs": 5198.873041999997,
+      "host": {
+        "settled": true,
+        "waitedMs": 11022.123792,
+        "idle": 0.8213338490904164,
+        "loadAverage": [3.42431640625, 3.9013671875, 6.04345703125]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/framework-overlap-startup-20261021/1-startup-warm/output.log",
+      "listenMs": 2653.506250000002,
+      "durationMs": 3313.4447500000024,
+      "host": {
+        "settled": true,
+        "waitedMs": 4005.321667,
+        "idle": 0.8453033266466065,
+        "loadAverage": [3.27880859375, 3.8544921875, 6.00146484375]
+      }
+    }
+  ],
+  "completedAt": "2026-10-21T00:48:23.832Z",
+  "loadAverageAtEnd": [3.17626953125, 3.8232421875, 5.9775390625]
+}
