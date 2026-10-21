@@ -25,6 +25,26 @@ function byId(id: string): QueryPlan {
 }
 
 describe("ID query execution", () => {
+  test("does not revisit a single matching ID to establish its default ordering", async () => {
+    let reads = 0;
+    const prepared = revision([
+      {
+        get id() {
+          reads++;
+          return "entry";
+        },
+        title: "Article",
+      },
+    ]);
+    const plan = { ...byId("entry"), select: ["title"] };
+    await executeQuery(prepared, plan, "first");
+    reads = 0;
+    for (let index = 0; index < 50; index++) {
+      expect(await executeQuery(prepared, plan, "first")).toEqual({ title: "Article" });
+    }
+    expect(reads).toBe(50);
+  });
+
   test("avoids rescanning unrelated IDs after the first lookup and scopes caches to records", async () => {
     let idReads = 0;
     const records = Array.from({ length: 1_000 }, (_, index) => ({

@@ -45,6 +45,15 @@ function pageRecords(
   revision: PreparedRevision,
   preserveOrder = false,
 ): QueryRecord[] {
+  if (records.length <= 1 && !plan.order.length) {
+    const record = records[0];
+    return record &&
+      plan.filters.every((expression) => matches(record, expression, revision, plan.collection)) &&
+      (plan.offset ?? 0) === 0 &&
+      plan.limit !== 0
+      ? [record]
+      : [];
+  }
   const filtered = records.filter((record) =>
     plan.filters.every((expression) => matches(record, expression, revision, plan.collection)),
   );

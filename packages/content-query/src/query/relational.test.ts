@@ -166,6 +166,31 @@ for (const encoded of [false, true]) {
         await session.dispose();
       }
     });
+    test("retains relationship filter scope when an ID lookup selects one candidate", async () => {
+      const { content, session } = await setup(encoded);
+      try {
+        expect(
+          await content.query.posts.findFirst({
+            columns: { id: true },
+            where: { id: "a", author: { name: { eq: "Ada" } } },
+          }),
+        ).toEqual({ id: "a" });
+        expect(
+          await content.query.posts.findFirst({
+            columns: { id: true },
+            where: { id: "a", author: { name: { eq: "Grace" } } },
+          }),
+        ).toBeUndefined();
+        expect(
+          await content.query.posts.findMany({
+            columns: { id: true },
+            where: { id: "missing", author: { name: { eq: "Ada" } } },
+          }),
+        ).toEqual([]);
+      } finally {
+        await session.dispose();
+      }
+    });
     test("filters parents by related entries independently from included relationship filters", async () => {
       const { content, session } = await setup(encoded);
       try {
