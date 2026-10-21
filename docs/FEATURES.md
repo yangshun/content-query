@@ -29,6 +29,7 @@
 - Vite diagnostics preserve BigInts, supported value graphs, and Error cause details across isolated runtimes; initial validation errors recover without restarting.
 - Vite client-import rejection and runtime server-only fallback guards.
 - Large-collection preparation reuses Markdown parser rules and unchanged immutable artifacts, with bounded publication I/O. Vite ignores generated output, prepares production content only for server graphs, and packs payload sources into lazy modules targeting 128 KiB before bundling, including hosts with strict entry signatures.
+- Compact metadata indexes and lazy payload batches use portable gzip decoding when compression saves at least ten percent, retaining the existing value codec. Vite development also batches payloads, and concurrent delivery shares one revision serialization. Payload imports and decompression stay lazy, shared per batch, and retryable.
 - Separate collection, query, runtime, preparation, loader, artifact, and integration modules behind stable package entry points; colocated unit tests and separate integration fixtures.
 
 Verification combines shared conformance tests, typed callsites, controlled watch/race tests, loader tests, the published Astro CSV loader, native schema/watcher contracts, real generated/CLI consumers, Vite bundles, and the migrated VoidPress app. SQLite and other [future extensions](./TODO.md#future-extensions) are intentionally outside v1.

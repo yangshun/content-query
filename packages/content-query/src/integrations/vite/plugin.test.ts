@@ -295,7 +295,8 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
         const chunks = outputs.flatMap((output) =>
           "output" in output ? output.output.filter((chunk) => chunk.type === "chunk") : [],
         );
-        const payloads = chunks.filter((chunk) => chunk.code.includes("Payload marker "));
+        const entry = chunks.find((chunk) => chunk.isEntry)!;
+        const payloads = chunks.filter((chunk) => entry.dynamicImports.includes(chunk.fileName));
         if (!padding) {
           expect(chunks.length).toBeLessThan(20);
         }
@@ -308,7 +309,6 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
         } else {
           expect(payloads).toHaveLength(1);
         }
-        const entry = chunks.find((chunk) => chunk.isEntry)!;
         expect(entry.code).not.toContain("Payload marker ");
         expect(entry.imports).not.toContain(payloads[0]!.fileName);
         expect(entry.dynamicImports).toContain(payloads[0]!.fileName);

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { gzipSync } from "node:zlib";
 import { ARTIFACT_VERSION, CODEC_VERSION } from "./types.ts";
 import type { PreparedRevision } from "../runtime/revision.ts";
 import { encode } from "../shared/values.ts";
@@ -14,6 +15,16 @@ function directoryName(name: string): string {
     !/^(?:con|prn|aux|nul|com[0-9]|lpt[0-9])$/i.test(name)
     ? name
     : `~${Buffer.from(name).toString("base64url")}`;
+}
+
+/** Returns a gzip/base64 JavaScript literal only when it saves at least ten percent. */
+function compactJson(source: string): string | undefined {
+  const bytes = Buffer.byteLength(source);
+  if (bytes < 4096) {
+    return undefined;
+  }
+  const compressed = JSON.stringify(gzipSync(source, { level: 1 }).toString("base64"));
+  return compressed.length < bytes * 0.9 ? compressed : undefined;
 }
 
 /** Creates portable ESM; build integrations can batch payload sources before a strict bundler runs. */
@@ -49,7 +60,7 @@ export async function revisionModules(
         return;
       }
       const source = JSON.stringify(Object.fromEntries(batch));
-      const value = `JSON.parse(${JSON.stringify(source)})`;
+      const value = compactJson(source) ?? `JSON.parse(${JSON.stringify(source)})`;
       const code = `export default ${value};\n`;
       const key = digest([name, code]);
       publishPayload(`${directory}/entries/${key}.js`, code);
@@ -82,14 +93,18 @@ export async function revisionModules(
     }
     flushBatch();
     const recordSource = JSON.stringify(collection.records.map(encode));
-    const helpers = chunks.length ? ["createPayloadLoaders"] : [];
+    const compressedRecords = compactJson(recordSource);
+    const helpers = [
+      ...(chunks.length ? ["createPayloadLoaders"] : []),
+      ...(compressedRecords ? ["decodeCompressed"] : []),
+    ];
     const loaders = helpers.length
       ? `import { ${helpers.join(", ")} } from "content-query/internal";\n`
       : "";
     const loading = chunks.length
       ? `createPayloadLoaders([${chunks.join(",\n")}])`
       : `{ ${payloads.join(",\n")} }`;
-    const records = recordSource;
+    const records = compressedRecords ? `decodeCompressed(${compressedRecords})` : recordSource;
     const code = `${loaders}export default { records: ${records}, payloads: ${loading} };\n`;
     const index = `index-${digest(code)}.js`;
     modules.set(`${directory}/${index}`, code);

@@ -50,6 +50,17 @@ describe("portable payload batches", () => {
       const revision = largeRevision(compressible);
       try {
         const modules = await revisionModules(revision, { payloadChunkBytes: 128 * 1024 });
+        const sourceBytes = [...modules.values()].reduce(
+          (total, source) => total + Buffer.byteLength(source),
+          0,
+        );
+        const bodyBytes = (
+          await Promise.all(
+            [...revision.collections.posts!.payloads.values()].map((load) => load()),
+          )
+        ).reduce((total, payload) => total + Buffer.byteLength(payload.body!), 0);
+        expect(sourceBytes).toBeLessThan(bodyBytes * (compressible ? 0.2 : 1.3));
+
         for (const [filename, source] of modules) {
           const destination = path.join(fixture.root, "portable", filename);
           await mkdir(path.dirname(destination), { recursive: true });

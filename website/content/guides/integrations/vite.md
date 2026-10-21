@@ -47,3 +47,5 @@ See the [framework guides](/docs/integrations/frameworks) for the server boundar
 Content preparation runs in server environments. Client compilation still enforces the server import boundary and does not repeat content loading or Markdown compilation.
 
 Before bundling, the plugin packs server payloads into lazy source modules targeting 128 KiB. This also avoids per-item facade modules in hosts that require strict entry signatures. Default metadata queries do not import bodies; rendering one entry can load neighboring payloads in its module. Your output and chunking settings continue to control the final bundle. Standalone generated artifacts remain ordinary per-item ESM modules.
+
+Large metadata indexes and payload batches are compressed when gzip/base64 reduces their size by at least ten percent. Metadata is restored synchronously by a portable decoder. Payload batches are imported and expanded once on first body or render access, and failed loads can be retried. Rich metadata, heading aliases, and detached results keep the same value semantics.

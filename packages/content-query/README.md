@@ -327,7 +327,7 @@ Generated output is ordinary ESM for Node or another bundler; it does not requir
 
 Vite excludes generated artifacts from its file watcher while preserving application watcher settings. Production content preparation runs for server environments, so client compilation does not repeat source loading and Markdown rendering. Before bundling, Vite packs payload sources into lazy modules targeting 128 KiB each, including when the host requires strict entry signatures. Default metadata queries still load no bodies; rendering an entry can load neighboring payloads in its module. Host output and chunking settings continue to control the final bundle. Standalone generated artifacts retain individual immutable item modules.
 
-Development prepares initial content before Vite starts listening; server module loads also await that preparation. Closing a server before it listens releases its content session. Development uses the same bounded payload batches and shares concurrent serialization of a revision.
+Development prepares initial content before Vite starts listening; server module loads also await that preparation. Closing a server before it listens releases its content session. Development uses the same bounded payload batches and shares concurrent serialization of a revision. Large metadata indexes and payload batches use gzip/base64 when that saves at least ten percent. A portable decoder restores metadata synchronously and expands each payload batch once on first access; failed payload loads can be retried. The underlying value codec still preserves rich metadata, heading aliases, special entry IDs, and detached results. Small or incompressible data stays uncompressed.
 
 ## Next.js
 
