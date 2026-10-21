@@ -1,5 +1,5 @@
 {
-  "name": "@voidpress/content-query-sveltekit",
+  "name": "@content-query/example-sveltekit",
   "version": "0.0.0",
   "private": true,
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "@voidpress/content-query-tanstack-start",
+  "name": "@content-query/example-tanstack-start",
   "version": "0.0.0",
   "private": true,
   "type": "module",

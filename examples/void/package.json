@@ -1,5 +1,5 @@
 {
-  "name": "@voidpress/content-query-basic",
+  "name": "@content-query/example-void",
   "version": "0.0.0",
   "private": true,
   "type": "module",

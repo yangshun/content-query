@@ -83,7 +83,19 @@ vp check
 vp test run
 ```
 
-Static pages are emitted to `dist/client/`. The Cloudflare Worker name is `content-query`, which is also the site's `workers.dev` subdomain prefix; this app is not wired into the existing deployment scripts.
+Static pages are emitted to `dist/client/`. The Cloudflare Worker name is `content-query`, which is also the site's `workers.dev` subdomain prefix. It serves [contentquery.dev](https://contentquery.dev/).
+
+Cloudflare Workers Builds uses `website/` as its root directory and automatic dependency installation. Leave its build command empty and set its deploy command to `./node_modules/.bin/void deploy --platform cloudflare`. This uses the installed project tool without a global Vite+ installation or shell setup.
+
+Set the build variable `NODE_VERSION` to `24.21.0` and leave `SKIP_DEPENDENCY_INSTALL` unset.
+
+To build and deploy locally from `website/`:
+
+```sh
+vp run deploy
+```
+
+The deploy script uses Void's Cloudflare deployment flow, which builds the website and uploads through `cf`. Publishing is handled separately by Cloudflare Workers Builds; check its deployment status to confirm that a commit is live.
 
 ## Pages
 

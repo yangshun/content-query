@@ -25,7 +25,7 @@ for (const application of [
 }
 
 for (const [application, arguments_] of [
-  ["examples/sveltekit/", ["exec", "svelte-kit", "sync"]],
+  ["examples/sveltekit/", ["run", "check"]],
   ["benchmarks/apps/astro/", ["exec", "astro", "sync"]],
   ["benchmarks/apps/nuxt/", ["exec", "nuxt", "prepare"]],
   ["benchmarks/apps/vite-react/", ["build"]],

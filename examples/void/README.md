@@ -13,7 +13,7 @@ Use the repository's Node.js 24.21.0 runtime and Vite+ CLI. From the repository 
 ```sh
 vp install --frozen-lockfile
 vp run --filter content-query build
-vp run --filter @voidpress/content-query-basic dev
+vp run --filter @content-query/example-void dev
 ```
 
 `void` and `@void/react` use `catalog:` references to the matching `1.1.12` pins in the root `pnpm-workspace.yaml`.
@@ -26,8 +26,8 @@ From the repository root:
 
 ```sh
 vp run --filter content-query build
-vp run --filter @voidpress/content-query-basic build
-vp run --filter @voidpress/content-query-basic preview
+vp run --filter @content-query/example-void build
+vp run --filter @content-query/example-void preview
 ```
 
 Void uses static output. The build prerenders `/` and the three `/docs/<guide-id>` pages into `dist/client/`. Cloudflare deployments use the Worker name `content-query-void`, giving the app the URL prefix `content-query-void.<account-subdomain>.workers.dev`. Generated `.content-query/`, `.void/`, `.void-wrangler.jsonc`, `.wrangler/`, and `dist/` artifacts are ignored by Git.

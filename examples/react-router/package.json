@@ -1,5 +1,5 @@
 {
-  "name": "@voidpress/content-query-react-router",
+  "name": "@content-query/example-react-router",
   "version": "0.0.0",
   "private": true,
   "type": "module",

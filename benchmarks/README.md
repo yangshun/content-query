@@ -130,13 +130,22 @@ vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmar
 ## Validation
 
 ```sh
-vp env exec --node 24.21.0 -- vp test benchmarks
-vp env exec --node 24.21.0 -- vp check
-vp env exec --node 24.21.0 -- vp test
+vp env exec --node 24.21.0 -- vp test run benchmarks
+vp env exec --node 24.21.0 -- vp run check
+vp env exec --node 24.21.0 -- vp test run
 ```
 
-Unit tests cover corpus determinism, app-file parity, hardlink and copy behavior, invalid inputs, timing summaries, deadlines, and process-tree cleanup. Integration tests copy the real apps into a temporary workspace with 24 entries each, then verify the full index and first/last articles in development and production in Chromium. They audit all 25 content HTML files, including every article body, and exceed the old 20-item display limit. They do not overwrite the main 10,000-entry corpus or timing report. Install Chromium before running them.
+The repository's CI includes benchmark unit tests. Browser tests and full performance measurements are opt-in, so regular tests do not require Chromium. Unit tests cover corpus determinism, app-file parity, hardlink and copy behavior, invalid inputs, timing summaries, deadlines, and process-tree cleanup.
+
+To run the browser tests, install Chromium and select their config from the repository root:
+
+```sh
+vp env exec --node 24.21.0 -- vp exec --filter @content-query/benchmarks playwright install chromium
+vp env exec --node 24.21.0 -- vp test run --config benchmarks/vite.browser.config.ts
+```
+
+The browser config selects `tests/*.browser.ts`, which the default test command does not discover. These tests copy the real apps into a temporary workspace with 24 entries each, then verify the full index and first/last articles in development and production in Chromium. They audit all 25 content HTML files, including every article body, and exceed the old 20-item display limit. They do not overwrite the main 10,000-entry corpus or timing report.
 
 Temporary app fixtures forward command execution to the original installed launchers. This preserves pnpm's relative binary paths after fresh installs while keeping the working directory, content, caches, and build output inside each fixture.
 
-Generate framework types before the workspace check if the app-generated directories have been removed: run Astro's `sync` and Nuxt's `prepare` commands in their app folders, and start/build the React and Void apps to generate their collection types. The benchmark builds also generate these files.
+`vp run check` prepares framework types and collection declarations before checking the workspace. The benchmark builds also generate these files.

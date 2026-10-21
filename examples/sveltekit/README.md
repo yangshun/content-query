@@ -13,13 +13,13 @@ From the repository root, use Node.js 24.21.0 and Vite+:
 ```sh
 vp install
 vp run --filter content-query build
-vp run --filter @voidpress/content-query-sveltekit dev
+vp run --filter @content-query/example-sveltekit dev
 ```
 
 ## Build
 
 ```sh
-vp run --filter @voidpress/content-query-sveltekit build
+vp run --filter @content-query/example-sveltekit build
 ```
 
 The example prerenders the homepage and guide pages. ContentQuery's Vite integration prepares content before compilation, generates `.content-query/types.d.ts`, and keeps its server runtime out of client modules. Content files live under `content/guides`; the application owns URLs, metadata, and HTML presentation. Nested guide IDs map to catch-all routes. Missing guides return a 404.

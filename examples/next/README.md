@@ -13,7 +13,7 @@ Use the repository's Node.js 24.21.0 runtime and Vite+ CLI. From the repository 
 ```sh
 vp install --frozen-lockfile
 vp run --filter content-query build
-vp run --filter @voidpress/content-query-next dev
+vp run --filter @content-query/example-next dev
 ```
 
 Open [localhost:3000](http://localhost:3000). `vp run` executes the Next.js script; `vp dev` would start Vite instead.
@@ -28,7 +28,7 @@ The adapter skips content preparation when Next's detached telemetry helper read
 
 ```sh
 vp run --filter content-query build
-vp run --filter @voidpress/content-query-next build
+vp run --filter @content-query/example-next build
 ```
 
 `next.config.mjs` wraps the static-export configuration with `withContentQuery()` from `content-query/next`. The adapter owns a persistent development session and cleans it up on shutdown. Production awaits a one-shot content build and disposes its session before compilation; invalid content fails the build. Content generation uses the same compiler as the standalone API and CLI.
@@ -58,7 +58,7 @@ This follows Next.js's [async configuration](https://next.org/docs/app/api-refer
 ```sh
 vp check
 vp test run
-vp run --filter @voidpress/content-query-next build
+vp run --filter @content-query/example-next build
 ```
 
 The integration suite builds a real Next.js consumer through `next.config.mjs`, then checks its exported index, metadata, Markdown rendering, adjacent guides, nested routes, and 404 page after removing source content and configuration. It also checks that invalid content blocks compilation. Development tests run real Turbopack and Webpack servers and exercise metadata/body edits, route additions/renames/deletions, configuration updates, and invalid-content recovery.
