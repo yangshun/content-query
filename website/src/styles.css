@@ -90,6 +90,7 @@ a {
 .site-nav {
   display: flex;
   align-items: center;
+  gap: 1.25rem;
 }
 
 .nav-link {
@@ -126,6 +127,10 @@ a {
 
 .site-footer p {
   margin: 0;
+}
+
+.site-footer a:hover {
+  color: var(--accent);
 }
 
 .skip-link {
@@ -461,7 +466,9 @@ a {
   }
 
   .site-header {
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 0 1rem;
+    padding-block: 0.5rem;
   }
 
   .site-page {

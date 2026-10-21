@@ -35,6 +35,9 @@ export default function Layout({ children }: { children: ReactNode }) {
           >
             Documentation
           </Link>
+          <a className="nav-link" href="https://github.com/yangshun/content-query">
+            GitHub
+          </a>
         </nav>
       </header>
       <main className="site-content site-page" id="main-content" tabIndex={-1}>
@@ -90,7 +93,10 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       </main>
       <footer className="site-footer">
-        <p>ContentQuery</p>
+        <p>
+          ContentQuery by <a href="https://github.com/yangshun">Yangshun Tay</a>
+        </p>
+        <a href="https://github.com/yangshun/content-query">GitHub</a>
         <p>Built with Void</p>
       </footer>
     </div>
