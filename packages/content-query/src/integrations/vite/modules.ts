@@ -65,7 +65,7 @@ export async function preparedModules(state: ContentState): Promise<Map<string, 
       ],
     ]);
   } else {
-    next = await revisionModules(revision!);
+    next = await revisionModules(revision!, { payloadChunkBytes: 128 * 1024 });
     next.set(
       "server.js",
       next
