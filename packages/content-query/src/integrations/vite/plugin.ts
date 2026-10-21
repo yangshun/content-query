@@ -190,26 +190,6 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
   return {
     name: "content-query",
     enforce: "pre",
-    configEnvironment(name, environment) {
-      if (
-        environment.consumer === "server" ||
-        (environment.consumer === undefined && name !== "client")
-      ) {
-        return {
-          optimizeDeps: {
-            include: [
-              "content-query/internal",
-              "content-query/internal/markdown",
-              "content-query > devalue",
-              "content-query > markdown-exit",
-              "content-query > github-slugger",
-              "content-query > @shikijs/engine-javascript",
-              "content-query > shiki",
-            ],
-          },
-        };
-      }
-    },
     configResolved(resolved) {
       config = resolved;
       building ||= resolved.command === "build";
