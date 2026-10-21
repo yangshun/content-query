@@ -17,6 +17,10 @@ export default defineConfig({
       cli: "src/cli.ts",
     },
     dts: true,
+    deps: {
+      // Keep portable runtime modules usable as ESM without host-side CommonJS conversion.
+      alwaysBundle: ["devalue", "fflate", "github-slugger", "markdown-exit"],
+    },
     exports: { inlinedDependencies: false },
   },
   lint: { options: { typeAware: true, typeCheck: true } },
