@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, realpath, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -40,19 +40,21 @@ const corpus = JSON.parse(
 );
 const artifacts = path.resolve(benchmarkRoot, "../packages/content-query/dist");
 /** Detects rebuilt package code during a measurement sequence. */
-async function fingerprintArtifacts(): Promise<string> {
+async function fingerprintArtifacts(directory = artifacts): Promise<string> {
   const hash = createHash("sha256");
-  for (const filename of (await readdir(artifacts, { recursive: true }))
+  for (const filename of (await readdir(directory, { recursive: true }))
     .filter((file) => file.endsWith(".mjs"))
     .sort()) {
     hash
       .update(filename)
       .update("\0")
-      .update(await readFile(path.join(artifacts, filename)))
+      .update(await readFile(path.join(directory, filename)))
       .update("\0");
   }
   return hash.digest("hex");
 }
+const voidPackage = await realpath(path.join(benchmarkRoot, "apps/void/node_modules/void"));
+const reactPackage = await realpath(path.join(benchmarkRoot, "apps/void/node_modules/@void/react"));
 const report = {
   workload,
   startedAt: new Date().toISOString(),
@@ -70,6 +72,11 @@ const report = {
     .digest("hex"),
   corpus,
   contentQueryArtifactsSha256: await fingerprintArtifacts(),
+  voidArtifactsSha256: await fingerprintArtifacts(path.join(voidPackage, "dist")),
+  reactArtifactsSha256: await fingerprintArtifacts(path.join(reactPackage, "dist")),
+  reactArtifactsUnchanged: undefined as boolean | undefined,
+  voidPackage: path.relative(benchmarkRoot, voidPackage),
+  voidArtifactsUnchanged: undefined as boolean | undefined,
   contentQueryArtifactsUnchanged: undefined as boolean | undefined,
   samples: [] as Sample[],
   completedAt: undefined as string | undefined,
@@ -118,6 +125,10 @@ try {
   report.completedAt = new Date().toISOString();
   report.contentQueryArtifactsUnchanged =
     (await fingerprintArtifacts()) === report.contentQueryArtifactsSha256;
+  report.voidArtifactsUnchanged =
+    (await fingerprintArtifacts(path.join(voidPackage, "dist"))) === report.voidArtifactsSha256;
+  report.reactArtifactsUnchanged =
+    (await fingerprintArtifacts(path.join(reactPackage, "dist"))) === report.reactArtifactsSha256;
   report.loadAverageAtEnd = os.loadavg();
   await writeFile(output, `${JSON.stringify(report, null, 2)}\n`);
 } finally {
@@ -126,7 +137,9 @@ try {
 }
 if (
   report.samples.some((sample) => sample.status !== "success") ||
-  report.contentQueryArtifactsUnchanged === false
+  report.contentQueryArtifactsUnchanged === false ||
+  report.voidArtifactsUnchanged === false ||
+  report.reactArtifactsUnchanged === false
 ) {
   process.exitCode = 1;
 }

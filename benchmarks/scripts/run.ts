@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, realpath, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
@@ -32,8 +32,7 @@ import { stopAllProcesses } from "./process.ts";
 const execute = promisify(execFile);
 
 /** Fingerprints the locally built package, whose unpublished version alone cannot identify it. */
-async function contentQueryFingerprint(): Promise<string> {
-  const directory = path.resolve(benchmarkRoot, "../packages/content-query/dist");
+async function javascriptFingerprint(directory: string): Promise<string> {
   const files = (await readdir(directory, { recursive: true }))
     .filter((file) => file.endsWith(".mjs"))
     .sort();
@@ -46,6 +45,50 @@ async function contentQueryFingerprint(): Promise<string> {
       .update("\0");
   }
   return hash.digest("hex");
+}
+
+/** Identifies both published and locally linked Void code, even when their versions match. */
+async function voidBuild(): Promise<NonNullable<Report["environment"]["voidBuild"]>> {
+  const directory = await realpath(path.join(benchmarkRoot, "apps/void/node_modules/void"));
+  const reactDirectory = await realpath(
+    path.join(benchmarkRoot, "apps/void/node_modules/@void/react"),
+  );
+  const source = await execute("git", ["rev-parse", "--show-toplevel"], { cwd: directory });
+  const repository = source.stdout.trim();
+  const isSource = path.relative(repository, directory) === "packages/void";
+  return {
+    directory: path.relative(benchmarkRoot, directory),
+    sha256: await javascriptFingerprint(path.join(directory, "dist")),
+    reactDirectory: path.relative(benchmarkRoot, reactDirectory),
+    reactSha256: await javascriptFingerprint(path.join(reactDirectory, "dist")),
+    ...(isSource
+      ? {
+          revision: (
+            await execute("git", ["rev-parse", "HEAD"], { cwd: repository })
+          ).stdout.trim(),
+          dirty:
+            (
+              await execute(
+                "git",
+                [
+                  "status",
+                  "--porcelain",
+                  "--untracked-files=no",
+                  "--",
+                  "packages/void",
+                  "packages/react",
+                ],
+                { cwd: repository },
+              )
+            ).stdout.trim().length > 0,
+        }
+      : {}),
+  };
+}
+
+/** Fingerprints the built ContentQuery package used by every selected application. */
+function contentQueryFingerprint(): Promise<string> {
+  return javascriptFingerprint(path.resolve(benchmarkRoot, "../packages/content-query/dist"));
 }
 
 /** Reads installed frameworks and the overridden bundler for each Vite-based application. */
@@ -162,6 +205,9 @@ export async function runBenchmark(options: {
       dirty: status.stdout.trim().length > 0,
       lockfileSha256: createHash("sha256").update(lockfile).digest("hex"),
       contentQueryArtifactsSha256: await contentQueryFingerprint(),
+      ...(options.selected.some((app) => app.id === "void")
+        ? { voidBuild: await voidBuild() }
+        : {}),
       packages,
     },
     control: {
@@ -190,6 +236,18 @@ export async function runBenchmark(options: {
       report.contentQueryArtifactsUnchanged = false;
       report.error =
         "The built ContentQuery package changed during measurement. Rebuild it before restarting the benchmark.";
+      report.completedAt = new Date().toISOString();
+      await save();
+      throw new Error(report.error);
+    }
+    const framework = report.environment.voidBuild ? await voidBuild() : undefined;
+    if (
+      framework &&
+      (framework.sha256 !== report.environment.voidBuild!.sha256 ||
+        framework.reactSha256 !== report.environment.voidBuild!.reactSha256)
+    ) {
+      report.error =
+        "The built Void package changed during measurement. Rebuild it before restarting the benchmark.";
       report.completedAt = new Date().toISOString();
       await save();
       throw new Error(report.error);
