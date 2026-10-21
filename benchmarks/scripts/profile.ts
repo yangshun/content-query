@@ -7,6 +7,7 @@ import { chromium } from "playwright";
 import { apps, benchmarkRoot, appDirectory, workload, type Phase } from "./config.ts";
 import { clearCaches, measureSample, type Sample } from "./measure.ts";
 import { environment, stopAllProcesses } from "./process.ts";
+import { defaultSettle, waitForQuietHost } from "./host.ts";
 
 const { values } = parseArgs({
   options: {
@@ -106,6 +107,10 @@ try {
           environment.CONTENT_QUERY_PROFILE_CPU = values.mode === "cpu" ? "1" : "0";
         }
         console.log(`${values.label}: ${repetition}/${runs} ${phase} ${cache} (${values.mode})`);
+        const host = await waitForQuietHost(defaultSettle);
+        console.log(
+          `Host ${(host.idle * 100).toFixed(0)}% idle${host.settled ? "" : " (did not settle)"}`,
+        );
         const sample = await measureSample(
           browser,
           app,
@@ -116,6 +121,7 @@ try {
           repetition,
           path.join(directory, "output.log"),
         );
+        sample.host = host;
         report.samples.push(sample);
         await writeFile(output, `${JSON.stringify(report, null, 2)}\n`);
         console.log(JSON.stringify(sample));

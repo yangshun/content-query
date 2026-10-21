@@ -6,6 +6,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { apps, benchmarkRoot } from "./config.ts";
+import { defaultSettle, waitForQuietHost } from "./host.ts";
 import { verifyStaticOutput } from "./measure.ts";
 import { summarizeCpu } from "./summarize-profile.ts";
 
@@ -200,6 +201,10 @@ syncBuiltinESMExports();
 let runner;
 let inspector;
 try {
+  const host = await waitForQuietHost(defaultSettle);
+  console.log(
+    `Prerender replay starts at ${(host.idle * 100).toFixed(0)}% host idle${host.settled ? "" : " (did not settle)"}.`,
+  );
   let started = performance.now();
   runner = await createCloudflarePrerenderRunner({
     root: appRoot,
@@ -296,6 +301,7 @@ try {
       "Prerender replay with worker CPU sampling and query counters; no bundling or CLI startup.",
     ...(renderer ? { renderer: { file: renderer.file, sha256: renderer.sha256 } } : {}),
     node: process.version,
+    host,
     corpus: manifest,
     phases,
     fetches,
