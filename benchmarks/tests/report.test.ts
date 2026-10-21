@@ -109,6 +109,25 @@ describe("timing summaries", () => {
 });
 
 describe("measurement controls", () => {
+  test("identifies locally built Void even when its release version is unchanged", () => {
+    const report = fixture();
+    report.environment.voidBuild = {
+      directory: "../../../void/packages/void",
+      sha256: "void-build-hash",
+      reactSha256: "react-build-hash",
+      reactDirectory: "../../../void/packages/react",
+      revision: "void-source-revision",
+      dirty: true,
+    };
+    const markdown = renderReport(report);
+    expect(markdown).toContain("Built Void JavaScript SHA-256: `void-build-hash`");
+    expect(markdown).toContain("Built @void/react JavaScript SHA-256: `react-build-hash`");
+    expect(markdown).toContain("package directory: `../../../void/packages/void`");
+    expect(markdown).toContain(
+      "Source revision: `void-source-revision`; uncommitted package changes: true",
+    );
+  });
+
   test("reports randomized orders, the settle gate, Spotlight state, and busy samples", () => {
     const report = fixture();
     report.control = {

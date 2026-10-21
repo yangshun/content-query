@@ -26,6 +26,14 @@ export type Report = {
     dirty: boolean;
     lockfileSha256: string;
     contentQueryArtifactsSha256: string;
+    voidBuild?: {
+      directory: string;
+      sha256: string;
+      revision?: string;
+      dirty?: boolean;
+      reactDirectory?: string;
+      reactSha256?: string;
+    };
     packages: Record<string, Record<string, string>>;
   };
   /** Measurement controls; absent from reports recorded before they existed. */
@@ -184,6 +192,16 @@ export function renderReport(report: Report): string {
     `- Git revision: \`${report.environment.revision}\`; uncommitted changes: ${report.environment.dirty}.`,
     `- Lockfile SHA-256: \`${report.environment.lockfileSha256}\`.`,
     `- Built ContentQuery JavaScript SHA-256: \`${report.environment.contentQueryArtifactsSha256}\`${report.contentQueryArtifactsUnchanged === undefined ? "." : `; unchanged during measurement: ${report.contentQueryArtifactsUnchanged}.`}`,
+    ...(report.environment.voidBuild
+      ? [
+          `- Built Void JavaScript SHA-256: \`${report.environment.voidBuild.sha256}\`; package directory: \`${report.environment.voidBuild.directory}\`.${report.environment.voidBuild.revision ? ` Source revision: \`${report.environment.voidBuild.revision}\`; uncommitted package changes: ${report.environment.voidBuild.dirty}.` : ""}`,
+        ]
+      : []),
+    ...(report.environment.voidBuild?.reactSha256
+      ? [
+          `- Built @void/react JavaScript SHA-256: \`${report.environment.voidBuild.reactSha256}\`; package directory: \`${report.environment.voidBuild.reactDirectory}\`.`,
+        ]
+      : []),
     "",
     "```text",
     report.environment.vitePlus.trim(),
