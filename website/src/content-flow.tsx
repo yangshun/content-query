@@ -3,9 +3,9 @@ import { exampleAuthors, examplePosts } from "./feature-example-data";
 
 const graphPosts = [examplePosts[0]!, examplePosts[2]!, examplePosts[1]!];
 const associations = [
-  "M106 28 C128 28 128 63 150 63",
-  "M106 90 C128 90 128 63 150 63",
-  "M106 151 C128 151 128 135 150 135",
+  "M40 0 C40 30 60 30 60 60",
+  "M120 0 C120 30 60 30 60 60",
+  "M200 0 C200 30 180 30 180 60",
 ];
 
 /** Illustrates the source-to-application flow without depending on a running compiler. */
@@ -34,7 +34,15 @@ export function ContentFlowDiagram() {
           <div className="flow-visual flow-visual-graph" aria-hidden="true">
             <div className="flow-graph-frame">
               <div className="flow-graph">
-                <svg fill="none" viewBox="0 0 240 180" preserveAspectRatio="none">
+                <div className="flow-posts">
+                  {graphPosts.map((post) => (
+                    <div className="flow-node" key={post.id}>
+                      <small>post</small>
+                      <span>{post.title}</span>
+                    </div>
+                  ))}
+                </div>
+                <svg fill="none" viewBox="0 0 240 60" preserveAspectRatio="none">
                   {associations.map((path) => (
                     <g key={path}>
                       <path className="flow-association" d={path} />
@@ -42,18 +50,14 @@ export function ContentFlowDiagram() {
                     </g>
                   ))}
                 </svg>
-                {graphPosts.map((post, index) => (
-                  <div className="flow-node flow-post" data-position={index} key={post.id}>
-                    <small>post</small>
-                    <span>{post.title}</span>
-                  </div>
-                ))}
-                {exampleAuthors.map((author, index) => (
-                  <div className="flow-node flow-author" data-position={index} key={author.id}>
-                    <small>author</small>
-                    <span>{author.name}</span>
-                  </div>
-                ))}
+                <div className="flow-authors">
+                  {exampleAuthors.map((author) => (
+                    <div className="flow-node" key={author.id}>
+                      <small>author</small>
+                      <span>{author.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
