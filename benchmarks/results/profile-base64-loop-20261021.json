@@ -1,0 +1,72 @@
+{
+  "diagnostic": "Isolated decoder on actual compiled application literals, including inflate, parse and parity hashing. Excludes application startup, module loading and prerender.",
+  "chunks": 190,
+  "samples": [
+    {
+      "name": "callback",
+      "durationMs": 125.4266249999996,
+      "sha256": "d9865f7690e07c03d717a3750c1f654a13cd4d0b89bf8b27279582f7fd275aed",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.594458,
+        "idle": 0.8450611465888452,
+        "loadAverage": [3.32958984375, 3.6943359375, 6.6484375]
+      }
+    },
+    {
+      "name": "loop",
+      "durationMs": 89.80783299999985,
+      "sha256": "d9865f7690e07c03d717a3750c1f654a13cd4d0b89bf8b27279582f7fd275aed",
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.486458,
+        "idle": 0.9002369922520924,
+        "loadAverage": [3.32958984375, 3.6943359375, 6.6484375]
+      }
+    },
+    {
+      "name": "loop",
+      "durationMs": 88.38708399999996,
+      "sha256": "d9865f7690e07c03d717a3750c1f654a13cd4d0b89bf8b27279582f7fd275aed",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.354333,
+        "idle": 0.8414379351460402,
+        "loadAverage": [3.22265625, 3.666015625, 6.62109375]
+      }
+    },
+    {
+      "name": "callback",
+      "durationMs": 111.08408299999974,
+      "sha256": "d9865f7690e07c03d717a3750c1f654a13cd4d0b89bf8b27279582f7fd275aed",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.701500000001,
+        "idle": 0.8492169078750414,
+        "loadAverage": [3.60498046875, 3.73779296875, 6.62890625]
+      }
+    },
+    {
+      "name": "callback",
+      "durationMs": 110.07091599999876,
+      "sha256": "d9865f7690e07c03d717a3750c1f654a13cd4d0b89bf8b27279582f7fd275aed",
+      "host": {
+        "settled": true,
+        "waitedMs": 3004.3478749999995,
+        "idle": 0.8808567603748326,
+        "loadAverage": [3.60498046875, 3.73779296875, 6.62890625]
+      }
+    },
+    {
+      "name": "loop",
+      "durationMs": 88.39941700000054,
+      "sha256": "d9865f7690e07c03d717a3750c1f654a13cd4d0b89bf8b27279582f7fd275aed",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.0227080000004,
+        "idle": 0.8481873203146736,
+        "loadAverage": [3.63623046875, 3.74169921875, 6.61328125]
+      }
+    }
+  ]
+}

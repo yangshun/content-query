@@ -10,7 +10,10 @@ import { gunzipSync } from "fflate/browser";
  */
 export function decodeCompressed<Value>(encoded: string): Value {
   const binary = atob(encoded);
-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) {
+    bytes[index] = binary.charCodeAt(index);
+  }
   return JSON.parse(new TextDecoder().decode(gunzipSync(bytes))) as Value;
 }
 
