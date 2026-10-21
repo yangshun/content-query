@@ -58,25 +58,38 @@ export async function loadGlob(
     );
   }
   const base = pathToFileURL(`${resolved}${path.sep}`);
-  const results = await Promise.allSettled(
-    entries.sort().map(async (entry) => {
+  entries.sort();
+  const results: PromiseSettledResult<LoaderEntry<FileSource>>[] = [];
+  let next = 0;
+  /** Bounds outstanding reads while retaining source order and every contextual failure. */
+  async function loadNext(): Promise<void> {
+    while (next < entries.length) {
+      const index = next++;
+      const entry = entries[index]!;
       signal.throwIfAborted();
       const filename = path.join(resolved, entry);
       try {
-        return {
-          ...(await loadEntry(descriptor, entry, filename, base, signal)),
-          sourceData: { filePath: path.relative(root, filename).split(path.sep).join("/") },
+        results[index] = {
+          status: "fulfilled",
+          value: {
+            ...(await loadEntry(descriptor, entry, filename, base, signal)),
+            sourceData: { filePath: path.relative(root, filename).split(path.sep).join("/") },
+          },
         };
       } catch (cause) {
-        throw contentError(cause, {
-          code: "source-error",
-          source: filename,
-          message: `Could not load "${entry}": ${describeCause(cause)}`,
-          cause,
-        });
+        results[index] = {
+          status: "rejected",
+          reason: contentError(cause, {
+            code: "source-error",
+            source: filename,
+            message: `Could not load "${entry}": ${describeCause(cause)}`,
+            cause,
+          }),
+        };
       }
-    }),
-  );
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(entries.length, 64) }, loadNext));
   signal.throwIfAborted();
   const failures = results.flatMap((result) =>
     result.status === "rejected" ? (result.reason as ContentError).diagnostics : [],
