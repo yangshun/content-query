@@ -1,4 +1,4 @@
-import { access, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, test } from "vite-plus/test";
@@ -159,9 +159,19 @@ describe("application toolchains", () => {
     "$id runs the vite-plus package recorded in the report",
     async (app) => {
       const shim = await readFile(executable(benchmarkRoot, app), "utf8");
-      // pnpm shims execute the sibling package, so the CLI is the app's installed vite-plus.
-      expect(shim).toContain('"$basedir/../vite-plus/bin/vp"');
-      await access(path.join(appDirectory(benchmarkRoot, app), "node_modules/vite-plus/bin/vp"));
+      // pnpm can write either a sibling link or a direct store path after peer resolution.
+      const targets = await Promise.all(
+        [...shim.matchAll(/"\$basedir\/([^"\n]*vite-plus\/bin\/vp)"/g)].map((match) =>
+          realpath(path.resolve(path.dirname(executable(benchmarkRoot, app)), match[1]!)),
+        ),
+      );
+      expect(new Set(targets)).toEqual(
+        new Set([
+          await realpath(
+            path.join(appDirectory(benchmarkRoot, app), "node_modules/vite-plus/bin/vp"),
+          ),
+        ]),
+      );
     },
   );
 });

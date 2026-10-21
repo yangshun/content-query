@@ -59,7 +59,7 @@ describe.sequential("native benchmark apps with isolated content", () => {
           continue;
         }
         await symlink(
-          path.join(original, "node_modules", dependency),
+          await realpath(path.join(original, "node_modules", dependency)),
           path.join(dependencies, dependency),
         );
       }
