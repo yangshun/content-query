@@ -1,0 +1,71 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-20T15:40:05.083Z",
+  "label": "core-before-20261020",
+  "mode": "cpu",
+  "backend": "in-memory",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [3.2421875, 5.9443359375, 6.853515625],
+  "lockfileSha256": "bc316524fd84e55b06609f1363f6fdfbf3ac9182050b1864ce2bf598a94b94cc",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "3513d0efd290a2dd6923b255f18511bc75af10a8618a6c699830dd3088345c44",
+  "contentQueryArtifactsUnchanged": true,
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/core-before-20261020/1-startup-cold/output.log",
+      "listenMs": 5095.737125000001,
+      "durationMs": 6683.7495
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/core-before-20261020/1-startup-warm/output.log",
+      "listenMs": 3291.216792,
+      "durationMs": 4457.860417000001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/core-before-20261020/1-build-cold/output.log",
+      "durationMs": 9254.641624999998,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/core-before-20261020/1-build-warm/output.log",
+      "durationMs": 10359.4035,
+      "prerenderedPages": 10001
+    }
+  ],
+  "completedAt": "2026-10-20T15:40:38.905Z",
+  "loadAverageAtEnd": [5.19384765625, 6.13671875, 6.88623046875]
+}

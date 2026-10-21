@@ -1,0 +1,94 @@
+{
+  "diagnostic": "Isolated Node React SSR only. No host idle gate was applied; runs occurred with an active game. Timings are not a controlled application comparison.",
+  "node": "v24.21.0",
+  "pagesPerSample": 10000,
+  "allOutputIdentical": true,
+  "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4",
+  "sourceRevision": "09703fb408b170bd30aba71f316bf8a3d7de183a",
+  "sources": [
+    {
+      "file": "packages/react/src/runtime/pages-server.ts",
+      "controlSha256": "6cac0e91fee78e66a3d7d15a717f907180cdab108ae0fefd87204cf17b2bd620",
+      "candidateSha256": "ad57bd6e438f9fc07b15ccba4a016eb85fbcb34229b48d430341bed105267b14"
+    },
+    {
+      "file": "packages/react/src/runtime/page-streams.ts",
+      "controlSha256": "bf46069f1f6690a4d7d201d0038b86030965049c50c2fd2bf4dc164157d6a575",
+      "candidateSha256": "02ce65c8eac47cb850a1bd263f5347fcb5c6a3fdfdaaa8cf6b8a1156d73205dd"
+    }
+  ],
+  "reports": [
+    {
+      "diagnostic": "Isolated uninstrumented React renderer, 10000 representative article pages per repetition; excludes queries, Worker transport and file output.",
+      "variant": "control",
+      "samples": [
+        {
+          "durationMs": 1522.9575829999999,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        },
+        {
+          "durationMs": 964.3218749999999,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        },
+        {
+          "durationMs": 1101.5059579999997,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        }
+      ]
+    },
+    {
+      "diagnostic": "Isolated uninstrumented React renderer, 10000 representative article pages per repetition; excludes queries, Worker transport and file output.",
+      "variant": "candidate",
+      "samples": [
+        {
+          "durationMs": 1769.783583,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        },
+        {
+          "durationMs": 1726.1647079999998,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        },
+        {
+          "durationMs": 1226.1084170000004,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        }
+      ]
+    },
+    {
+      "diagnostic": "Isolated uninstrumented React renderer, 10000 representative article pages per repetition; excludes queries, Worker transport and file output.",
+      "variant": "paired",
+      "samples": [
+        {
+          "variant": "control",
+          "durationMs": 1487.3345,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        },
+        {
+          "variant": "candidate",
+          "durationMs": 1053.223292,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        },
+        {
+          "variant": "candidate",
+          "durationMs": 1000.6198340000001,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        },
+        {
+          "variant": "control",
+          "durationMs": 1134.2902909999998,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        },
+        {
+          "variant": "candidate",
+          "durationMs": 981.7837909999998,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        },
+        {
+          "variant": "control",
+          "durationMs": 994.0597090000001,
+          "sha256": "6efa9e3462f7d37eee2b9b260e0ae0c4078d41ea18efa897a1819eb608c74eb4"
+        }
+      ]
+    }
+  ]
+}

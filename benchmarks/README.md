@@ -36,7 +36,11 @@ vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmar
 
 The runner generates the corpus before starting any timers. It requires the package build and browser setup above. Results are checkpointed after each sample to [results/latest.json](./results/latest.json) and summarized in [RESULTS.md](./RESULTS.md). The current workload is recorded as `full-index-and-prerendered-articles` in raw measurements. The [historical single-page report](./results/single-page-RESULTS.md) and [raw data](./results/single-page.json) describe the previous workload and are not directly comparable. A full benchmark run replaces the latest report with that run's complete comparison. Each run writes complete command output to the ignored `.runs/` directory.
 
-The current report has separate cold and warm tables, with Void first, Astro second, and TanStack Start third. They show content-usable startup and production build time to two decimal places. All six stacks come from a single run under the controls below. Only one framework and measurement type runs at a time; each server, build process, and validation preview stops before the next sample. Keep other development servers, builds, tests, and benchmarking agents stopped during measurement.
+The current report is a focused comparison of Void, Astro, and TanStack Start after the [core optimizations](./CORE-OPTIMIZATION.md). Its cold and warm tables show content-usable startup and production build time to two decimal places. All three stacks use one run with seed `20261021`; both ContentQuery apps use the same optimized package. Unrequested stacks are omitted from focused reports. Only one framework and measurement type runs at a time; each server, build process, and validation preview stops before the next sample. Keep other development servers, builds, tests, and benchmarking agents stopped during measurement.
+
+The [six-stack baseline report](./results/core-baseline-20261020-RESULTS.md) and [raw samples](./results/core-baseline-20261020.json) preserve the 2026-10-20 rerun. It used seed `1506779684`, selected before measurement so every app occupies a different position in each of the three repetitions, with no repeated predecessor/successor pair within those orders. All 72 samples passed, all 36 production builds verified 10,001 content pages each, and every sample began after the host met the 80% idle threshold. Reproduce its order by appending `--seed 1506779684` to the command above.
+
+The focused comparison passed all 36 samples and verified all 10,001 pages from each of its 18 builds. Every sample met the idle threshold, and the package fingerprint remained unchanged. Its [saved report](./results/core-optimized-20261021-RESULTS.md) and [raw measurements](./results/core-optimized-20261021.json) remain separate from the baseline. The requested performance target remains open: the optimized Void stack still trails Astro and TanStack Start in this run.
 
 The previous [composite report](./results/composite-20261020-RESULTS.md) and its [raw comparison](./results/composite-20261020.json) combined three separate runs: the [original five-framework sequential comparison](./results/full-site-sequential-20261020.json), refreshed [Astro samples](./results/astro-rerun-20261020.json), and a [TanStack Start run](./results/tanstack-start-20261020.json). Those sources ran under different host load, and in two of three repetitions Void ran immediately after Next.js, while background indexing of the previous stack's output was still running. Its timings are not directly comparable across stacks. The [earlier comparison](./results/pre-sequential-20261020.json) and [report](./results/pre-sequential-20261020-RESULTS.md) remain archived.
 
@@ -85,7 +89,18 @@ Options are `--entries` (default `10000`), `--runs` (default `3`), `--apps` (com
 
 ## Profile Void and ContentQuery
 
-The [current full-site build profile](./BUILD-PROFILING.md) separates ContentQuery preparation and runtime queries from Void's worker setup, prerender requests, and output writes. It includes the ContentQuery-only ID-query fix, before/after worker CPU attribution, byte-for-byte output parity, and follow-up build timings. Void code is unchanged.
+The [earlier full-site build profile](./BUILD-PROFILING.md) separates ContentQuery preparation and runtime queries from Void's worker setup, prerender requests, and output writes. It includes the ContentQuery-only ID-query fix, before/after worker CPU attribution, byte-for-byte output parity, and follow-up build timings recorded before Void changes.
+
+The [core optimization report](./CORE-OPTIMIZATION.md) records compact artifacts, bounded source reads, shared development serialization, the focused comparison, and final CPU attribution. A renderer replay can isolate an existing framework change against the same compiled application:
+
+```sh
+vp env exec --node 24.21.0 -- vp exec --filter @content-query/benchmarks node scripts/profile-prerender.mjs --label renderer-baseline
+vp env exec --node 24.21.0 -- vp exec --filter @content-query/benchmarks node scripts/profile-prerender.mjs --renderer ../../../void/packages/void/src/prerender-render.ts --label renderer-candidate
+```
+
+The second command assumes a sibling Void checkout and reads its renderer source. The replay records that source's SHA-256 and substitutes it in its own process. Replay timings cover prerendering; the `bench` command measures complete application builds.
+
+The [Void follow-up](./CORE-OPTIMIZATION.md#authorized-void-follow-up) uses a locally built framework package. The app currently links that sibling checkout; build it before running a comparison. New reports record the exact built Void code, and the runner checks that it stays unchanged. Both `profile` and renderer replays now wait for the usual host idle threshold and record whether it was reached. Timings from a busy host remain diagnostic.
 
 The [historical profiling report](./PROFILING.md) records startup/build bottlenecks and follow-up measurements for the previous single-page workload. The commands below profile the current full-site workload. After building ContentQuery and generating the corpus, collect profiles without replacing the six-stack comparison:
 

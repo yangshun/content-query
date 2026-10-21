@@ -1,0 +1,49 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-20T16:15:32.825Z",
+  "label": "core-after-20261021",
+  "mode": "cpu",
+  "backend": "in-memory",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [4.4814453125, 6.9921875, 8.38525390625],
+  "lockfileSha256": "2b4fb07508b48bb20952a0a80e5e95794a894d6eac81b10a52eaea0e8ecf6f99",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "4555c466b87b713367e6b646c4d9cc0540ceb24d7fc69c422c62d2c977f9ee52",
+  "contentQueryArtifactsUnchanged": true,
+  "samples": [
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/core-after-20261021/1-build-cold/output.log",
+      "durationMs": 8706.716334,
+      "prerenderedPages": 10001
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/core-after-20261021/1-build-warm/output.log",
+      "durationMs": 9428.217290999999,
+      "prerenderedPages": 10001
+    }
+  ],
+  "completedAt": "2026-10-20T16:15:53.614Z",
+  "loadAverageAtEnd": [6.1396484375, 7.21630859375, 8.4326171875]
+}

@@ -1,0 +1,43 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-20T23:49:05.443Z",
+  "label": "void-pipeline-prototype-20261021",
+  "mode": "timings",
+  "backend": "in-memory",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [12.28125, 21.33203125, 45.91650390625],
+  "lockfileSha256": "8b4c90c3064e013e2919ca681fdd5001587a7d376af9e3c5c6ae8717acb4b8f4",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "4555c466b87b713367e6b646c4d9cc0540ceb24d7fc69c422c62d2c977f9ee52",
+  "voidArtifactsSha256": "cb7f1a234da9e64e031a5e71e69b16488c6d29b90d39359536e7f63d8066783e",
+  "voidPackage": "../../../void/packages/void",
+  "samples": [
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/void-pipeline-prototype-20261021/1-build-cold/output.log",
+      "durationMs": 38397.41095799999,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": false,
+        "waitedMs": 180650.789958,
+        "idle": 0.48015260319016856,
+        "loadAverage": [7.142578125, 14.6015625, 38.3701171875]
+      }
+    }
+  ]
+}

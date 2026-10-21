@@ -1,0 +1,349 @@
+{
+  "label": "core-final-worker-20261021",
+  "diagnostic": "Prerender replay with worker CPU sampling and query counters; no bundling or CLI startup.",
+  "node": "v24.21.0",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "phases": {
+    "bootstrapMs": 475.82275,
+    "collectPathsMs": 64.78700000000003,
+    "renderMs": 4900.432417,
+    "disposeMs": 13.2442089999995
+  },
+  "fetches": {
+    "html": 10001,
+    "pageData": 10001
+  },
+  "io": {
+    "mkdirSync": {
+      "calls": 20002,
+      "totalMs": 132.66311200001041
+    },
+    "writeFileSync": {
+      "calls": 20002,
+      "totalMs": 1344.5107169999906
+    }
+  },
+  "query": {
+    "calls": 20003,
+    "candidates": 50000,
+    "idQueries": 20000,
+    "idCandidates": 20000
+  },
+  "pages": 10001,
+  "cpu": {
+    "sampledMs": 4924.929,
+    "activeMs": 4326.686,
+    "idleMs": 598.243,
+    "self": [
+      {
+        "name": "(program)",
+        "source": "",
+        "durationMs": 534.334,
+        "activePercent": 12.349729099823744
+      },
+      {
+        "name": "(garbage collector)",
+        "source": "",
+        "durationMs": 501.757,
+        "activePercent": 11.596797179180555
+      },
+      {
+        "name": "pull",
+        "source": "index.js",
+        "durationMs": 239.583,
+        "activePercent": 5.537332729946199
+      },
+      {
+        "name": "",
+        "source": "",
+        "durationMs": 210.357,
+        "activePercent": 4.861850386184715
+      },
+      {
+        "name": "ReadableStream",
+        "source": "",
+        "durationMs": 202.345,
+        "activePercent": 4.676674017943525
+      },
+      {
+        "name": "run",
+        "source": "",
+        "durationMs": 135.106,
+        "activePercent": 3.1226208696448046
+      },
+      {
+        "name": "createBuilder",
+        "source": "assets/_content_query_server-difv0d8U.js",
+        "durationMs": 130.615,
+        "activePercent": 3.0188231824541925
+      },
+      {
+        "name": "Response",
+        "source": "",
+        "durationMs": 127.407,
+        "activePercent": 2.9446786755498318
+      },
+      {
+        "name": "inflt",
+        "source": "assets/_content_query_server-difv0d8U.js",
+        "durationMs": 126.52,
+        "activePercent": 2.9241779967393056
+      },
+      {
+        "name": "decodeCompressed",
+        "source": "assets/_content_query_server-difv0d8U.js",
+        "durationMs": 115.034,
+        "activePercent": 2.658709229188344
+      },
+      {
+        "name": "buildRegExp",
+        "source": "index.js",
+        "durationMs": 113.031,
+        "activePercent": 2.6124151371280466
+      },
+      {
+        "name": "enqueue",
+        "source": "",
+        "durationMs": 102.207,
+        "activePercent": 2.362246763458222
+      },
+      {
+        "name": "read",
+        "source": "",
+        "durationMs": 97.575,
+        "activePercent": 2.2551902310451926
+      },
+      {
+        "name": "stringToChunk",
+        "source": "index.js",
+        "durationMs": 84.239,
+        "activePercent": 1.9469635651859183
+      },
+      {
+        "name": "",
+        "source": "index.js",
+        "durationMs": 81.462,
+        "activePercent": 1.8827804929685215
+      },
+      {
+        "name": "pageJsonResponse",
+        "source": "index.js",
+        "durationMs": 66.133,
+        "activePercent": 1.5284908588235893
+      },
+      {
+        "name": "",
+        "source": "assets/_content_query_server-difv0d8U.js",
+        "durationMs": 60.542,
+        "activePercent": 1.3992695564226292
+      },
+      {
+        "name": "getReader",
+        "source": "",
+        "durationMs": 54.904,
+        "activePercent": 1.2689619722808636
+      },
+      {
+        "name": "encode",
+        "source": "",
+        "durationMs": 51.563,
+        "activePercent": 1.191743519173797
+      },
+      {
+        "name": "copyDirect",
+        "source": "assets/_content_query_server-difv0d8U.js",
+        "durationMs": 45.96,
+        "activePercent": 1.06224486824327
+      },
+      {
+        "name": "entries/[id]",
+        "source": "index.js",
+        "durationMs": 44.862,
+        "activePercent": 1.0368674777878495
+      },
+      {
+        "name": "URL",
+        "source": "",
+        "durationMs": 41.294,
+        "activePercent": 0.9544025149964661
+      },
+      {
+        "name": "json",
+        "source": "",
+        "durationMs": 40.306,
+        "activePercent": 0.9315674860620808
+      },
+      {
+        "name": "start",
+        "source": "index.js",
+        "durationMs": 39.191,
+        "activePercent": 0.9057971851897735
+      },
+      {
+        "name": "loadPayload",
+        "source": "assets/_content_query_server-difv0d8U.js",
+        "durationMs": 37.451,
+        "activePercent": 0.8655816484024956
+      }
+    ],
+    "inclusive": [
+      {
+        "name": "",
+        "source": "index.js",
+        "durationMs": 1124.47,
+        "activePercent": 25.98917508689098
+      },
+      {
+        "name": "renderReactPage",
+        "source": "index.js",
+        "durationMs": 605.214,
+        "activePercent": 13.987934414468716
+      },
+      {
+        "name": "handlePageGet",
+        "source": "index.js",
+        "durationMs": 601.748,
+        "activePercent": 13.907826914178658
+      },
+      {
+        "name": "pull",
+        "source": "index.js",
+        "durationMs": 574.046,
+        "activePercent": 13.267567833672238
+      },
+      {
+        "name": "(program)",
+        "source": "",
+        "durationMs": 534.334,
+        "activePercent": 12.349729099823744
+      },
+      {
+        "name": "",
+        "source": "assets/_content_query_server-difv0d8U.js",
+        "durationMs": 529.676,
+        "activePercent": 12.242071645596653
+      },
+      {
+        "name": "(garbage collector)",
+        "source": "",
+        "durationMs": 501.757,
+        "activePercent": 11.596797179180555
+      },
+      {
+        "name": "",
+        "source": "",
+        "durationMs": 462.643,
+        "activePercent": 10.692779647055506
+      },
+      {
+        "name": "fetch",
+        "source": "index.js",
+        "durationMs": 374.078,
+        "activePercent": 8.645831936960528
+      },
+      {
+        "name": "",
+        "source": "assets/_id_.server-iE66hlOh.js",
+        "durationMs": 317.792,
+        "activePercent": 7.3449286590244816
+      },
+      {
+        "name": "ReadableStream",
+        "source": "",
+        "durationMs": 266.28,
+        "activePercent": 6.154363871101346
+      },
+      {
+        "name": "performWork",
+        "source": "index.js",
+        "durationMs": 252.286,
+        "activePercent": 5.830929260870791
+      },
+      {
+        "name": "decodeCompressed",
+        "source": "assets/_content_query_server-difv0d8U.js",
+        "durationMs": 251.734,
+        "activePercent": 5.818171228510689
+      },
+      {
+        "name": "textStream",
+        "source": "index.js",
+        "durationMs": 206.743,
+        "activePercent": 4.778322254029989
+      },
+      {
+        "name": "render",
+        "source": "index.js",
+        "durationMs": 205.206,
+        "activePercent": 4.742798529867894
+      },
+      {
+        "name": "#dispatch",
+        "source": "index.js",
+        "durationMs": 195.528,
+        "activePercent": 4.5191169407717595
+      },
+      {
+        "name": "read",
+        "source": "",
+        "durationMs": 189.516,
+        "activePercent": 4.380165327458475
+      },
+      {
+        "name": "retryNode",
+        "source": "index.js",
+        "durationMs": 168.622,
+        "activePercent": 3.8972553127266454
+      },
+      {
+        "name": "run",
+        "source": "",
+        "durationMs": 164.835,
+        "activePercent": 3.809728739270657
+      },
+      {
+        "name": "renderElement",
+        "source": "index.js",
+        "durationMs": 161.832,
+        "activePercent": 3.7403222697464065
+      },
+      {
+        "name": "renderNodeDestructive",
+        "source": "index.js",
+        "durationMs": 161.825,
+        "activePercent": 3.740160483104159
+      },
+      {
+        "name": "dispatch",
+        "source": "index.js",
+        "durationMs": 161.367,
+        "activePercent": 3.7295750142256683
+      },
+      {
+        "name": "match",
+        "source": "index.js",
+        "durationMs": 143.547,
+        "activePercent": 3.3177124478180295
+      },
+      {
+        "name": "renderNode",
+        "source": "index.js",
+        "durationMs": 138.872,
+        "activePercent": 3.20966208317405
+      },
+      {
+        "name": "__withRawEnv",
+        "source": "index.js",
+        "durationMs": 138.129,
+        "activePercent": 3.1924895867183336
+      }
+    ]
+  },
+  "outputRoot": ".runs/profiles/core-final-worker-20261021"
+}

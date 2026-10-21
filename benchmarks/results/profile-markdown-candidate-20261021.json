@@ -1,0 +1,24 @@
+{
+  "note": "Core-only experiment. An in-memory Node load hook uses the synchronous Markdown renderer when no fence token exists. No package source or installed file was changed. Timings cover rendering captured bodies, excluding source acquisition, serialization, and the application framework.",
+  "contentQueryArtifactsSha256": "4555c466b87b713367e6b646c4d9cc0540ceb24d7fc69c422c62d2c977f9ee52",
+  "corpusSha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+  "before": {
+    "mode": "before",
+    "node": "v24.21.0",
+    "entries": 10000,
+    "importMs": 41.64183400000002,
+    "renderRunsMs": [160.59829200000001, 135.87862500000006, 134.0261670000001],
+    "renderedSha256": "355afb12b2832e4d86a33fd1b445b1be9dca2b7f6987e31132ea60995b44a607"
+  },
+  "candidate": {
+    "mode": "candidate",
+    "node": "v24.21.0",
+    "entries": 10000,
+    "importMs": 20.367667000000004,
+    "renderRunsMs": [151.30170800000008, 120.13008300000001, 114.78125],
+    "renderedSha256": "355afb12b2832e4d86a33fd1b445b1be9dca2b7f6987e31132ea60995b44a607"
+  },
+  "renderedOutputUnchanged": true,
+  "medianSavingMs": 15.748542000000043,
+  "decision": "Do not add this candidate: the measured saving is under 0.02 seconds for the complete corpus and does not materially close the multi-second application gap."
+}

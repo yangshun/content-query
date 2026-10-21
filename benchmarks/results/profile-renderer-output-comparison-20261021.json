@@ -1,0 +1,31 @@
+{
+  "diagnostic": "Uninstrumented prerender phase comparison with four alternating samples; excludes framework bundling and startup.",
+  "results": [
+    {
+      "name": "control",
+      "durationMs": 24006.078374999983,
+      "host": {
+        "settled": false,
+        "waitedMs": 180677.604125,
+        "idle": 0.5267609803225295,
+        "loadAverage": [8.7138671875, 53.07080078125, 67.33447265625]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "91b7aee3874bda006183cc15a6317fbee20db80532a680a5d9f2d7e242e76d82"
+    },
+    {
+      "name": "candidate",
+      "durationMs": 20722.61750000005,
+      "host": {
+        "settled": false,
+        "waitedMs": 180752.393417,
+        "idle": 0.5407013127300795,
+        "loadAverage": [6.9814453125, 29.57763671875, 53.95947265625]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "91b7aee3874bda006183cc15a6317fbee20db80532a680a5d9f2d7e242e76d82"
+    }
+  ]
+}

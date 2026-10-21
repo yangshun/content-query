@@ -1,0 +1,132 @@
+{
+  "diagnostic": "Native Miniflare dispatchFetch with default versus Accept-Encoding: identity; no custom batch transport, same four render workers. Three mixed repetitions with host idle gates and exact HTML/navigation JSON parity. Times exclude framework bundling, bootstrap and discovery.",
+  "seed": 2026102104,
+  "orders": [
+    ["identity", "default"],
+    ["default", "identity"],
+    ["default", "identity"]
+  ],
+  "builds": {
+    "void": "6b4533b89c5780e07d43bd974c0265f31e7891213f3ec81f8861a79883d19533",
+    "react": "9a54c226743500678a71eaa7e2d8dce2b0613903126b883876727c0562e0a165",
+    "content-query": "5f120887622923066b4d85476a99378d6580a1de1f96793f5fbee94a2bb5e28f"
+  },
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "driverSha256": "442f63f9b44ae1dac6dcef25db8847493db5f9a57561b8871143e68253f66514",
+  "samples": [
+    {
+      "name": "identity",
+      "durationMs": 2621.5183330000004,
+      "host": {
+        "settled": true,
+        "waitedMs": 3004.056709,
+        "idle": 0.8608031757262435,
+        "loadAverage": [3.57568359375, 3.091796875, 3.212890625]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e",
+      "transport": {
+        "recording": false,
+        "responses": 10001,
+        "encodedResponses": 0
+      }
+    },
+    {
+      "name": "default",
+      "durationMs": 2956.896917,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.852667,
+        "idle": 0.8546571578462844,
+        "loadAverage": [3.5537109375, 3.10400390625, 3.2158203125]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e",
+      "transport": {
+        "recording": false,
+        "responses": 10001,
+        "encodedResponses": 10001
+      }
+    },
+    {
+      "name": "default",
+      "durationMs": 3256.7259159999994,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.528042,
+        "idle": 0.8222706719972609,
+        "loadAverage": [3.42919921875, 3.08544921875, 3.20849609375]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e",
+      "transport": {
+        "recording": false,
+        "responses": 10001,
+        "encodedResponses": 10001
+      }
+    },
+    {
+      "name": "identity",
+      "durationMs": 2427.733333,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.474833,
+        "idle": 0.8513400486976063,
+        "loadAverage": [3.42333984375, 3.09814453125, 3.21142578125]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e",
+      "transport": {
+        "recording": false,
+        "responses": 10001,
+        "encodedResponses": 0
+      }
+    },
+    {
+      "name": "default",
+      "durationMs": 2809.441082999998,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.975750000005,
+        "idle": 0.8592667746581851,
+        "loadAverage": [3.22900390625, 3.06298828125, 3.1982421875]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e",
+      "transport": {
+        "recording": false,
+        "responses": 10001,
+        "encodedResponses": 10001
+      }
+    },
+    {
+      "name": "identity",
+      "durationMs": 4161.521250000005,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.8895830000038,
+        "idle": 0.866076372241789,
+        "loadAverage": [3.45068359375, 3.111328125, 3.21435546875]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e",
+      "transport": {
+        "recording": false,
+        "responses": 10001,
+        "encodedResponses": 0
+      }
+    }
+  ]
+}

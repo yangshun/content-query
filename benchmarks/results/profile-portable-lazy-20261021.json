@@ -1,0 +1,168 @@
+{
+  "workload": "full-index-and-prerendered-articles",
+  "startedAt": "2026-10-21T01:09:38.001Z",
+  "label": "portable-lazy-20261021",
+  "mode": "timings",
+  "backend": "in-memory",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "memoryBytes": 25769803776,
+  "platform": "darwin arm64 25.3.0",
+  "loadAverageAtStart": [2.74267578125, 3.0283203125, 3.6826171875],
+  "lockfileSha256": "af4f7203061411dfdec7c43ae4296c5e81cc25cdeb7a553afa845d3e3d5a4a6f",
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "contentQueryArtifactsSha256": "5f120887622923066b4d85476a99378d6580a1de1f96793f5fbee94a2bb5e28f",
+  "voidArtifactsSha256": "6b4533b89c5780e07d43bd974c0265f31e7891213f3ec81f8861a79883d19533",
+  "reactArtifactsSha256": "9a54c226743500678a71eaa7e2d8dce2b0613903126b883876727c0562e0a165",
+  "reactArtifactsUnchanged": true,
+  "voidPackage": "../../../void/packages/void",
+  "voidArtifactsUnchanged": true,
+  "contentQueryArtifactsUnchanged": true,
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/portable-lazy-20261021/1-startup-cold/output.log",
+      "listenMs": 3077.971334,
+      "durationMs": 3962.862959,
+      "host": {
+        "settled": true,
+        "waitedMs": 5006.716833,
+        "idle": 0.8028310898535516,
+        "loadAverage": [3.32373046875, 3.14404296875, 3.71923828125]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/portable-lazy-20261021/1-startup-warm/output.log",
+      "listenMs": 2183.867791999999,
+      "durationMs": 2870.277791999999,
+      "host": {
+        "settled": true,
+        "waitedMs": 4004.3783750000002,
+        "idle": 0.8141291392350313,
+        "loadAverage": [3.19970703125, 3.12255859375, 3.70458984375]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/portable-lazy-20261021/1-build-cold/output.log",
+      "durationMs": 5654.047000000002,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 5004.369167000001,
+        "idle": 0.8539361185557194,
+        "loadAverage": [2.85498046875, 3.0517578125, 3.67236328125]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/portable-lazy-20261021/1-build-warm/output.log",
+      "durationMs": 6914.547957999999,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3001.948042,
+        "idle": 0.8227116371461839,
+        "loadAverage": [3.17138671875, 3.115234375, 3.68701171875]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/portable-lazy-20261021/2-startup-cold/output.log",
+      "listenMs": 2693.983125000006,
+      "durationMs": 3603.234000000004,
+      "host": {
+        "settled": true,
+        "waitedMs": 12012.921958000006,
+        "idle": 0.8050206382264319,
+        "loadAverage": [3.33203125, 3.15576171875, 3.68701171875]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/portable-lazy-20261021/2-startup-warm/output.log",
+      "listenMs": 4492.046457999997,
+      "durationMs": 5681.884082999997,
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.9152079999985,
+        "idle": 0.833065057008719,
+        "loadAverage": [3.22509765625, 3.13623046875, 3.6767578125]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/portable-lazy-20261021/2-build-cold/output.log",
+      "durationMs": 5558.315917,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 10011.064499999993,
+        "idle": 0.8403402843359103,
+        "loadAverage": [6.2626953125, 3.83984375, 3.91943359375]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "build",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp build",
+      "log": ".runs/profiles/portable-lazy-20261021/2-build-warm/output.log",
+      "durationMs": 6137.882292000009,
+      "prerenderedPages": 10001,
+      "host": {
+        "settled": true,
+        "waitedMs": 3001.5288750000036,
+        "idle": 0.8090640841644857,
+        "loadAverage": [5.82763671875, 3.82763671875, 3.91357421875]
+      }
+    }
+  ],
+  "completedAt": "2026-10-21T01:11:07.318Z",
+  "loadAverageAtEnd": [7.28271484375, 4.162109375, 4.03125]
+}

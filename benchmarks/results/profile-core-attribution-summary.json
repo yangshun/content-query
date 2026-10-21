@@ -1,0 +1,45 @@
+{
+  "note": "Instrumented diagnostics, not benchmark wall-clock speedups. Preparation spans are elapsed time; serializeConfig is inclusive sampled CPU time. These quantities can overlap.",
+  "stages": {
+    "before": [
+      {
+        "sourceProfile": ".runs/profiles/core-before-20261020/1-build-cold/20023-0.cpuprofile",
+        "cache": "cold",
+        "preparationElapsedMs": 1043.0013330000002,
+        "sourceAcquisitionElapsedMs": 574.72875,
+        "moduleGenerationElapsedMs": 140.49316700000008,
+        "serializeConfigCpuMs": 641.5,
+        "serverFacadeKilobytes": 2334.4
+      },
+      {
+        "sourceProfile": ".runs/profiles/core-before-20261020/1-build-warm/20161-0.cpuprofile",
+        "cache": "warm",
+        "preparationElapsedMs": 902.1142090000001,
+        "sourceAcquisitionElapsedMs": 500.91162499999996,
+        "moduleGenerationElapsedMs": 139.19062499999995,
+        "serializeConfigCpuMs": 601.582,
+        "serverFacadeKilobytes": 2334.4
+      }
+    ],
+    "after": [
+      {
+        "sourceProfile": ".runs/profiles/core-after-20261021/1-build-cold/47047-0.cpuprofile",
+        "cache": "cold",
+        "preparationElapsedMs": 877.3729590000003,
+        "sourceAcquisitionElapsedMs": 431.721542,
+        "moduleGenerationElapsedMs": 146.2705420000002,
+        "serializeConfigCpuMs": 89.541,
+        "serverFacadeKilobytes": 445.45
+      },
+      {
+        "sourceProfile": ".runs/profiles/core-after-20261021/1-build-warm/47212-0.cpuprofile",
+        "cache": "warm",
+        "preparationElapsedMs": 855.8054999999999,
+        "sourceAcquisitionElapsedMs": 439.07608300000015,
+        "moduleGenerationElapsedMs": 138.40795800000024,
+        "serializeConfigCpuMs": 83.124,
+        "serverFacadeKilobytes": 445.45
+      }
+    ]
+  }
+}

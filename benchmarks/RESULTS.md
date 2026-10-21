@@ -1,12 +1,14 @@
 # ContentQuery full-site benchmarks
 
-Run: 2026-10-20T10:38:14.019Z. Completed: 2026-10-20T11:22:01.490Z.
+Run: 2026-10-21T00:29:02.703Z. Completed: 2026-10-21T00:36:47.490Z.
 
 10,000 unique Markdown entries, 10,368,894 bytes total, shared across benchmark apps (60000 hardlinks, 0 copies). Corpus SHA-256: `643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914`.
 
 Workload: `full-index-and-prerendered-articles`. Each homepage lists every title and description with a link. Every entry has a dedicated prerendered article: 10,001 content HTML pages per successful build. Native error pages and auxiliary assets are additional output.
 
-Validation: 72/72 recorded samples passed. 36/36 recorded production builds emitted and verified every content HTML page. Failed samples are excluded from timing summaries.
+Selected stacks: Astro collections, Void + ContentQuery, TanStack Start + ContentQuery.
+
+Validation: 36/36 recorded samples passed. 18/18 recorded production builds emitted and verified every content HTML page. Failed samples are excluded from timing summaries.
 
 The [historical single-page report](./results/single-page-RESULTS.md) and [raw samples](./results/single-page.json) cover the previous workload and are not directly comparable.
 
@@ -16,29 +18,23 @@ Seconds, shown as median (minimum–maximum; successful samples / requested samp
 
 ### Cold
 
-| Stack                              |             Content usable |           Production build |
-| ---------------------------------- | -------------------------: | -------------------------: |
-| Void + ContentQuery                |    5.27 (5.10–5.47; n=3/3) |  10.09 (9.05–11.26; n=3/3) |
-| Astro collections                  |    3.53 (3.23–5.46; n=3/3) |    5.98 (5.82–6.53; n=3/3) |
-| TanStack Start + ContentQuery      |    3.96 (3.79–6.66; n=3/3) |    7.69 (6.04–8.58; n=3/3) |
-| Vite + React + Content Collections |   9.54 (8.40–11.16; n=3/3) |    7.89 (7.25–9.97; n=3/3) |
-| Nuxt Content                       | 17.27 (15.62–18.57; n=3/3) | 62.21 (60.18–65.46; n=3/3) |
-| Next.js + ContentQuery             | 20.98 (18.61–23.10; n=3/3) | 41.66 (38.69–46.19; n=3/3) |
+| Stack                         |          Content usable |        Production build |
+| ----------------------------- | ----------------------: | ----------------------: |
+| Void + ContentQuery           | 4.10 (4.02–4.17; n=3/3) | 5.17 (5.16–5.83; n=3/3) |
+| Astro collections             | 3.41 (3.19–3.46; n=3/3) | 4.10 (3.86–4.28; n=3/3) |
+| TanStack Start + ContentQuery | 2.70 (2.69–3.27; n=3/3) | 5.29 (4.86–5.60; n=3/3) |
 
 ### Warm
 
-| Stack                              |             Content usable |           Production build |
-| ---------------------------------- | -------------------------: | -------------------------: |
-| Void + ContentQuery                |    4.47 (3.85–4.50; n=3/3) |  12.20 (9.81–12.78; n=3/3) |
-| Astro collections                  |    5.87 (3.63–6.20; n=3/3) |    7.04 (6.59–7.13; n=3/3) |
-| TanStack Start + ContentQuery      |    3.52 (3.02–4.39; n=3/3) |    7.78 (7.26–8.03; n=3/3) |
-| Vite + React + Content Collections |    8.92 (6.63–9.05; n=3/3) |    7.02 (6.99–7.86; n=3/3) |
-| Nuxt Content                       |    7.44 (5.85–7.81; n=3/3) | 64.34 (55.45–79.43; n=3/3) |
-| Next.js + ContentQuery             | 15.35 (14.36–17.21; n=3/3) | 43.14 (38.14–46.36; n=3/3) |
+| Stack                         |          Content usable |        Production build |
+| ----------------------------- | ----------------------: | ----------------------: |
+| Void + ContentQuery           | 3.17 (3.15–3.18; n=3/3) | 6.22 (5.86–6.41; n=3/3) |
+| Astro collections             | 3.26 (2.94–3.52; n=3/3) | 5.42 (4.87–6.45; n=3/3) |
+| TanStack Start + ContentQuery | 2.54 (2.37–2.68; n=3/3) | 7.16 (6.43–7.64; n=3/3) |
 
 ## Method
 
-- Three cold/warm pairs by default, all six stacks in one run. Only one framework and measurement type (startup or build) runs at a time, in a seeded random app order per repetition. Each server, build, and validation preview is shut down before the next sample starts. No Vite task-result cache is used.
+- Three cold/warm pairs by default; 3 requested stacks in this run. Only one framework and measurement type (startup or build) runs at a time, in a seeded random app order per repetition. Each server, build, and validation preview is shut down before the next sample starts. No Vite task-result cache is used.
 - Before every sample, the runner waits for host CPU to become idle, so background work triggered by earlier samples, such as file indexing of tens of thousands of emitted pages, does not overlap the next measurement. Host state before each sample is recorded in the raw results.
 - Cold means application content/framework/build and local dependency-optimizer caches are removed. OS filesystem caches remain warm, especially because the inputs are hardlinked. This is not a machine cold-boot benchmark.
 - Startup uses a prelaunched Chromium with a fresh browser context and page. Timing begins immediately before spawning the dev command. TCP readiness does not request the app. Content usability verifies every homepage title, description, and item link, then directly loads the first and last articles and verifies their own metadata and rendered Markdown.
@@ -50,13 +46,13 @@ Seconds, shown as median (minimum–maximum; successful samples / requested samp
 
 ## Order and host load
 
-App order was shuffled independently for each repetition with seed `20261020`:
+App order was shuffled independently for each repetition with seed `2026102103`:
 
-1. nuxt, astro, next, void, tanstack-start, vite-react
-2. nuxt, tanstack-start, astro, next, vite-react, void
-3. vite-react, void, astro, nuxt, tanstack-start, next
+1. tanstack-start, void, astro
+2. void, astro, tanstack-start
+3. astro, tanstack-start, void
 
-Before every sample, the runner waited until host CPU was at least 80% idle, averaged over 3 consecutive 1-second windows, for up to 180 seconds. 72/72 samples started on a settled host. Median idle before a sample: 81% (80%–88%); median wait: 8.0 s (maximum 177.2 s).
+Before every sample, the runner waited until host CPU was at least 80% idle, averaged over 3 consecutive 1-second windows, for up to 180 seconds. 36/36 samples started on a settled host. Median idle before a sample: 82% (80%–86%); median wait: 5.0 s (maximum 45.0 s).
 
 Spotlight did not index new files under the applications directory during this run.
 
@@ -65,9 +61,11 @@ Spotlight did not index new files under the applications directory during this r
 - Node: v24.21.0; Chromium: 156.0.8078.4.
 - System: darwin arm64, OS 25.3.0.
 - CPU: Apple M5; 10 logical CPUs; 24.0 GiB RAM.
-- Git revision: `10243a4952e92ac8e9cde1abb5cf01596c76dcb8`; uncommitted changes: true.
-- Lockfile SHA-256: `6d1776a6d25e47714e6bc508aefb855354214af33be9465c37d347942584a674`.
-- Built ContentQuery JavaScript SHA-256: `fc104e63574fb1c3d01c6ce7b46ab4381e1226bc922a7de9943189e0776f9926`; unchanged during measurement: true.
+- Git revision: `2bbf6b5a9cea6e4424629dc56861e66e43a74bf2`; uncommitted changes: true.
+- Lockfile SHA-256: `af4f7203061411dfdec7c43ae4296c5e81cc25cdeb7a553afa845d3e3d5a4a6f`.
+- Built ContentQuery JavaScript SHA-256: `4555c466b87b713367e6b646c4d9cc0540ceb24d7fc69c422c62d2c977f9ee52`; unchanged during measurement: true.
+- Built Void JavaScript SHA-256: `6b4533b89c5780e07d43bd974c0265f31e7891213f3ec81f8861a79883d19533`; package directory: `../../../void/packages/void`. Source revision: `09703fb408b170bd30aba71f316bf8a3d7de183a`; uncommitted package changes: true.
+- Built @void/react JavaScript SHA-256: `9a54c226743500678a71eaa7e2d8dce2b0613903126b883876727c0562e0a165`; package directory: `../../../void/packages/react`.
 
 ```text
 VITE+ - The Unified Toolchain for the Web
@@ -89,14 +87,11 @@ Tools:
 
 ## Versions and output
 
-| Stack                              | Resolved packages                                                                                                                                                                             | Normal output                                       | Command                   |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------- |
-| Astro collections                  | astro@7.4.0, vite-plus@0.1.16, @voidzero-dev/vite-plus-core@1.3.0                                                                                                                             | Static HTML                                         | `vp exec astro build`     |
-| Vite + React + Content Collections | react@19.2.5, react-dom@19.2.5, @content-collections/core@0.15.3, @content-collections/vite@0.3.1, @content-collections/markdown@0.1.4, vite-plus@0.1.16, @voidzero-dev/vite-plus-core@0.1.16 | Prerendered HTML + React hydration (Vite SSR/SSG)   | `vp run --no-cache build` |
-| Nuxt Content                       | nuxt@4.6.2, vue@3.5.44, @nuxt/content@3.16.2, vite-plus@0.1.16, @voidzero-dev/vite-plus-core@1.3.0                                                                                            | Prerendered HTML + Nuxt payloads (nuxt generate)    | `vp exec nuxt generate`   |
-| Void + ContentQuery                | void@1.1.12, @void/react@1.1.12, react@19.2.5, content-query@0.0.0, vite-plus@0.1.16, @voidzero-dev/vite-plus-core@0.1.16                                                                      | Static HTML + bundled content                       | `vp build`                |
-| Next.js + ContentQuery             | next@16.4.2, react@19.2.5, react-dom@19.2.5, content-query@0.0.0, vite-plus@0.1.16                                                                                                             | Static HTML + RSC payloads (Next.js export)         | `vp exec next build`      |
-| TanStack Start + ContentQuery      | @tanstack/react-start@1.169.3, @tanstack/react-router@1.170.45, react@19.2.5, react-dom@19.2.5, content-query@0.0.0, vite-plus@1.3.0, @voidzero-dev/vite-plus-core@1.3.0                       | Prerendered HTML + React hydration (TanStack Start) | `vp build`                |
+| Stack                         | Resolved packages                                                                                                                                                        | Normal output                                       | Command               |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- | --------------------- |
+| Astro collections             | astro@7.4.0, vite-plus@0.1.16, @voidzero-dev/vite-plus-core@1.3.0                                                                                                        | Static HTML                                         | `vp exec astro build` |
+| Void + ContentQuery           | void@1.1.12, @void/react@1.1.12, react@19.2.5, content-query@0.0.0, vite-plus@1.3.0, @voidzero-dev/vite-plus-core@1.3.0                                                  | Static HTML + bundled content                       | `vp build`            |
+| TanStack Start + ContentQuery | @tanstack/react-start@1.169.3, @tanstack/react-router@1.170.45, react@19.2.5, react-dom@19.2.5, content-query@0.0.0, vite-plus@1.3.0, @voidzero-dev/vite-plus-core@1.3.0 | Prerendered HTML + React hydration (TanStack Start) | `vp build`            |
 
 ## Failures
 
