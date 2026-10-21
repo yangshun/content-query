@@ -7,6 +7,7 @@ import { build, createServer } from "vite-plus";
 import { describe, expect, test, vi } from "vite-plus/test";
 import { projectFixture } from "../../../tests/helpers/project.ts";
 import { contentQuery } from "./plugin.ts";
+import * as virtualModules from "./modules.ts";
 
 const execute = promisify(execFile);
 vi.setConfig({ testTimeout: 20_000 });
@@ -50,6 +51,43 @@ describe("Vite artifact watching", () => {
 });
 
 describe("Vite content preparation", () => {
+  test("serializes each development revision once across concurrent delivery and startup", async () => {
+    const fixture = await projectFixture();
+    const original = virtualModules.preparedModules;
+    const revisions: unknown[] = [];
+    const prepared = vi.spyOn(virtualModules, "preparedModules").mockImplementation((state) => {
+      revisions.push(state.revision);
+      return original(state);
+    });
+    let server: Awaited<ReturnType<typeof createServer>> | undefined;
+    try {
+      await writeFile(
+        fixture.config,
+        `import {defineCollection} from "content-query";
+export const collections = {posts: defineCollection({loader: {name: "fixture", async load({store}) {
+  for (let index = 0; index < 64; index++) {
+    store.set({id: String(index), data: {title: "Article " + index}, body: "Body " + index});
+  }
+}}})};`,
+      );
+      server = await createServer({
+        root: fixture.root,
+        configFile: false,
+        plugins: [contentQuery()],
+        server: { middlewareMode: true, ws: false },
+        optimizeDeps: { noDiscovery: true },
+      });
+      // A delayed filesystem notification can legitimately prepare a replacement revision.
+      expect(revisions.length).toBeGreaterThan(0);
+      expect(revisions).not.toContain(undefined);
+      expect(new Set(revisions).size).toBe(revisions.length);
+    } finally {
+      prepared.mockRestore();
+      await server?.close();
+      await fixture.dispose();
+    }
+  });
+
   test("does not load or prepare server content for a client-only production graph", async () => {
     const fixture = await projectFixture();
     try {

@@ -58,6 +58,8 @@ Public guides and homepage examples use standard Vite configuration and npm/npx 
 
 The Vite guide documents the in-memory default and explicit standalone artifact publication, generated-output watcher exclusions, server-only production preparation, and payload source packing before bundling, including lazy loading and host output settings.
 
+It also explains shared development revision serialization.
+
 From the repository root, using Node.js 24.21.0 and Vite+:
 
 ```sh
