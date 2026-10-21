@@ -327,6 +327,8 @@ Generated output is ordinary ESM for Node or another bundler; it does not requir
 
 Vite excludes generated artifacts from its file watcher while preserving application watcher settings. Production content preparation runs for server environments, so client compilation does not repeat source loading and Markdown rendering. Before bundling, Vite packs payload sources into lazy modules targeting 128 KiB each, including when the host requires strict entry signatures. Default metadata queries still load no bodies; rendering an entry can load neighboring payloads in its module. Host output and chunking settings continue to control the final bundle. Standalone generated artifacts retain individual immutable item modules.
 
+Concurrent delivery shares serialization of a revision.
+
 ## Next.js
 
 ```ts

@@ -36,6 +36,13 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
   let modules = new Map<string, string>();
   let deliveredRevision: PreparedRevision | undefined;
   let deliveredError: ContentError | undefined;
+  let encoding:
+    | {
+        revision: PreparedRevision | undefined;
+        error: ContentError | undefined;
+        pending: Promise<Map<string, string>>;
+      }
+    | undefined;
   const bridgeKey = randomUUID();
   const refreshClients = new WeakSet<object>();
 
@@ -54,14 +61,27 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
     if (deliveredRevision === revision && deliveredError === error && modules.size) {
       return;
     }
-    const next = await preparedModules(state);
-    if (state.revision !== revision || state.error !== error) {
-      await refreshModules(state);
-      return;
+    if (!encoding || encoding.revision !== revision || encoding.error !== error) {
+      encoding = { revision, error, pending: preparedModules(state) };
     }
-    modules = new Map([...modules, ...next]);
-    deliveredRevision = revision;
-    deliveredError = error;
+    const current = encoding;
+    try {
+      const next = await current.pending;
+      if (state.revision !== revision || state.error !== error) {
+        await refreshModules(state);
+        return;
+      }
+      if (deliveredRevision === revision && deliveredError === error && modules.size) {
+        return;
+      }
+      modules = new Map([...modules, ...next]);
+      deliveredRevision = revision;
+      deliveredError = error;
+    } finally {
+      if (encoding === current) {
+        encoding = undefined;
+      }
+    }
   }
   /** Notifies every host environment after portable state modules are ready. */
   async function changed(state: ContentState): Promise<void> {
