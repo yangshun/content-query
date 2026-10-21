@@ -15,6 +15,8 @@ export type SourceWatchOptions = {
   root: string;
   config: string;
   output?: string;
+  /** The session-owned project subscription, already ready before source setup begins. */
+  projectWatcher?: FSWatcher;
   registry(): CollectionRegistry;
   /** Evaluated config modules, or undefined while the module graph is unknown. */
   dependencies(): ReadonlySet<string> | undefined;
@@ -74,26 +76,31 @@ function ready(watcher: FSWatcher): Promise<void> {
   });
 }
 
+/** Shares the project ignore policy with declared-input subscription coverage checks. */
+function projectIgnored(options: SourceWatchOptions): (filename: string) => boolean {
+  const ignoredRoots = [
+    ...(options.output ? [options.output] : []),
+    path.join(options.root, ".content-query"),
+  ];
+  return (filename) =>
+    filename
+      .split(path.sep)
+      .some((segment) =>
+        ["node_modules", ".git", ".next", ".void", ".wrangler", "dist", "coverage"].includes(
+          segment,
+        ),
+      ) || ignoredRoots.some((ignored) => withinDirectory(ignored, filename));
+}
+
 /** Registers ownership before awaiting readiness so initialization failures retain cleanup. */
 export async function watchProject(
   options: SourceWatchOptions,
   register: (watcher: FSWatcher) => void,
 ): Promise<void> {
-  const ignoredRoots = [
-    ...(options.output ? [options.output] : []),
-    path.join(options.root, ".content-query"),
-  ];
   const watcher = watch([options.root, await watchAncestor(path.dirname(options.config))], {
     ignoreInitial: true,
     awaitWriteFinish,
-    ignored: (filename) =>
-      filename
-        .split(path.sep)
-        .some((segment) =>
-          ["node_modules", ".git", ".next", ".void", ".wrangler", "dist", "coverage"].includes(
-            segment,
-          ),
-        ) || ignoredRoots.some((ignored) => withinDirectory(ignored, filename)),
+    ignored: projectIgnored(options),
   });
   register(watcher);
   watcher.on("all", (event, filename) => {
@@ -111,11 +118,12 @@ export async function watchProject(
   await ready(watcher);
 }
 
-/** Owns explicit source and external config-module subscriptions for one configuration. */
+/** Owns scoped source listeners and external subscriptions for one configuration. */
 export async function watchSources(
   options: SourceWatchOptions,
   register: (cleanup: LoaderCleanup) => void,
 ): Promise<void> {
+  const ignoredByProject = projectIgnored(options);
   // The project watcher already covers the root and the config's directory.
   const modules = [...(options.dependencies() ?? [])].filter(
     (filename) =>
@@ -140,14 +148,40 @@ export async function watchSources(
         ...(options.output ? [options.output] : []),
       ];
       const ancestor = await watchAncestor(target);
-      const external = watch(ancestor, {
-        ignoreInitial: true,
-        awaitWriteFinish,
-        ignored: (filename) =>
-          !(withinDirectory(target, filename) || withinDirectory(filename, target)) ||
-          outputRoots.some((output) => withinDirectory(output, filename)),
-      });
-      register(() => external.close());
+      const shared =
+        !ignoredByProject(target) &&
+        (withinDirectory(options.root, target) ||
+          withinDirectory(path.dirname(options.config), target))
+          ? options.projectWatcher
+          : undefined;
+      // A recursive glob can include ignored descendants such as content/dist/. Keep a
+      // directory subscription there, skipping ordinary files already covered by the project.
+      const dedicated = !shared || builtin.kind === "glob";
+      const external = dedicated
+        ? watch(ancestor, {
+            ignoreInitial: true,
+            awaitWriteFinish,
+            ignored: (filename, stats) =>
+              !(withinDirectory(target, filename) || withinDirectory(filename, target)) ||
+              outputRoots.some((output) => withinDirectory(output, filename)) ||
+              !!(shared && stats?.isFile() && !ignoredByProject(filename)),
+          })
+        : shared!;
+      /** Invalidates only the collection whose declared input can match this event. */
+      function changed(event: string, filename: string): void {
+        if (affectsSnapshot(builtin!, target, event, filename)) {
+          options.invalidated(name);
+        }
+      }
+      if (shared) {
+        shared.on("all", changed);
+        register(() => {
+          shared.off("all", changed);
+        });
+      }
+      if (dedicated) {
+        register(() => external.close());
+      }
       if (ancestor !== target && !outputRoots.some((output) => withinDirectory(output, target))) {
         /** Recovers a missing declared path even if the ancestor's creation event is lost. */
         function recheck(current: Stats, previous: Stats): void {
@@ -155,19 +189,20 @@ export async function watchSources(
             return;
           }
           external.add(target);
+          if (shared && shared !== external) {
+            shared.add(target);
+          }
           options.invalidated(name);
         }
         // Poll only the declared file or base directory, never every file in a glob collection.
         watchFile(target, { interval: 100, persistent: false }, recheck);
         register(() => unwatchFile(target, recheck));
       }
-      external.on("all", (event, filename) => {
-        if (affectsSnapshot(builtin, target, event, filename)) {
-          options.invalidated(name);
-        }
-      });
-      external.on("error", (cause) => options.failed(cause));
-      await ready(external);
+      if (dedicated) {
+        external.on("all", changed);
+        external.on("error", (cause) => options.failed(cause));
+        await ready(external);
+      }
     }
   }
 }

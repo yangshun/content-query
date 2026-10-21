@@ -206,6 +206,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
         await watchSources(
           {
             ...watchOptions,
+            projectWatcher: watcher,
             registry: () => loaded.registry,
             dependencies: () => loaded.dependencies,
             configChanged: () => receive({ kind: "config" }),

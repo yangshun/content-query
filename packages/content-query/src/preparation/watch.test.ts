@@ -15,6 +15,110 @@ function settle(): Promise<void> {
 }
 
 describe("source watching", () => {
+  test.each(["glob", "file"] as const)(
+    "subscribes once to a %s source already covered by the project watcher",
+    async (kind) => {
+      const root = await realpath(
+        await mkdtemp(path.join(os.tmpdir(), "content-query-shared-watch-")),
+      );
+      const base = path.join(root, "content");
+      const filename = path.join(base, kind === "glob" ? "post.md" : "posts.json");
+      await mkdir(base);
+      await writeFile(
+        filename,
+        kind === "glob"
+          ? "---\ntitle: Initial\n---\n"
+          : JSON.stringify([{ id: "post", title: "Initial" }]),
+      );
+      // oxlint-disable-next-line typescript-eslint/unbound-method
+      const subscribe = NodeFsHandler.prototype._watchWithNodeFs;
+      let sourceSubscriptions = 0;
+      const subscriptions = vi
+        .spyOn(NodeFsHandler.prototype, "_watchWithNodeFs")
+        .mockImplementation(function (
+          this: NodeFsHandler,
+          ...arguments_: Parameters<typeof subscribe>
+        ) {
+          if (path.resolve(arguments_[0]) === filename) {
+            sourceSubscriptions++;
+          }
+          return subscribe.apply(this, arguments_);
+        });
+      let session: Awaited<ReturnType<typeof createSession>> | undefined;
+      try {
+        const registry = {
+          posts: defineCollection({
+            loader: kind === "glob" ? glob({ pattern: "*.md", base }) : file(filename),
+            schema: z.object({ title: z.string() }),
+          }),
+        };
+        session = await createSession<typeof registry>({
+          root,
+          config: "unused",
+          outDir: ".content-query",
+          registry,
+          watch: true,
+        });
+        expect(sourceSubscriptions).toBe(1);
+        const listing = session.content.select("title").from("posts");
+        await writeFile(
+          filename,
+          kind === "glob"
+            ? "---\ntitle: Updated\n---\n"
+            : JSON.stringify([{ id: "post", title: "Updated" }]),
+        );
+        await vi.waitFor(async () => expect(await listing.all()).toEqual([{ title: "Updated" }]));
+      } finally {
+        await session?.dispose();
+        subscriptions.mockRestore();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
+
+  test.each(["dist", "coverage"])(
+    "watches declared glob descendants under %s when the base is covered by the project watcher",
+    async (directory) => {
+      const root = await realpath(
+        await mkdtemp(path.join(os.tmpdir(), "content-query-nested-watch-")),
+      );
+      const base = path.join(root, "content");
+      const nested = path.join(base, directory);
+      const filename = path.join(nested, "post.md");
+      await mkdir(base);
+      const registry = {
+        posts: defineCollection({
+          loader: glob({ pattern: "**/*.md", base }),
+          schema: z.object({ title: z.string() }),
+        }),
+      };
+      const session = await createSession<typeof registry>({
+        root,
+        config: "unused",
+        outDir: ".content-query",
+        registry,
+        watch: true,
+      });
+      try {
+        const listing = session.content.select("title").from("posts");
+        await mkdir(nested);
+        await writeFile(filename, "---\ntitle: First\n---\n");
+        await vi.waitFor(async () => expect(await listing.all()).toEqual([{ title: "First" }]), {
+          timeout: 3_000,
+        });
+        await writeFile(filename, "---\ntitle: Edited\n---\n");
+        await vi.waitFor(async () => expect(await listing.all()).toEqual([{ title: "Edited" }]), {
+          timeout: 3_000,
+        });
+        await rm(nested, { recursive: true });
+        await vi.waitFor(async () => expect(await listing.all()).toEqual([]), { timeout: 3_000 });
+      } finally {
+        await session.dispose();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
+
   test("recovers a missing source directory when its ancestor creation event is lost", async () => {
     const root = await realpath(await mkdtemp(path.join(os.tmpdir(), "content-query-watch-gap-")));
     const base = path.join(root, "dist/content");
