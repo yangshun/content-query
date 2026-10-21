@@ -56,6 +56,8 @@ The syntax comparison keeps controls, sample posts, both query styles, and a sha
 
 Public guides and homepage examples use standard Vite configuration and npm/npx commands.
 
+The quick start documents Node.js 22.12 as the minimum package runtime. The Vite integration guide requires Vite 8, and published plugin declarations resolve the host's Vite types without requiring Vite+ in consumer projects.
+
 The Vite guide documents the in-memory default and explicit standalone artifact publication, generated-output watcher exclusions, server-only production preparation, and payload source packing before bundling, including lazy loading and host output settings.
 
 It also explains shared development revision serialization, bounded lazy payload batches, and portable compression of large metadata indexes and payloads while preserving value semantics.

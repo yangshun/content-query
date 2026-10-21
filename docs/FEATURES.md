@@ -1,5 +1,6 @@
 # ContentQuery v1 features
 
+- MIT-licensed ESM package for Node.js 22.12 or later, with optional Vite 8 and Next.js 16 integrations. Published Vite declarations use the host's Vite types without requiring the Vite+ development toolchain.
 - Standard Schema metadata/computed validation and output inference, with grouped contextual errors.
 - Bundled Zod-backed content builders through `import { schema } from "content-query/schema"`, with chaining, primitive coercion, and provider-independent `schema.input`, `schema.output`, and `schema.infer` types. Consumers need no separate Zod installation; other Standard Schema validators remain supported, and deployed runtime JavaScript imports no validators.
 - Computed context includes the collection registry key and optional, typed loader source metadata. Built-in file loaders supply project-relative paths and multi-record keys; source-only edits participate in preparation cache invalidation. Existing Astro loaders remain compatible without supplying the ContentQuery metadata extension.
