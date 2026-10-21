@@ -1,0 +1,95 @@
+{
+  "diagnostic": "Uninstrumented prerender comparison; three repetitions each in a preselected mixed order, excluding framework bundling and startup.",
+  "order": [4, 16, 16, 4, 4, 16],
+  "renderers": {
+    "4": "9d27578f2ab7bbf6069dd0423b855cb141220144cf134d3fcdefe3a1addc0112",
+    "16": "a6006e1144f5c4a06f1de2cbbe5b991a65d31c92bd8e9edca0b124e1a3ca8946"
+  },
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "results": [
+    {
+      "concurrency": 4,
+      "durationMs": 2952.300208,
+      "host": {
+        "settled": true,
+        "waitedMs": 3004.578208,
+        "idle": 0.879073110075573,
+        "loadAverage": [2.8173828125, 3.67919921875, 6.9521484375]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e"
+    },
+    {
+      "concurrency": 16,
+      "durationMs": 2866.8000840000004,
+      "host": {
+        "settled": true,
+        "waitedMs": 5005.318291999999,
+        "idle": 0.8046441291292803,
+        "loadAverage": [3.0849609375, 3.7060546875, 6.9228515625]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e"
+    },
+    {
+      "concurrency": 16,
+      "durationMs": 2922.4815830000007,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.7367080000004,
+        "idle": 0.8576793620235253,
+        "loadAverage": [3.158203125, 3.71044921875, 6.9052734375]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e"
+    },
+    {
+      "concurrency": 4,
+      "durationMs": 2708.845083,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.9612500000003,
+        "idle": 0.8581548629350175,
+        "loadAverage": [3.3544921875, 3.7353515625, 6.876953125]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e"
+    },
+    {
+      "concurrency": 4,
+      "durationMs": 2756.326792,
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.5983339999984,
+        "idle": 0.8232608606222728,
+        "loadAverage": [3.32568359375, 3.72265625, 6.85400390625]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e"
+    },
+    {
+      "concurrency": 16,
+      "durationMs": 2983.4917080000014,
+      "host": {
+        "settled": true,
+        "waitedMs": 3006.3517920000013,
+        "idle": 0.8000108624209598,
+        "loadAverage": [4.09814453125, 3.87841796875, 6.87255859375]
+      },
+      "pages": 10001,
+      "files": 20002,
+      "sha256": "eb57998dfc165638da2cf7a5e1045d8bb11563821d3d7b8620587f7dcef5a69e"
+    }
+  ]
+}

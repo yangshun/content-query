@@ -1,0 +1,18 @@
+{
+  "note": "Same compiled application; diagnostic renderer replacement only. HTML and navigation JSON bytes are compared in relative-path order.",
+  "outputs": [
+    {
+      "label": "core-final-worker-20261021",
+      "files": 20002,
+      "bytes": 49971135,
+      "sha256": "91b7aee3874bda006183cc15a6317fbee20db80532a680a5d9f2d7e242e76d82"
+    },
+    {
+      "label": "void-main-renderer-20261021",
+      "files": 20002,
+      "bytes": 49971135,
+      "sha256": "91b7aee3874bda006183cc15a6317fbee20db80532a680a5d9f2d7e242e76d82"
+    }
+  ],
+  "identical": true
+}

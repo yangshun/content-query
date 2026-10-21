@@ -1,0 +1,350 @@
+{
+  "label": "framework-async4-second-20261021",
+  "diagnostic": "Prerender replay with worker CPU sampling and query counters; no bundling or CLI startup.",
+  "renderer": {
+    "file": "../../../../../../../tmp/void-renderer-async-4-20261021.ts",
+    "sha256": "9d27578f2ab7bbf6069dd0423b855cb141220144cf134d3fcdefe3a1addc0112"
+  },
+  "node": "v24.21.0",
+  "host": {
+    "settled": true,
+    "waitedMs": 3004.900875,
+    "idle": 0.8735458845255905,
+    "loadAverage": [3.15185546875, 4.14990234375, 7.515625]
+  },
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "phases": {
+    "bootstrapMs": 299.4113339999999,
+    "collectPathsMs": 41.79270899999983,
+    "renderMs": 3145.319125,
+    "disposeMs": 9.278874999999971
+  },
+  "fetches": {
+    "html": 10001,
+    "pageData": 0
+  },
+  "io": {},
+  "query": {
+    "calls": 10002,
+    "candidates": 30000,
+    "idQueries": 10000,
+    "idCandidates": 10000
+  },
+  "pages": 10001,
+  "cpu": {
+    "sampledMs": 3164.975,
+    "activeMs": 2832.836,
+    "idleMs": 332.139,
+    "self": [
+      {
+        "name": "(program)",
+        "source": "",
+        "durationMs": 279.815,
+        "activePercent": 9.877557331239789
+      },
+      {
+        "name": "(garbage collector)",
+        "source": "",
+        "durationMs": 267.801,
+        "activePercent": 9.45345936016063
+      },
+      {
+        "name": "inflt",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 171.529,
+        "activePercent": 6.055027541304897
+      },
+      {
+        "name": "ReadableStream",
+        "source": "",
+        "durationMs": 131.029,
+        "activePercent": 4.625364828744058
+      },
+      {
+        "name": "",
+        "source": "index.js",
+        "durationMs": 118.087,
+        "activePercent": 4.1685081663746155
+      },
+      {
+        "name": "fetch",
+        "source": "index.js",
+        "durationMs": 116.002,
+        "activePercent": 4.09490701191315
+      },
+      {
+        "name": "decodeCompressed",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 109.045,
+        "activePercent": 3.849322728177699
+      },
+      {
+        "name": "pull",
+        "source": "index.js",
+        "durationMs": 104.05,
+        "activePercent": 3.6729976602951955
+      },
+      {
+        "name": "run",
+        "source": "",
+        "durationMs": 97.017,
+        "activePercent": 3.4247305527040743
+      },
+      {
+        "name": "gunzipSync",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 67.673,
+        "activePercent": 2.3888781419044376
+      },
+      {
+        "name": "createBuilder",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 67.498,
+        "activePercent": 2.3827005869736193
+      },
+      {
+        "name": "flushCompletedQueues",
+        "source": "index.js",
+        "durationMs": 63.574,
+        "activePercent": 2.2441821552677244
+      },
+      {
+        "name": "renderReactPage",
+        "source": "index.js",
+        "durationMs": 62.275,
+        "activePercent": 2.1983270475241063
+      },
+      {
+        "name": "stringToChunk",
+        "source": "index.js",
+        "durationMs": 57.97,
+        "activePercent": 2.046359196225973
+      },
+      {
+        "name": "",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 57.372,
+        "activePercent": 2.025249608519519
+      },
+      {
+        "name": "",
+        "source": "",
+        "durationMs": 54.847,
+        "activePercent": 1.9361163159462815
+      },
+      {
+        "name": "parse",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 51.515,
+        "activePercent": 1.8184956700634982
+      },
+      {
+        "name": "escapeScriptJson",
+        "source": "index.js",
+        "durationMs": 50.072,
+        "activePercent": 1.7675573171196637
+      },
+      {
+        "name": "Response",
+        "source": "",
+        "durationMs": 48.575,
+        "activePercent": 1.7147127472257484
+      },
+      {
+        "name": "enqueue",
+        "source": "",
+        "durationMs": 33,
+        "activePercent": 1.1649103583829068
+      },
+      {
+        "name": "layout",
+        "source": "index.js",
+        "durationMs": 32.64,
+        "activePercent": 1.152202245382366
+      },
+      {
+        "name": "entries/[id]",
+        "source": "index.js",
+        "durationMs": 30.346,
+        "activePercent": 1.0712233253178087
+      },
+      {
+        "name": "copyDirect",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 27.956,
+        "activePercent": 0.9868555751197741
+      },
+      {
+        "name": "resolveHead",
+        "source": "index.js",
+        "durationMs": 27.07,
+        "activePercent": 0.9555794970128875
+      },
+      {
+        "name": "URL",
+        "source": "",
+        "durationMs": 24.304,
+        "activePercent": 0.8579388287920656
+      }
+    ],
+    "inclusive": [
+      {
+        "name": "",
+        "source": "index.js",
+        "durationMs": 931.449,
+        "activePercent": 32.880442072890915
+      },
+      {
+        "name": "",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 550.93,
+        "activePercent": 19.448001931633176
+      },
+      {
+        "name": "renderReactPage",
+        "source": "index.js",
+        "durationMs": 438.874,
+        "activePercent": 15.49238995833151
+      },
+      {
+        "name": "decodeCompressed",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 348.247,
+        "activePercent": 12.293228411387034
+      },
+      {
+        "name": "fetch",
+        "source": "index.js",
+        "durationMs": 320.784,
+        "activePercent": 11.323775891015222
+      },
+      {
+        "name": "handlePageGet",
+        "source": "index.js",
+        "durationMs": 308.849,
+        "activePercent": 10.902466644733405
+      },
+      {
+        "name": "",
+        "source": "",
+        "durationMs": 308.611,
+        "activePercent": 10.894065170027492
+      },
+      {
+        "name": "(program)",
+        "source": "",
+        "durationMs": 279.815,
+        "activePercent": 9.877557331239789
+      },
+      {
+        "name": "pull",
+        "source": "index.js",
+        "durationMs": 270.914,
+        "activePercent": 9.563349237301418
+      },
+      {
+        "name": "(garbage collector)",
+        "source": "",
+        "durationMs": 267.801,
+        "activePercent": 9.45345936016063
+      },
+      {
+        "name": "performWork",
+        "source": "index.js",
+        "durationMs": 252.51,
+        "activePercent": 8.91368226046266
+      },
+      {
+        "name": "gunzipSync",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 239.202,
+        "activePercent": 8.443905683209335
+      },
+      {
+        "name": "render",
+        "source": "index.js",
+        "durationMs": 199.854,
+        "activePercent": 7.054908932250226
+      },
+      {
+        "name": "retryNode",
+        "source": "index.js",
+        "durationMs": 187.527,
+        "activePercent": 6.619761962923374
+      },
+      {
+        "name": "renderElement",
+        "source": "index.js",
+        "durationMs": 180.175,
+        "activePercent": 6.36023405520122
+      },
+      {
+        "name": "renderNodeDestructive",
+        "source": "index.js",
+        "durationMs": 180.168,
+        "activePercent": 6.359986953003986
+      },
+      {
+        "name": "renderNode",
+        "source": "index.js",
+        "durationMs": 172.77,
+        "activePercent": 6.098835230842873
+      },
+      {
+        "name": "inflt",
+        "source": "assets/_content_query_server-ByoR4M2L.js",
+        "durationMs": 171.529,
+        "activePercent": 6.055027541304897
+      },
+      {
+        "name": "",
+        "source": "assets/_id_.server-BtF2QUCf.js",
+        "durationMs": 162.431,
+        "activePercent": 5.733865285530118
+      },
+      {
+        "name": "finishFunctionComponent",
+        "source": "index.js",
+        "durationMs": 144.278,
+        "activePercent": 5.093058687477849
+      },
+      {
+        "name": "ReadableStream",
+        "source": "",
+        "durationMs": 131.029,
+        "activePercent": 4.625364828744058
+      },
+      {
+        "name": "read",
+        "source": "",
+        "durationMs": 122.276,
+        "activePercent": 4.316381181261464
+      },
+      {
+        "name": "run",
+        "source": "",
+        "durationMs": 121.823,
+        "activePercent": 4.300390139069116
+      },
+      {
+        "name": "pushStartInstance",
+        "source": "index.js",
+        "durationMs": 115.318,
+        "activePercent": 4.0707615972121225
+      },
+      {
+        "name": "exports.renderToReadableStream",
+        "source": "index.js",
+        "durationMs": 106.484,
+        "activePercent": 3.7589186243044073
+      }
+    ]
+  },
+  "outputRoot": ".runs/profiles/framework-async4-second-20261021"
+}

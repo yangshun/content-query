@@ -1,0 +1,541 @@
+{
+  "diagnostic": "Temporary in-memory React adapter config: separate client/Worker React dependencies and remove the unused Node SSR prebundle. Three interleaved cold/warm startup pairs per variant, complete first-page/browser validation.",
+  "hookSha256": "2702d4a407e89ef611f7f251eb37a751e08e9c482f0e01f8bfb06597f581b7f0",
+  "order": ["control", "scoped", "scoped", "control", "control", "scoped"],
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "builds": {
+    "content-query": "5f120887622923066b4d85476a99378d6580a1de1f96793f5fbee94a2bb5e28f",
+    "void": "6b4533b89c5780e07d43bd974c0265f31e7891213f3ec81f8861a79883d19533",
+    "react": "9a54c226743500678a71eaa7e2d8dce2b0613903126b883876727c0562e0a165"
+  },
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/0-control-cold.log",
+      "listenMs": 3923.801042,
+      "durationMs": 4950.583417000001,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 5006.236583,
+        "idle": 0.80549105779818,
+        "loadAverage": [3.3037109375, 3.8740234375, 3.7919921875]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/0-control-warm.log",
+      "listenMs": 2208.556875000002,
+      "durationMs": 2780.907041999999,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 4005.3417499999996,
+        "idle": 0.8374258453753219,
+        "loadAverage": [3.4775390625, 3.89404296875, 3.7998046875]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/1-scoped-cold.log",
+      "listenMs": 2292.287625000001,
+      "durationMs": 3099.8363329999993,
+      "variant": "scoped",
+      "host": {
+        "settled": true,
+        "waitedMs": 5006.187042000001,
+        "idle": 0.803715244424116,
+        "loadAverage": [3.35888671875, 3.8623046875, 3.7890625]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/1-scoped-warm.log",
+      "listenMs": 2106.8760839999995,
+      "durationMs": 2690.128499999999,
+      "variant": "scoped",
+      "host": {
+        "settled": true,
+        "waitedMs": 3004.4014580000003,
+        "idle": 0.8343586135864894,
+        "loadAverage": [3.35791015625, 3.8486328125, 3.78515625]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/2-scoped-cold.log",
+      "listenMs": 2287.117999999995,
+      "durationMs": 3047.2342500000013,
+      "variant": "scoped",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.063166,
+        "idle": 0.807566697274383,
+        "loadAverage": [3.1689453125, 3.80126953125, 3.7685546875]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/2-scoped-warm.log",
+      "listenMs": 2104.625,
+      "durationMs": 2704.4474160000027,
+      "variant": "scoped",
+      "host": {
+        "settled": true,
+        "waitedMs": 3006.706459000001,
+        "idle": 0.8259730275162838,
+        "loadAverage": [3.3955078125, 3.83740234375, 3.78125]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 4,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/3-control-cold.log",
+      "listenMs": 2359.860541999995,
+      "durationMs": 3101.9352079999953,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 3004.0724580000024,
+        "idle": 0.8029823403739919,
+        "loadAverage": [3.36376953125, 3.8232421875, 3.7763671875]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 4,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/3-control-warm.log",
+      "listenMs": 2263.283082999995,
+      "durationMs": 2881.753874999995,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.8244170000035,
+        "idle": 0.823327819827394,
+        "loadAverage": [3.57470703125, 3.859375, 3.7890625]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 5,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/4-control-cold.log",
+      "listenMs": 2510.0777910000033,
+      "durationMs": 3361.5340829999986,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 4003.1965839999975,
+        "idle": 0.8134940926499526,
+        "loadAverage": [3.64599609375, 3.86376953125, 3.791015625]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 5,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/4-control-warm.log",
+      "listenMs": 2142.3078330000135,
+      "durationMs": 2752.726250000007,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.810500000007,
+        "idle": 0.860576439893709,
+        "loadAverage": [3.51416015625, 3.83251953125, 3.7802734375]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/client",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 6,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/5-scoped-cold.log",
+      "listenMs": 2268.5314170000056,
+      "durationMs": 3015.391583000004,
+      "variant": "scoped",
+      "host": {
+        "settled": true,
+        "waitedMs": 5004.918208000003,
+        "idle": 0.8339173351748704,
+        "loadAverage": [3.421875, 3.80419921875, 3.7705078125]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 6,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/react-env-deps-20261021/5-scoped-warm.log",
+      "listenMs": 2118.6433749999997,
+      "durationMs": 2692.653582999992,
+      "variant": "scoped",
+      "host": {
+        "settled": true,
+        "waitedMs": 3002.919499999989,
+        "idle": 0.8530220602658395,
+        "loadAverage": [3.3876953125, 3.79052734375, 3.765625]
+      },
+      "optimized": {
+        "deps": [
+          "react-dom",
+          "react-dom/client",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime"
+        ],
+        "deps_ssr": [],
+        "deps_void_worker": [
+          "fflate/browser",
+          "hono",
+          "react-dom",
+          "react-dom/server",
+          "react",
+          "react/jsx-dev-runtime",
+          "react/jsx-runtime",
+          "void/live/client",
+          "void > email-validator"
+        ]
+      }
+    }
+  ]
+}

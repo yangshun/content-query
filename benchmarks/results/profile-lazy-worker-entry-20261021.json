@@ -1,0 +1,230 @@
+{
+  "diagnostic": "Three mixed cold/warm startup pairs per variant, complete first-page/browser validation. Temporary in-memory filesystem hook rewrites only generated development entry; no published framework code changed.",
+  "hookSha256": "c5c5b89bb704b820705ff117a17b09c0daf9f77e4ddd509c36e00431bef25871",
+  "order": ["control", "lazy", "lazy", "control", "control", "lazy"],
+  "corpus": {
+    "entries": 10000,
+    "bytes": 10368894,
+    "sha256": "643790e071889ba794ccca7a44872a07ac6507438317b6620d17d3d47d533914",
+    "hardlinks": 60000,
+    "copies": 0
+  },
+  "samples": [
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/0-control-cold.log",
+      "listenMs": 2671.0994579999997,
+      "durationMs": 3488.1406660000002,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 6008.255333,
+        "idle": 0.8133018271895156,
+        "loadAverage": [2.52783203125, 2.97314453125, 3.50830078125]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 1,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/0-control-warm.log",
+      "listenMs": 2111.6715839999997,
+      "durationMs": 2685.911167,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.051666000001,
+        "idle": 0.8701300686617438,
+        "loadAverage": [2.4052734375, 2.93994140625, 3.4931640625]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/1-lazy-cold.log",
+      "listenMs": 1943.0847909999975,
+      "durationMs": 3123.212291,
+      "variant": "lazy",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.4768749999985,
+        "idle": 0.8359996542727467,
+        "loadAverage": [2.37255859375, 2.92431640625, 3.484375]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 2,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/1-lazy-warm.log",
+      "listenMs": 1847.4374160000007,
+      "durationMs": 2630.0081250000003,
+      "variant": "lazy",
+      "host": {
+        "settled": true,
+        "waitedMs": 3004.2354159999995,
+        "idle": 0.8499576950396034,
+        "loadAverage": [2.39453125, 2.91015625, 3.47265625]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/2-lazy-cold.log",
+      "listenMs": 1931.2953340000022,
+      "durationMs": 3116.1510419999977,
+      "variant": "lazy",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.6670840000006,
+        "idle": 0.8335268640829249,
+        "loadAverage": [2.44287109375, 2.91162109375, 3.4697265625]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 3,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/2-lazy-warm.log",
+      "listenMs": 1860.3020000000033,
+      "durationMs": 2642.2917920000036,
+      "variant": "lazy",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.1755829999965,
+        "idle": 0.8547581625009958,
+        "loadAverage": [2.4072265625, 2.896484375, 3.4609375]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 4,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/3-control-cold.log",
+      "listenMs": 2402.7682499999937,
+      "durationMs": 3149.068499999994,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.0212089999986,
+        "idle": 0.8349565752926115,
+        "loadAverage": [2.37451171875, 2.88134765625, 3.4521484375]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 4,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/3-control-warm.log",
+      "listenMs": 2085.920833999997,
+      "durationMs": 2681.563666999995,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.084833999994,
+        "idle": 0.8524571872920129,
+        "loadAverage": [2.34423828125, 2.86669921875, 3.443359375]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 5,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/4-control-cold.log",
+      "listenMs": 2395.471166999996,
+      "durationMs": 3172.162749999996,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 4004.0361669999984,
+        "idle": 0.850257308805113,
+        "loadAverage": [2.53759765625, 2.8876953125, 3.443359375]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 5,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/4-control-warm.log",
+      "listenMs": 2103.5761669999993,
+      "durationMs": 2683.321917000001,
+      "variant": "control",
+      "host": {
+        "settled": true,
+        "waitedMs": 3001.9709160000057,
+        "idle": 0.858775337910783,
+        "loadAverage": [2.4140625, 2.85595703125, 3.4287109375]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "cold",
+      "repetition": 6,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/5-lazy-cold.log",
+      "listenMs": 2117.2842919999966,
+      "durationMs": 3258.754416999989,
+      "variant": "lazy",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.0702079999974,
+        "idle": 0.8002026809913841,
+        "loadAverage": [3.501953125, 3.07373046875, 3.501953125]
+      }
+    },
+    {
+      "app": "void",
+      "phase": "startup",
+      "cache": "warm",
+      "repetition": 6,
+      "status": "success",
+      "command": "vp dev",
+      "log": ".runs/profiles/lazy-worker-entry-20261021/5-lazy-warm.log",
+      "listenMs": 1868.6564580000122,
+      "durationMs": 2677.7885000000097,
+      "variant": "lazy",
+      "host": {
+        "settled": true,
+        "waitedMs": 3003.8472499999916,
+        "idle": 0.8876540755839258,
+        "loadAverage": [3.86181640625, 3.1552734375, 3.52783203125]
+      }
+    }
+  ]
+}
