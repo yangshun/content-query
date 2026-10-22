@@ -72,4 +72,6 @@ Pass `contentQuery()` directly to Vite or Vite+'s `plugins` array. No `Plugin` t
 
 Build integrations can reuse the active source session without reading schemas or bodies. `ContentSession.sources()` from `content-query/build` returns an immutable `{ revision, entries: [{ collection, id, filePath? }] }` snapshot; `session.subscribe(listener)` reports successful publications (`{ type: "ready", snapshot }`) and errors (`{ type: "error", error }`) and returns an unsubscribe function. Revisions are opaque and session-scoped. In Vite, `contentQuery().api.prepare()` asynchronously prepares the shared session and returns its source snapshot, and `.api.subscribe()` forwards subsequent events. The [MDX architecture](https://github.com/yangshun/content-query/blob/main/docs/MDX-ARCHITECTURE.md) documents its use by companion integrations.
 
+`prepare()` waits for pending preparation and rejects while validation errors are active. Successful unchanged reads reuse the frozen snapshot; publications supply a new revision. Subscribers can observe errors and recovery, and unsubscribing stops subsequent notifications. Development integrations should let core display recoverable errors without aborting the server or replacing the host's refresh subscription.
+
 Released under the [MIT license](https://github.com/yangshun/content-query/blob/main/LICENSE).

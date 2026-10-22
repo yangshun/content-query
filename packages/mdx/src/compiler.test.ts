@@ -5,6 +5,38 @@ import type { Root } from "mdast";
 import { analyzeMdx, compileAnalysis, compileMdx } from "./compiler.ts";
 
 describe("compileMdx", () => {
+  test.each([
+    "export const headings = [];",
+    "export const outline = [];\nexport {outline as headings};",
+    'export {outline as headings} from "./outline.js";',
+    'export {outline as "headings"} from "./outline.js";',
+    'export * as headings from "./outline.js";',
+    "export const {outline: headings} = {outline: []};",
+    "export const [headings = []] = [];",
+    "export const [...headings] = [];",
+    "export const {...headings} = {};",
+    "export function headings() {}",
+    "export class headings {}",
+  ])("diagnoses a reserved headings export: %s", async (value) => {
+    await expect(
+      compileMdx({ path: "reserved.mdx", value }, { highlight: false }),
+    ).rejects.toMatchObject({
+      message: expect.stringContaining('"headings" export'),
+      line: expect.any(Number),
+      column: 1,
+    });
+  });
+  test("allows a local headings binding without introducing a duplicate declaration", async () => {
+    const result = await compileMdx(
+      {
+        path: "local.mdx",
+        value: 'import headings from "./outline.js";\n\n# Title\n\n{headings.length}',
+      },
+      { highlight: false },
+    );
+    expect(result.code).not.toContain("export const headings");
+    expect(result.headings[0]?.text).toBe("Title");
+  });
   test("emits normal ESM, source maps, exports, GFM, headings and highlighting", async () => {
     const result = await compileMdx({
       path: "/source/article.mdx",

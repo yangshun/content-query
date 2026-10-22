@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { createContext, createElement, useContext, type ElementType } from "react";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { stringify } from "devalue";
@@ -24,6 +23,7 @@ export type RenderMdxOptions = {
   assets: MdxAssets;
   props?: Record<string, unknown>;
   components?: MDXComponents;
+  /** Stable root namespace; supply distinct values when embedding repeated standalone renders. */
   identifierPrefix?: string;
 };
 
@@ -81,7 +81,7 @@ export function renderMdxModule(
 ) {
   const state: RenderContext = {
     assets: options.assets,
-    prefix: options.identifierPrefix ?? `cq-${randomUUID()}-`,
+    prefix: options.identifierPrefix ?? "cq-",
     next: 0,
     styles: new Set(styles),
   };

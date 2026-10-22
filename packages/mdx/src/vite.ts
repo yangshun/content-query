@@ -9,6 +9,7 @@ import {
   compileAnalysis,
   type MdxAnalysis,
   type MdxCompileOptions,
+  type MdxIslandReference,
 } from "./compiler.ts";
 import {
   documentKey,
@@ -20,6 +21,7 @@ import {
 const prefix = "\0content-query-mdx:";
 const widgetPrefix = `${prefix}widget:`;
 const onlyPrefix = `${prefix}only:`;
+const widgetModulePrefix = `${prefix}widget-module:`;
 const serverId = `${prefix}server`;
 const reactId = `${prefix}react`;
 const islandsId = `${prefix}islands`;
@@ -32,7 +34,7 @@ type BridgeGlobal = typeof globalThis & {
   [bridgeSymbol]?: Map<string, () => Promise<MdxAssets>>;
 };
 type Entry = { collection: string; id: string; filePath: string };
-type Widget = { id: string; module: string; imported: string };
+type Widget = { id: string; source: string; importer: string; imported: string };
 type OutputChunk = { imports: string[]; viteMetadata?: { importedCss: Set<string> } };
 
 /** Vite owns asset references and environments; the shared compiler retains ordinary module imports. */
@@ -46,6 +48,19 @@ export type ContentQueryMdxOptions = Pick<
 /** Normalizes source module identities independently of operating-system path separators. */
 function normalize(filename: string): string {
   return filename.replaceAll("\\", "/");
+}
+
+/** Claims generated MDX variants consistently during loading and content-update handling. */
+function targetFor(id: string): "react" | "islands" | undefined {
+  const [filename, search] = id.split("?");
+  if (!filename?.endsWith(".mdx")) {
+    return;
+  }
+  const query = new URLSearchParams(search);
+  const target = query.get("cq-mdx");
+  return !query.has("raw") && !query.has("url") && (target === "react" || target === "islands")
+    ? target
+    : undefined;
 }
 
 /** Selects a default, named, or namespace-member export without evaluating the source module. */
@@ -80,7 +95,9 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
   const widgets = new Map<string, Widget>();
   const emittedWidgets = new Map<string, string>();
   const emittedDocuments = new Map<string, string>();
-  let styleEntry: string | undefined;
+  const styleEntries = new Map<string, string>();
+  const styleModules = new Map<string, string[]>();
+  const widgetModules = new Set<string>();
   let serverStyles: Record<string, string[]> = {};
   let serverAssets: string[] = [];
   let appBuild = false;
@@ -91,19 +108,40 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
     return path.join(config.root, ".content-query", "mdx");
   }
 
+  /** Keeps widget identity independent of server/browser package export conditions. */
+  function rememberWidget(reference: MdxIslandReference, importer: string): Widget {
+    const source = reference.source;
+    const identity =
+      source.startsWith(".") || path.isAbsolute(source)
+        ? normalize(path.relative(config.root, path.resolve(path.dirname(importer), source)))
+        : JSON.stringify([normalize(path.relative(config.root, path.dirname(importer))), source]);
+    const id = createHash("sha256")
+      .update(`${identity}:${reference.imported}`)
+      .digest("hex")
+      .slice(0, 20);
+    const widget = { id, source, importer, imported: reference.imported };
+    widgets.set(id, widget);
+    return widget;
+  }
+
+  /** Publishes source identities synchronously before host refresh callbacks request new modules. */
+  function acceptSnapshot(next: ContentSourceSnapshot): void {
+    snapshot = next;
+    entries = next.entries.flatMap((entry) =>
+      entry.filePath?.toLowerCase().endsWith(".mdx")
+        ? [{ ...entry, filePath: normalize(path.resolve(config.root, entry.filePath)) }]
+        : [],
+    );
+    entriesByKey = new Map(
+      entries.map((entry) => [documentKey(entry.collection, entry.id), entry]),
+    );
+  }
+
   /** Reuses prepared identities; no companion directory scan or second content preparation is needed. */
   async function prepare(): Promise<Entry[]> {
     const next = await content.prepare();
     if (snapshot?.revision !== next.revision) {
-      snapshot = next;
-      entries = next.entries.flatMap((entry) =>
-        entry.filePath?.toLowerCase().endsWith(".mdx")
-          ? [{ ...entry, filePath: normalize(path.resolve(config.root, entry.filePath)) }]
-          : [],
-      );
-      entriesByKey = new Map(
-        entries.map((entry) => [documentKey(entry.collection, entry.id), entry]),
-      );
+      acceptSnapshot(next);
     }
     return entries;
   }
@@ -115,7 +153,12 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
     if (!cached || cached.source !== source) {
       cached = {
         source,
-        value: analyzeMdx({ path: filename, value: source }, options),
+        value: analyzeMdx({ path: filename, value: source }, options).catch((cause: unknown) => {
+          if (analyses.get(filename) === cached) {
+            analyses.delete(filename);
+          }
+          throw cause;
+        }),
         compiled: new Map(),
       };
       analyses.set(filename, cached);
@@ -186,7 +229,10 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
         if (rendering === "islands") {
           throw new Error("No browser document entry; enable rendering: react or both.");
         }
-        return { url: devUrl(`${entry.filePath}?cq-mdx=react`), css: styles(collection, id) };
+        return {
+          url: devUrl(`${entry.filePath}?cq-mdx=react&v=${encodeURIComponent(snapshot!.revision)}`),
+          css: styles(collection, id),
+        };
       },
       island(id) {
         if (!widgets.has(id)) {
@@ -226,6 +272,11 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
     config: {
       order: "post",
       handler(user, environment) {
+        if (user.base === "./" || user.base === "") {
+          throw new Error(
+            "MDX SSR requires an absolute Vite base, such as '/' or '/docs/', or an HTTP(S) URL. Relative asset bases cannot identify a deployment root from nested routes.",
+          );
+        }
         appBuild = environment.command === "build" && Boolean(user.builder?.buildApp);
         return {
           ...(user.build?.ssr ? { build: { emitAssets: true } } : {}),
@@ -270,9 +321,12 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
         throw new Error("contentQueryMdx() requires contentQuery() with source integration hooks.");
       }
       content = core;
-      unsubscribe = core.subscribe(() => {
-        snapshot = undefined;
-        analyses.clear();
+      unsubscribe = core.subscribe((event) => {
+        if (event.type === "ready") {
+          acceptSnapshot(event.snapshot);
+        } else {
+          snapshot = undefined;
+        }
         if (server) {
           for (const environment of Object.values(server.environments)) {
             for (const module of environment.moduleGraph.idToModuleMap.values()) {
@@ -281,7 +335,6 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
               }
             }
           }
-          server.ws.send({ type: "full-reload" });
         }
       });
     },
@@ -292,7 +345,14 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
       global[bridgeSymbol].set(bridgeKey, developmentAssets);
     },
     async buildStart() {
-      await prepare();
+      try {
+        await prepare();
+      } catch (cause) {
+        if (config.command !== "serve") {
+          throw cause;
+        }
+        // Core owns the recoverable development overlay; requested modules still reject.
+      }
       await writeTypes();
       if (config.command !== "build" || this.environment.config.consumer !== "client") {
         return;
@@ -313,15 +373,10 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
         const parsed = await (await analysis(filename)).value;
         for (const reference of parsed.islands) {
           const resolved = await this.resolve(reference.source, filename, { skipSelf: true });
-          if (!resolved || resolved.external) {
+          if (!resolved) {
             this.error(`Cannot resolve MDX widget ${reference.source} from ${filename}.`);
           }
-          const module = normalize(resolved.id);
-          const id = createHash("sha256")
-            .update(`${normalize(path.relative(config.root, module))}:${reference.imported}`)
-            .digest("hex")
-            .slice(0, 20);
-          widgets.set(id, { id, module, imported: reference.imported });
+          rememberWidget(reference, filename);
         }
         for (const node of parsed.tree.children) {
           if (node.type === "mdxjsEsm") {
@@ -355,22 +410,65 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
           );
         }
       }
+      const browserEntries = new Map<string, string>();
+      emittedWidgets.clear();
       for (const widget of widgets.values()) {
-        emittedWidgets.set(
-          widget.id,
-          this.emitFile({
+        const resolved = await this.resolve(widget.source, widget.importer, { skipSelf: true });
+        if (!resolved) {
+          this.error(`Cannot resolve MDX widget ${widget.source} from ${widget.importer}.`);
+        }
+        const key = JSON.stringify([resolved.id, widget.imported]);
+        let emitted = browserEntries.get(key);
+        if (!emitted) {
+          emitted = this.emitFile({
             type: "chunk",
             id: `${widgetPrefix}${widget.id}`,
             name: `mdx-widget-${widget.id}`,
             preserveSignature: "strict",
-          }),
-        );
+          });
+          browserEntries.set(key, emitted);
+        }
+        emittedWidgets.set(widget.id, emitted);
       }
-      if (Object.values(serverStyles).some((styles) => styles.length)) {
-        styleEntry = this.emitFile({ type: "chunk", id: stylesId, name: "mdx-styles" });
+      styleEntries.clear();
+      styleModules.clear();
+      const sharedStyles = new Map<string, string>();
+      for (const entry of entries) {
+        const key = documentKey(entry.collection, entry.id);
+        const styles = serverStyles[key] ?? [];
+        if (!styles.length) {
+          continue;
+        }
+        const identity = JSON.stringify(styles);
+        let emitted = sharedStyles.get(identity);
+        if (!emitted) {
+          const id = `${stylesId}:${createHash("sha256").update(identity).digest("hex").slice(0, 12)}`;
+          styleModules.set(id, styles);
+          emitted = this.emitFile({
+            type: "chunk",
+            id,
+            name: `mdx-styles-${id.slice(stylesId.length + 1)}`,
+          });
+          sharedStyles.set(identity, emitted);
+        }
+        styleEntries.set(key, emitted);
       }
     },
-    resolveId(source) {
+    async resolveId(source) {
+      if (source.startsWith(widgetModulePrefix)) {
+        const widget = widgets.get(source.slice(widgetModulePrefix.length));
+        if (!widget) {
+          this.error(`Unknown MDX widget module ${source}.`);
+        }
+        const resolved = await this.resolve(widget.source, widget.importer, { skipSelf: true });
+        if (!resolved) {
+          this.error(`Cannot resolve MDX widget ${widget.source} from ${widget.importer}.`);
+        }
+        if (!resolved.external) {
+          widgetModules.add(normalize(resolved.id));
+        }
+        return resolved;
+      }
       if (source.startsWith(prefix)) {
         return source;
       }
@@ -380,46 +478,52 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
     },
     async load(id) {
       const filename = normalize(id.split("?")[0]!);
-      if (filename.endsWith(".mdx")) {
-        const target =
-          new URLSearchParams(id.split("?")[1]).get("cq-mdx") === "islands" ? "islands" : "react";
+      const requestedTarget = targetFor(id);
+      if (requestedTarget) {
+        const query = new URLSearchParams(id.split("?")[1]);
+        const target = requestedTarget;
         const cached = await analysis(filename);
-        let compiled = cached.compiled.get(target);
+        const key = `${this.environment.name}:${target}:${query.get("v") ?? ""}`;
+        let compiled = cached.compiled.get(key);
         if (!compiled) {
-          compiled = cached.value.then((parsed) =>
-            compileAnalysis(parsed, {
-              ...options,
-              target,
-              resolveMdxImport: async (specifier, inherited) => {
-                const resolved = await this.resolve(specifier, filename, { skipSelf: true });
-                if (!resolved || resolved.external) {
-                  this.error(`Cannot resolve MDX import ${specifier} from ${filename}.`);
-                }
-                return `${normalize(resolved.id)}?cq-mdx=${inherited}`;
-              },
-              resolveIsland: async (reference) => {
-                const resolved = await this.resolve(reference.source, filename, { skipSelf: true });
-                if (!resolved || resolved.external) {
-                  this.error(`Cannot resolve MDX widget ${reference.source} from ${filename}.`);
-                }
-                const module = normalize(resolved.id);
-                const widgetId = createHash("sha256")
-                  .update(`${normalize(path.relative(config.root, module))}:${reference.imported}`)
-                  .digest("hex")
-                  .slice(0, 20);
-                widgets.set(widgetId, { id: widgetId, module, imported: reference.imported });
-                return { id: widgetId, clientOnlyImport: `${onlyPrefix}${widgetId}` };
-              },
-            }),
-          );
-          cached.compiled.set(target, compiled);
+          compiled = cached.value
+            .then((parsed) =>
+              compileAnalysis(parsed, {
+                ...options,
+                target,
+                resolveMdxImport: async (specifier, inherited) => {
+                  const resolved = await this.resolve(specifier, filename, { skipSelf: true });
+                  if (!resolved || resolved.external) {
+                    this.error(`Cannot resolve MDX import ${specifier} from ${filename}.`);
+                  }
+                  return `${normalize(resolved.id)}?cq-mdx=${inherited}${query.has("v") ? `&v=${encodeURIComponent(query.get("v")!)}` : ""}`;
+                },
+                resolveIsland: async (reference) => {
+                  const resolved = await this.resolve(reference.source, filename, {
+                    skipSelf: true,
+                  });
+                  if (!resolved) {
+                    this.error(`Cannot resolve MDX widget ${reference.source} from ${filename}.`);
+                  }
+                  const widget = rememberWidget(reference, filename);
+                  return { id: widget.id, clientOnlyImport: `${onlyPrefix}${widget.id}` };
+                },
+              }),
+            )
+            .catch((cause: unknown) => {
+              if (cached.compiled.get(key) === compiled) {
+                cached.compiled.delete(key);
+              }
+              throw cause;
+            });
+          cached.compiled.set(key, compiled);
         }
         const result = await compiled;
         return { code: result.code, map: result.map };
       }
-      if (id === stylesId) {
+      if (styleModules.has(id)) {
         return (
-          [...new Set(Object.values(serverStyles).flat())]
+          [...new Set(styleModules.get(id)!)]
             .map((style) => `import ${JSON.stringify(style)};`)
             .join("\n") + "\nexport const styles = true;"
         );
@@ -437,9 +541,9 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
           this.error(`Unknown MDX widget entry ${id}.`);
         }
         if (only) {
-          return `"use client";\nimport {createClientOnly} from "@content-query/mdx/react";\nexport default createClientOnly(() => import(${JSON.stringify(widget.module)}).then(module => module${exported(widget.imported)}));`;
+          return `"use client";\nimport {createClientOnly} from "@content-query/mdx/react";\nexport default createClientOnly(() => import(${JSON.stringify(`${widgetModulePrefix}${widget.id}`)}).then(module => module${exported(widget.imported)}));`;
         }
-        return `import * as module from ${JSON.stringify(widget.module)};\nimport {mountReactIsland} from "@content-query/mdx/react/client";\nexport function mount(element,props,options){return mountReactIsland(element,module${exported(widget.imported)},props,options);}`;
+        return `import * as module from ${JSON.stringify(`${widgetModulePrefix}${widget.id}`)};\nimport {mountReactIsland} from "@content-query/mdx/react/client";\nexport function mount(element,props,options){return mountReactIsland(element,module${exported(widget.imported)},props,options);}`;
       }
       if (id === serverId) {
         if (this.environment.config.consumer === "client") {
@@ -483,7 +587,7 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
       const loading = `const entries=new Map([${table}]);\nconst loaded=new Map();\nasync function load(collection,id){const key=JSON.stringify([collection,id]);if(!entries.has(key))throw new Error("Unknown MDX document "+key);let pending=loaded.get(key);if(!pending){pending=entries.get(key)().catch(cause=>{loaded.delete(key);throw cause;});loaded.set(key,pending);}return pending;}\n`;
       return id === reactId
         ? `import {getMdxAssets} from ${JSON.stringify(assetsId)};\nimport {prepareMdxDocument} from "@content-query/mdx/react/server";\n${loading}export const loadMdx=load;\nexport async function loadMdxDocument(collection,id){const module=await load(collection,id);const assets=await getMdxAssets();return prepareMdxDocument(assets.document(collection,id),module);}`
-        : `import {getMdxAssets} from ${JSON.stringify(assetsId)};\nimport {renderMdxModule} from "@content-query/mdx/react/server";\n${loading}export async function renderMdx(collection,id,options={}){const module=await load(collection,id);const assets=options.assets??await getMdxAssets();return renderMdxModule(module,{...options,assets},assets.styles(collection,id));}`;
+        : `import {getMdxAssets} from ${JSON.stringify(assetsId)};\nimport {renderMdxModule} from "@content-query/mdx/react/server";\n${loading}export async function renderMdx(collection,id,options={}){const module=await load(collection,id);const assets=options.assets??await getMdxAssets();return renderMdxModule(module,{...options,assets,identifierPrefix:options.identifierPrefix??"cq-"+encodeURIComponent(JSON.stringify([collection,id]))+"-"},assets.styles(collection,id));}`;
     },
     transform: {
       order: "post",
@@ -561,7 +665,6 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
           css: [...new Set(css(filename))].map((style) => `${config.base}${style}`),
         };
       };
-      const common = styleEntry ? reference(styleEntry).css : [];
       const manifest: MdxAssetManifest = {
         version: 1,
         documents: Object.create(null) as MdxAssetManifest["documents"],
@@ -574,25 +677,27 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
         const key = documentKey(entry.collection, entry.id);
         const ref = emittedDocuments.get(key);
         const client = ref ? reference(ref) : undefined;
+        const styleEntry = styleEntries.get(key);
+        const styles = styleEntry ? reference(styleEntry).css : [];
         manifest.documents[key] = {
-          css: [...new Set([...common, ...(client?.css ?? [])])],
+          css: [...new Set([...styles, ...(client?.css ?? [])])],
           ...(client ? { client } : {}),
         };
       }
       for (const [id, ref] of emittedWidgets) {
         manifest.islands[id] = reference(ref);
       }
-      this.emitFile({
-        type: "asset",
-        fileName: ".vite/content-query-mdx-manifest.json",
-        source: JSON.stringify(manifest, null, 2),
-      });
       await writeFile(path.join(directory(), "manifest.json"), JSON.stringify(manifest));
     },
     handleHotUpdate(context) {
       analyses.delete(normalize(context.file));
-      if ([...widgets.values()].some((widget) => widget.module === normalize(context.file))) {
+      if (widgetModules.has(normalize(context.file))) {
         context.server.ws.send({ type: "full-reload" });
+      }
+      if (entries.some((entry) => entry.filePath === normalize(context.file))) {
+        // Core publishes this source edit and the host revalidates its selected reference.
+        // Vite's fallback for a server-only MDX graph would otherwise reload every client.
+        return context.modules.filter((module) => !module.id || !targetFor(module.id));
       }
     },
     closeBundle() {

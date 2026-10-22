@@ -43,7 +43,15 @@ export async function loader({ params }: LoaderFunctionArgs) {
         }
       : { mode: "react" as const, reference: await loadMdxDocument("guides", slug) };
 
-  return { guides, guide, document, documentUrl: assets.document("guides", slug).url };
+  const articleHtmlBytes =
+    document.mode === "islands" ? new TextEncoder().encode(document.html).byteLength : undefined;
+  return {
+    guides,
+    guide,
+    document,
+    articleHtmlBytes,
+    documentUrl: assets.document("guides", slug).url,
+  };
 }
 
 export const meta: MetaFunction<typeof loader> = ({ loaderData }) => [
@@ -56,7 +64,7 @@ export const meta: MetaFunction<typeof loader> = ({ loaderData }) => [
 ];
 
 export default function GuidePage() {
-  const { guides, guide, document, documentUrl } = useLoaderData<typeof loader>();
+  const { guides, guide, document, articleHtmlBytes, documentUrl } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const mode = document.mode;
 
@@ -140,7 +148,7 @@ export default function GuidePage() {
             </Link>
           </div>
         </nav>
-        <LoadMetrics documentUrl={documentUrl} />
+        <LoadMetrics documentUrl={documentUrl} articleHtmlBytes={articleHtmlBytes} />
         <article>
           {document.mode === "islands" ? (
             <MdxIslands html={document.html} styles={document.styles} />

@@ -1,5 +1,5 @@
 import { createProcessor } from "@mdx-js/mdx";
-import type { Expression, Program } from "estree";
+import type { Expression, Pattern, Program } from "estree";
 import type { Root, RootContent } from "mdast";
 import type { Root as HastRoot } from "hast";
 import type { PluggableList, Plugin } from "unified";
@@ -47,6 +47,46 @@ export type MdxFile = { value: string; path: string };
 /** Parsed source reusable across compilation targets without rerunning author transforms. */
 export type MdxAnalysis = { tree: Root; islands: MdxIslandReference[]; file: MdxFile };
 let highlighting: ReturnType<typeof createHighlighter> | undefined;
+
+/** Checks declaration patterns without treating object keys as exported bindings. */
+function bindsHeadings(pattern: Pattern): boolean {
+  switch (pattern.type) {
+    case "Identifier":
+      return pattern.name === "headings";
+    case "ObjectPattern":
+      return pattern.properties.some((property) =>
+        bindsHeadings(
+          property.type === "RestElement" ? property.argument : (property.value as Pattern),
+        ),
+      );
+    case "ArrayPattern":
+      return pattern.elements.some((element) => element !== null && bindsHeadings(element));
+    case "AssignmentPattern":
+      return bindsHeadings(pattern.left);
+    case "RestElement":
+      return bindsHeadings(pattern.argument);
+    default:
+      return false;
+  }
+}
+
+/** Shares successful initialization while permitting a later attempt after transient setup failures. */
+function highlighter() {
+  if (!highlighting) {
+    const pending = createHighlighter({
+      engine: createJavaScriptRegexEngine(),
+      themes: ["github-light", "github-dark"],
+      langs: ["javascript", "typescript", "tsx", "jsx", "json", "css", "html", "bash", "markdown"],
+    }).catch((cause: unknown) => {
+      if (highlighting === pending) {
+        highlighting = undefined;
+      }
+      throw cause;
+    });
+    highlighting = pending;
+  }
+  return highlighting;
+}
 
 /** Builds a single expression attribute with the ESTree representation MDX expects. */
 function expressionAttribute(name: string, expression: Expression): JsxAttribute {
@@ -132,6 +172,39 @@ export async function analyzeMdx(
       continue;
     }
     for (const statement of node.data?.estree?.body ?? []) {
+      if (
+        statement.type === "ExportAllDeclaration" &&
+        statement.exported &&
+        (statement.exported.type === "Identifier"
+          ? statement.exported.name
+          : statement.exported.value) === "headings"
+      ) {
+        input.fail(
+          'MDX reserves the "headings" export for generated heading metadata. Rename the authored export.',
+          node,
+        );
+      }
+      if (statement.type === "ExportNamedDeclaration") {
+        const declaration = statement.declaration;
+        if (
+          statement.specifiers.some(
+            (specifier) =>
+              (specifier.exported.type === "Identifier"
+                ? specifier.exported.name
+                : specifier.exported.value) === "headings",
+          ) ||
+          (declaration?.type === "VariableDeclaration" &&
+            declaration.declarations.some((item) => bindsHeadings(item.id))) ||
+          ((declaration?.type === "FunctionDeclaration" ||
+            declaration?.type === "ClassDeclaration") &&
+            declaration.id?.name === "headings")
+        ) {
+          input.fail(
+            'MDX reserves the "headings" export for generated heading metadata. Rename the authored export.',
+            node,
+          );
+        }
+      }
       if (statement.type !== "ImportDeclaration") {
         continue;
       }
@@ -355,13 +428,9 @@ export async function compileAnalysis(analysis: MdxAnalysis, options: MdxCompile
   };
   const rehypePlugins: PluggableList = [...(options.rehypePlugins ?? []), headingPlugin];
   if (options.highlight !== false) {
-    const highlighter = await (highlighting ??= createHighlighter({
-      engine: createJavaScriptRegexEngine(),
-      themes: ["github-light", "github-dark"],
-      langs: ["javascript", "typescript", "tsx", "jsx", "json", "css", "html", "bash", "markdown"],
-    }));
+    const initialized = await highlighter();
     rehypePlugins.push(() =>
-      rehypeShiki(highlighter, {
+      rehypeShiki(initialized, {
         themes: { light: "github-light", dark: "github-dark" },
         defaultColor: "light",
         fallbackLanguage: "text",
@@ -377,8 +446,12 @@ export async function compileAnalysis(analysis: MdxAnalysis, options: MdxCompile
   // MDX's run declaration describes its output tree; its actual pipeline begins with mdast.
   const program = await processor.run(tree as unknown as Program, input);
   const code = String(processor.stringify(program, input));
+  let metadata = "__cq_headings";
+  while (code.includes(metadata)) {
+    metadata += "_";
+  }
   return {
-    code: `${code}\nexport const headings = ${JSON.stringify(headings)};\n`,
+    code: `${code}\nconst ${metadata} = ${JSON.stringify(headings)};\nexport {${metadata} as headings};\n`,
     map: input.map,
     headings,
     islands: analysis.islands,
