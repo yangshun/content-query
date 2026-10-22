@@ -14,11 +14,11 @@ onlyBuiltDependencies:
   - workerd
 
 catalog:
-  "@void/md": 1.1.12
-  "@void/react": 1.1.12
+  "@void/md": 1.2.1
+  "@void/react": 1.2.1
   vite: npm:@voidzero-dev/vite-plus-core@1.3.0
   vite-plus: 1.3.0
-  void: 1.1.12
+  void: 1.2.1
 
 overrides:
   vite: "catalog:"
