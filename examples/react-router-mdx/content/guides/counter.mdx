@@ -1,0 +1,24 @@
+---
+title: A simple counter
+description: One React counter that becomes interactive immediately.
+order: 1
+---
+
+import { Counter } from "../widgets/counter";
+import { Callout } from "../widgets/callout";
+
+# A simple counter
+
+Click the button to increment the count. In islands mode, only the counter hydrates.
+
+<Counter client:load initialCount={0} />
+
+## Updating state
+
+```tsx
+setCount((current) => current + 1);
+```
+
+<Callout>The article stays static while the counter updates.</Callout>
+
+Try [loading widgets](./loading) or [writing guides](./writing).

@@ -32,6 +32,7 @@ describe("forbidden", () => {
       "/work/app/content-query.config.ts",
       "content-query/query",
       "content-query:server",
+      "content-query:mdx:server",
     ]) {
       expect(forbidden(source, app, {}), source).toBe(true);
     }

@@ -2,11 +2,13 @@
   "files": [],
   "references": [
     { "path": "./packages/content-query" },
+    { "path": "./packages/mdx" },
     { "path": "./examples/angular" },
     { "path": "./examples/angular/tests" },
     { "path": "./examples/next" },
     { "path": "./examples/payloads" },
     { "path": "./examples/react-router" },
+    { "path": "./examples/react-router-mdx" },
     { "path": "./examples/sveltekit" },
     { "path": "./examples/sveltekit/tests" },
     { "path": "./examples/tanstack-start" },

@@ -10,5 +10,6 @@ coverage
 
 .content-query
 .react-router
+examples/react-router-mdx/build/
 .svelte-kit
 routeTree.gen.ts

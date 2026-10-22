@@ -17,4 +17,5 @@ jobs:
       - run: vp install --frozen-lockfile
       - run: vp run build
       - run: vp run check
+      - run: vp run --filter @content-query/example-react-router-mdx browsers:install
       - run: vp test run --coverage

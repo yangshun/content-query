@@ -3,6 +3,8 @@
 - [Quick start](../website/content/guides/quick-start.md)
 - [API and usage](./API.md)
 - [Features](./FEATURES.md)
+- [Optional MDX and React islands](../packages/mdx/README.md)
+- [MDX architecture and Next.js review](./MDX-ARCHITECTURE.md)
 - [Design and contracts](./PLAN.md)
 - [Library comparisons](./COMPARISONS.md)
 - [Planned work](./TODO.md)

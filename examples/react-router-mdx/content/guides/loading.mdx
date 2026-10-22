@@ -1,0 +1,15 @@
+---
+title: Choosing when to load widgets
+description: A quiz that becomes interactive when it comes into view.
+order: 2
+---
+
+import { Quiz } from "../widgets/quiz";
+
+# Choosing when to load widgets
+
+Use `client:visible` for a widget readers can use after reaching it. Its HTML is rendered on the server; interactivity waits for visibility.
+
+<Quiz client:visible />
+
+Return to the [counter guide](./counter) or the [prose-only guide](./writing).
