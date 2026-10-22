@@ -99,8 +99,11 @@ describe("MDX + React islands production example", () => {
       timeout: 60_000,
     });
     manifest = JSON.parse(
-      await readFile(path.join(root, "build/client/.vite/content-query-mdx-manifest.json"), "utf8"),
+      await readFile(path.join(root, ".content-query/mdx/manifest.json"), "utf8"),
     ) as MdxAssetManifest;
+    await expect(
+      readFile(path.join(root, "build/client/.vite/content-query-mdx-manifest.json")),
+    ).rejects.toMatchObject({ code: "ENOENT" });
     await rm(path.join(root, "content"), { recursive: true });
     await rm(path.join(root, "content-query.config.ts"));
     await rm(path.join(root, "app"), { recursive: true });
@@ -170,6 +173,15 @@ describe("MDX + React islands production example", () => {
     expect(html).toContain('rel="stylesheet"');
     const deferred = await (await fetch(`${origin}/islands/docs/loading`)).text();
     expect(deferred).toContain('data-cq-strategy="visible"');
+    const writing = await (await fetch(`${origin}/islands/docs/writing`)).text();
+    const writingStyles = manifest.documents['["guides","writing"]']!.css;
+    expect(writingStyles.length).toBeGreaterThan(0);
+    for (const widget of Object.values(manifest.islands)) {
+      for (const style of widget.css) {
+        expect(writingStyles).not.toContain(style);
+        expect(writing).not.toContain(`href="${style}"`);
+      }
+    }
     expect((await fetch(`${origin}/islands/docs/missing`)).status).toBe(404);
     expect((await fetch(`${origin}/unknown`)).status).toBe(404);
     expect(Object.keys(manifest.documents)).toHaveLength(3);
@@ -181,6 +193,30 @@ describe("MDX + React islands production example", () => {
     expect(react).toContain("mdx-document-");
     expect(react).not.toContain('"documents":');
     expect(react).not.toContain("data-cq-island");
+    expect((await fetch(`${origin}/.vite/content-query-mdx-manifest.json`)).status).toBe(404);
+  });
+
+  test("measures article HTML and accounts for its framework hydration copy", async () => {
+    const response = await fetch(`${origin}/islands/docs/counter`);
+    const html = await response.text();
+    const article = html.match(/<article><div>([\s\S]*?)<\/div><\/article>/)?.[1];
+    expect(article).toBeDefined();
+    const expected = new TextEncoder().encode(article!).byteLength;
+    const phrase = "The article stays static while the counter updates.";
+    expect(html.split(phrase)).toHaveLength(3);
+    const { page: page_, errors } = await page();
+    try {
+      await page_.goto(`${origin}/islands/docs/counter`, { waitUntil: "networkidle" });
+      const metrics = page_.locator('.load-metrics[data-scope="page-load"]');
+      expect(await metrics.getAttribute("data-article-html-bytes")).toBe(String(expected));
+      await metrics.locator("summary").click();
+      expect(
+        await metrics.getByText("React Router also serializes", { exact: false }).isVisible(),
+      ).toBe(true);
+      expect(errors).toEqual([]);
+    } finally {
+      await page_.close();
+    }
   });
 
   test("hydrates one selected widget, loads its styles, and excludes unrelated JavaScript", async () => {
@@ -206,46 +242,50 @@ describe("MDX + React islands production example", () => {
     }
   });
 
-  test("keeps widget geometry and following prose stable during interaction", async () => {
-    for (const mode of ["islands", "react"]) {
-      for (const width of [1200, 360]) {
-        const { page: page_, errors } = await page();
-        try {
-          await page_.setViewportSize({ width, height: 800 });
-          await page_.goto(`${origin}/${mode}/docs/counter`, { waitUntil: "networkidle" });
-          const elements = [
-            page_.getByRole("region", { name: "Counter demo" }),
-            page_.getByRole("complementary"),
-          ];
-          const measure = () =>
-            Promise.all(
-              elements.map((element) =>
-                element.evaluate((element_) => {
-                  const bounds = element_.getBoundingClientRect();
-                  return {
-                    top: bounds.top + window.scrollY,
-                    left: bounds.left + window.scrollX,
-                    width: bounds.width,
-                    height: bounds.height,
-                  };
-                }),
-              ),
-            );
-          const before = await measure();
-          for (let count = 0; count < 12; count++) {
-            await page_.getByRole("button", { name: "Increment", exact: true }).click();
-          }
-          await vi.waitFor(async () =>
-            expect(await page_.getByRole("status", { name: "Count" }).textContent()).toBe("12"),
+  test.each([
+    { mode: "islands", width: 1200 },
+    { mode: "islands", width: 360 },
+    { mode: "react", width: 1200 },
+    { mode: "react", width: 360 },
+  ])(
+    "keeps widget geometry and following prose stable in $mode at $width pixels",
+    async ({ mode, width }) => {
+      const { page: page_, errors } = await page();
+      try {
+        await page_.setViewportSize({ width, height: 800 });
+        await page_.goto(`${origin}/${mode}/docs/counter`, { waitUntil: "networkidle" });
+        const elements = [
+          page_.getByRole("region", { name: "Counter demo" }),
+          page_.getByRole("complementary"),
+        ];
+        const measure = () =>
+          Promise.all(
+            elements.map((element) =>
+              element.evaluate((element_) => {
+                const bounds = element_.getBoundingClientRect();
+                return {
+                  top: bounds.top + window.scrollY,
+                  left: bounds.left + window.scrollX,
+                  width: bounds.width,
+                  height: bounds.height,
+                };
+              }),
+            ),
           );
-          expect(await measure()).toEqual(before);
-          expect(errors).toEqual([]);
-        } finally {
-          await page_.close();
+        const before = await measure();
+        for (let count = 0; count < 12; count++) {
+          await page_.getByRole("button", { name: "Increment", exact: true }).click();
         }
+        await vi.waitFor(async () =>
+          expect(await page_.getByRole("status", { name: "Count" }).textContent()).toBe("12"),
+        );
+        expect(await measure()).toEqual(before);
+        expect(errors).toEqual([]);
+      } finally {
+        await page_.close();
       }
-    }
-  });
+    },
+  );
 
   test("defers widget entries until visible and needs no document or widget modules for prose-only pages", async () => {
     const { page: page_, errors, scripts } = await page();

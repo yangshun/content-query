@@ -31,6 +31,13 @@ function field(props: Record<string, unknown> = {}) {
 }
 
 describe("standalone island server renderer", () => {
+  test("produces stable HTML and supports explicit prefixes for repeated document roots", () => {
+    const module: MdxModule = { default: () => field(), headings: [] };
+    expect(renderMdxModule(module, { assets }).html).toBe(renderMdxModule(module, { assets }).html);
+    expect(renderMdxModule(module, { assets, identifierPrefix: "first-" }).html).not.toBe(
+      renderMdxModule(module, { assets, identifierPrefix: "second-" }).html,
+    );
+  });
   test("isolates instance IDs, serializes data, and deduplicates styles", () => {
     const module: MdxModule = {
       default: () =>

@@ -29,6 +29,8 @@ The production command uses React Router's application server (`react-router-ser
 
 The MDX plugin uses an internal server graph to collect static-component styles before React Router builds its browser entries. It preserves emitted static assets and embeds the generated MDX manifest in the server bundle. Consumers use the normal framework build command.
 
+The complete manifest stays in generated server inputs and the server bundle; no public manifest is emitted. Each guide links its own server-reachable CSS. Package widgets resolve their browser exports independently of server imports. Development validation errors retain the server and overlay, and content changes use the root route's `onContentUpdate` revalidation without an extra forced reload.
+
 Generated declarations and MDX build intermediates share `.content-query/`, with companion files under `.content-query/mdx/`. The TypeScript include glob `.content-query/**/*.d.ts` covers both packages.
 
 ## Rendering modes
@@ -65,6 +67,8 @@ A compact row beneath the mode toggle reports browser measurements rather than p
 The row labels each measurement as **Full page load** or **Additional navigation load**. Full page loads include HTML and the React Router shell. Client navigation starts a new measurement window before link/history loading and counts only additional requests; the shell and modules already imported in the page are reused. Refreshing starts a full-page measurement again, but can still use the browser's HTTP cache. Amounts depend on navigation history and caching. Compare modes using full page loads in separate fresh browser sessions, rather than comparing a refresh with a client navigation.
 
 Expand the row for resource/cache counts and a reload button. The numbers update when deferred widgets load. Hash changes retain the current measurement. These counters are optional example instrumentation, not required application setup.
+
+For islands, the expanded details also show the exact UTF-8 byte count of rendered article HTML. Standard React Router SSR sends that HTML as markup and serializes it again in hydration data; escaping and compression affect the final transfer size. The full-page transfer total includes both copies, while client navigation receives route data without another HTML document. This example retains normal React Router hydration rather than introducing a separate HTML transport. Its byte comparison includes that framework cost.
 
 The [Resource Timing API](https://w3c.github.io/resource-timing/#dom-performanceresourcetiming-transfersize) reports zero transfer for local cache hits and estimates header overhead. Compare production builds in fresh browser sessions or with browser caching disabled for cold-load numbers. Development serves unbundled modules and is labeled separately. No speed or bundle-size advantage is assumed; the displayed results include this example's instrumentation.
 
