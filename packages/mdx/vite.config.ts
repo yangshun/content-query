@@ -16,11 +16,6 @@ export default defineConfig({
     deps: { neverBundle: ["vite-plus"], alwaysBundle: ["devalue"], onlyBundle: false },
     outputOptions: {
       paths: { "vite-plus": "vite" },
-      banner(chunk) {
-        return /\/src\/react(?:\/client)?\.ts$/.test(chunk.facadeModuleId ?? "")
-          ? '"use client";'
-          : "";
-      },
     },
     exports: {
       devExports: true,

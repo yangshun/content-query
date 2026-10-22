@@ -38,6 +38,10 @@ export default defineConfig({
 
 `rendering` controls browser document emission: `"islands"` (default) emits widget entries only, `"react"` emits normal document entries, and `"both"` enables both choices. Server rendering APIs are available in all modes. `highlight: false` disables highlighting; `remarkPlugins` and `rehypePlugins` extend the build-time pipeline. Defaults include GFM, unique heading IDs, source maps, and Shiki GitHub Light/Dark code highlighting.
 
+The plugin handles only its generated `?cq-mdx=react` and `?cq-mdx=islands` imports. Ordinary MDX imports remain available to other compilers; Vite retains `?raw` and `?url` behavior. Use an absolute Vite `base` such as `/`, `/docs/`, or an HTTP(S) asset URL. Relative bases (`"./"` and `""`) are rejected because SSR cannot infer the deployment root from a nested page URL.
+
+Initial validation errors keep the development server running. Core displays its error overlay and publishes recovery after correction; compilation and highlighter failures can be retried. Content publications use core's existing refresh subscription instead of forcing an additional page reload. Browser document references are versioned in development so host revalidation loads updated prose. Production builds still reject invalid content.
+
 The plugin writes generated declarations and build intermediates under `.content-query/mdx/`. Ignore `.content-query/` and include `.content-query/**/*.d.ts` in your TypeScript project; this covers both core and MDX declarations.
 
 ## Author widgets
@@ -72,6 +76,8 @@ In islands mode, unmarked components render on the server. Each marked widget ow
 | `client:only`    | Skip server evaluation and markup; import and mount in the browser. |
 
 `client:only="react"` is also accepted. Widgets must be explicitly imported default, named, or namespace-member components. Unsupported directives, options, and references report source positions. Keep browser-only modules exclusively behind `client:only`; an ordinary use or re-export is still an ordinary server import.
+
+Widgets can come from local files or packages. Package imports resolve independently under server and browser conditions, including external server dependencies. Browser entries never reuse a server-resolved package path. Imports that resolve to the same browser module and export share one emitted widget entry.
 
 Props use `devalue`, supporting data such as dates, maps, sets, and BigInts. Functions and React elements cannot cross island boundaries. Use text children or data props; put formatted slots, nested widgets, and their providers inside the imported component. Inline occurrences use a `span` root and block occurrences use a `div`; keep widget markup appropriate for its surrounding HTML. Unmarked components and the application cannot provide React context to a separate island root. Repeated instances share a module download and receive separate identifier prefixes for `useId()`.
 
@@ -118,7 +124,7 @@ const { html, headings, styles } = await renderMdx("guides", id, {
 });
 ```
 
-Vite resolves assets automatically. An optional `assets` override supports custom two-pass hosts; the lower-level `renderMdxModule` helper from `@content-query/mdx/react/server` requires explicit assets. `identifierPrefix?` can supply a per-render root prefix. Render the returned styles as stylesheet links before displaying the HTML. Results are buffered HTML, matching headings, and stylesheet URLs.
+Vite resolves assets automatically. An optional `assets` override supports custom two-pass hosts; the lower-level `renderMdxModule` helper from `@content-query/mdx/react/server` requires explicit assets. `renderMdx()` uses a stable collection/document identifier prefix, and `renderMdxModule()` defaults to `cq-`. Identical inputs therefore produce stable HTML. Supply distinct `identifierPrefix` values when embedding repeated renders of the same document, or multiple lower-level renders, in one page. Each widget instance within a render already receives its own suffix. Render the returned styles as stylesheet links before displaying the HTML. Results are buffered HTML, matching headings, and stylesheet URLs.
 
 ```ts
 // Browser: islands
@@ -160,9 +166,9 @@ Browser loading uses native dynamic imports and awaits referenced CSS. It contai
 
 For frameworks using Vite's Environment API, including React Router, use the framework's normal build command. The plugin first builds an internal MDX server graph, records server-reachable styles including CSS imported by static components, preserves static assets, and emits browser entries. The generated manifest is included in the final server bundle. `renderMdx()` and `loadMdxDocument()` resolve it automatically; `getMdxAssets()` exposes it for advanced integrations. These APIs work in development and production without application-owned file reading or asset copying.
 
-The browser output contains `.vite/content-query-mdx-manifest.json` with document/widget references and static asset URLs. The complete manifest stays server-side; send only selected references to clients.
+The complete manifest is written only to `.content-query/mdx/manifest.json` and embedded in the application server bundle. It is not emitted into the public browser output. Styles remain associated with the documents that reach them; shared styles can share emitted assets without attaching every document's CSS to every page. Send only selected references to clients.
 
-For custom two-pass Vite SSR builds, build the SSR graph before browser entries. The plugin captures styles and copies emitted static server assets into the browser output. Such hosts load the manifest explicitly:
+For custom two-pass Vite SSR builds, build the SSR graph before browser entries. The plugin captures styles and copies emitted static server assets into the browser output. Such hosts copy `.content-query/mdx/manifest.json` into their server deployment and load it explicitly:
 
 Read the manifest once at server startup and resolve references through:
 
@@ -205,6 +211,8 @@ const result = await compileMdx(
 ```
 
 `code` is ordinary ESM with a default MDX component, preserved authored imports/exports, and a `headings` export. The compiler does not evaluate modules or import Vite or React DOM. A host can reuse one analysis across targets. Island output needs `resolveIsland(reference)` returning `{ id, clientOnlyImport? }`; React `client:only` needs a host-generated wrapper import. `resolveMdxImport(specifier, target)` optionally propagates a target through imported MDX. References include import source/export identity, strategy, and file/line/column. Caches belong to each integration, keeping its options and targets separate.
+
+The `headings` export is reserved for generated metadata. Authored exports using that name fail with a source-position diagnostic. Local variables and imports named `headings` remain supported.
 
 ## Compatibility and limits
 

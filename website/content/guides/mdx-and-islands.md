@@ -26,6 +26,8 @@ The loader supports `pattern` and `generateId`, captures YAML frontmatter and so
 
 Add `contentQueryMdx()` from `@content-query/mdx/vite` alongside `contentQuery()` and your React plugin. Its `rendering` option is `"islands"` by default; choose `"react"` to emit ordinary browser document modules or `"both"` to support both modes. MDX declarations and build intermediates live under `.content-query/mdx/`. Ignore `.content-query/` and include `.content-query/**/*.d.ts` in TypeScript to cover both core and MDX declarations.
 
+Use an absolute Vite asset base (`/`, `/docs/`, or an HTTP(S) URL); relative bases are rejected for SSR. The plugin leaves ordinary MDX imports and Vite's `?raw`/`?url` imports alone. Widgets imported from packages use the appropriate server and browser export conditions. Development validation errors remain recoverable through core's overlay and refresh subscription.
+
 ## Choose a React tree
 
 ```mdx
@@ -69,7 +71,9 @@ Both modes support component overrides, GFM, heading IDs, syntax highlighting, a
 
 ## Build and navigate
 
-For React Router and other Vite Environment API application builds, use the framework's normal build command. The MDX plugin collects static-component styles in an internal server environment, preserves static assets, and embeds the generated browser manifest in the final server bundle. Rendering resolves the manifest automatically; `getMdxAssets()` from `content-query:mdx:server` is available for advanced reference access. Custom two-pass Vite SSR builds can still build the server first, build browser entries afterward, and load `.vite/content-query-mdx-manifest.json` explicitly with `createMdxAssets(manifest)`, passing `{ assets }` to `renderMdx()`.
+For React Router and other Vite Environment API application builds, use the framework's normal build command. The MDX plugin collects styles per document in an internal server environment, preserves static assets, and embeds the generated manifest in the final server bundle. No complete manifest is published to browser output. Rendering resolves the manifest automatically; `getMdxAssets()` from `content-query:mdx:server` is available for advanced reference access. Custom two-pass Vite SSR builds can still build the server first, build browser entries afterward, and deploy `.content-query/mdx/manifest.json` privately with `createMdxAssets(manifest)`, passing `{ assets }` to `renderMdx()`.
+
+Island HTML uses stable identifier prefixes for repeated requests. When embedding the same document more than once in a page, supply distinct `identifierPrefix` options. The compiler reserves the `headings` export for generated metadata and reports conflicting authored exports with source positions.
 
 The [React Router SSR example](https://github.com/yangshun/content-query/tree/main/examples/react-router-mdx) demonstrates both modes with ordinary framework routes and no custom server, build script, or client entry. React Router owns navigation, metadata, history, and stale loader requests; the package owns stylesheet loading and island lifecycles. Production tests run without application source or content files. Context sharing is covered by the package's React integration tests.
 

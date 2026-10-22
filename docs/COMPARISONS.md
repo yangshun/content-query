@@ -77,6 +77,8 @@ Per-entry computed context includes the collection registry key, entry ID, valid
 
 `glob()`, `file()`, default IDs, `retainBody`, and `deferRender` deliberately mirror Astro and are parity rather than differentiation. Astro added `deferRender` to `glob()` in 7.1.
 
+MDX package widgets resolve server/browser exports independently, including external server packages. Browser entries are shared, CSS follows each document's graph, and the complete manifest remains in server output. The Vite integration preserves ordinary MDX imports and recoverable development errors. Its SSR asset URLs require an absolute deployment base. The React Router example measures framework hydration overhead as part of the page transfer.
+
 ### Gaps
 
 Ordered roughly by impact on a documentation site such as VoidPress. Each gap has a note under [future extensions](./TODO.md#future-extensions).

@@ -154,8 +154,14 @@ function formatBytes(bytes: number) {
   return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KiB`;
 }
 
-/** Shows actual browser measurements, with scope and cache details available on demand. */
-export function LoadMetrics({ documentUrl }: { documentUrl: string }) {
+/** Shows observed browser transfers and optional rendered article bytes in expandable details. */
+export function LoadMetrics({
+  documentUrl,
+  articleHtmlBytes,
+}: {
+  documentUrl: string;
+  articleHtmlBytes?: number;
+}) {
   const sample = useOutletContext<Measurement>();
   if (!sample || sample === "unavailable") {
     return (
@@ -173,6 +179,7 @@ export function LoadMetrics({ documentUrl }: { documentUrl: string }) {
       data-mdx-bytes={metrics.document}
       data-transfer-bytes={metrics.transferred}
       data-request-count={metrics.requests}
+      data-article-html-bytes={articleHtmlBytes}
     >
       <summary>
         {import.meta.env.DEV ? "Dev · " : ""}
@@ -187,6 +194,13 @@ export function LoadMetrics({ documentUrl }: { documentUrl: string }) {
           ? "Includes HTML and the React Router application shell. A refresh can still use cached files."
           : "Only additional requests for this navigation. The application shell and previously imported modules are reused."}
       </p>
+      {articleHtmlBytes !== undefined ? (
+        <p>
+          Rendered article HTML: <strong>{formatBytes(articleHtmlBytes)}</strong>. React Router also
+          serializes this HTML in its hydration data. Full-page transfers include both copies;
+          navigation sends route data only.
+        </p>
+      ) : null}
       <p>
         JS counts uncompressed script response bodies requested during this measurement. MDX entry
         counts only this document’s module, excluding its imports. Transferred includes same-origin

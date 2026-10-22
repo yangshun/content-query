@@ -9,6 +9,7 @@ import { projectFixture } from "../../../tests/helpers/project.ts";
 import * as preparation from "../../preparation/build.ts";
 import { contentQuery } from "./plugin.ts";
 import * as virtualModules from "./modules.ts";
+import type { ContentSourceEvent } from "../../preparation/session.ts";
 
 const execute = promisify(execFile);
 vi.setConfig({ testTimeout: 20_000 });
@@ -21,6 +22,69 @@ function preparationGate() {
   });
   return { promise, resolve: release };
 }
+
+describe("Vite source integration API", () => {
+  test("exposes immutable metadata snapshots and delivers publication, errors, recovery, and unsubscribe", async () => {
+    const fixture = await projectFixture(true);
+    const plugin = contentQuery();
+    const events: ContentSourceEvent[] = [];
+    const unsubscribe = plugin.api.subscribe((event) => events.push(event));
+    const server = await createServer({
+      root: fixture.root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [plugin],
+      server: { middlewareMode: true, ws: false },
+      optimizeDeps: { noDiscovery: true },
+    });
+    try {
+      const initial = await plugin.api.prepare();
+      expect(Object.isFrozen(initial)).toBe(true);
+      expect(Object.isFrozen(initial.entries)).toBe(true);
+      expect(initial.entries.every(Object.isFrozen)).toBe(true);
+      expect(initial.entries).toContainEqual({
+        collection: "posts",
+        id: "getting-started",
+        filePath: fixture.postPath,
+      });
+      expect(
+        initial.entries.every((entry) =>
+          Object.keys(entry).every((key) => ["collection", "id", "filePath"].includes(key)),
+        ),
+      ).toBe(true);
+      expect(await plugin.api.prepare()).toBe(initial);
+      const valid = "---\ntitle: Changed\nauthorId: ada\ndate: 2026-01-01\n---\n# Updated";
+      await writeFile(fixture.postPath, valid);
+      await vi.waitFor(
+        async () => expect((await plugin.api.prepare()).revision).not.toBe(initial.revision),
+        { timeout: 8000 },
+      );
+      expect(events.some((event) => event.type === "ready")).toBe(true);
+      await writeFile(fixture.postPath, valid.replace("title: Changed", "title: false"));
+      await vi.waitFor(() => expect(events.some((event) => event.type === "error")).toBe(true), {
+        timeout: 8000,
+      });
+      await expect(plugin.api.prepare()).rejects.toThrow();
+      await writeFile(fixture.postPath, valid.replace("Changed", "Recovered"));
+      await vi.waitFor(async () => expect((await plugin.api.prepare()).entries.length).toBe(2), {
+        timeout: 8000,
+      });
+      const previous = await plugin.api.prepare();
+      unsubscribe();
+      const delivered = events.length;
+      await writeFile(fixture.postPath, valid.replace("Changed", "After unsubscribe"));
+      await vi.waitFor(
+        async () => expect((await plugin.api.prepare()).revision).not.toBe(previous.revision),
+        { timeout: 8000 },
+      );
+      expect(events).toHaveLength(delivered);
+    } finally {
+      unsubscribe();
+      await server.close();
+      await fixture.dispose();
+    }
+  });
+});
 
 describe("Vite artifact watching", () => {
   test.each([".content-query", "generated[content]/bundle"])(

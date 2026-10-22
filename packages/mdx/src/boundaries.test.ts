@@ -159,9 +159,9 @@ export default defineConfig({plugins:[contentQueryMdx()]});`,
       }
     }
     for (const entry of ["react", "react/client"]) {
-      expect(await readFile(new URL(`../dist/${entry}.mjs`, import.meta.url), "utf8")).toMatch(
-        /^"use client";/,
-      );
+      const code = await readFile(new URL(`../dist/${entry}.mjs`, import.meta.url), "utf8");
+      expect(code).toMatch(/^"use client";/);
+      expect(code.match(/["']use client["'];/g)).toHaveLength(1);
     }
     expect(await readFile(new URL("../dist/vite.d.mts", import.meta.url), "utf8")).not.toContain(
       'from "vite-plus"',
@@ -184,7 +184,7 @@ export default defineConfig({plugins:[contentQueryMdx()]});`,
         {
           path: path.join(root, "article.mdx"),
           value:
-            'import Widget from "./widget.mjs";\n\nexport const answer = 42;\n\n# A heading\n\nThe answer is {answer}.\n\n<Widget label="Imported component" />',
+            'import Widget from "./widget.mjs";\nimport headings from "./widget.mjs";\n\nexport const answer = 42;\nexport const __cq_headings = "Authored export";\n\n# A heading\n\nThe answer is {answer}.\n\n{headings.name}\n\n<Widget label="Imported component" />',
         },
         { highlight: false },
       );
@@ -194,6 +194,7 @@ export default defineConfig({plugins:[contentQueryMdx()]});`,
         /* @vite-ignore */ pathToFileURL(path.join(root, "article.mjs")).href
       )) as MdxModule;
       expect(module.answer).toBe(42);
+      expect(module.__cq_headings).toBe("Authored export");
       const html = renderToString(
         createElement(module.default, {
           components: {
