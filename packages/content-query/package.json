@@ -14,7 +14,7 @@
     "directory": "packages/content-query"
   },
   "bin": {
-    "content-query": "./dist/cli.mjs"
+    "content-query": "./src/cli.ts"
   },
   "files": [
     "dist",
@@ -41,7 +41,9 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
-    "access": "public",
+    "bin": {
+      "content-query": "./dist/cli.mjs"
+    },
     "exports": {
       ".": "./dist/index.mjs",
       "./build": "./dist/build.mjs",
@@ -56,7 +58,8 @@
       "./schema": "./dist/schema.mjs",
       "./vite": "./dist/vite.mjs",
       "./package.json": "./package.json"
-    }
+    },
+    "access": "public"
   },
   "scripts": {
     "build": "vp pack",

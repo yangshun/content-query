@@ -4,6 +4,8 @@ Server metadata queries use `content.select(...fields).from(collection)`. The re
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
+The Vite+ command runner uses the pinned shared workspace catalog; Next.js owns application compilation.
+
 Next.js App Router Server Components query the workspace ContentQuery collection. The homepage lists every title and description with a link. `app/entries/[id]/page.tsx` uses `generateStaticParams()` to enumerate every entry, then renders each entry's own metadata and Markdown body. Missing entries return a 404.
 
 `withContentQuery()` prepares content before Next starts compiling and owns the content watcher during development. The Next.js adapter uses generated metadata and lazy payload artifacts; the Vite adapter's in-memory backend is a separate integration. This app uses Next.js's default Turbopack bundler, rather than Vite.

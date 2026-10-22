@@ -31,7 +31,7 @@ async function packedFixture(withVite = false) {
     if (withVite) {
       const require = createRequire(import.meta.url);
       const toolchain = createRequire(require.resolve("vite-plus/package.json"));
-      const vite = path.dirname(toolchain.resolve("@voidzero-dev/vite-plus-core/package.json"));
+      const vite = path.dirname(toolchain.resolve("vite/package.json"));
       await symlink(vite, path.join(fixture.root, "node_modules/vite"), "dir");
     }
     return { ...fixture, installed, manifest };
@@ -42,6 +42,46 @@ async function packedFixture(withVite = false) {
 }
 
 describe("packed package consumers", () => {
+  test("typechecks the workspace plugin with the consuming app's Vite+ types", async () => {
+    const fixture = await projectFixture();
+    try {
+      await symlink(
+        await realpath(
+          new URL("../../../../examples/react-router/node_modules/vite-plus", import.meta.url),
+        ),
+        path.join(fixture.root, "node_modules/vite-plus"),
+        "dir",
+      );
+      await writeFile(
+        path.join(fixture.root, "vite.config.ts"),
+        `import { defineConfig, type Plugin } from "vite-plus";
+import { contentQuery } from "content-query/vite";
+const plugin = contentQuery() satisfies Plugin;
+export default defineConfig({ plugins: [plugin] });`,
+      );
+      await execute(
+        process.execPath,
+        [
+          path.join(packageRoot, "node_modules/typescript/bin/tsc"),
+          "--noEmit",
+          "--strict",
+          "--skipLibCheck",
+          "--allowImportingTsExtensions",
+          "--module",
+          "esnext",
+          "--moduleResolution",
+          "bundler",
+          "--target",
+          "esnext",
+          "vite.config.ts",
+        ],
+        { cwd: fixture.root },
+      );
+    } finally {
+      await fixture.dispose();
+    }
+  }, 30_000);
+
   test(
     "typechecks the public Vite integration without Vite+ installed",
     { timeout: 30_000 },

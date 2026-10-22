@@ -115,9 +115,9 @@ type ColumnResult<Data, Options> = Options extends { columns: infer Columns }
     ? {}
     : true extends Columns[keyof Columns]
       ? {
-          -readonly [Key in keyof Columns as Columns[Key] extends false | undefined
-            ? never
-            : Key]-?: Key extends keyof Data ? Data[Key] : never;
+          -readonly [
+            Key in keyof Columns as Columns[Key] extends false | undefined ? never : Key
+          ]-?: Key extends keyof Data ? Data[Key] : never;
         }
       : Omit<
           Data,
@@ -130,9 +130,9 @@ type IncludedResult<
   Options,
 > = Options extends { with: infer Related }
   ? {
-      -readonly [Key in keyof Related as Related[Key] extends false | undefined
-        ? never
-        : Key]-?: Key extends keyof RelationshipsOf<Registry[Name]>
+      -readonly [
+        Key in keyof Related as Related[Key] extends false | undefined ? never : Key
+      ]-?: Key extends keyof RelationshipsOf<Registry[Name]>
         ? RelationshipResult<
             Registry[Name],
             RelationshipsOf<Registry[Name]>[Key] & Relationship,

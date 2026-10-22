@@ -2,6 +2,8 @@
 
 Astro's built-in content collections load `content/entries/*.md` through `glob()` and validate frontmatter. The homepage lists every title and description with a link. `src/pages/entries/[id].astro` uses `getStaticPaths()` to enumerate every entry and `render()` to render its Markdown. The normal Astro build emits the homepage and all 10,000 dedicated article pages.
 
+Vite and Vite+ versions come from the pinned shared workspace catalog.
+
 Follow the [suite setup](../../README.md#setup) to install dependencies, Chromium, and generate the shared 10,000-entry corpus. From the repository root:
 
 ```sh

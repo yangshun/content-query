@@ -30,7 +30,7 @@ import {
   waitForListening,
 } from "../scripts/process.ts";
 
-describe.sequential("native benchmark apps with isolated content", () => {
+describe("native benchmark apps with isolated content", { concurrent: false }, () => {
   let root: string;
   let browser: Browser;
   const count = 24;

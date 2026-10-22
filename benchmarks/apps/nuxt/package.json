@@ -14,8 +14,8 @@
   },
   "devDependencies": {
     "typescript": "6.0.2",
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.1.16",
-    "vite-plus": "0.1.16",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
     "zod": "4.6.7"
   }
 }

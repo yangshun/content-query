@@ -19,6 +19,8 @@ Every homepage renders the actual collection count and every title and descripti
 
 Run these commands from the repository root. Use the explicit runtime wrapper because the system's Node version can differ from `.node-version`.
 
+All apps use the pinned Vite+ version from the shared workspace catalog. Recorded reports retain the toolchain versions used when they were measured.
+
 ```sh
 vp env exec --node 24.21.0 -- vp install --frozen-lockfile
 vp env exec --node 24.21.0 -- vp run --no-cache --filter content-query build
@@ -50,7 +52,7 @@ The previous [composite report](./results/composite-20261020-RESULTS.md) and its
 
 ### Measurement controls
 
-- **Each app's own toolchain:** every command runs through the app's `node_modules/.bin/vp`, so each stack uses the Vite+ version it declares, and the versions table records the CLI that actually ran. A bare `vp` would resolve to whichever binary is first on PATH; under `vp run`, that is this benchmark package's pinned `vite-plus`, whose development server does not serve TanStack Start routes.
+- **Each app's own toolchain:** every command runs through the app's `node_modules/.bin/vp`, and the versions table records the CLI that actually ran. This preserves the app's dependency resolution when a fixture runs outside the workspace; a bare `vp` would use whichever binary is first on PATH.
 - **Randomized order:** each repetition measures the apps in an independent random order derived from `--seed`. The seed and every order are recorded, so a run can be reproduced and no stack always follows the same predecessor.
 - **Quiet host:** before every sample, the runner waits until host CPU is at least 80% idle, averaged over three consecutive one-second windows, for up to 180 seconds. It records the idle fraction, wait, and load average with each sample, and the report lists samples that started before the host settled. The gate checks only before a sample; it cannot exclude contention that begins during one.
 - **Spotlight:** at startup, the runner writes a probe file under `apps/` and records whether Spotlight indexes it. Builds emit 10,000 to 20,000 files, and indexing them competes with the timed process in proportion to each stack's output. On current macOS, `.metadata_never_index` marker files are ignored for ordinary folders; folders ending in `.noindex`, hidden folders, and Spotlight's privacy list are excluded. Before a comparison run, add `benchmarks/apps` to Spotlight's privacy list or disable indexing with `sudo mdutil -a -i off` (restore it with `sudo mdutil -a -i on`), and quit applications that watch the repository, such as Git clients.
