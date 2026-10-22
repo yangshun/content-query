@@ -71,7 +71,7 @@ The Vite integration supports Vite 8, and the Next.js integration supports Next.
 
 See the [contributor guide](./CONTRIBUTING.md) for setup, development, and checks. For performance measurements, see the [benchmark suite](./benchmarks/README.md) and [results](./benchmarks/RESULTS.md).
 
-Workspace Vite and Vite+ consumers share pinned versions in `pnpm-workspace.yaml` so plugin types stay compatible across packages and examples.
+Workspace `void`, `@void/react`, and `@void/md` dependencies share matching `1.2.1` pins in `pnpm-workspace.yaml`. Vite and Vite+ also share catalog pins so plugin types stay compatible across packages and examples.
 
 CI builds the library, checks the workspace's formatting, linting, and types, and runs tests with coverage across the repository. Benchmark browser tests are opt-in; see the [benchmark suite](./benchmarks/README.md#validation). Cloudflare builds and deploys the website separately.
 

@@ -16,7 +16,7 @@ vp run --filter content-query build
 vp run --filter @content-query/example-void dev
 ```
 
-`void` and `@void/react` use `catalog:` references to the matching `1.1.12` pins in the root `pnpm-workspace.yaml`.
+`void` and `@void/react` use `catalog:` references to the matching `1.2.1` pins in the root `pnpm-workspace.yaml`.
 
 Build the workspace ContentQuery package before starting the app because its exports point at `packages/content-query/dist/`. The dev server watches Markdown and updates metadata and rendered bodies after edits. `src/content-updates.tsx` subscribes to `content-query:client` and refreshes Void loader data while preserving component state and scroll; the surrounding application remains mounted.
 
