@@ -7,4 +7,7 @@ export default async function setup(): Promise<void> {
   await promisify(execFile)("vp", ["pack"], {
     cwd: fileURLToPath(new URL("../../", import.meta.url)),
   });
+  await promisify(execFile)("vp", ["pack"], {
+    cwd: fileURLToPath(new URL("../../../mdx/", import.meta.url)),
+  });
 }

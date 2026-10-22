@@ -10,6 +10,7 @@ Use it with your existing framework. Your application owns its routes, layouts, 
 - **Flexible sources.** Load local files, use Astro-compatible content loaders, or write your own loader.
 - **Queries and relationships.** Select fields, filter, sort, paginate, and load related entries with validated references.
 - **Markdown rendering.** Request HTML, headings, and syntax highlighting as query payloads, loaded only when a query asks for them.
+- **Optional MDX.** Add [`@content-query/mdx`](./packages/mdx/README.md) for React islands or a normal React document tree with Vite SSR. MDX and React stay outside core.
 - **Framework integrations.** Use Vite, Next.js, or the standalone CLI, with content updates during development.
 
 ## Usage
@@ -81,6 +82,6 @@ Workspace `void`, `@void/react`, and `@void/md` dependencies share matching `1.5
 
 The workspace provides TypeScript `7.1.0-beta` as `vp exec tsc`. Framework and declaration tools resolve the official TypeScript 6 compatibility package through the shared catalog, providing the `6.0.3` JavaScript API. Repository checks continue to use tsrs.
 
-CI builds the library, checks formatting and linting with Vite+, checks workspace types with [tsrs](https://github.com/oxc-project/tsrs), and runs tests with coverage across the repository. Run `vp run check` for all static checks or `vp run typecheck` for types after preparation. Benchmark browser tests are opt-in; see the [benchmark suite](./benchmarks/README.md#validation). Cloudflare builds and deploys the website separately.
+CI builds the libraries, checks formatting and linting with Vite+, checks workspace types with [tsrs](https://github.com/oxc-project/tsrs), and runs tests with coverage across the repository, including the [MDX example's](./examples/react-router-mdx/README.md) production Chromium checks. Run `vp run check` for all static checks or `vp run typecheck` for types after preparation. Benchmark browser tests are opt-in; see the [benchmark suite](./benchmarks/README.md#validation). Cloudflare builds and deploys the website separately.
 
 Released under the [MIT license](./LICENSE).

@@ -10,6 +10,7 @@ Use it with your existing framework. Your application owns its routes, layouts, 
 - **Flexible sources.** Load local files, use Astro-compatible content loaders, or write your own loader.
 - **Queries and relationships.** Select fields, filter, sort, paginate, and load related entries with validated references.
 - **Markdown rendering.** Request HTML, headings, and syntax highlighting as query payloads, loaded only when a query asks for them.
+- **Optional MDX companion.** [`@content-query/mdx`](https://github.com/yangshun/content-query/tree/main/packages/mdx) supplies React islands and ordinary React document modules with Vite SSR. Core has no MDX or React dependency.
 - **Framework integrations.** Use Vite, Next.js, or the standalone CLI, with content updates during development.
 
 ## Usage
@@ -88,5 +89,7 @@ The Vite integration supports Vite 8, and the Next.js integration supports Next.
 Pass `contentQuery()` directly to Vite or Vite+'s `plugins` array. No `Plugin` type cast is needed; workspace consumers share the pinned toolchain versions in the dependency catalog.
 
 Repository development checks package types and isolated consumers with [tsrs](https://github.com/oxc-project/tsrs). Run `vp run check` in the package directory for formatting, linting, and type checks; build tools use the shared TypeScript 6 compatibility package for its `6.0.3` JavaScript API. Native TypeScript `7.1.0-beta` is available at the repository root as `vp exec tsc`.
+
+Build integrations can reuse the active source session without reading schemas or bodies. `ContentSession.sources()` from `content-query/build` returns an immutable `{ revision, entries: [{ collection, id, filePath? }] }` snapshot; `session.subscribe(listener)` reports successful publications (`{ type: "ready", snapshot }`) and errors (`{ type: "error", error }`) and returns an unsubscribe function. Revisions are opaque and session-scoped. In Vite, `contentQuery().api.prepare()` asynchronously prepares the shared session and returns its source snapshot, and `.api.subscribe()` forwards subsequent events. The [MDX architecture](https://github.com/yangshun/content-query/blob/main/docs/MDX-ARCHITECTURE.md) documents its use by companion integrations.
 
 Released under the [MIT license](https://github.com/yangshun/content-query/blob/main/LICENSE).

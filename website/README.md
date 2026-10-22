@@ -6,6 +6,8 @@ Collection configs, executable examples, and published guides use `{ schema }` f
 
 The [computed fields guide](./content/guides/computed-fields.md) covers collection names and optional, typed loader source metadata, with file and CMS examples that make those values queryable. It distinguishes the ContentQuery metadata extension from Astro's standard entry fields and explains source-only updates and digest behavior.
 
+The [MDX and React islands guide](./content/guides/mdx-and-islands.md) covers the optional companion package, independent roots versus a shared React tree, directive scheduling, data props, the single `content-query:mdx:server` facade, automatic asset resolution, framework build integration, the shared `.content-query/` generated directory, and navigation cleanup. It uses a simple counter and links to the React Router SSR example, distinguishing the future native Next adapter from verified Vite support. Core Markdown rendering remains unchanged.
+
 The guide also documents `readingTime()`, `wordCount()`, and `excerpt()` from `content-query/computed`: body defaults, typed async selectors, text/Markdown/HTML formats, empty input, Unicode excerpt limits, and build-only processing. The homepage computed-fields example uses these helpers, and its displayed imports and configuration execute in the integration suite.
 
 Standalone examples and documentation use `content-query build` (or `content-query build --watch`) and `buildContent()` from `content-query/build`. The CLI reference documents CAC's help/version output, short option aliases, and equals-form values. Framework guides also cover the native Angular SSR example, its server API boundaries, and CLI development watching.
