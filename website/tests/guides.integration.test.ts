@@ -44,6 +44,7 @@ const guideIds = [
   "relationships",
   "querying-content",
   "rendering-content",
+  "mdx-and-islands",
   "integrations/vite",
   "integrations/next",
   "integrations/frameworks",

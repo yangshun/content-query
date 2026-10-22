@@ -2,7 +2,7 @@ import { fixtureLoader } from "../../tests/helpers/loader.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, test } from "vite-plus/test";
+import { describe, expect, test, vi } from "vite-plus/test";
 import { z } from "zod";
 import { defineCollection } from "../collection/define.ts";
 import {
@@ -62,6 +62,55 @@ function source(initial: LoaderEntry[]) {
 }
 
 describe("watch lifecycle and revision publication", () => {
+  test("publishes immutable format-neutral sources, errors, recovery, and unsubscribe", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "content-query-sources-"));
+    const records = source([
+      { id: "one", data: { title: "A" }, source: path.join(root, "one.custom") },
+    ]);
+    const registry = {
+      posts: defineCollection({ loader: records.loader, schema: z.object({ title: z.string() }) }),
+    };
+    const session = await createSession({
+      root,
+      config: "unused",
+      outDir: ".content-query",
+      registry,
+      watch: true,
+    });
+    try {
+      const first = session.sources();
+      expect(session.sources()).toBe(first);
+      expect(first.entries).toEqual([
+        { collection: "posts", id: "one", filePath: path.join(root, "one.custom") },
+      ]);
+      expect(Object.isFrozen(first.entries[0])).toBe(true);
+      expect(Object.isFrozen(first.entries)).toBe(true);
+      const listener = vi.fn();
+      const unsubscribe = session.subscribe(listener);
+      records.replace([{ id: "two", data: { title: "B" } }]);
+      await sessionInternals(session).idle();
+      expect(session.sources().revision).not.toBe(first.revision);
+      expect(session.sources().entries).toEqual([{ collection: "posts", id: "two" }]);
+      expect(listener).toHaveBeenLastCalledWith({ type: "ready", snapshot: session.sources() });
+      records.replace([{ id: "two", data: { title: false } }]);
+      await sessionInternals(session).idle();
+      expect(listener).toHaveBeenLastCalledWith({ type: "error", error: expect.any(Error) });
+      expect(() => session.sources()).toThrow();
+      records.replace([{ id: "two", data: { title: "Recovered" } }]);
+      await sessionInternals(session).idle();
+      expect(session.sources().entries[0]?.id).toBe("two");
+      unsubscribe();
+      unsubscribe();
+      listener.mockClear();
+      records.replace([{ id: "three", data: { title: "C" } }]);
+      await sessionInternals(session).idle();
+      expect(listener).not.toHaveBeenCalled();
+    } finally {
+      await session.dispose();
+      await rm(root, { recursive: true, force: true });
+    }
+    expect(() => session.subscribe(() => {})).toThrow("disposed");
+  });
   test("pins asynchronous query and rendering work while a newer revision is published", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "content-query-inflight-"));
     const records = source([{ id: "one", data: { title: "A" } }]);

@@ -6,7 +6,12 @@ import { resolveConfigPath } from "../../preparation/config-path.ts";
 import { revisionModules } from "../../artifacts/modules.ts";
 import { writeChanged } from "../../artifacts/write.ts";
 import { virtualDeclarations } from "../../artifacts/declarations.ts";
-import { sessionInternals, type ContentSession } from "../../preparation/session.ts";
+import {
+  sessionInternals,
+  type ContentSession,
+  type ContentSourceSnapshot,
+  type ContentSourceEvent,
+} from "../../preparation/session.ts";
 import type { ContentState, PreparedRevision } from "../../runtime/revision.ts";
 import type { ContentError } from "../../shared/errors.ts";
 
@@ -26,8 +31,20 @@ import {
 const bridgeSymbol = Symbol.for("content-query.dev-sessions");
 type BridgeGlobal = typeof globalThis & { [bridgeSymbol]?: Map<string, ContentSession> };
 
+/** Public, format-neutral hooks for integrations sharing this plugin's preparation session. */
+export type ContentQueryPluginApi = {
+  /** Prepares or awaits the shared session and returns its current source identities. */
+  prepare(): Promise<ContentSourceSnapshot>;
+  /** Observes subsequent source publications and errors without owning another watcher. */
+  subscribe(listener: (event: ContentSourceEvent) => void): () => void;
+};
+/** A normal Vite plugin with a typed source-integration API. */
+export interface ContentQueryPlugin extends Plugin<ContentQueryPluginApi> {
+  api: ContentQueryPluginApi;
+}
+
 /** Integrates in-memory content with Vite; opt into generated storage for standalone artifacts. */
-export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): Plugin {
+export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): ContentQueryPlugin {
   let config: ResolvedConfig;
   let building = false;
   let server: ViteDevServer | undefined;
@@ -45,6 +62,7 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
     | undefined;
   const bridgeKey = randomUUID();
   const refreshClients = new WeakSet<object>();
+  const sourceListeners = new Set<(event: ContentSourceEvent) => void>();
 
   /** Publishes type-only facade binding without importing configuration in executable code. */
   async function writeTypes(configPath: string): Promise<void> {
@@ -170,6 +188,19 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
         },
       );
       session = prepared;
+      prepared.subscribe((event) => {
+        // Snapshot subscriptions so a listener can unsubscribe or subscribe during notification.
+        const listeners = [...sourceListeners];
+        for (const listener of listeners) {
+          try {
+            listener(event);
+          } catch (cause) {
+            config.logger.error(
+              `Content source subscriber failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+            );
+          }
+        }
+      });
       try {
         if (config.command === "serve") {
           const global = globalThis as BridgeGlobal;
@@ -189,6 +220,19 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
   }
   return {
     name: "content-query",
+    api: {
+      async prepare() {
+        const prepared = await ensureSession();
+        await sessionInternals(prepared).idle();
+        return prepared.sources();
+      },
+      subscribe(listener) {
+        sourceListeners.add(listener);
+        return () => {
+          sourceListeners.delete(listener);
+        };
+      },
+    },
     enforce: "pre",
     configResolved(resolved) {
       config = resolved;
@@ -293,6 +337,7 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
       // createServer() can be closed before listen() starts the client build hooks.
       await starting?.catch(() => undefined);
       await session?.dispose();
+      sourceListeners.clear();
       (globalThis as BridgeGlobal)[bridgeSymbol]?.delete(bridgeKey);
     },
   };

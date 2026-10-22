@@ -1,4 +1,5 @@
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import type { FSWatcher } from "chokidar";
 import { ContentError, contentError, groupDiagnostics, withContext } from "../shared/errors.ts";
 import { prepareRevision, type CandidateSources, type PreparationCache } from "./prepare.ts";
@@ -11,8 +12,24 @@ import { loadRegistry } from "./config.ts";
 import { watchProject, watchSources, type SourceWatchOptions } from "./watch.ts";
 import { createLoaderSession, type LoaderSession } from "./loaders/session.ts";
 
+/** A local source captured by a successfully prepared content revision. */
+export type ContentSourceEntry = Readonly<{ collection: string; id: string; filePath?: string }>;
+/** Format-neutral integration metadata; the revision token is opaque and session-scoped. */
+export type ContentSourceSnapshot = Readonly<{
+  revision: string;
+  entries: readonly ContentSourceEntry[];
+}>;
+/** Notifications are delivered only after atomic publication, or after a failed attempt. */
+export type ContentSourceEvent =
+  | { type: "ready"; snapshot: ContentSourceSnapshot }
+  | { type: "error"; error: ContentError };
+
 export type ContentSession<Registry extends CollectionRegistry = {}> = {
   content: Content<Registry>;
+  /** Reads the latest successful source snapshot; current preparation errors are rethrown. */
+  sources(): ContentSourceSnapshot;
+  /** Observes subsequent publications and failures; returns an idempotent unsubscribe function. */
+  subscribe(listener: (event: ContentSourceEvent) => void): () => void;
   dispose(): Promise<void>;
 };
 export type SessionOptions = {
@@ -59,6 +76,55 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
     outDir: path.resolve(options.root, options.outDir),
   };
   const state: ContentState = {};
+  const sourceListeners = new Set<(event: ContentSourceEvent) => void>();
+  const sourceSnapshots = new WeakMap<PreparedRevision, ContentSourceSnapshot>();
+  const sourceOwner = randomUUID();
+  let sourceVersion = 0;
+
+  /** Detaches and freezes integration metadata without exposing prepared payloads or schemas. */
+  function sources(): ContentSourceSnapshot {
+    if (state.error) {
+      throw state.error;
+    }
+    if (!state.revision) {
+      throw new ContentError({
+        code: "artifact-error",
+        message: "No prepared source revision is available.",
+      });
+    }
+    let snapshot = sourceSnapshots.get(state.revision);
+    if (!snapshot) {
+      snapshot = Object.freeze({
+        revision: `${sourceOwner}:${++sourceVersion}`,
+        entries: Object.freeze(
+          Object.entries(state.revision.collections).flatMap(([collection, prepared]) =>
+            prepared.records.map(({ id }) => {
+              const filePath = prepared.sources?.get(id);
+              return Object.freeze({
+                collection,
+                id,
+                ...(filePath === undefined ? {} : { filePath }),
+              });
+            }),
+          ),
+        ),
+      });
+      sourceSnapshots.set(state.revision, snapshot);
+    }
+    return snapshot;
+  }
+
+  /** Keeps a consumer notification failure from corrupting successfully prepared content. */
+  function notifySources(event: ContentSourceEvent): void {
+    const listeners = [...sourceListeners];
+    for (const listener of listeners) {
+      try {
+        listener(event);
+      } catch (cause) {
+        console.error("[content-query] Source subscriber failed", cause);
+      }
+    }
+  }
   let registry: CollectionRegistry = {};
   let loaders = new Map<string, LoaderSession>();
   let configDependencies: ReadonlySet<string> | undefined;
@@ -134,6 +200,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
       message: cause instanceof Error ? cause.message : "Content preparation failed.",
     });
     options.change?.(state);
+    notifySources({ type: "error", error: state.error });
   }
   /** Aborts an owned subscription group and attempts every cleanup even when one fails. */
   async function releaseResources(
@@ -317,6 +384,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
       state.revision = revision;
       state.error = undefined;
       options.change?.(state);
+      notifySources({ type: "ready", snapshot: sources() });
     } catch (cause) {
       if (!disposed && currentGeneration === generation) {
         fail(cause);
@@ -389,6 +457,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
       return;
     }
     disposed = true;
+    sourceListeners.clear();
     generation++;
     attempt?.abort();
     const results = await Promise.allSettled([
@@ -404,7 +473,20 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
       });
     }
   }
-  const session: ContentSession<Registry> = { content: createRuntime<Registry>(state), dispose };
+  const session: ContentSession<Registry> = {
+    content: createRuntime<Registry>(state),
+    sources,
+    subscribe(listener) {
+      if (disposed) {
+        throw new Error("Content session has been disposed.");
+      }
+      sourceListeners.add(listener);
+      return () => {
+        sourceListeners.delete(listener);
+      };
+    },
+    dispose,
+  };
   internals.set(session, {
     state,
     async idle() {

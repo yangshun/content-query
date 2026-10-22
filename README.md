@@ -10,6 +10,7 @@ Use it with your existing framework. Your application owns its routes, layouts, 
 - **Flexible sources.** Load local files, use Astro-compatible content loaders, or write your own loader.
 - **Queries and relationships.** Select fields, filter, sort, paginate, and load related entries with validated references.
 - **Markdown rendering.** Get HTML, headings, and syntax highlighting separately from metadata queries.
+- **Optional MDX.** Add [`@content-query/mdx`](./packages/mdx/README.md) for React islands or a normal React document tree with Vite SSR. MDX and React stay outside core.
 - **Framework integrations.** Use Vite, Next.js, or the standalone CLI, with content updates during development.
 
 ## Usage
@@ -73,6 +74,6 @@ See the [contributor guide](./CONTRIBUTING.md) for setup, development, and check
 
 Workspace Vite and Vite+ consumers share pinned versions in `pnpm-workspace.yaml` so plugin types stay compatible across packages and examples.
 
-CI builds the library, checks the workspace's formatting, linting, and types, and runs tests with coverage across the repository. Benchmark browser tests are opt-in; see the [benchmark suite](./benchmarks/README.md#validation). Cloudflare builds and deploys the website separately.
+CI builds the libraries, checks the workspace's formatting, linting, and types, and runs tests with coverage across the repository, including the [MDX example's](./examples/react-router-mdx/README.md) production Chromium checks. Benchmark browser tests are opt-in; see the [benchmark suite](./benchmarks/README.md#validation). Cloudflare builds and deploys the website separately.
 
 Released under the [MIT license](./LICENSE).

@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globalSetup: ["./packages/content-query/tests/helpers/global-setup.ts"],
     coverage: {
-      include: ["packages/content-query/src/**/*.ts"],
+      include: ["packages/*/src/**/*.ts", "packages/*/src/**/*.tsx"],
       exclude: ["**/*.test.ts"],
       thresholds: { statements: 90, lines: 90, branches: 85, functions: 90 },
     },
@@ -17,6 +17,7 @@ export default defineConfig({
       "**/dist/**",
       "**/coverage/**",
       "**/.content-query/**",
+      "**/.content-query-mdx/**",
       "**/.void/**",
       "**/.wrangler/**",
       "**/.astro/**",

@@ -173,11 +173,11 @@ Before implementation, define the extension contract, how settings participate i
 
 ### MDX and component content
 
-Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
+Status: optional Vite SSR support implemented in `@content-query/mdx` on October 21, 2026. Core remains framework independent.
 
-Rendering returns framework-independent HTML. Astro supports MDX and Markdoc with component mapping. Content Collections offers `@content-collections/mdx` and bundler-compiled static imports through `createDefaultImport()`. Velite compiles `s.mdx()` to function-body code.
+The companion owns a local-file loader, ordinary ESM compilation with plugins, React islands, full React document rendering, styles/assets, and browser lifecycle management. Core retains its HTML renderer and exposes only generic source identities and publication events to build integrations. See the [package guide](../packages/mdx/README.md) and [example](../examples/react-router-mdx/README.md).
 
-Component content conflicts with framework independence and with packaging rules that exclude application callbacks. One candidate is an entry field that records a typed module reference to the source file, so the host bundler compiles it and `content.render()` stays unchanged for HTML content. Define how references are typed, how component modules cross the [server/client boundary](./PLAN.md#4-enforce-the-serverclient-boundary) when pages import them, and how headings are extracted without a framework renderer.
+Native Next.js integration remains deferred, with a [separate architecture review](./MDX-ARCHITECTURE.md). Other UI frameworks, remote MDX, streaming islands, formatted slots, and nested island declarations also remain future work. The existing core Next adapter does not imply companion MDX compatibility.
 
 ### Typed content href helpers
 

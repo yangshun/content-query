@@ -16,7 +16,7 @@ const body = await content.readBody("posts", "hello");
 
 `render()` returns HTML and headings with `depth`, `slug`, and `text`. HTML headings have matching unique IDs, and fenced code blocks are syntax highlighted. Your application owns heading links, templates, and presentation.
 
-Authored links and image URLs pass through unchanged. The current renderer produces HTML; MDX, asset processing, and configurable Markdown plugins are not supported yet.
+Authored links and image URLs pass through unchanged. The core renderer produces HTML with a fixed pipeline. Optional [MDX and React islands](/docs/mdx-and-islands) use the separate `@content-query/mdx` package and companion rendering APIs.
 
 ## Bodies and rendering policy
 

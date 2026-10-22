@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vp run --filter content-query build",
+    "build": "vp run --filter content-query build && vp run --filter @content-query/mdx build",
     "build:examples": "vp run build && vp run --filter './examples/*' build",
     "build:website": "vp run build && vp run --filter @content-query/website build",
     "check": "vp run check:prepare && vp check",

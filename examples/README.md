@@ -1,5 +1,7 @@
 # ContentQuery examples
 
+The [React Router MDX example](./react-router-mdx/README.md) demonstrates the optional `@content-query/mdx` package with independent React islands, ordinary React documents, and framework-owned client navigation. Its Chromium tests verify production operation without source files. It is a separate feature example from the six matching Markdown examples below.
+
 All six examples use the same sample guides and matching local stylesheets. Each example contains its own stylesheet and browser navigation helper where needed; application imports never reach into sibling directories. The local files are hardlinked to the common [`styles.css`](./shared/styles.css) and [`navigation.ts`](./shared/navigation.ts) in this workspace. Shared production test utilities are also included locally through hardlinks. They share a header/footer, numbered home index, two-column docs layout, sticky sidebar, article typography, previous/next links, and a stacked layout below 720px. Branding names the host framework.
 
 All six examples use `content.select(...fields).from(collection)` for fluent queries or `content.query.guides.findMany()` / `findFirst()` with `columns` for relational queries. Their selected metadata, ordering, adjacent navigation, and server boundaries follow the same contract.

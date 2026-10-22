@@ -1,0 +1,31 @@
+{
+  "name": "@content-query/example-react-router-mdx",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "preview": "react-router-serve ./build/server/index.js",
+    "browsers:install": "playwright install --with-deps chromium"
+  },
+  "dependencies": {
+    "@content-query/mdx": "workspace:*",
+    "@react-router/serve": "8.4.0",
+    "content-query": "workspace:*",
+    "isbot": "^5",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router": "8.4.0"
+  },
+  "devDependencies": {
+    "@react-router/dev": "8.4.0",
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "playwright": "^1.58.0",
+    "typescript": "^6.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

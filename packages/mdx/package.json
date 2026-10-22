@@ -1,0 +1,109 @@
+{
+  "name": "@content-query/mdx",
+  "version": "0.1.0",
+  "description": "Optional MDX compilation and React islands for ContentQuery.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangshun/content-query.git",
+    "directory": "packages/mdx"
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./assets": "./src/assets.ts",
+    "./client": "./src/client.ts",
+    "./compiler": "./src/compiler.ts",
+    "./react": "./src/react.ts",
+    "./react/client": "./src/react/client.ts",
+    "./react/server": "./src/react/server.ts",
+    "./vite": {
+      "types": "./src/vite.ts",
+      "default": "./dist/vite.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.mjs",
+      "./assets": "./dist/assets.mjs",
+      "./client": "./dist/client.mjs",
+      "./compiler": "./dist/compiler.mjs",
+      "./react": "./dist/react.mjs",
+      "./react/client": "./dist/react/client.mjs",
+      "./react/server": "./dist/react/server.mjs",
+      "./vite": "./dist/vite.mjs",
+      "./package.json": "./package.json"
+    },
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch --no-clean",
+    "test": "vp test",
+    "prepublishOnly": "vp run build"
+  },
+  "dependencies": {
+    "@mdx-js/mdx": "^3.1.1",
+    "@shikijs/engine-javascript": "^4.5.0",
+    "@shikijs/rehype": "^4.5.0",
+    "@types/estree": "^1.0.8",
+    "@types/hast": "^3.0.4",
+    "@types/mdast": "^4.0.4",
+    "@types/mdx": "^2.0.13",
+    "devalue": "6.0.2",
+    "github-slugger": "^2.0.0",
+    "gray-matter": "^4.0.3",
+    "hast-util-to-string": "^3.0.1",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-mdx": "^3.1.1",
+    "remark-parse": "^11.0.0",
+    "shiki": "^4.5.0",
+    "source-map": "^0.7.6",
+    "tinyglobby": "^0.2.17",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.1.0",
+    "vfile": "^6.0.3",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "content-query": "workspace:*",
+    "happy-dom": "^20.0.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "typescript": "^6.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "content-query": "^0.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "vite": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "inlinedDependencies": {
+    "devalue": "6.0.2"
+  }
+}
