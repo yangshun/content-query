@@ -6,6 +6,8 @@ Collection schemas use `schema` from `content-query/schema`, which supplies Zod-
 
 A small documentation site using native SvelteKit server data loading and portable ContentQuery content. The listing selects metadata only; detail pages explicitly render Markdown and select previous/next guides through `_adjacent`.
 
+The Vite config passes `contentQuery()` directly to `plugins`; the shared workspace catalog keeps the plugin and host toolchain types compatible.
+
 ## Run locally
 
 From the repository root, use Node.js 24.21.0 and Vite+:

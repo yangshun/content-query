@@ -19,8 +19,13 @@ import type { HomeGuides } from "../guides-api";
           @for (guide of guides(); track guide.id; let index = $index) {
             <li>
               <a class="guide-row" [routerLink]="'/docs/' + guide.id">
-                <span class="guide-number" aria-hidden="true">{{ (index + 1).toString().padStart(2, '0') }}</span>
-                <div><h3>{{ guide.title }}</h3><p>{{ guide.description }}</p></div>
+                <span class="guide-number" aria-hidden="true">{{
+                  (index + 1).toString().padStart(2, "0")
+                }}</span>
+                <div>
+                  <h3>{{ guide.title }}</h3>
+                  <p>{{ guide.description }}</p>
+                </div>
                 <span class="guide-arrow" aria-hidden="true">→</span>
               </a>
             </li>

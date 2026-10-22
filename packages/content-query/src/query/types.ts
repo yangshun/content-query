@@ -100,9 +100,9 @@ export type Query<
     Registry,
     Name,
     {
-      [Key in
-        | Exclude<keyof Result, keyof QueryData<Registry[Name]>>
-        | Keys[number]]: Key extends Keys[number]
+      [
+        Key in Exclude<keyof Result, keyof QueryData<Registry[Name]>> | Keys[number]
+      ]: Key extends Keys[number]
         ? QueryData<Registry[Name]>[Key & keyof QueryData<Registry[Name]>]
         : Key extends keyof Result
           ? Result[Key]
@@ -349,9 +349,9 @@ export type SelectionResult<
   Name extends keyof Registry & string,
   Projection,
 > = {
-  -readonly [Key in keyof Projection as Projection[Key] extends false | undefined
-    ? never
-    : Key]-?: Key extends "_adjacent"
+  -readonly [
+    Key in keyof Projection as Projection[Key] extends false | undefined ? never : Key
+  ]-?: Key extends "_adjacent"
     ? Projection[Key] extends true
       ? Adjacent<{ id: string }>
       : Projection[Key] extends { select: infer Neighbors }

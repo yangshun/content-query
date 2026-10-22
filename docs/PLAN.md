@@ -410,12 +410,12 @@ No runtime-safe definition split, arbitrary function serialization, closure extr
 
 Status: build-time context agreed on October 18, 2026. These rules describe the redesign API, not the current implementation.
 
-| Member       | Purpose                                                                                             |
+| Member | Purpose |
 | ------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `id`         | Stable entry identity.                                                                              |
-| `data`       | Validated, read-only source metadata. Other computed fields are unavailable in v1.                  |
+| `id` | Stable entry identity. |
+| `data` | Validated, read-only source metadata. Other computed fields are unavailable in v1. |
 | `readBody()` | Explicit asynchronous access to captured source text for this preparation revision; returns `string | undefined`. No collection-level body restriction. |
-| `signal`     | A library-managed signal for cooperative cancellation of preparation.                               |
+| `signal` | A library-managed signal for cooperative cancellation of preparation. |
 
 The build-time `readBody()` helper is available for every collection and returns `Promise<string | undefined>`. It reads the loader-supplied captured text rather than invoking a source callback; absent text is `undefined`. Computed resolvers must handle absence. Public raw-body access follows the retention policy, while preparation can use captured source text before retention is applied. No separate body-capability flag or loader-free shared definition is required.
 

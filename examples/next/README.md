@@ -8,7 +8,7 @@ A small Next.js App Router documentation site in `examples/next`, backed by Cont
 
 ## Development
 
-Use the repository's Node.js 24.21.0 runtime and Vite+ CLI. From the repository root:
+Use the repository's Node.js 24.21.0 runtime and Vite+ CLI, pinned through the shared workspace catalog. From the repository root:
 
 ```sh
 vp install --frozen-lockfile

@@ -10,6 +10,6 @@ export default defineConfig({
     voidReact() as unknown as Plugin[],
     contentQuery({
       backend: process.env.CONTENT_QUERY_BENCH_BACKEND === "generated" ? "generated" : "in-memory",
-    }) as unknown as Plugin,
+    }),
   ],
 });
