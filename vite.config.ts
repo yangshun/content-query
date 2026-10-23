@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   staged: {
-    "*": "vp check --fix",
+    "*": ["vp check --fix", () => "vp run typecheck"],
   },
   fmt: {
     ignorePatterns: [
@@ -34,7 +34,7 @@ export default defineConfig({
   lint: {
     options: {
       typeAware: true,
-      typeCheck: true,
+      typeCheck: false,
     },
   },
 });

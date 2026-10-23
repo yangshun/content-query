@@ -4,7 +4,7 @@ Server metadata queries use `content.select(...fields).from(collection)`. The re
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
-This app pins Vite+ 1.3.0, matching the shared workspace toolchain catalog. Its config passes `contentQuery()` directly to `plugins`. The raw report records its resolved toolchain separately from the other stacks.
+This app pins Vite+ 1.3.0, matching the shared workspace toolchain catalog. Its config passes `contentQuery()` directly to `plugins`. The raw report records its resolved toolchain separately from the other stacks. Workspace type checks use tsrs; `allowImportingTsExtensions` enables the local ContentQuery Vite source types.
 
 The homepage lists all 10,000 titles and descriptions with links. Each article renders its own metadata and Markdown body. Inline TanStack Start server functions query ContentQuery; content imports stay inside their handlers, so the runtime and article collection remain on the server.
 
@@ -27,3 +27,5 @@ vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmar
 ```
 
 The standard benchmark command replaces `results/latest.json` and `RESULTS.md`; preserve an existing comparison before running a subset. The [suite results](../../RESULTS.md) retain each framework's source run when combining partial reruns.
+
+TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../../../CONTRIBUTING.md#setup-and-checks).

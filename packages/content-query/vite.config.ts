@@ -45,7 +45,7 @@ export default defineConfig({
       },
     },
   },
-  lint: { options: { typeAware: true, typeCheck: true } },
+  lint: { options: { typeAware: true, typeCheck: false } },
   test: {
     globalSetup: ["./tests/helpers/global-setup.ts"],
     coverage: {

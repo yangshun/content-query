@@ -16,7 +16,7 @@ vp run --filter content-query build
 vp run --filter @content-query/example-void dev
 ```
 
-`void` and `@void/react` use `catalog:` references to the matching `1.2.1` pins in the root `pnpm-workspace.yaml`.
+`void` and `@void/react` use `catalog:` references to the matching `1.2.1` pins in the root `pnpm-workspace.yaml`. Workspace type checks use tsrs; `allowImportingTsExtensions` enables the local ContentQuery Vite source types.
 
 Build the workspace ContentQuery package before starting the app because its exports point at `packages/content-query/dist/`. The dev server watches Markdown and updates metadata and rendered bodies after edits. `src/content-updates.tsx` subscribes to `content-query:client` and refreshes Void loader data while preserving component state and scroll; the surrounding application remains mounted.
 
@@ -65,7 +65,7 @@ The filename determines its ID: `your-guide.md` becomes `/docs/your-guide`. Nest
 From the repository root:
 
 ```sh
-vp check
+vp run check
 vp test run
 ```
 
@@ -74,3 +74,5 @@ vp test run
 Each example imports its own local stylesheet, hardlinked to the common [`../shared/styles.css`](../shared/styles.css) in this workspace for the site shell, home index, docs sidebar, article typography, and mobile layout. Void requires native `.server.ts` page companions and middleware for server data; its layouts receive only children. Those native boundaries keep content loading separate from browser code without a standalone content helper.
 
 The example is self-contained: its stylesheet and browser navigation helper (where needed) are local files. Hardlinks keep the common copies synchronized in this workspace. Git stores ordinary file contents, so copying or checking out an example does not require sibling shared files.
+
+TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../../CONTRIBUTING.md#setup-and-checks).

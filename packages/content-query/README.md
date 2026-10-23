@@ -69,4 +69,6 @@ The Vite integration supports Vite 8, and the Next.js integration supports Next.
 
 Pass `contentQuery()` directly to Vite or Vite+'s `plugins` array. No `Plugin` type cast is needed; workspace consumers share the pinned toolchain versions in the dependency catalog.
 
+Repository development checks package types and isolated consumers with [tsrs](https://github.com/oxc-project/tsrs). Run `vp run check` in the package directory for formatting, linting, and type checks; build tools use the shared TypeScript 6 compatibility package for its `6.0.3` JavaScript API. Native TypeScript `7.1.0-beta` is available at the repository root as `vp exec tsc`.
+
 Released under the [MIT license](https://github.com/yangshun/content-query/blob/main/LICENSE).

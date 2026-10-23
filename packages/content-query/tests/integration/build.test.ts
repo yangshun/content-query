@@ -79,7 +79,7 @@ void checked;
         await execute(
           process.execPath,
           [
-            path.join(packageRoot, "node_modules/typescript/bin/tsc"),
+            path.join(packageRoot, "node_modules/tsrs/bin/tsrs"),
             "--noEmit",
             "--strict",
             "--skipLibCheck",

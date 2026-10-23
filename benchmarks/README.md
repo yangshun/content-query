@@ -151,3 +151,5 @@ The browser config selects `tests/*.browser.ts`, which the default test command 
 Temporary app fixtures forward command execution to the original installed launchers. This preserves pnpm's relative binary paths after fresh installs while keeping the working directory, content, caches, and build output inside each fixture.
 
 `vp run check` prepares framework types and collection declarations before checking the workspace. The benchmark builds also generate these files.
+
+TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../CONTRIBUTING.md#setup-and-checks).

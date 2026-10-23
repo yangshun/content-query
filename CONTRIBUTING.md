@@ -2,7 +2,7 @@
 
 ## Setup and checks
 
-From this repository root, use Node.js 24.21.0 and Vite+. The repository owns its workspace configuration, dependency catalog, lockfile, formatting, type-aware linting, TypeScript checks, tests, and package builds:
+From this repository root, use Node.js 24.21.0 and Vite+. The repository owns its workspace configuration, dependency catalog, lockfile, formatting, type-aware linting, tsrs type checks, tests, and package builds:
 
 ```sh
 vp install --frozen-lockfile
@@ -12,9 +12,11 @@ vp test run
 vp test run --coverage
 ```
 
-`vp run check` builds the library and prepares consumer declarations and framework types before running workspace formatting, linting, and TypeScript checks. Preparation includes SvelteKit diagnostics. Use the built-in `vp check` directly after preparation. Run `vp fmt` to format workspace files or `vp lint` for linting alone.
+`vp run check` builds the library and prepares consumer declarations and framework types before running Vite+ formatting and linting, then [tsrs](https://github.com/oxc-project/tsrs) type checks. Preparation includes SvelteKit diagnostics. After preparation, use `vp run typecheck` to check the projects listed in `tsconfig.check.json` with tsrs's build mode and `--noEmit`. Add new workspace TypeScript projects to that list. The built-in `vp check` runs formatting and type-aware linting; its separate Go type-diagnostic pass is disabled. Run `vp fmt` to format workspace files or `vp lint` for linting alone.
 
-Installation builds the library so local CLI links work immediately, and the integration suite rebuilds it before exercising consumers. The pre-commit hook runs `vp staged`. GitHub Actions builds the library, checks the workspace, and runs tests with coverage, including framework examples, the website, and benchmark unit tests. Browser tests for benchmark apps are opt-in through `vp test run --config benchmarks/vite.browser.config.ts`; see the [benchmark setup](./benchmarks/README.md) for Chromium installation. Performance measurements remain manual. Package coverage must remain above 90% for statements, lines, and functions, and 85% for branches. Cloudflare Workers Builds handles the website build and deployment separately.
+The root, library, and website share an exact tsrs version through the workspace catalog. Consumer integration tests also use this compiler. The root installs TypeScript `7.1.0-beta` under the `@typescript/native` alias, exposing `vp exec tsc`. Every workspace `typescript` dependency uses the shared `npm:@typescript/typescript6@6.0.2` catalog entry, which forwards to the locked TypeScript `6.0.3` JavaScript API and exposes `vp exec tsc6`. Angular, Svelte diagnostics, and declaration bundling still require that API. This follows [Microsoft's side-by-side setup](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/). Use `vp exec tsc --build tsconfig.check.json --noEmit` for an optional check with the native compiler. Vite consumers enable `allowImportingTsExtensions` so tsrs can check the library's local source-type export.
+
+Installation builds the library so local CLI links work immediately, and the integration suite rebuilds it before exercising consumers. The pre-commit hook runs `vp staged`, which formats and lints staged files before running workspace tsrs checks. GitHub Actions builds the library, checks the workspace, and runs tests with coverage, including framework examples, the website, and benchmark unit tests. Browser tests for benchmark apps are opt-in through `vp test run --config benchmarks/vite.browser.config.ts`; see the [benchmark setup](./benchmarks/README.md) for Chromium installation. Performance measurements remain manual. Package coverage must remain above 90% for statements, lines, and functions, and 85% for branches. Cloudflare Workers Builds handles the website build and deployment separately.
 
 ## Development
 
@@ -69,11 +71,11 @@ Unit tests stay beside their owning modules. Query plans are independent of Java
 
 ## Development checks
 
-From `packages/content-query/`, run `vp check` and `vp test run --coverage`. The suite covers every documented value of the PLAN.md living example (`tests/integration/living-example.test.ts`; update it with the plan), typed consumer callsites, both backends, generated consumers without source files, watch recovery, concurrent publication, CLI behavior, and Vite integration. Coverage requires at least 90% statements/lines, 85% branches, and 90% functions. The repository's `vp test run` also exercises all framework examples, benchmark unit tests, and the website. VoidPress verifies its consumers in its own repository. The root formatter configuration ignores `dist/` and `coverage/` output.
+From `packages/content-query/`, run `vp run check` and `vp test run --coverage`. The suite covers every documented value of the PLAN.md living example (`tests/integration/living-example.test.ts`; update it with the plan), typed consumer callsites, both backends, generated consumers without source files, watch recovery, concurrent publication, CLI behavior, and Vite integration. Coverage requires at least 90% statements/lines, 85% branches, and 90% functions. The repository's `vp test run` also exercises all framework examples, benchmark unit tests, and the website. VoidPress verifies its consumers in its own repository. The root formatter configuration ignores `dist/` and `coverage/` output.
 
 Watch recovery tests repeat configuration notifications and check stable error codes and diagnostics, preserved revisions, and rejected reads through content edits before verifying recovery from a corrected configuration.
 
-The living-example declaration and published Astro-loader consumer checks launch TypeScript and fresh Node processes. They use explicit 30-second deadlines to accommodate compiler startup under coverage or system load; ordinary tests retain the default deadline and all consumer assertions remain enabled.
+The living-example declaration and published Astro-loader consumer checks launch tsrs and fresh Node processes. They use explicit 30-second deadlines to accommodate compiler startup under coverage or system load; ordinary tests retain the default deadline and all consumer assertions remain enabled.
 
 The packed-package integration tests unpack the actual npm tarball into isolated consumers, verify its exports, license, and documentation links, type-check the Vite integration without Vite+ installed, and query/render generated content after removing authored sources. Vite+ remains the development toolchain; published Vite declarations reference the optional Vite 8 peer. The npm package supports Node.js 22.12 or later, while contributor tooling uses the version in `.node-version`.
 

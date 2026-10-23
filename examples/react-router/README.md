@@ -6,7 +6,7 @@ Collection schemas use `schema` from `content-query/schema`, which supplies Zod-
 
 A small documentation site using native React Router server data loading and portable ContentQuery content. The listing selects metadata only; detail pages explicitly render Markdown and select previous/next guides through `_adjacent`.
 
-The Vite config passes `contentQuery()` directly to `plugins`; the shared workspace catalog keeps the plugin and host toolchain types compatible.
+The Vite config passes `contentQuery()` directly to `plugins`; the shared workspace catalog keeps the plugin and host toolchain types compatible. Workspace type checks use tsrs; `allowImportingTsExtensions` enables the local plugin's source types.
 
 ## Run locally
 
@@ -37,3 +37,5 @@ The fixture invokes the installed React Router CLI by its physical path so pnpm'
 The root layout imports its local stylesheet, hardlinked to the common [`../shared/styles.css`](../shared/styles.css) in this workspace. All examples use the same site shell, home index, docs sidebar, article typography, footer, and responsive layout. Sidebar metadata is loaded independently of child article data.
 
 The example is self-contained: its stylesheet and browser navigation helper (where needed) are local files. Hardlinks keep the common copies synchronized in this workspace. Git stores ordinary file contents, so copying or checking out an example does not require sibling shared files.
+
+TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../../CONTRIBUTING.md#setup-and-checks).

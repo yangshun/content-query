@@ -56,7 +56,7 @@ This follows Next.js's [async configuration](https://next.org/docs/app/api-refer
 ## Verification
 
 ```sh
-vp check
+vp run check
 vp test run
 vp run --filter @content-query/example-next build
 ```
@@ -66,3 +66,5 @@ The integration suite builds a real Next.js consumer through `next.config.mjs`, 
 The root layout imports its local stylesheet, hardlinked to the common [`../shared/styles.css`](../shared/styles.css) in this workspace, giving all five examples the same header, footer, home index, sidebar, article typography, and responsive layout. Queries stay inline in Server Components and route metadata functions. `app/docs/content.tsx` is a small client presentation boundary that routes internal Markdown links through Next.js while keeping the docs layout mounted.
 
 The example is self-contained: its stylesheet and browser navigation helper (where needed) are local files. Hardlinks keep the common copies synchronized in this workspace. Git stores ordinary file contents, so copying or checking out an example does not require sibling shared files.
+
+TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../../CONTRIBUTING.md#setup-and-checks).

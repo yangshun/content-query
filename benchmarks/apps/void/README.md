@@ -6,7 +6,7 @@ Collection schemas use `schema` from `content-query/schema`, which supplies Zod-
 
 The workspace ContentQuery Vite plugin loads and validates `content/entries/*.md`. The homepage loader queries every title and description, and React renders a link for every item. `pages/entries/[id].server.ts` exports `getPrerenderPaths()` for the entire collection; each route queries its metadata and renders its own Markdown body.
 
-The config passes `contentQuery()` directly to `plugins`, using the same pinned Vite+ version as the shared workspace toolchain catalog.
+The config passes `contentQuery()` directly to `plugins`, using the same pinned Vite+ version as the shared workspace toolchain catalog. Workspace type checks use tsrs; `allowImportingTsExtensions` enables the local plugin's source types.
 
 The static build produces `dist/client/index.html` and one `dist/client/entries/<id>.html` per entry: 10,001 content HTML pages. React receives selected metadata and rendered HTML through the native Void page loader.
 
@@ -26,3 +26,5 @@ The default app uses published `void` and `@void/react` version `1.2.1`, pinned 
 The app uses ContentQuery's default in-memory Vite backend, writing only declarations under `.content-query/` and bundling production payloads with the app. Set `CONTENT_QUERY_BENCH_BACKEND=generated` to additionally publish standalone runtime artifacts.
 
 The [profiling report](../../PROFILING.md) examines this app's startup and build costs. ContentQuery's production Vite integration prepares only server content and groups payload modules into bounded lazy chunks; the standalone generated artifacts retain separate item modules. Metadata queries still avoid loading bodies.
+
+TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../../../CONTRIBUTING.md#setup-and-checks).
