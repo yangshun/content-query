@@ -17,7 +17,7 @@
     "@types/react-dom": "19.2.3",
     "@void/react": "catalog:",
     "content-query": "workspace:*",
-    "typescript": "6.0.2",
+    "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "void": "catalog:"

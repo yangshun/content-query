@@ -29,3 +29,5 @@ vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmar
 ```
 
 The runner clears `.next/`, `out/`, and `.content-query/` for cold runs and verifies every emitted article's HTML after a build. Benchmark runs replace the latest raw measurements and report, so preserve previous results before running a subset. Generated content, framework types, and outputs are ignored by Git.
+
+TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../../../CONTRIBUTING.md#setup-and-checks).

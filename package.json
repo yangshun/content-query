@@ -6,14 +6,18 @@
     "build": "vp run --filter content-query build",
     "build:examples": "vp run build && vp run --filter './examples/*' build",
     "build:website": "vp run build && vp run --filter @content-query/website build",
-    "check": "vp run check:prepare && vp check",
+    "check": "vp run check:prepare && vp check && vp run typecheck",
     "check:prepare": "vp run build && node scripts/prepare-checks.mjs",
     "dev": "vp run --filter content-query dev",
-    "prepare": "vp config && vp run build"
+    "prepare": "vp config && vp run build",
+    "typecheck": "tsrs --build tsconfig.check.json --noEmit"
   },
   "devDependencies": {
     "@tanstack/router-generator": "1.167.45",
+    "@typescript/native": "catalog:",
     "@vitest/coverage-v8": "5.0.5",
+    "tsrs": "catalog:",
+    "typescript": "catalog:",
     "vite-plus": "catalog:"
   },
   "engines": {

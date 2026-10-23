@@ -20,7 +20,8 @@
     "@types/react-dom": "^19.2.3",
     "@void/react": "catalog:",
     "content-query": "workspace:*",
-    "typescript": "^5.9.3",
+    "tsrs": "catalog:",
+    "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "void": "catalog:"

@@ -62,7 +62,7 @@ export default defineConfig({ plugins: [plugin] });`,
       await execute(
         process.execPath,
         [
-          path.join(packageRoot, "node_modules/typescript/bin/tsc"),
+          path.join(packageRoot, "node_modules/tsrs/bin/tsrs"),
           "--noEmit",
           "--strict",
           "--skipLibCheck",
@@ -102,7 +102,7 @@ export default defineConfig({ plugins: [contentQuery()] });`,
         await execute(
           process.execPath,
           [
-            path.join(packageRoot, "node_modules/typescript/bin/tsc"),
+            path.join(packageRoot, "node_modules/tsrs/bin/tsrs"),
             "--noEmit",
             "--strict",
             "--module",

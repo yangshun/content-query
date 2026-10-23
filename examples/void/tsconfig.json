@@ -6,6 +6,7 @@
     "strict": true,
     "esModuleInterop": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "types": ["node", "void/env", "vite-plus/client"],
     "jsx": "react-jsx"

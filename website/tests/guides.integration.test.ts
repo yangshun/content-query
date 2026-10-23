@@ -346,7 +346,7 @@ assert.deepEqual(await content.select("id", "title").from("posts").all(), [
     await execFileAsync(
       process.execPath,
       [
-        path.join(appRoot, "node_modules/typescript/bin/tsc"),
+        path.join(appRoot, "node_modules/tsrs/bin/tsrs"),
         "--noEmit",
         "--strict",
         "--skipLibCheck",
@@ -530,7 +530,7 @@ content.query.posts.findMany({ columns: { title: true, drafft: true } });
     await execFileAsync(
       process.execPath,
       [
-        path.join(appRoot, "node_modules/typescript/bin/tsc"),
+        path.join(appRoot, "node_modules/tsrs/bin/tsrs"),
         "--noEmit",
         "--strict",
         "--skipLibCheck",

@@ -49,3 +49,5 @@ vp test run examples/angular/tests
 Tests build and run the real SSR application after removing source content and generated input files, verify nested guide routes and API projections, check 404 responses and browser bundle boundaries, and exercise the real development watcher.
 
 Fixture commands use `vp env exec` with the workspace's `.node-version`, including nested build scripts and the production server. Temporary fixtures therefore use the required Node version even when the shell's `node` points to an older installation.
+
+TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../../CONTRIBUTING.md#setup-and-checks).

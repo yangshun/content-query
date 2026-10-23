@@ -64,7 +64,8 @@
   "scripts": {
     "build": "vp pack",
     "dev": "vp pack --watch --no-clean",
-    "check": "vp check",
+    "check": "vp check && vp run typecheck",
+    "typecheck": "tsrs --noEmit",
     "test": "vp test",
     "prepublishOnly": "vp run build"
   },
@@ -94,7 +95,8 @@
     "@types/picomatch": "^4.0.3",
     "astro": "7.4.0",
     "next": "16.4.2",
-    "typescript": "^6.0.2",
+    "tsrs": "catalog:",
+    "typescript": "catalog:",
     "vite-plus": "catalog:"
   },
   "peerDependencies": {

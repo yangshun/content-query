@@ -79,7 +79,7 @@ vp run --filter @content-query/website dev
 ```sh
 vp run --filter @content-query/website build
 vp run --filter @content-query/website preview
-vp check
+vp run check
 vp test run
 ```
 
@@ -112,4 +112,6 @@ order: 14
 
 Introduction renders at `/docs/introduction`. Nested files work too: `reference/cli.md` becomes `/docs/reference/cli`. Rebuild to include new static routes.
 
-`tests/guides.integration.test.ts` exercises the real ContentQuery integration, homepage examples and SSR output, section metadata, guide loaders, internal links, executable snippets, and prerender paths. It runs every published Next.js configuration against the quick-start collection, executes the homepage's aliased server query, and type-checks the guide's Server Component against the generated declarations.
+`tests/guides.integration.test.ts` exercises the real ContentQuery integration, homepage examples and SSR output, section metadata, guide loaders, internal links, executable snippets, and prerender paths. It runs every published Next.js configuration against the quick-start collection, executes the homepage's aliased server query, and type-checks the guide's Server Component against the generated declarations with the workspace-pinned tsrs compiler. Run `vp run check` from the repository root for all static checks. The app enables `allowImportingTsExtensions` for the local ContentQuery Vite source types.
+
+TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../CONTRIBUTING.md#setup-and-checks).

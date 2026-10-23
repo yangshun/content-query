@@ -17,3 +17,5 @@ vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmar
 ```
 
 Use the [benchmark runner](../../README.md#run-the-comparison) for controlled cold/warm measurements. Generated content, `.content-collections/`, `.prerender/`, and `dist/` are ignored by Git.
+
+TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../../../CONTRIBUTING.md#setup-and-checks).

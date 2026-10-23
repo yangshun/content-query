@@ -1,0 +1,22 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/content-query" },
+    { "path": "./examples/angular" },
+    { "path": "./examples/angular/tests" },
+    { "path": "./examples/next" },
+    { "path": "./examples/react-router" },
+    { "path": "./examples/sveltekit" },
+    { "path": "./examples/sveltekit/tests" },
+    { "path": "./examples/tanstack-start" },
+    { "path": "./examples/void" },
+    { "path": "./website" },
+    { "path": "./benchmarks" },
+    { "path": "./benchmarks/apps/astro" },
+    { "path": "./benchmarks/apps/next" },
+    { "path": "./benchmarks/apps/nuxt" },
+    { "path": "./benchmarks/apps/tanstack-start" },
+    { "path": "./benchmarks/apps/vite-react" },
+    { "path": "./benchmarks/apps/void" }
+  ]
+}

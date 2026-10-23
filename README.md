@@ -73,6 +73,8 @@ See the [contributor guide](./CONTRIBUTING.md) for setup, development, and check
 
 Workspace `void`, `@void/react`, and `@void/md` dependencies share matching `1.2.1` pins in `pnpm-workspace.yaml`. Vite and Vite+ also share catalog pins so plugin types stay compatible across packages and examples.
 
-CI builds the library, checks the workspace's formatting, linting, and types, and runs tests with coverage across the repository. Benchmark browser tests are opt-in; see the [benchmark suite](./benchmarks/README.md#validation). Cloudflare builds and deploys the website separately.
+The workspace provides TypeScript `7.1.0-beta` as `vp exec tsc`. Framework and declaration tools resolve the official TypeScript 6 compatibility package through the shared catalog, providing the `6.0.3` JavaScript API. Repository checks continue to use tsrs.
+
+CI builds the library, checks formatting and linting with Vite+, checks workspace types with [tsrs](https://github.com/oxc-project/tsrs), and runs tests with coverage across the repository. Run `vp run check` for all static checks or `vp run typecheck` for types after preparation. Benchmark browser tests are opt-in; see the [benchmark suite](./benchmarks/README.md#validation). Cloudflare builds and deploys the website separately.
 
 Released under the [MIT license](./LICENSE).
