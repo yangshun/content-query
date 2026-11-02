@@ -16,7 +16,7 @@ vp run --filter content-query build
 vp run --filter @content-query/example-void dev
 ```
 
-`void` and `@void/react` use `catalog:` references to the matching `1.2.1` pins in the root `pnpm-workspace.yaml`. Workspace type checks use tsrs; `allowImportingTsExtensions` enables the local ContentQuery Vite source types.
+`void` and `@void/react` use `catalog:` references to the matching `1.5.0` pins in the root `pnpm-workspace.yaml`. Workspace type checks use tsrs; `allowImportingTsExtensions` enables the local ContentQuery Vite source types.
 
 Build the workspace ContentQuery package before starting the app because its exports point at `packages/content-query/dist/`. The dev server watches Markdown and updates metadata and rendered bodies after edits. `src/content-updates.tsx` subscribes to `content-query:client` and refreshes Void loader data while preserving component state and scroll; the surrounding application remains mounted.
 
@@ -30,7 +30,7 @@ vp run --filter @content-query/example-void build
 vp run --filter @content-query/example-void preview
 ```
 
-Void uses static output. The build prerenders `/` and the three `/docs/<guide-id>` pages into `dist/client/`. Cloudflare deployments use the Worker name `content-query-void`, giving the app the URL prefix `content-query-void.<account-subdomain>.workers.dev`. Generated `.content-query/`, `.void/`, `.void-wrangler.jsonc`, `.wrangler/`, and `dist/` artifacts are ignored by Git.
+Void uses static output. The build prerenders `/` and the three `/docs/<guide-id>` pages into `dist/client/`. Cloudflare deployments use the Worker name `content-query-void`, giving the app the URL prefix `content-query-void.<account-subdomain>.workers.dev`. Generated `.cloudflare/`, `.content-query/`, `.void/`, `.void-wrangler.jsonc`, `.wrangler/`, and `dist/` artifacts are ignored by Git.
 
 ## How it fits together
 
