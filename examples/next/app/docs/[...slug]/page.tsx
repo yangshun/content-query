@@ -39,13 +39,15 @@ export default async function GuidePage({ params }: GuideProps) {
     where: { id },
     adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
     columns: { id: true, title: true, description: true },
+    // One query returns metadata, neighbors, and both built-in payloads from the same revision.
+    payloads: { _rendered: true, _body: true },
   });
 
   if (!guide) {
     notFound();
   }
 
-  const { html } = await content.render("guides", id);
+  const { _rendered: rendered, _body: body } = guide._payloads;
   const { previous, next } = guide._adjacent;
 
   return (
@@ -55,7 +57,15 @@ export default async function GuidePage({ params }: GuideProps) {
           <h1>{guide.title}</h1>
           <p>{guide.description}</p>
         </header>
-        <GuideContent html={html} />
+        <GuideContent html={rendered.html} />
+        {body !== undefined && (
+          <details className="prose markdown-source">
+            <summary>Markdown source</summary>
+            <pre>
+              <code>{body}</code>
+            </pre>
+          </details>
+        )}
       </article>
       <nav className="page-navigation" aria-label="Previous and next guides">
         <div>

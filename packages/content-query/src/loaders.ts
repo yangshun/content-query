@@ -8,6 +8,7 @@ export type {
   LoaderSource,
   FileSource,
   FileEntrySource,
+  RecordLoader,
   DataEntry,
   DataStore,
   MetaStore,

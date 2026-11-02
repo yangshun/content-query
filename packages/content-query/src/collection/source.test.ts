@@ -6,6 +6,7 @@ import { defineCollection } from "./define.ts";
 import { collectLoader } from "../../tests/helpers/loader.ts";
 import { projectFixture } from "../../tests/helpers/project.ts";
 import { buildAtRoot } from "../preparation/build.ts";
+import { renderedOf } from "../../tests/helpers/payloads.ts";
 
 describe("collection source shorthand", () => {
   test("defaults string sources to Markdown and keeps directory-relative IDs", async () => {
@@ -23,9 +24,9 @@ describe("collection source shorthand", () => {
             .from("posts" as never)
             .all(),
         ).toEqual([{ title: "Getting started" }]);
-        expect((await session.content.render("posts" as never, "getting-started")).html).toContain(
-          "Hello",
-        );
+        expect(
+          (await renderedOf(session.content, "posts" as never, "getting-started")).html,
+        ).toContain("Hello");
       } finally {
         await session.dispose();
       }

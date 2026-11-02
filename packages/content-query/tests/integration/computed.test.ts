@@ -72,7 +72,7 @@ try {
     posts:await session.content.select("readingMinutes", "words", "summary").from("posts").all(),
     articles:await session.content.select("readingMinutes", "words", "summary").from("articles").all(),
     cms:await session.content.select("words").from("cms").all(),
-    retainedBody:await session.content.readBody("posts","getting-started"),
+    retainedBody:(await session.content.query.posts.findFirst({where:{id:"getting-started"},payloads:{_body:true}}))._payloads._body,
   }));
 } finally {await session.dispose();}
 `,

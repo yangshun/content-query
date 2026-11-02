@@ -10,6 +10,7 @@ import type { LoaderCleanup } from "../loaders/types.ts";
 import { loadRegistry } from "./config.ts";
 import { watchProject, watchSources, type SourceWatchOptions } from "./watch.ts";
 import { createLoaderSession, type LoaderSession } from "./loaders/session.ts";
+import { queryRegistry } from "../collection/registry.ts";
 
 export type ContentSession<Registry extends CollectionRegistry = {}> = {
   content: Content<Registry>;
@@ -248,12 +249,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
     registry = nextRegistry;
     loaders = nextLoaders;
     configDependencies = loaded.dependencies;
-    state.registry = Object.fromEntries(
-      Object.entries(registry).map(([name, definition]) => [
-        name,
-        { relationships: definition.relationships ?? {} },
-      ]),
-    );
+    state.registry = queryRegistry(registry);
     candidates.clear();
     cache.clear();
     loadFailures.clear();

@@ -1,20 +1,29 @@
 ---
 title: Rendering content
-description: Load Markdown output and retained bodies explicitly.
+description: Request Markdown output and retained bodies as query payloads.
 section: rendering
 order: 30
 ---
 
-Metadata queries do not render content. Call `render()` for the article you want to display:
+Metadata queries do not render content. Request the `_rendered` payload in the query that loads the article you want to display:
 
 ```ts
-const { html, headings } = await content.render("posts", "hello");
-const body = await content.readBody("posts", "hello");
+const post = await content.query.posts.findFirst({
+  where: { id: "hello" },
+  columns: { title: true },
+  payloads: { _rendered: true, _body: true },
+});
+if (post) {
+  const { html, headings } = post._payloads._rendered;
+  const body = post._payloads._body;
+}
 ```
+
+With fluent queries, call `.withPayload("_rendered")` before the terminal. Payloads load after filtering and pagination, from the same revision as the rest of the result, and appear under `_payloads`. They can also be requested inside relationship scopes, but not in counts or adjacent entries.
 
 ## Markdown output
 
-`render()` returns HTML and headings with `depth`, `slug`, and `text`. HTML headings have matching unique IDs, and fenced code blocks are syntax highlighted. Your application owns heading links, templates, and presentation.
+The `_rendered` payload contains HTML and headings with `depth`, `slug`, and `text`. HTML headings have matching unique IDs, and fenced code blocks are syntax highlighted. Your application owns heading links, templates, and presentation.
 
 Authored links and image URLs pass through unchanged. The current renderer produces HTML; MDX, asset processing, and configurable Markdown plugins are not supported yet.
 
@@ -22,6 +31,12 @@ Authored links and image URLs pass through unchanged. The current renderer produ
 
 Markdown defaults to `retainBody: true` and `deferRender: false`. Production preparation compiles HTML eagerly, and the runtime loads each requested item's output separately. `deferRender: true` packages captured Markdown with the renderer for runtime compilation.
 
-`readBody()` returns retained text or `undefined`; it never reads original source files. Missing entries reject. A body provided by a custom loader does not automatically imply Markdown rendering.
+The `_body` payload is the retained text, or `undefined` when an entry has none; it never reads original source files. Entries without supplied HTML or a Markdown rendering path reject a `_rendered` request with `not-renderable`. A body provided by a custom loader does not automatically imply Markdown rendering.
+
+Markdown sources, `glob()`, and custom loaders offer `_body` and `_rendered`. JSON, YAML, and TOML sources and `file()` hold data records only, so requesting either payload there is a type error.
+
+Version 0.2.0 replaced `content.render(collection, id)` and `content.readBody(collection, id)` with these payload requests. A query for a missing entry returns `undefined`, so handle page-not-found behavior where you check the result.
+
+The repository's `content-query/examples/payloads/` example builds a static site that uses each kind of payload request, including payloads inside relationship scopes and HTML supplied by a custom loader.
 
 See [how ContentQuery works](/docs/how-it-works) for preparation and production boundaries.

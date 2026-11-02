@@ -73,7 +73,7 @@ async function setup(encoded: boolean) {
     const revision = sessionInternals(session).state.revision!;
     const collections: Record<string, EncodedCollection> = {};
     for (const [name, collection] of Object.entries(revision.collections)) {
-      collections[name] = { records: collection.records.map(encode), payloads: {} };
+      collections[name] = { records: collection.records.map(encode), builtins: {} };
     }
     content = createArtifactRuntime<typeof registry>(
       { version: ARTIFACT_VERSION, codec: CODEC_VERSION, collections: revision.registry },

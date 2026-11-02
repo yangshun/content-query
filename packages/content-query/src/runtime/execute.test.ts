@@ -7,7 +7,7 @@ import type { PreparedRevision, QueryRecord } from "./revision.ts";
 function revision(records: readonly QueryRecord[]): PreparedRevision {
   return {
     registry: { entries: { relationships: {} } },
-    collections: { entries: { records, relationships: {}, payloads: new Map() } },
+    collections: { entries: { records, relationships: {}, builtins: new Map() } },
     relations: new Map(),
     active: 0,
     payloadCache: new Map(),

@@ -23,6 +23,7 @@ Outstanding tasks and future design notes. Implemented capabilities are document
   - [Lazy source bodies and cross-operation snapshots](#lazy-source-bodies-and-cross-operation-snapshots)
   - [Live collections and runtime source loading](#live-collections-and-runtime-source-loading)
 - **Processing and rendering**
+  - [Named per-entry payloads](#named-per-entry-payloads)
   - [Build-time transforms](#build-time-transforms)
   - [Collection-wide computed context](#collection-wide-computed-context)
   - [Built-in derived fields](#built-in-derived-fields)
@@ -135,6 +136,17 @@ Before implementation, define freshness and caching, invalidation or explicit re
 
 Reference: [Astro's live collections](https://docs.astro.build/en/guides/content-collections/#live-content-collections) use separate APIs and loaders that return request-time data directly. The [original proposal](https://github.com/withastro/roadmap/discussions/1137) explicitly excluded updating its content-layer store. That is a different contract from refreshing prepared content and is a reference for the second approach, not an API decision for this library. Astro live loaders also return cache hints (`tags` and `lastModified`) that applications pass to `Astro.cache.set()` or response headers. A ContentQuery live design should decide whether freshness metadata belongs in runtime results.
 
+### Named per-entry payloads
+
+Status: built-in `_body` and `_rendered` payloads and payload queries shipped in 0.2.0 on November 2, 2026. The remaining milestones are agreed but not implemented.
+
+Entries assembled from many files, such as an exercise folder with a manifest, Markdown sections, per-language code, and test cases, need large typed data that catalog queries never load. Planned work, in order:
+
+1. **Custom payloads.** `defineCollection({ payloads: { detail: { schema, variants?, combinations?, resolve } } })`, resolved and schema-validated during preparation and stored one module per entry and variant. Custom payload names cannot start with an underscore, which is reserved for built-ins such as `_body` and `_rendered`. Variant keys are required with no fallback; a missing combination fails with `variant-not-found`. Diagnostics gain `payload` and `variant` fields.
+2. **Tracked related files.** `files.glob()`, `files.file()`, `files.renderMarkdown()`, `files.text()`, and `files.bytes()` mirror the loaders, are rooted at the manifest's folder, and record dependencies so edits, additions, and deletions re-resolve only affected payloads.
+3. **Bounded preparation.** Concurrent payload resolution with streamed writes, a persistent preparation cache, on-demand payload resolution in Vite development and tests, a `content-query check` command, and cross-entry validators.
+4. **Assets and delivery.** Content-hashed `AssetRef<Value>` payloads read with `content.readAsset(ref)`, and `bundle` or `files` delivery with Node and Cloudflare Workers readers.
+
 ### Build-time transforms
 
 - General build-time transforms for typed output reshaping and conditional entry omission. See [build-time transforms](#build-time-transforms).
@@ -159,7 +171,7 @@ Status: reading time, word count, and excerpt helpers implemented on October 19,
 
 `content-query/computed` exports `readingTime()`, `wordCount()`, and `excerpt()` as reusable computed definitions with Standard Schema results. Helpers support captured Markdown bodies and typed selectors for text/HTML fields. See the [implemented contract](./PLAN.md#reusable-computed-text-fields).
 
-Queryable headings, table of contents, slug helpers, and uniqueness helpers remain future work. Rendered headings are available only from `content.render()`. Any helper derived from rendered output must make its compilation cost explicit under [guideline 8](./PLAN.md#8-make-expensive-work-explicit), and uniqueness across a collection depends on the [collection-wide context](#collection-wide-computed-context).
+Queryable headings, table of contents, slug helpers, and uniqueness helpers remain future work. Rendered headings are available only from the `_rendered` payload. Any helper derived from rendered output must make its compilation cost explicit under [guideline 8](./PLAN.md#8-make-expensive-work-explicit), and uniqueness across a collection depends on the [collection-wide context](#collection-wide-computed-context).
 
 ### Configurable Markdown processing
 
@@ -177,7 +189,7 @@ Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./
 
 Rendering returns framework-independent HTML. Astro supports MDX and Markdoc with component mapping. Content Collections offers `@content-collections/mdx` and bundler-compiled static imports through `createDefaultImport()`. Velite compiles `s.mdx()` to function-body code.
 
-Component content conflicts with framework independence and with packaging rules that exclude application callbacks. One candidate is an entry field that records a typed module reference to the source file, so the host bundler compiles it and `content.render()` stays unchanged for HTML content. Define how references are typed, how component modules cross the [server/client boundary](./PLAN.md#4-enforce-the-serverclient-boundary) when pages import them, and how headings are extracted without a framework renderer.
+Component content conflicts with framework independence and with packaging rules that exclude application callbacks. One candidate is an entry field that records a typed module reference to the source file, so the host bundler compiles it and the `_rendered` payload stays unchanged for HTML content. Define how references are typed, how component modules cross the [server/client boundary](./PLAN.md#4-enforce-the-serverclient-boundary) when pages import them, and how headings are extracted without a framework renderer.
 
 ### Typed content href helpers
 

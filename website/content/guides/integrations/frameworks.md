@@ -24,4 +24,4 @@ The Vite-based examples use the [Vite plugin](/docs/integrations/vite) and `cont
 
 The native Angular example uses `@angular/ssr` and Angular Router. It runs `content-query build` before Angular compilation and imports the physical `.content-query/server.js` entry in server-only API handlers. Router resolvers consume those APIs through `HttpClient`, and Angular transfers the initial responses during hydration. Development runs `content-query build --watch` alongside `ng serve`; generated module changes trigger Angular rebuilds and page reloads. Production runs the built Node SSR server.
 
-The repository's `content-query/examples/` directory contains runnable examples for all six frameworks. Keep collection configuration and the prepared server runtime out of browser code.
+The repository's `content-query/examples/` directory contains runnable examples for all six frameworks, plus a framework-free `payloads/` example. Keep collection configuration and the prepared server runtime out of browser code.

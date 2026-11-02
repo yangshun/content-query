@@ -1,5 +1,6 @@
 import type {
   CollectionRegistry,
+  PayloadsOf,
   QueryData,
   Relationship,
   RelationshipsOf,
@@ -76,6 +77,12 @@ export type RelationalWhere<
   RAW?: (fields: Fields<QueryData<Registry[Name]>>) => Expression;
 };
 
+/** Payloads to attach under `_payloads`; payloads set to false are omitted. */
+export type PayloadOptions<
+  Registry extends CollectionRegistry,
+  Name extends keyof Registry & string,
+> = { [Key in keyof PayloadsOf<Registry[Name]>]?: boolean };
+
 /** Collection-scoped metadata queries with Drizzle-style columns, relationships, and filters. */
 export type RelationalQueryOptions<
   Registry extends CollectionRegistry,
@@ -101,6 +108,7 @@ export type RelationalQueryOptions<
   (AllowAdjacent extends true
     ? {
         adjacent?: true | RelationalQueryOptions<Registry, Name, true, false, false>;
+        payloads?: PayloadOptions<Registry, Name>;
       }
     : {});
 
@@ -158,6 +166,20 @@ type AdjacentResult<
     }
   : {};
 type Simplify<Value> = { [Key in keyof Value]: Value[Key] };
+type RequestedPayloads<Payloads, Requested> = {
+  -readonly [
+    Key in keyof Requested as Requested[Key] extends false | undefined ? never : Key
+  ]-?: Key extends keyof Payloads ? Payloads[Key] : never;
+};
+type PayloadResult<
+  Registry extends CollectionRegistry,
+  Name extends keyof Registry & string,
+  Options,
+> = Options extends { payloads: infer Requested }
+  ? keyof RequestedPayloads<PayloadsOf<Registry[Name]>, Requested> extends never
+    ? {}
+    : { _payloads: Simplify<RequestedPayloads<PayloadsOf<Registry[Name]>, Requested>> }
+  : {};
 
 /** Infers selected columns and relationships, preserving optional metadata in default projections. */
 export type RelationalQueryResult<
@@ -168,7 +190,8 @@ export type RelationalQueryResult<
   ? Simplify<
       ColumnResult<QueryData<Registry[Name]>, Options> &
         IncludedResult<Registry, Name, Options> &
-        AdjacentResult<Registry, Name, Options>
+        AdjacentResult<Registry, Name, Options> &
+        PayloadResult<Registry, Name, Options>
     >
   : never;
 
@@ -252,31 +275,39 @@ export type CheckedRelationalOptions<
               ? true
               : CheckedRelationalOptions<Registry, Name, Options[Key], true, false, false>
             : never
-          : Key extends "orderBy"
-            ? Key extends keyof RelationalQueryOptions<
-                Registry,
-                Name,
-                Many,
-                AllowAdjacent,
-                Pagination
-              >
+          : Key extends "payloads"
+            ? AllowAdjacent extends true
               ? {
-                  [Field in keyof Options[Key]]: Field extends keyof OrderBy<
-                    QueryData<Registry[Name]>
-                  >
-                    ? Options[Key][Field]
+                  [Payload in keyof Options[Key]]: Payload extends keyof PayloadsOf<Registry[Name]>
+                    ? Options[Key][Payload]
                     : never;
                 }
               : never
-            : Key extends keyof RelationalQueryOptions<
+            : Key extends "orderBy"
+              ? Key extends keyof RelationalQueryOptions<
                   Registry,
                   Name,
                   Many,
                   AllowAdjacent,
                   Pagination
                 >
-              ? Options[Key]
-              : never;
+                ? {
+                    [Field in keyof Options[Key]]: Field extends keyof OrderBy<
+                      QueryData<Registry[Name]>
+                    >
+                      ? Options[Key][Field]
+                      : never;
+                  }
+                : never
+              : Key extends keyof RelationalQueryOptions<
+                    Registry,
+                    Name,
+                    Many,
+                    AllowAdjacent,
+                    Pagination
+                  >
+                ? Options[Key]
+                : never;
 };
 
 /** Typed per-collection query entry points that never expose source configuration at runtime. */

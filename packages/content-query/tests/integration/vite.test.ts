@@ -291,7 +291,11 @@ export const collections = { posts: defineCollection({loader:file("./content/val
             }),
           watcherWait,
         );
-        expect((await content.render("posts", "getting-started")).headings[0].slug).toBe("fixed");
+        const page = await content.query.posts.findFirst({
+          where: { id: "getting-started" },
+          payloads: { _rendered: true },
+        });
+        expect(page._payloads._rendered.headings[0].slug).toBe("fixed");
         await writeFile(
           configPath,
           (await readFile(configPath, "utf8")).replace(
@@ -355,7 +359,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
           [
             "--input-type=module",
             "-e",
-            `const {content}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, "dist/server.mjs")).href)}); console.log(await content.select().from("posts").count());console.log((await content.render("posts","getting-started")).headings.length);`,
+            `const {content}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, "dist/server.mjs")).href)}); console.log(await content.select().from("posts").count());console.log((await content.query.posts.findFirst({where:{id:"getting-started"},payloads:{_rendered:true}}))._payloads._rendered.headings.length);`,
           ],
           { cwd: fixture.root },
         );

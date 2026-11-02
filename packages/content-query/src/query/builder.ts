@@ -1,7 +1,7 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { detach } from "../shared/values.ts";
 import { validateExpression } from "./operators.ts";
-import { checkedFields, checkedOrder, checkedPagination } from "./clauses.ts";
+import { checkedFields, checkedOrder, checkedPagination, checkedPayload } from "./clauses.ts";
 import { objectPlan } from "./object.ts";
 import {
   emptyPlan,
@@ -109,6 +109,17 @@ export function createBuilder(
         );
       }
       return branch({ with: { ...plan.with, [name]: nested } });
+    },
+    withPayload(name: string, variant?: Record<string, string>) {
+      if (!allowAdjacent || Object.hasOwn(plan.payloads ?? {}, name)) {
+        invalidQuery("Payloads cannot be repeated or requested in adjacent scopes.");
+      }
+      return branch({
+        payloads: {
+          ...plan.payloads,
+          [name]: checkedPayload(registry, plan.collection, name, variant),
+        },
+      });
     },
     selectAdjacent(configure?: object | ((siblings: unknown) => unknown)) {
       if (!allowAdjacent || plan.adjacent !== undefined) {

@@ -2,7 +2,7 @@ import { ContentError } from "../shared/errors.ts";
 import { decode } from "../shared/values.ts";
 import { createRuntime } from "../runtime/content.ts";
 import { prepareRelationships } from "../runtime/relationships.ts";
-import type { ItemPayload, PreparedRevision, QueryRecord } from "../runtime/revision.ts";
+import type { BuiltinPayload, PreparedRevision, QueryRecord } from "../runtime/revision.ts";
 import type { CollectionRegistry } from "../collection/types.ts";
 import type { ContentRenderResult } from "../runtime/types.ts";
 import {
@@ -45,7 +45,9 @@ export function createArtifactRevision(
             Array.isArray(record) ||
             !Object.hasOwn(record, "id") ||
             typeof record.id !== "string" ||
-            !record.id,
+            !record.id ||
+            Object.hasOwn(record, "_adjacent") ||
+            Object.hasOwn(record, "_payloads"),
         ) ||
         new Set(records.map((record) => record.id)).size !== records.length
       ) {
@@ -54,10 +56,10 @@ export function createArtifactRevision(
       revision.collections[name] = {
         records,
         relationships: descriptor.relationships,
-        payloads: new Map(
-          Object.entries(encoded.payloads).map(([id, load]) => [
+        builtins: new Map(
+          Object.entries(encoded.builtins ?? {}).map(([id, load]) => [
             id,
-            async () => decode<ItemPayload>((await load()).default),
+            async () => decode<BuiltinPayload>((await load()).default),
           ]),
         ),
       };

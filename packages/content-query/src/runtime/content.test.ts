@@ -3,6 +3,7 @@ import { fixtureLoader } from "../../tests/helpers/loader.ts";
 import { describe, expect, test } from "vite-plus/test";
 import { z } from "zod";
 import { defineCollection } from "../collection/define.ts";
+import type { CollectionDefinition } from "../collection/types.ts";
 import { createSession, sessionInternals } from "../preparation/session.ts";
 import {
   and,
@@ -101,9 +102,10 @@ function fixture() {
 for (const backend of ["in-memory", "encoded"] as const) {
   describe(`${backend} conformance`, () => {
     /** Prepares once, then optionally crosses the actual encoded-module data boundary. */
-    async function setup() {
-      const registry = fixture();
-      const session = await createSession<typeof registry>({
+    async function prepared<Registry extends Record<string, CollectionDefinition>>(
+      registry: Registry,
+    ) {
+      const session = await createSession<Registry>({
         root: process.cwd(),
         config: "unused",
         outDir: "unused",
@@ -112,25 +114,29 @@ for (const backend of ["in-memory", "encoded"] as const) {
       });
       let content = session.content;
       if (backend === "encoded") {
-        const revision = sessionInternals(session).state.revision!;
+        const revision = sessionInternals(session as never).state.revision!;
         const collections: Record<string, EncodedCollection> = {};
         for (const [name, collection] of Object.entries(revision.collections)) {
           collections[name] = {
             records: collection.records.map(encode),
-            payloads: Object.fromEntries(
-              [...collection.payloads].map(([id, load]) => [
+            builtins: Object.fromEntries(
+              [...collection.builtins].map(([id, load]) => [
                 id,
                 async () => ({ default: encode(await load()) }),
               ]),
             ),
           };
         }
-        content = createArtifactRuntime<typeof registry>(
+        content = createArtifactRuntime<Registry>(
           { version: ARTIFACT_VERSION, codec: CODEC_VERSION, collections: revision.registry },
           collections,
         );
       }
       return { content, session };
+    }
+    /** Prepares the shared conformance fixture. */
+    function setup() {
+      return prepared(fixture());
     }
     test("projects only selected fields, preserving own undefined and query immutability", async () => {
       const { content, session } = await setup();
@@ -277,22 +283,162 @@ for (const backend of ["in-memory", "encoded"] as const) {
         .first();
       expect(sorted?.featuredPosts).toEqual([{ id: "first" }, { id: "second" }, { id: "second" }]);
     });
-    test("body/render results are explicit, detached, and have distinct absence/errors", async () => {
+    test("payloads load after paging, detached, with distinct absence and errors", async () => {
       const { content } = await setup();
-      expect(await content.readBody("posts", "first")).toBe("raw");
-      expect(await content.readBody("authors", "ada")).toBeUndefined();
-      const rendered = await content.render("posts", "first");
-      rendered.headings[0]!.text = "Changed";
-      expect((await content.render("posts", "first")).headings[0]!.text).toBe("Hello");
-      await expect(content.render("authors", "ada")).rejects.toMatchObject({
-        code: "not-renderable",
+      const post = await content.query.posts.findFirst({
+        where: { id: "first" },
+        columns: { title: true },
+        payloads: { _body: true, _rendered: true },
       });
-      await expect(content.readBody("posts", "missing")).rejects.toMatchObject({
-        code: "entry-not-found",
+      expect(post).toEqual({
+        title: "Alpha%_",
+        _payloads: {
+          _body: "raw",
+          _rendered: {
+            html: '<h2 id="hello">Hello</h2>',
+            headings: [{ depth: 2, slug: "hello", text: "Hello" }],
+          },
+        },
       });
-      await expect(content.render("bad" as "posts", "first")).rejects.toMatchObject({
-        code: "invalid-query",
+      post!._payloads._rendered.headings[0]!.text = "Changed";
+      const fluent = await content
+        .select("id")
+        .from("posts")
+        .where((fields) => eq(fields.id, "first"))
+        .withPayload("_rendered")
+        .withPayload("_body")
+        .first();
+      expect(fluent).toEqual({
+        id: "first",
+        _payloads: {
+          _rendered: {
+            html: '<h2 id="hello">Hello</h2>',
+            headings: [{ depth: 2, slug: "hello", text: "Hello" }],
+          },
+          _body: "raw",
+        },
       });
+      expect(
+        await content.query.authors.findFirst({
+          where: { id: "ada" },
+          columns: {},
+          payloads: { _body: true },
+        }),
+      ).toEqual({ _payloads: { _body: undefined } });
+      expect(
+        await content.query.posts.findMany({
+          columns: { id: true },
+          orderBy: { id: "asc" },
+          offset: 1,
+          limit: 1,
+          payloads: { _body: true, _rendered: false },
+        }),
+      ).toEqual([{ id: "second", _payloads: { _body: undefined } }]);
+      expect(
+        await content.query.posts.findMany({ columns: { id: true }, payloads: { _body: false } }),
+      ).toEqual([{ id: "first" }, { id: "second" }, { id: "third" }]);
+      await expect(
+        content.query.authors.findMany({ payloads: { _rendered: true } }),
+      ).rejects.toMatchObject({ code: "not-renderable" });
+      expect(() => content.query.posts.findMany({ payloads: { missing: true } as never })).toThrow(
+        /Unknown payload "missing"/,
+      );
+      expect(() => content.query.posts.findMany({ payloads: { _body: "yes" } as never })).toThrow(
+        /requires exactly these string variant keys: none/,
+      );
+      await expect(
+        content.count("posts", { payloads: { _body: true } } as never),
+      ).rejects.toMatchObject({ code: "invalid-query" });
+      const counted = content.select("id").from("posts").withPayload("_body") as unknown as {
+        count(): Promise<number>;
+      };
+      await expect(counted.count()).rejects.toMatchObject({ code: "invalid-query" });
+      expect(() =>
+        content
+          .select("id")
+          .from("posts")
+          .withPayload("_body")
+          .withPayload("_body" as never),
+      ).toThrow(/cannot be repeated/);
+    });
+    test("payloads never reach adjacent rows, and shared related rows get their own copies", async () => {
+      const { content } = await setup();
+      expect(
+        await content.query.posts.findMany({
+          columns: { id: true },
+          adjacent: true,
+          payloads: { _body: true },
+          limit: 1,
+        }),
+      ).toEqual([
+        {
+          id: "first",
+          _adjacent: { previous: null, next: { id: "second" } },
+          _payloads: { _body: "raw" },
+        },
+      ]);
+      expect(
+        await content.query.posts.findFirst({
+          where: { id: "second" },
+          columns: { id: true },
+          adjacent: { orderBy: { id: "asc" }, columns: { id: true } },
+          payloads: { _body: true },
+        }),
+      ).toEqual({
+        id: "second",
+        _adjacent: { previous: { id: "first" }, next: { id: "third" } },
+        _payloads: { _body: undefined },
+      });
+      const author = await content.query.authors.findFirst({
+        where: { id: "ada" },
+        columns: {},
+        with: { featuredPosts: { columns: { id: true }, payloads: { _body: true } } },
+      });
+      expect(author?.featuredPosts).toEqual([
+        { id: "second", _payloads: { _body: undefined } },
+        { id: "first", _payloads: { _body: "raw" } },
+        { id: "second", _payloads: { _body: undefined } },
+      ]);
+      expect(author!.featuredPosts[0]!._payloads).not.toBe(author!.featuredPosts[2]!._payloads);
+      const pages = {
+        pages: defineCollection({
+          loader: fixtureLoader(() => [
+            {
+              id: "home",
+              data: {},
+              rendered: {
+                html: "<h1>Home</h1>",
+                metadata: { headings: [{ depth: 1, slug: "home", text: "Home" }] },
+              },
+            },
+          ]),
+          schema: z.object({}),
+        }),
+        notes: defineCollection({
+          loader: fixtureLoader(() => [
+            { id: "a", data: { pageId: "home" } },
+            { id: "b", data: { pageId: "home" } },
+          ]),
+          schema: z.object({ pageId: z.string() }),
+          relationships: {
+            page: {
+              collection: "pages",
+              type: "one",
+              from: "pageId",
+              to: "id",
+              referenceSide: "from",
+            },
+          },
+        }),
+      };
+      const shared = await prepared(pages);
+      const notes = await shared.content.query.notes.findMany({
+        columns: { id: true },
+        with: { page: { columns: {}, payloads: { _rendered: true } } },
+      });
+      notes[0]!.page._payloads._rendered.headings[0]!.text = "Changed";
+      expect(notes[1]!.page._payloads._rendered.headings[0]!.text).toBe("Home");
+      await shared.session.dispose();
     });
   });
 }
@@ -396,16 +542,20 @@ describe("prepared values and errors", () => {
       watch: false,
     });
     const revision = sessionInternals(session).state.revision!;
-    revision.collections.values!.payloads = new Map([["one", async () => ({ body: 2 }) as never]]);
-    await expect(session.content.readBody("values", "one")).rejects.toMatchObject({
+    revision.collections.values!.builtins = new Map([["one", async () => ({ body: 2 }) as never]]);
+    await expect(
+      session.content.query.values.findMany({ payloads: { _body: true } }),
+    ).rejects.toMatchObject({
       code: "artifact-error",
       cause: expect.any(Error),
     });
-    revision.collections.values!.payloads = new Map([["one", async () => ({ markdown: "input" })]]);
+    revision.collections.values!.builtins = new Map([["one", async () => ({ markdown: "input" })]]);
     revision.renderMarkdown = async () => {
       throw new Error("compiler failed");
     };
-    await expect(session.content.render("values", "one")).rejects.toMatchObject({
+    await expect(
+      session.content.query.values.findMany({ payloads: { _rendered: true } }),
+    ).rejects.toMatchObject({
       code: "render-error",
       cause: expect.any(Error),
     });

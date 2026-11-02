@@ -9,6 +9,7 @@ const cli = fileURLToPath(new URL("packages/content-query/dist/cli.mjs", reposit
 for (const application of [
   "examples/angular/",
   "examples/next/",
+  "examples/payloads/",
   "examples/react-router/",
   "examples/sveltekit/",
   "examples/tanstack-start/",

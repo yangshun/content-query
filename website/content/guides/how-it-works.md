@@ -13,7 +13,7 @@ During development or a build, ContentQuery loads sources, validates metadata, r
 
 ## Runtime
 
-Your server imports the prepared runtime. Queries return selected metadata; `readBody()` and `render()` explicitly load an item's retained body or rendered output. Production does not need the original content files or collection configuration.
+Your server imports the prepared runtime. Queries return selected metadata, and load an item's retained body or rendered output only when they request it as a payload. Production does not need the original content files or collection configuration.
 
 ## Development updates
 

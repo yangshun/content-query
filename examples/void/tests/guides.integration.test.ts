@@ -29,7 +29,6 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
   let guideRoute: typeof import("../pages/docs/[...slug].server");
   let navigationMiddleware: typeof import("../middleware/01.docs").default;
   let startupQueries: number;
-  let startupRenders: number;
 
   beforeAll(async () => {
     workspace = await realpath(await mkdtemp(path.join(os.tmpdir(), "content-query-basic-test-")));
@@ -60,14 +59,12 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
     });
     ({ content } = await server.ssrLoadModule("content-query:server"));
     const querySpy = vi.spyOn(content, "select");
-    const renderSpy = vi.spyOn(content, "render");
     homeRoute = (await server.ssrLoadModule("/pages/index.server.ts")) as typeof homeRoute;
     guideRoute = (await server.ssrLoadModule(
       "/pages/docs/[...slug].server.ts",
     )) as typeof guideRoute;
     ({ default: navigationMiddleware } = await server.ssrLoadModule("/middleware/01.docs.ts"));
     startupQueries = querySpy.mock.calls.length;
-    startupRenders = renderSpy.mock.calls.length;
     vi.restoreAllMocks();
   }, 20_000);
 
@@ -82,13 +79,11 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
     }
   });
 
-  test("imports route modules without querying or rendering content", () => {
+  test("imports route modules without querying content", () => {
     expect(startupQueries).toBe(0);
-    expect(startupRenders).toBe(0);
   });
 
   test("returns an ordered metadata-only homepage index without rendering guides", async () => {
-    const renderSpy = vi.spyOn(content, "render");
     const props = (await homeRoute.loader(requestContext())) as HomeProps;
 
     expect(props.guides.map((guide) => guide.id)).toEqual(guideIds);
@@ -100,13 +95,11 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
     for (const guide of props.guides) {
       expect(Object.keys(guide).sort()).toEqual(["description", "id", "title"]);
     }
-    expect(renderSpy).not.toHaveBeenCalled();
   });
 
   test("loads sidebar metadata in shared middleware independently of article data", async () => {
     const set = vi.fn();
     const next = vi.fn().mockResolvedValue(undefined);
-    const render = vi.spyOn(content, "render");
     await navigationMiddleware(
       {
         req: { path: "/docs/getting-started" },
@@ -123,7 +116,6 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
         { id: "sharing-a-workspace", title: "Sharing a workspace" },
       ],
     });
-    expect(render).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledOnce();
     set.mockClear();
     await navigationMiddleware({ req: { path: "/" }, set } as unknown as CloudContext, next);
@@ -131,7 +123,6 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
   });
 
   test.each(guideIds)("renders only %s and supplies its adjacent guides", async (id) => {
-    const renderSpy = vi.spyOn(content, "render");
     const props = (await guideRoute.loader(requestContext(id))) as GuideProps;
     const currentIndex = guideIds.indexOf(id);
 
@@ -141,7 +132,8 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
     expect(props).not.toHaveProperty("guides");
     expect(props.previous?.id ?? null).toBe(guideIds[currentIndex - 1] ?? null);
     expect(props.next?.id ?? null).toBe(guideIds[currentIndex + 1] ?? null);
-    expect(renderSpy).toHaveBeenCalledExactlyOnceWith("guides", id);
+    expect(props.guide).not.toHaveProperty("_payloads");
+    expect(props.guide).not.toHaveProperty("_adjacent");
 
     if (id === "getting-started") {
       expect(props.guide.html).toContain("<ol>");
@@ -154,12 +146,10 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
   test.each(["missing-guide", ""])(
     "returns 404 for '%s' without attempting to render it",
     async (id) => {
-      const renderSpy = vi.spyOn(content, "render");
       const response = (await guideRoute.loader(requestContext(id))) as Response;
 
       expect(response.status).toBe(404);
       expect(await response.text()).toBe("Not Found");
-      expect(renderSpy).not.toHaveBeenCalled();
     },
   );
 

@@ -154,7 +154,7 @@ export default defineConfig({ plugins: [contentQuery()] });`,
             "-e",
             `import { content } from "./.content-query/server.js";
 const posts = await content.select("id", "title", "upper").from("posts").all();
-const { html } = await content.render("posts", posts[0].id);
+const { html } = (await content.query.posts.findFirst({ where: { id: posts[0].id }, payloads: { _rendered: true } }))._payloads._rendered;
 console.log(JSON.stringify({ posts, html }));`,
           ],
           { cwd: fixture.root },

@@ -37,13 +37,26 @@ export type QueryPlan = {
   offset?: number;
   with: Readonly<Record<string, QueryPlan>>;
   adjacent?: true | QueryPlan;
+  /** Payloads to attach under `_payloads` after filtering, ordering, and pagination. */
+  payloads?: Readonly<Record<string, PlanPayload>>;
 };
+/** One requested payload; variant keys are empty for payloads without variants. */
+export type PlanPayload = { variant: Readonly<Record<string, string>> };
 
 export type QueryRunner = (
   plan: QueryPlan,
   terminal: "all" | "first" | "count",
 ) => Promise<unknown>;
-export type QueryRegistry = Record<string, { relationships: Record<string, Relationship> }>;
+/** Describes a payload that queries may request, without its resolver or schema. */
+export type PayloadDescriptor = { variants: readonly string[] };
+export type QueryRegistry = Record<
+  string,
+  {
+    relationships: Record<string, Relationship>;
+    /** Payload names available to queries; omitted when the collection has none. */
+    payloads?: Record<string, PayloadDescriptor>;
+  }
+>;
 
 /** Starts a fresh query without binding a content revision until execution. */
 export function emptyPlan(collection: string): QueryPlan {

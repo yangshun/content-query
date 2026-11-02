@@ -13,12 +13,13 @@ export const loader = defineHandler(async (context) => {
     .select("id", "title", "description")
     .from("entries")
     .where((fields) => eq(fields.id, id))
+    .withPayload("_rendered")
     .first();
   if (!entry) {
     return context.notFound();
   }
-  const { html } = await content.render("entries", entry.id);
-  return { entry, html };
+  const { _payloads, ...metadata } = entry;
+  return { entry: metadata, html: _payloads._rendered.html };
 });
 
 export async function getPrerenderPaths() {

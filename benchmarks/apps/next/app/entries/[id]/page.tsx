@@ -17,11 +17,12 @@ export default async function EntryPage({ params }: { params: Promise<{ id: stri
     .select("id", "title", "description")
     .from("entries")
     .where((fields) => eq(fields.id, id))
+    .withPayload("_rendered")
     .first();
   if (!entry) {
     notFound();
   }
-  const { html } = await content.render("entries", id);
+  const { html } = entry._payloads._rendered;
   return (
     <main data-benchmark-entry={id}>
       <Link href="/">All entries</Link>

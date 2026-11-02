@@ -70,7 +70,7 @@ export async function revisionModules(
       batch = [];
       batchBytes = 0;
     }
-    for (const [id, load] of collection.payloads) {
+    for (const [id, load] of collection.builtins) {
       const payload = await load();
       const encoded = encode(payload);
       needsRenderer ||= payload.markdown !== undefined;
@@ -105,7 +105,7 @@ export async function revisionModules(
       ? `createPayloadLoaders([${chunks.join(",\n")}])`
       : `{ ${payloads.join(",\n")} }`;
     const records = compressedRecords ? `decodeCompressed(${compressedRecords})` : recordSource;
-    const code = `${loaders}export default { records: ${records}, payloads: ${loading} };\n`;
+    const code = `${loaders}export default { records: ${records}, builtins: ${loading} };\n`;
     const index = `index-${digest(code)}.js`;
     modules.set(`${directory}/${index}`, code);
     modules.set(

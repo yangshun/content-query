@@ -49,7 +49,7 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vite-plus:
         specifier: 'catalog:'
-        version: 1.3.0(@astrojs/compiler-rs@0.5.2)(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(playwright@1.64.1)(sass-embedded@1.104.1)(sass@1.104.1)(svelte@5.57.2(@typescript-eslint/types@8.58.1))(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1)
+        version: 1.3.0(@astrojs/compiler-rs@0.5.2)(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(playwright@1.64.1)(sass-embedded@1.104.1)(sass@1.104.1)(svelte@5.57.2(@typescript-eslint/types@8.58.1))(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1)
 
   benchmarks:
     devDependencies:
@@ -352,6 +352,21 @@ importers:
       vite-plus:
         specifier: 'catalog:'
         version: 1.3.0(@astrojs/compiler-rs@0.5.2)(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(playwright@1.64.1)(sass-embedded@1.104.1)(sass@1.104.1)(svelte@5.57.2(@typescript-eslint/types@8.58.1))(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1)
+
+  examples/payloads:
+    devDependencies:
+      '@types/node':
+        specifier: ^25.5.2
+        version: 25.6.0
+      content-query:
+        specifier: workspace:*
+        version: link:../../packages/content-query
+      typescript:
+        specifier: 'catalog:'
+        version: '@typescript/typescript6@6.0.2'
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.3.0(@astrojs/compiler-rs@0.5.2)(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(playwright@1.64.1)(sass-embedded@1.104.1)(sass@1.104.1)(svelte@5.57.2(@typescript-eslint/types@8.58.1))(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1)
 
   examples/react-router:
     dependencies:
@@ -11637,8 +11652,7 @@ snapshots:
 
   '@oxc-project/runtime@0.154.0': {}
 
-  '@oxc-project/types@0.124.0':
-    optional: true
+  '@oxc-project/types@0.124.0': {}
 
   '@oxc-project/types@0.139.0': {}
 
@@ -12050,8 +12064,7 @@ snapshots:
   '@rolldown/binding-win32-x64-msvc@1.2.8':
     optional: true
 
-  '@rolldown/pluginutils@1.0.0-rc.15':
-    optional: true
+  '@rolldown/pluginutils@1.0.0-rc.15': {}
 
   '@rolldown/pluginutils@1.0.1': {}
 
@@ -12970,7 +12983,7 @@ snapshots:
       '@testing-library/dom': 10.4.2
       '@testing-library/user-event': 14.6.8(@testing-library/dom@10.4.2)
       '@vitest/browser': 5.0.5(@voidzero-dev/vite-plus-core@1.3.0(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))(vitest@5.0.5)
-      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
+      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -12982,7 +12995,7 @@ snapshots:
       '@testing-library/dom': 10.4.2
       '@testing-library/user-event': 14.6.8(@testing-library/dom@10.4.2)
       '@vitest/browser': 5.0.5(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))(vitest@5.0.5)
-      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
+      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -13000,7 +13013,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
+      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
       ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
@@ -13018,7 +13031,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
+      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
       ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
@@ -13037,9 +13050,9 @@ snapshots:
       obug: 3.0.0
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
+      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
     optionalDependencies:
-      '@vitest/browser': 5.0.5(@voidzero-dev/vite-plus-core@1.3.0(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))(vitest@5.0.5)
+      '@vitest/browser': 5.0.5(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))(vitest@5.0.5)
 
   '@vitest/istanbul-lib-coverage@1.0.2': {}
 
@@ -13064,7 +13077,6 @@ snapshots:
       magic-string: 1.4.3
     optionalDependencies:
       vite: 8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1)
-    optional: true
 
   '@vitest/pretty-format@5.0.5':
     dependencies:
@@ -13087,7 +13099,7 @@ snapshots:
       pathe: 2.0.3
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5))(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
+      vitest: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
 
   '@vitest/utils@5.0.5':
     dependencies:
@@ -16967,7 +16979,6 @@ snapshots:
       '@rolldown/binding-wasm32-wasi': 1.0.0-rc.15
       '@rolldown/binding-win32-arm64-msvc': 1.0.0-rc.15
       '@rolldown/binding-win32-x64-msvc': 1.0.0-rc.15
-    optional: true
 
   rolldown@1.2.14:
     dependencies:
@@ -18264,7 +18275,6 @@ snapshots:
       terser: 5.51.2
       tsx: 4.21.0
       yaml: 2.9.1
-    optional: true
 
   vitefu@1.1.3(@voidzero-dev/vite-plus-core@1.3.0(@types/node@25.6.0)(@typescript/typescript6@6.0.2)(@volar/typescript@2.4.28)(@vue/language-core@3.3.13)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1)):
     optionalDependencies:
@@ -18320,7 +18330,7 @@ snapshots:
     transitivePeerDependencies:
       - msw
 
-  vitest@5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1)):
+  vitest@5.0.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.5(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.9.1))
@@ -18344,7 +18354,6 @@ snapshots:
       '@vitest/ui': 5.0.5(vitest@5.0.5)
     transitivePeerDependencies:
       - msw
-    optional: true
 
   void@1.2.1(e366c7d128079a3c7d071acf2b489f34):
     dependencies:

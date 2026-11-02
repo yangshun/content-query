@@ -181,15 +181,18 @@ const posts = await content
   .orderBy("title")
   .limit(20);
 
-const body = await content.readBody("posts", posts[0]!.id);
-const { html, headings } = await content.render("posts", posts[0]!.id);
+const post = await content.query.posts.findFirst({
+  where: { id: posts[0]!.id },
+  payloads: { _body: true, _rendered: true },
+});
+const { _body: body, _rendered: rendered } = post!._payloads;
 ```
 
-Start fluent queries with `content.select(...fields).from(collection)`; `from()` is available only after `select()`. Builders are immutable and reusable. Await them directly, or call `all()` / `execute()` for an array and `first()` for one entry or `undefined`. `content.select().from("posts")` returns all prepared metadata. `count()` counts filtered parents before pagination. Selected optional properties remain own properties with value `undefined`. Returned graphs and headings are detached from internal state. Queries never load bodies, rendered HTML, or a compiler.
+Start fluent queries with `content.select(...fields).from(collection)`; `from()` is available only after `select()`. Builders are immutable and reusable. Await them directly, or call `all()` / `execute()` for an array and `first()` for one entry or `undefined`. `content.select().from("posts")` returns all prepared metadata. `count()` counts filtered parents before pagination. Selected optional properties remain own properties with value `undefined`. Returned graphs and headings are detached from internal state. Queries load bodies or rendered HTML only when they request [payloads](#payloads).
 
 Queries constrained by ID equality, such as `.where((fields) => eq(fields.id, id))` or `where: { id }`, use a lazily built index for the current immutable collection revision. Repeated detail-page lookups avoid scanning the entire collection. Additional filters, selection, ordering, pagination, counts, and independent adjacency scopes retain their normal semantics. Development revisions receive their own index.
 
-Detachment copies a result directly when it contains only primitives, plain objects, dense arrays, and dates. This covers typical field selections and `render()` output, including long HTML strings. A result containing any other value, such as a `Map` or an array hole, is detached as a whole through the devalue round trip. Repeated references, cycles, mutation isolation, and the supported-value rules are the same on both paths.
+Detachment copies a result directly when it contains only primitives, plain objects, dense arrays, and dates. This covers typical field selections and `_rendered` payloads, including long HTML strings. A result containing any other value, such as a `Map` or an array hole, is detached as a whole through the devalue round trip. Repeated references, cycles, mutation isolation, and the supported-value rules are the same on both paths.
 
 Filtering uses structured expressions from `content-query/query`: scalar equality/comparison/choice operators, literal string matching, scalar-array membership, absence checks, and boolean composition. See the [operator matrix](./PLAN.md#filtering). Sorting uses deterministic Unicode code-point order and ID tie-breakers, with nullish/unordered special values last. Pagination accepts nonnegative safe integers.
 
@@ -254,7 +257,7 @@ Both return `_adjacent: { previous, next }`, with `null` at boundaries or when t
 
 `content-query/query` exports `QueryOptions<Registry, Name>` (also named `RelationalQueryOptions`), `CountOptions<Registry, Name>`, `RelationalWhere`, and `RelationalQueryResult` for typed helpers. Use `satisfies QueryOptions<...>` to validate reusable options while retaining literal column selections.
 
-The five top-level content operations are `select`, `query`, `count`, `readBody`, and `render`. This replaces callable `content.query("posts")` and root `content.findMany("posts", options)` / `findFirst`. Migrate fluent calls to `content.select(...).from("posts")`, and object calls to `content.query.posts.findMany({ columns, with, ... })` / `findFirst`.
+The top-level content operations are `select`, `query`, and `count`. Bodies and rendered output are payloads that queries request. This replaces callable `content.query("posts")` and root `content.findMany("posts", options)` / `findFirst`. Migrate fluent calls to `content.select(...).from("posts")`, and object calls to `content.query.posts.findMany({ columns, with, ... })` / `findFirst`. Version 0.2.0 removes `content.readBody()` and `content.render()`; see [Payloads](#payloads) for their replacements.
 
 ## Backends and Vite
 
@@ -296,7 +299,7 @@ Server modules import `content` from `content-query:server` with either backend.
 
 Generated output is ordinary ESM for Node or another bundler; it does not require Vite. The Vite integration rejects direct/transitive client imports, including the physical generated server entry. It recognizes package files by the installed package's location and `node_modules/content-query` paths, so an application directory named `content-query` is unaffected. Other hosts must enforce equivalent server-only boundaries. Runtime guards provide a fallback. The [Next.js example](../examples/next/README.md) uses the optional Next.js adapter, server-only queries, and App Router static generation.
 
-Vite excludes generated artifacts from its file watcher while preserving application watcher settings. Production content preparation runs for server environments, so client compilation does not repeat source loading and Markdown rendering. Before bundling, Vite packs payload sources into lazy modules targeting 128 KiB each, including when the host requires strict entry signatures. Default metadata queries still load no bodies; rendering an entry can load neighboring payloads in its module. Host output and chunking settings continue to control the final bundle. Standalone generated artifacts retain individual immutable item modules.
+Vite excludes generated artifacts from its file watcher while preserving application watcher settings. Production content preparation runs for server environments, so client compilation does not repeat source loading and Markdown rendering. Before bundling, Vite packs payload sources into lazy modules targeting 128 KiB each, including when the host requires strict entry signatures. Queries without payloads still load no payload modules; requesting `_body` or `_rendered` for an entry can load neighboring entries' payloads in the same module. Host output and chunking settings continue to control the final bundle. Standalone generated artifacts retain individual immutable item modules.
 
 Development prepares initial content before Vite starts listening; server module loads also await that preparation. Closing a server before it listens releases its content session. Development uses the same bounded payload batches and shares concurrent serialization of a revision. Large metadata indexes and payload batches use gzip/base64 when that saves at least ten percent. A portable decoder restores metadata synchronously and expands each payload batch once on first access; failed payload loads can be retried. The underlying value codec still preserves rich metadata, heading aliases, special entry IDs, and detached results. Small or incompressible data stays uncompressed.
 
@@ -352,17 +355,43 @@ The Void example and docs app clear the router cache and call `router.refresh({ 
 
 The examples use native framework loaders/server functions and keep routing and HTML presentation in the application: [Void](../examples/void/README.md), [React Router](../examples/react-router/README.md), [TanStack Start](../examples/tanstack-start/README.md), [Next.js](../examples/next/README.md), [SvelteKit](../examples/sveltekit/README.md), and [Angular](../examples/angular/README.md).
 
-## Body and rendering policy
+## Payloads
 
-`readBody(collection, id)` accepts any registered collection and returns retained text or `undefined`. Missing entries reject. It never reads original sources. Custom loaders can provide optional text and `rendered: { html, metadata?: { headings? } }`; a generic body string alone does not imply Markdown.
+Bodies and rendered output are payloads: per-entry data stored and loaded separately from query records. Request them in the query that selects the entry:
 
-Markdown defaults to `retainBody: true` and `deferRender: false`. Production preparation compiles eagerly and packages HTML/headings for lazy loading. `deferRender: true` packages captured input and the library-owned renderer. Development compiles on explicit rendering. Disabling public retention still preserves private input needed by deferred rendering. Built-in HTML includes matching unique heading IDs and syntax-highlighted fenced code. Headings carry IDs only; permalink anchors and other heading presentation are application-owned. Authored image/link URLs remain application-owned and are not rewritten or copied.
+```ts
+const post = await content.query.posts.findFirst({
+  where: { id },
+  columns: { title: true },
+  payloads: { _rendered: true },
+});
+const { html, headings } = post!._payloads._rendered;
 
-`content.render()` returns HTML and headings, with no framework components or user-defined runtime resolvers. Separate query/render operations may observe different development revisions. Production content is immutable.
+const same = await content
+  .select("title")
+  .from("posts")
+  .where((fields) => eq(fields.id, id))
+  .withPayload("_rendered")
+  .withPayload("_body")
+  .first();
+```
+
+- **Requests.** Relational `payloads` maps payload names to `true`; `false` omits a payload. It is accepted at the root and inside `with` scopes. Fluent `.withPayload(name)` does the same on root and relationship builders; requesting the same payload twice throws. Omitting `columns` still returns all metadata alongside the payloads.
+- **Results.** Requested values appear under the reserved `_payloads` key, which metadata, computed fields, and relationships cannot use. A query that requests no payloads has no `_payloads` key.
+- **Loading.** Payloads load after filtering, ordering, and pagination, from the same pinned revision as the records, with at most 16 loads in flight per query. Each distinct payload loads once per query, and every row receives its own detached copy, including rows that share a related entry. Adjacent sibling scopes never request payloads.
+- **Limits.** Payloads are never selectable, filterable, sortable, or countable. `content.count()` and fluent `.count()` reject payload requests, and the fluent `count()` terminal is unavailable in the types once `.withPayload()` is called.
+- **Built-ins.** Built-in payload names start with an underscore, so they never collide with payloads a collection declares. `_body` is the retained raw text, or `undefined` when an entry has none or `retainBody` is `false`. `_rendered` is `{ html, headings }`; entries without supplied output or a Markdown rendering path reject the query with `not-renderable`. Markdown `source` collections, `glob()`, and custom loaders offer both. JSON, YAML, and TOML `source` collections and `file()` do not: requesting either there is a type error and an `invalid-query` at runtime.
+- **Missing entries.** A query for a missing entry returns `undefined` or an empty array, so there is no separate lookup error.
+
+Payloads never read original sources. Custom loaders can provide optional text and `rendered: { html, metadata?: { headings? } }`; a generic body string alone does not imply Markdown.
+
+Markdown defaults to `retainBody: true` and `deferRender: false`. Production preparation compiles eagerly and packages HTML/headings for lazy loading. `deferRender: true` packages captured input and the library-owned renderer. Development compiles when a query first requests `_rendered`. Disabling public retention still preserves private input needed by deferred rendering. Built-in HTML includes matching unique heading IDs and syntax-highlighted fenced code. Headings carry IDs only; permalink anchors and other heading presentation are application-owned. Authored image/link URLs remain application-owned and are not rewritten or copied.
+
+`_rendered` contains HTML and headings, with no framework components or user-defined runtime resolvers. Records and payloads from one query always come from the same revision; separate queries may observe different development revisions. Production content is immutable.
 
 ## Errors and extension points
 
-Import `ContentError` from `content-query/runtime`. Its stable `code`, context, `issues`, `cause`, and grouped `diagnostics` distinguish validation, source, reference, query, artifact, rendering, and entry-lookup failures. Source read/parse failures name their collection and file (`source`), include the parser's message, and report every failing file together. Preparation also reports every dangling or ambiguous reference with its value, skipping relationship checks only for collections that already failed. Unsupported stored values report a structured field `path`. See the [error contract](./PLAN.md#errors-and-diagnostics).
+Import `ContentError` from `content-query/runtime`. Its stable `code`, context, `issues`, `cause`, and grouped `diagnostics` distinguish validation, source, reference, query, artifact, rendering, and payload-variant failures. Source read/parse failures name their collection and file (`source`), include the parser's message, and report every failing file together. Preparation also reports every dangling or ambiguous reference with its value, skipping relationship checks only for collections that already failed. Unsupported stored values report a structured field `path`. See the [error contract](./PLAN.md#errors-and-diagnostics).
 
 Vite transports development diagnostics with the same value codec as prepared data, preserving BigInt validation constraints, supported native values, and graph references. Error causes retain their names, messages, stacks, and nested causes in isolated runtimes. Invalid initial content remains recoverable, and asynchronous delivery failures are reported through Vite's logger and error display.
 

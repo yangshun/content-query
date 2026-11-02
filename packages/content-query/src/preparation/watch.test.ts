@@ -8,6 +8,7 @@ import { defineCollection } from "../collection/define.ts";
 import { file, glob } from "../loaders.ts";
 import { createSession, sessionInternals } from "./session.ts";
 import { projectFixture } from "../../tests/helpers/project.ts";
+import { bodyOf } from "../../tests/helpers/payloads.ts";
 
 /** Gives the watcher time to report an event, if it were going to. */
 function settle(): Promise<void> {
@@ -253,7 +254,7 @@ describe("source watching", () => {
         await internal.idle();
         expect(internal.state.error).toMatchObject(error);
         expect(internal.state.revision).toBe(previous);
-        await expect(session.content.readBody("posts", "getting-started")).rejects.toMatchObject(
+        await expect(bodyOf(session.content, "posts", "getting-started")).rejects.toMatchObject(
           error,
         );
         await writeFile(fixture.config, original);

@@ -7,6 +7,7 @@ import { buildAtRoot } from "../../src/preparation/build.ts";
 import type { Content } from "../../src/runtime/content.ts";
 import type { collections } from "../fixtures/example/content-query.config.ts";
 import { packageRoot, projectFixture } from "../helpers/project.ts";
+import { renderedOf } from "../helpers/payloads.ts";
 
 type ExampleContent = Content<typeof collections>;
 
@@ -19,15 +20,6 @@ async function exampleProject() {
   await cp(path.join(example, "content"), path.join(fixture.root, "content"), { recursive: true });
   await cp(path.join(example, "content-query.config.ts"), fixture.config);
   return fixture;
-}
-
-/** Captures a promise's ContentError code, or the value when it unexpectedly resolves. */
-async function codeOf(operation: () => Promise<unknown>): Promise<unknown> {
-  try {
-    return { resolved: await operation() };
-  } catch (error) {
-    return (error as { code?: unknown }).code;
-  }
 }
 
 /** Asserts every query, body, render, and error value documented by the PLAN.md example. */
@@ -77,13 +69,26 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   ).toStrictEqual({ subtitel: undefined });
 
   // Read retained raw text.
-  const rawMarkdown = await content.readBody("posts", "getting-started");
+  const raw = await content.query.posts.findFirst({
+    where: { id: "getting-started" },
+    columns: {},
+    payloads: { _body: true },
+  });
+  const rawMarkdown = raw?._payloads._body;
   expect(rawMarkdown).toBe(
     "# Getting started\n\nWelcome to **VoidPress**.\n\n## Installation\n\nAdd your content.\n",
   );
   expect(rawMarkdown?.startsWith("# Getting started")).toBe(true);
-  expect(await content.readBody("authors", "ada")).toBeUndefined();
-  expect(await codeOf(() => content.readBody("posts", "missing-post"))).toBe("entry-not-found");
+  expect(
+    await content.query.posts.findFirst({
+      where: { id: "missing-post" },
+      payloads: { _body: true },
+    }),
+  ).toBeUndefined();
+  // file() collections carry no built-in body or rendered payloads.
+  expect(() => content.query.authors.findFirst({ payloads: { _body: true } } as never)).toThrow(
+    expect.objectContaining({ code: "invalid-query" }),
+  );
 
   // Look up and render a page.
   const post = await content
@@ -92,13 +97,15 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
     .where((fields) =>
       and(eq(fields.slug, "getting-started"), eq(fields.locale, "en"), eq(fields.draft, false)),
     )
+    .withPayload("_rendered")
     .first();
-  expect(post).toStrictEqual({
+  const { _payloads, ...metadata } = post!;
+  expect(metadata).toStrictEqual({
     id: "getting-started",
     title: "Getting started",
     publishedAt: new Date("2026-10-17T00:00:00.000Z"),
   });
-  const { html, headings } = await content.render("posts", post!.id);
+  const { html, headings } = _payloads._rendered;
   expect(html).toBe(
     [
       '<h1 id="getting-started">Getting started</h1>',
@@ -121,7 +128,9 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
       .where((fields) => eq(fields.id, "missing-post"))
       .first(),
   ).toBeUndefined();
-  expect(await codeOf(() => content.render("authors", "ada"))).toBe("not-renderable");
+  expect(() => content.query.authors.findFirst({ payloads: { _rendered: true } } as never)).toThrow(
+    expect.objectContaining({ code: "invalid-query" }),
+  );
   expect(() => content.select("id").from("posts").limit(-1)).toThrow(
     expect.objectContaining({ code: "invalid-query" }),
   );
@@ -222,7 +231,7 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
       .where((fields) => eq(fields.id, "getting-started"))
       .first(),
   ).toStrictEqual({ publishedAt: new Date("2026-10-17T00:00:00.000Z") });
-  expect((await content.render("posts", "getting-started")).headings).toHaveLength(2);
+  expect((await renderedOf(content, "posts", "getting-started")).headings).toHaveLength(2);
   expect(await grace.select("featuredPostIds").first()).toStrictEqual({
     featuredPostIds: ["upcoming-features", "getting-started", "upcoming-features"],
   });

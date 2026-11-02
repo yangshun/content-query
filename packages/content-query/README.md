@@ -9,7 +9,7 @@ Use it with your existing framework. Your application owns its routes, layouts, 
 - **Typed schemas.** Validate metadata with bundled schema builders or any Standard Schema V1 provider, with inferred TypeScript types.
 - **Flexible sources.** Load local files, use Astro-compatible content loaders, or write your own loader.
 - **Queries and relationships.** Select fields, filter, sort, paginate, and load related entries with validated references.
-- **Markdown rendering.** Get HTML, headings, and syntax highlighting separately from metadata queries.
+- **Markdown rendering.** Request HTML, headings, and syntax highlighting as query payloads, loaded only when a query asks for them.
 - **Framework integrations.** Use Vite, Next.js, or the standalone CLI, with content updates during development.
 
 ## Usage
@@ -54,9 +54,27 @@ const posts = await content
   .from("posts")
   .where((fields) => eq(fields.draft, false))
   .orderBy("title");
+
+const post = await content.query.posts.findFirst({
+  where: { id: posts[0]!.id },
+  payloads: { _rendered: true },
+});
+const { html, headings } = post!._payloads._rendered;
 ```
 
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
+
+## Migrating to 0.2
+
+Version 0.2.0 removes `content.readBody()` and `content.render()`. Request bodies and rendered output as payloads in the query that loads the entry:
+
+| 0.1                                   | 0.2                                                                                                            |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `await content.readBody("posts", id)` | `(await content.query.posts.findFirst({ where: { id }, payloads: { _body: true } }))?._payloads._body`         |
+| `await content.render("posts", id)`   | `(await content.query.posts.findFirst({ where: { id }, payloads: { _rendered: true } }))?._payloads._rendered` |
+| Fluent queries                        | Add `.withPayload("_rendered")` or `.withPayload("_body")` before the terminal.                                |
+
+Built-in payload names start with an underscore: `_body` and `_rendered`. A query for a missing entry returns `undefined` instead of rejecting with `entry-not-found`, which no longer exists. JSON, YAML, and TOML sources and `file()` collections offer no payloads. Rebuild generated content after upgrading; 0.1 artifacts are rejected.
 
 ## Documentation
 

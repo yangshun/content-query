@@ -38,10 +38,12 @@ export function MarkdownRenderingExample({ rendered }: { rendered: ContentRender
         )}
       </div>
       <details className="example-details">
-        <summary>Render API</summary>
+        <summary>Rendering query</summary>
         <CodeExample
-          label="content.render()"
-          code={'const article = await content.render(\n  "examples",\n  "hello-world",\n);'}
+          label="payloads: { _rendered: true }"
+          code={
+            'const article = await content.query.examples.findFirst({\n  where: { id: "hello-world" },\n  payloads: { _rendered: true },\n});\nconst { html, headings } = article._payloads._rendered;'
+          }
         />
       </details>
     </div>

@@ -32,8 +32,8 @@ type PayloadChunk = {
  */
 export function createPayloadLoaders(
   chunks: readonly PayloadChunk[],
-): EncodedCollection["payloads"] {
-  const loaders: EncodedCollection["payloads"] = Object.create(null);
+): EncodedCollection["builtins"] {
+  const loaders: EncodedCollection["builtins"] = Object.create(null);
   for (const chunk of chunks) {
     let loaded: Promise<Record<string, string>> | undefined;
     /** Shares one chunk import and decompression across concurrent entry requests. */
