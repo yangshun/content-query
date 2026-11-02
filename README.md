@@ -77,7 +77,7 @@ The Vite integration supports Vite 8, and the Next.js integration supports Next.
 
 See the [contributor guide](./CONTRIBUTING.md) for setup, development, and checks. For performance measurements, see the [benchmark suite](./benchmarks/README.md) and [results](./benchmarks/RESULTS.md).
 
-Workspace `void`, `@void/react`, and `@void/md` dependencies share matching `1.2.1` pins in `pnpm-workspace.yaml`. Vite and Vite+ also share catalog pins so plugin types stay compatible across packages and examples.
+Workspace `void`, `@void/react`, and `@void/md` dependencies share matching `1.5.0` pins in `pnpm-workspace.yaml`. Vite and Vite+ also share catalog pins so plugin types stay compatible across packages and examples.
 
 The workspace provides TypeScript `7.1.0-beta` as `vp exec tsc`. Framework and declaration tools resolve the official TypeScript 6 compatibility package through the shared catalog, providing the `6.0.3` JavaScript API. Repository checks continue to use tsrs.
 
