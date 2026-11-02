@@ -21,7 +21,7 @@ ContentQuery turns Markdown and structured data into validated content that your
 
 1. **Define content.** Choose sources and validate their metadata with a schema.
 2. **Query content.** Select fields, filter entries, and load related content.
-3. **Render content.** Request a Markdown article's HTML and headings when you need them.
+3. **Render content.** Request a Markdown article's HTML and headings as a payload when you need them.
 
 Metadata queries and rendered bodies are separate. A page listing can select titles without loading every article. Your application owns routes, layouts, and public URLs.
 

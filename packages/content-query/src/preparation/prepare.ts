@@ -9,11 +9,12 @@ import { renderMarkdown } from "../runtime/markdown.ts";
 import { isRelationship, prepareRelationships } from "../runtime/relationships.ts";
 import { detach, encode, valuePath } from "../shared/values.ts";
 import type {
-  ItemPayload,
+  BuiltinPayload,
   PreparedCollection,
   PreparedRevision,
   QueryRecord,
 } from "../runtime/revision.ts";
+import { queryRegistry } from "../collection/registry.ts";
 import type { CollectionDefinition, CollectionRegistry } from "../collection/types.ts";
 import type { LoaderEntry } from "../loaders/types.ts";
 
@@ -22,7 +23,7 @@ type PreparedEntry = {
   signature?: string;
   definition: CollectionDefinition;
   record: QueryRecord;
-  payload: ItemPayload;
+  payload: BuiltinPayload;
 };
 export type PreparationCache = Map<string, PreparedEntry>;
 
@@ -48,12 +49,12 @@ export async function prepareRevision(
   >;
   for (const [collectionName, definition] of Object.entries(registry)) {
     const records: QueryRecord[] = [];
-    const payloads = new Map<string, () => Promise<ItemPayload>>();
+    const builtins = new Map<string, () => Promise<BuiltinPayload>>();
     const computed = definition.computed ?? {};
     const relationships = definition.relationships ?? {};
     const declarationNames = [...Object.keys(computed), ...Object.keys(relationships)];
     if (
-      declarationNames.some((name) => name === "id" || name === "_adjacent") ||
+      declarationNames.some((name) => ["id", "_adjacent", "_payloads"].includes(name)) ||
       new Set(declarationNames).size !== declarationNames.length ||
       Object.values(relationships).some((relation) => !isRelationship(relation))
     ) {
@@ -89,7 +90,7 @@ export async function prepareRevision(
       ) {
         records.push(previous.record);
         if (Object.keys(previous.payload).length) {
-          payloads.set(entry.id, async () => previous.payload);
+          builtins.set(entry.id, async () => previous.payload);
         }
         continue;
       }
@@ -106,10 +107,11 @@ export async function prepareRevision(
         if (
           Object.hasOwn(validated, "id") ||
           Object.hasOwn(validated, "_adjacent") ||
+          Object.hasOwn(validated, "_payloads") ||
           declarationNames.some((name) => Object.hasOwn(validated, name))
         ) {
           throw new Error(
-            "Metadata, computed fields, relationships, and reserved id/_adjacent must have distinct names.",
+            "Metadata, computed fields, relationships, and reserved id/_adjacent/_payloads must have distinct names.",
           );
         }
         // Clone as one graph, before exposing data to user resolvers or retaining it.
@@ -146,7 +148,7 @@ export async function prepareRevision(
           continue;
         }
         const record = detach({ ...metadata, ...values, id: entry.id });
-        const payload: ItemPayload = {};
+        const payload: BuiltinPayload = {};
         const markdown = descriptor?.kind === "glob" && entry.source?.toLowerCase().endsWith(".md");
         if (
           entry.body !== undefined &&
@@ -177,7 +179,7 @@ export async function prepareRevision(
         cache.set(key, { definition, signature, record, payload });
         records.push(record);
         if (Object.keys(payload).length) {
-          payloads.set(entry.id, async () => payload);
+          builtins.set(entry.id, async () => payload);
         }
       } catch (cause) {
         // Unsupported stored values report devalue's formatted location within the record.
@@ -199,7 +201,7 @@ export async function prepareRevision(
     collections[collectionName] = {
       records,
       relationships,
-      payloads,
+      builtins,
       sources: new Map(
         [...(sources.get(collectionName)?.values() ?? [])].map((entry) => [entry.id, entry.source]),
       ),
@@ -208,11 +210,8 @@ export async function prepareRevision(
   signal.throwIfAborted();
   const revision: PreparedRevision = {
     collections,
-    registry: Object.fromEntries(
-      Object.entries(collections).map(([name, collection]) => [
-        name,
-        { relationships: collection.relationships },
-      ]),
+    registry: queryRegistry(
+      Object.fromEntries(Object.keys(collections).map((name) => [name, registry[name]!])),
     ),
     relations: new Map(),
     active: 0,

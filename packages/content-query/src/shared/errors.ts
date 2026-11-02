@@ -1,5 +1,5 @@
 export type ContentErrorCode =
-  | "entry-not-found"
+  | "variant-not-found"
   | "not-renderable"
   | "source-error"
   | "validation-error"

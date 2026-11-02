@@ -1,5 +1,8 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { Loader } from "../loaders/types.ts";
+import type { ContentRenderResult } from "../runtime/types.ts";
+
+declare const builtinPayloadsType: unique symbol;
 
 export type Schema = StandardSchemaV1;
 export type SchemaOutput<Value> = Value extends StandardSchemaV1
@@ -57,3 +60,25 @@ export type QueryData<Definition> = { id: string } & EntryData<Definition> &
 export type RelationshipsOf<Definition> = Definition extends { relationships: infer Relationships }
   ? Relationships
   : {};
+/**
+ * Payloads that Markdown sources, `glob()`, and custom loaders provide for every entry.
+ * Built-in names start with an underscore, so they never collide with custom payloads.
+ */
+export type BuiltinPayloads = {
+  /** The retained raw body, or undefined when the entry has none or retention is disabled. */
+  _body: string | undefined;
+  /** HTML and headings; entries without a rendering path reject with `not-renderable`. */
+  _rendered: ContentRenderResult;
+};
+/** Type-only marker recording whether a defined collection carries built-in payloads. */
+export type BuiltinPayloadMarker<Available extends boolean> = {
+  readonly [builtinPayloadsType]?: Available;
+};
+/** Payload names and value types that queries can request for a collection definition. */
+export type PayloadsOf<Definition> = Definition extends {
+  readonly [builtinPayloadsType]?: infer Available;
+}
+  ? [Available] extends [false | undefined]
+    ? {}
+    : BuiltinPayloads
+  : BuiltinPayloads;

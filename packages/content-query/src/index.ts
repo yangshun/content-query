@@ -1,9 +1,11 @@
 export { defineCollection } from "./collection/define.ts";
 export type { CollectionSource } from "./collection/source.ts";
 export type {
+  BuiltinPayloads,
   CollectionDefinition,
   CollectionRegistry,
   ComputedContext,
+  PayloadsOf,
   QueryData,
   Relationship,
 } from "./collection/types.ts";
@@ -15,6 +17,7 @@ export type {
   LoaderSource,
   FileSource,
   FileEntrySource,
+  RecordLoader,
   LoaderContext,
   LoaderConfig,
   LoaderLogger,

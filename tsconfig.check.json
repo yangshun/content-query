@@ -5,6 +5,7 @@
     { "path": "./examples/angular" },
     { "path": "./examples/angular/tests" },
     { "path": "./examples/next" },
+    { "path": "./examples/payloads" },
     { "path": "./examples/react-router" },
     { "path": "./examples/sveltekit" },
     { "path": "./examples/sveltekit/tests" },

@@ -13,6 +13,7 @@ import type { Loader } from "../../loaders/types.ts";
 import { collectLoader } from "../../../tests/helpers/loader.ts";
 import { defineCollection } from "../../collection/define.ts";
 import { createSession } from "../../preparation/session.ts";
+import { bodyOf, renderedOf } from "../../../tests/helpers/payloads.ts";
 
 /** Checks that the native loader context remains a structural subset of Astro's public context. */
 function acceptsAstroContext(context: AstroContext): LoaderContext {
@@ -272,8 +273,8 @@ describe("Astro content loader compatibility", () => {
       expect(await session.content.select("id", "title").from("posts").all()).toEqual([
         { id: "hello", title: "HELLO" },
       ]);
-      expect(await session.content.readBody("posts", "hello")).toBe("# Hello\n");
-      expect(await session.content.render("posts", "hello")).toEqual({
+      expect(await bodyOf(session.content, "posts", "hello")).toBe("# Hello\n");
+      expect(await renderedOf(session.content, "posts", "hello")).toEqual({
         html: '<h1 id="hello">Hello</h1>\n',
         headings: [{ depth: 1, slug: "hello", text: "Hello" }],
       });

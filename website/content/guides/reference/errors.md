@@ -9,7 +9,7 @@ order: 55
 
 Import `ContentError` from `content-query/runtime`. Inspect its stable `code` and contextual `diagnostics`, including collection, entry, source, field path, and underlying cause where available.
 
-Codes include `source-error`, `validation-error`, `duplicate-id`, `invalid-reference`, `invalid-query`, `entry-not-found`, `not-renderable`, `artifact-error`, and `render-error`.
+Codes include `source-error`, `validation-error`, `duplicate-id`, `invalid-reference`, `invalid-query`, `variant-not-found`, `not-renderable`, `artifact-error`, and `render-error`.
 
 ## Common checks
 
@@ -19,4 +19,4 @@ Codes include `source-error`, `validation-error`, `duplicate-id`, `invalid-refer
 - **Client import rejected:** move the content query into a server loader, server function, or Server Component.
 - **Content stays invalid:** fix the reported source or configuration error; development watches recover after a valid preparation.
 
-Missing entries from `first()` and `findFirst()` return `undefined`. `readBody()` and `render()` reject missing entries, so handle page-not-found behavior in your application.
+Missing entries from `first()` and `findFirst()` return `undefined`, including queries that request payloads, so handle page-not-found behavior in your application. A `_rendered` payload request rejects with `not-renderable` when a matching entry has no rendering path.

@@ -1,6 +1,6 @@
 # ContentQuery x Void
 
-Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
+Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
@@ -37,7 +37,7 @@ Void uses static output. The build prerenders `/` and the three `/docs/<guide-id
 - `content-query.config.ts` defines the `guides` collection with `source: "./content/guides"` (Markdown by default) and bundled metadata schema builders. `contentQuery()` uses its default in-memory backend, delivering virtual modules during development and bundling content for production. Use `contentQuery({ backend: "generated" })` only when standalone runtime files are also needed.
 - `pages/index.server.ts` queries the homepage index directly, explicitly selecting metadata and sorting by `order`.
 - `pages/docs/layout.tsx` owns the persistent sidebar, reading its own metadata from `middleware/01.docs.ts` through Void shared data. The article loader does not fetch or pass sidebar entries.
-- `pages/docs/[...slug].server.ts` queries guide metadata and independent sibling navigation with fluent `.selectAdjacent()`, calls `content.render()` for the requested guide only, and handles missing-guide 404s. Its `getPrerenderPaths()` queries collection IDs when invoked. Queries run inside functions, not at route-module initialization.
+- `pages/docs/[...slug].server.ts` queries guide metadata and independent sibling navigation with fluent `.selectAdjacent()`, requests the rendered payload for that guide only with `.withPayload("_rendered")`, and handles missing-guide 404s. Its `getPrerenderPaths()` queries collection IDs when invoked. Queries run inside functions, not at route-module initialization.
 - `contentQuery()` generates `.content-query/types.d.ts`, included by `tsconfig.json`, with the `content-query:server` binding and `CollectionKey`, `CollectionData`, and `Collections` aliases. Runtime and client code never import `content-query.config.ts`.
 - React pages import only the types of their server loaders. They receive selected metadata and, on guide pages, the requested article's rendered HTML.
 - Internal page links use Void's `Link` component for client-side navigation, with view transitions enabled by `voidReact({ viewTransitions: true })`. Guide pages also route internal Markdown links through `useRouter()` and the local `src/navigation.ts` helper. Hash links, external links, downloads, new-tab links, and modified clicks retain their normal browser behavior.

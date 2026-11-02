@@ -1,0 +1,15 @@
+{
+  "name": "@content-query/example-payloads",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "content-query build && node src/site.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "content-query": "workspace:*",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

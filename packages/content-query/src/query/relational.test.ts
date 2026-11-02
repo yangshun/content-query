@@ -7,6 +7,7 @@ import { createArtifactRuntime } from "../internal.ts";
 import { ARTIFACT_VERSION, CODEC_VERSION, type EncodedCollection } from "../artifacts/types.ts";
 import { encode } from "../shared/values.ts";
 import { eq, type QueryOptions, type CountOptions } from "../query.ts";
+import { file } from "../loaders.ts";
 import type { Content } from "../runtime.ts";
 
 /** Defines public consumer fixtures with nullable relationships and shared rich values. */
@@ -65,7 +66,7 @@ async function setup(encoded: boolean) {
     const revision = sessionInternals(session).state.revision!;
     const collections: Record<string, EncodedCollection> = {};
     for (const [name, collection] of Object.entries(revision.collections)) {
-      collections[name] = { records: collection.records.map(encode), payloads: {} };
+      collections[name] = { records: collection.records.map(encode), builtins: {} };
     }
     content = createArtifactRuntime<typeof registry>(
       { version: ARTIFACT_VERSION, codec: CODEC_VERSION, collections: revision.registry },
@@ -376,5 +377,62 @@ async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
   const excluded = await content.query.posts.findMany({ columns: { rank: false } });
   // @ts-expect-error Excluded columns are absent from the result.
   void excluded[0]!.rank;
+  const withPayloads = await content.query.posts.findFirst({
+    columns: { title: true },
+    payloads: { _body: true, _rendered: true },
+    with: { author: { columns: { name: true }, payloads: { _body: true } } },
+  });
+  const body: string | undefined = withPayloads!._payloads._body;
+  const html: string = withPayloads!._payloads._rendered.html;
+  const authorBody: string | undefined = withPayloads!.author?._payloads._body;
+  void [body, html, authorBody];
+  const omitted = await content.query.posts.findMany({ payloads: { _body: false } });
+  // @ts-expect-error Payloads set to false add no _payloads key.
+  void omitted[0]!._payloads;
+  // @ts-expect-error Unknown payload names are rejected.
+  void content.query.posts.findMany({ payloads: { missing: true } });
+  void content.query.posts.findMany({
+    // @ts-expect-error Adjacent sibling scopes cannot request payloads.
+    adjacent: { columns: { id: true }, payloads: { _body: true } },
+  });
+  // @ts-expect-error Counts cannot request payloads.
+  void content.count("posts", { payloads: { _body: true } });
+  const fluent = await content
+    .select("id")
+    .from("posts")
+    .withPayload("_rendered")
+    .withPayload("_body")
+    .first();
+  const fluentHtml: string | undefined = fluent?._payloads._rendered.html;
+  const fluentBody: string | undefined = fluent?._payloads._body;
+  void [fluentHtml, fluentBody];
+  // @ts-expect-error Unknown fluent payload names are rejected.
+  content.select("id").from("posts").withPayload("missing");
+  // @ts-expect-error Counting is unavailable once payloads are requested.
+  void content.select("id").from("posts").withPayload("_body").count();
 }
 void checkTypes;
+
+/** Declares collections whose entries are data records without built-in payloads. */
+function recordDefinitions() {
+  const title = schema.object({ title: schema.string() });
+  return {
+    settings: defineCollection({ loader: file("./settings.json"), schema: title }),
+    data: defineCollection({ source: { type: "json", directory: "./data" }, schema: title }),
+    pages: defineCollection({ source: "./pages", schema: title }),
+  };
+}
+
+/** Checks that built-in payloads are offered only where entries can carry them. */
+async function checkRecordTypes(content: Content<ReturnType<typeof recordDefinitions>>) {
+  // @ts-expect-error file() collections carry no built-in payloads.
+  void content.query.settings.findMany({ payloads: { _body: true } });
+  // @ts-expect-error JSON sources carry no built-in payloads.
+  void content.query.data.findMany({ payloads: { _rendered: true } });
+  // @ts-expect-error Fluent queries follow the same availability.
+  content.select("id").from("data").withPayload("_body");
+  const page = await content.query.pages.findFirst({ payloads: { _rendered: true } });
+  const pageHtml: string | undefined = page?._payloads._rendered.html;
+  void pageHtml;
+}
+void checkRecordTypes;

@@ -4,7 +4,7 @@ All six examples use the same sample guides and matching local stylesheets. Each
 
 All six examples use `content.select(...fields).from(collection)` for fluent queries or `content.query.guides.findMany()` / `findFirst()` with `columns` for relational queries. Their selected metadata, ordering, adjacent navigation, and server boundaries follow the same contract.
 
-The docs sidebar belongs to a persistent layout and has its own metadata query. Article loaders select only the current entry and adjacent entries, then render that article. Content queries stay in framework-owned server boundaries; pure presentation remains in components.
+The docs sidebar belongs to a persistent layout and has its own metadata query. Article loaders select only the current entry and adjacent entries, and request that article's rendered payload in the same query. Content queries stay in framework-owned server boundaries; pure presentation remains in components.
 
 | Example                                      | Sidebar data owner                                | Article loading                           |
 | -------------------------------------------- | ------------------------------------------------- | ----------------------------------------- |
@@ -14,6 +14,8 @@ The docs sidebar belongs to a persistent layout and has its own metadata query. 
 | [Next.js](./next/README.md)                  | Async docs layout Server Component                | Async page Server Component               |
 | [Angular](./angular/README.md)               | Parent Angular resolver calling the sidebar API   | Child resolver calling the article API    |
 | [SvelteKit](./sveltekit/README.md)           | `docs/+layout.server.ts`                          | `+page.server.ts`                         |
+
+The [payloads example](./payloads/README.md) is separate from the six documentation sites. It uses no framework and builds a small static site with a plain Node.js script, showing each way to request `body` and `rendered` payloads: in relational and fluent queries, in relationship scopes, and from a custom loader that supplies HTML.
 
 Void requires companion server files and shared middleware; SvelteKit requires its server route modules. Angular uses native `@angular/ssr`, Express API routes, and Angular Router resolvers. Its queries live in a server-only module shared by those endpoints. The examples retain these native server/client boundaries. React Router, TanStack Start, and Next.js colocate loading with route UI where supported.
 

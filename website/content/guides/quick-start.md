@@ -64,18 +64,18 @@ Create `render.mjs` in the project root:
 import { writeFile } from "node:fs/promises";
 import { content } from "./.content-query/server.js";
 
-const post = await content.select("id", "title").from("posts").first();
+const post = await content.select("id", "title").from("posts").withPayload("_rendered").first();
 if (!post) {
   throw new Error("Add a post before rendering.");
 }
 
-const { html } = await content.render("posts", post.id);
+const { html } = post._payloads._rendered;
 await writeFile(
   "post.html",
   `<!doctype html><html lang="en"><meta charset="utf-8"><title>ContentQuery</title><main>${html}</main></html>`,
 );
 ```
 
-Run `node render.mjs` and open `post.html`. In a framework application, the same query and render calls belong in your server loader or server component.
+Run `node render.mjs` and open `post.html`. In a framework application, the same query belongs in your server loader or server component.
 
 Continue with [collections and schemas](/docs/collections-and-schemas) or [querying content](/docs/querying-content).

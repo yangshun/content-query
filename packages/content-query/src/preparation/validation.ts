@@ -1,7 +1,7 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import { ContentError, contentError, type ContentDiagnostic } from "../shared/errors.ts";
 import { detach } from "../shared/values.ts";
-import type { ItemPayload } from "../runtime/revision.ts";
+import type { BuiltinPayload } from "../runtime/revision.ts";
 import type { LoaderEntry } from "../loaders/types.ts";
 
 /** Checks records independently from validation-provider schema introspection. */
@@ -96,7 +96,7 @@ export function normalizeSnapshot(
 }
 
 /** Validates supplied rendering data and normalizes omitted headings. */
-export function renderedPayload(entry: LoaderEntry): ItemPayload["rendered"] {
+export function renderedPayload(entry: LoaderEntry): BuiltinPayload["rendered"] {
   if (entry.rendered === undefined) {
     return undefined;
   }

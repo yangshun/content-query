@@ -5,7 +5,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, test } from "vite-plus/test";
 import { projectFixture } from "../../tests/helpers/project.ts";
-import type { ItemPayload, PreparedRevision } from "../runtime/revision.ts";
+import type { BuiltinPayload, PreparedRevision } from "../runtime/revision.ts";
 import { revisionModules } from "./modules.ts";
 
 const execute = promisify(execFile);
@@ -13,10 +13,10 @@ const execute = promisify(execFile);
 /** Prepares large, distinct payloads without depending on source acquisition or schemas. */
 function largeRevision(compressible: boolean): PreparedRevision {
   const identifiers = [...Array.from({ length: 64 }, (_, index) => String(index)), "__proto__"];
-  const payloads = new Map(
+  const builtins = new Map(
     identifiers.map((id) => {
       const heading = { depth: 1, slug: id, text: `Article ${id}` };
-      const payload: ItemPayload = {
+      const payload: BuiltinPayload = {
         body: `Body ${id}: ${compressible ? "Unicode 🦋 <tag> & \u0000\n".repeat(600) : randomBytes(12_000).toString("base64")}`,
         rendered: {
           html: `<h1 id="${id}">Article ${id}</h1>`,
@@ -30,11 +30,16 @@ function largeRevision(compressible: boolean): PreparedRevision {
     collections: {
       posts: {
         records: identifiers.map((id) => ({ id, date: new Date(0), value: 10n })),
-        payloads,
+        builtins,
         relationships: {},
       },
     },
-    registry: { posts: { relationships: {} } },
+    registry: {
+      posts: {
+        relationships: {},
+        payloads: { _body: { variants: [] }, _rendered: { variants: [] } },
+      },
+    },
     relations: new Map(),
     active: 0,
     payloadCache: new Map(),
@@ -56,7 +61,7 @@ describe("portable payload batches", () => {
         );
         const bodyBytes = (
           await Promise.all(
-            [...revision.collections.posts!.payloads.values()].map((load) => load()),
+            [...revision.collections.posts!.builtins.values()].map((load) => load()),
           )
         ).reduce((total, payload) => total + Buffer.byteLength(payload.body!), 0);
         expect(sourceBytes).toBeLessThan(bodyBytes * (compressible ? 0.2 : 1.3));
@@ -73,10 +78,11 @@ describe("portable payload batches", () => {
             "-e",
             `
 const {content} = await import("./portable/server.js");
-const bodies = await Promise.all(["0", "63", "__proto__"].map(async id => ({id, body: await content.readBody("posts", id)})));
-const rendered = await content.render("posts", "__proto__");
+const payload = async (id, name) => (await content.query.posts.findFirst({ where: { id }, columns: {}, payloads: { [name]: true } }))._payloads[name];
+const bodies = await Promise.all(["0", "63", "__proto__"].map(async id => ({id, body: await payload(id, "_body")})));
+const rendered = await payload("__proto__", "_rendered");
 rendered.headings[0].text = "Caller mutation";
-const next = await content.render("posts", "__proto__");
+const next = await payload("__proto__", "_rendered");
 const metadata = await content.select("date", "value").from("posts").first();
 console.log(JSON.stringify({count: await content.count("posts"), bodies, aliases: rendered.headings[0] === rendered.headings[1], detached: next.headings[0].text, html: next.html, date: metadata.date instanceof Date && metadata.date.getTime(), bigint: metadata.value === 10n}));
 `,
@@ -88,7 +94,7 @@ console.log(JSON.stringify({count: await content.count("posts"), bodies, aliases
           bodies: await Promise.all(
             ["0", "63", "__proto__"].map(async (id) => ({
               id,
-              body: (await revision.collections.posts!.payloads.get(id)!()).body,
+              body: (await revision.collections.posts!.builtins.get(id)!()).body,
             })),
           ),
           aliases: true,

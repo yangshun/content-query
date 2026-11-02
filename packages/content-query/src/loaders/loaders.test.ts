@@ -11,6 +11,7 @@ import { loadBuiltin } from "./load.ts";
 import { createSession, sessionInternals } from "../preparation/session.ts";
 import { defineCollection } from "../collection/define.ts";
 import type { ComputedContext } from "../collection/types.ts";
+import { bodyOf, renderedOf } from "../../tests/helpers/payloads.ts";
 
 describe("built-in loaders", () => {
   test("passes collection names and loader-defined source metadata to computed fields", async () => {
@@ -297,11 +298,11 @@ describe("built-in loaders", () => {
           registry,
           watch: false,
         });
-        expect(await session.content.readBody("posts", "post")).toBeUndefined();
+        expect(await bodyOf(session.content, "posts", "post")).toBeUndefined();
         expect((await session.content.select("raw").from("posts").first())?.raw).toContain(
           "## Hello",
         );
-        expect((await session.content.render("posts", "post")).headings).toEqual([
+        expect((await renderedOf(session.content, "posts", "post")).headings).toEqual([
           { depth: 2, slug: "hello", text: "Hello" },
         ]);
         await session.dispose();

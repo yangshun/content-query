@@ -130,7 +130,7 @@ void checked;
         [
           "--input-type=module",
           "-e",
-          `const{content}=await import("./.content-query/server.js");const row=await content.select("value", "constructor").from("__proto__").first();console.log(JSON.stringify([row.value,Object.hasOwn(row,"constructor"),row.constructor,await content.readBody("__proto__","__proto__")]));`,
+          `const{content}=await import("./.content-query/server.js");const row=await content.select("value", "constructor").from("__proto__").first();console.log(JSON.stringify([row.value,Object.hasOwn(row,"constructor"),row.constructor,(await content.query.__proto__.findFirst({where:{id:"__proto__"},payloads:{_body:true}}))._payloads._body]));`,
         ],
         { cwd: fixture.root },
       );
@@ -180,8 +180,8 @@ void checked;
             `
 const {content} = await import(${JSON.stringify(pathToFileURL(path.join(generated, "server.js")).href)});
 const list = await content.select("title", "date", "upper").from("posts").with("author", author=>author.select("name")).all();
-const rendered = await content.render("posts","getting-started");
-console.log(JSON.stringify({list,body:await content.readBody("posts","getting-started"),rendered}));
+const {_payloads: {_body: body, _rendered: rendered}} = await content.query.posts.findFirst({where:{id:"getting-started"},payloads:{_body:true,_rendered:true}});
+console.log(JSON.stringify({list,body,rendered}));
 `,
           ],
           { cwd: fixture.root },
@@ -239,7 +239,7 @@ console.log(JSON.stringify({list,body:await content.readBody("posts","getting-st
           `
 const {content}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, ".content-query/server.js")).href)});
 console.log(await content.select().from("posts").count());
-try { await content.readBody("posts","getting-started"); } catch(error) { console.log(error.code); }
+try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads:{_body:true}}); } catch(error) { console.log(error.code); }
 `,
         ],
         { cwd: fixture.root },

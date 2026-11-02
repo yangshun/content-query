@@ -14,7 +14,7 @@ V1 centers on typed collections, useful queries, explicit body access, built-in 
 | Errors and diagnostics    | Stable `ContentError` codes, contextual diagnostics, preserved validation issues/causes, grouped independent preparation failures, and automatic development recovery.            |
 | Queries                   | List entries, look up by ID, filter, sort, paginate, and count. Explicitly select returned fields; return ordinary arrays for custom processing.                                  |
 | Computed query fields     | Derive queryable values such as slugs, excerpts, or reading time during preparation.                                                                                              |
-| Body access and rendering | Load retained raw text explicitly. `content.render(collection, id)` returns supplied or compiled HTML and headings with slugs separately from query results.                      |
+| Body access and rendering | Request retained raw text and supplied or compiled HTML/headings as `_body` and `_rendered` payloads; queries load them only when requested, under `_payloads`.                   |
 | Relationships             | Named forward and inverse relationships, ID-array references, and explicitly requested nested selection, filtering, ordering, and pagination.                                     |
 | Development updates       | Reflect additions, edits, deletions, and configuration changes. Reuse unchanged work and surface errors instead of silently serving stale content.                                |
 | Production preparation    | Prepare deployable query data, a collection manifest, and body/rendering payloads for SSG and SSR. Production works without original sources or importing `content-query.config`. |
@@ -70,7 +70,7 @@ Choosing a backend must not silently change query results, field types, or the m
 
 Queries can return all prepared metadata: use `content.select().from("posts")` or omit relational `columns`. Narrow fields with fluent `select(...fields)` or relational `columns`; `{}` selects no scalar fields, inclusion selects `true` fields, and false-only selection excludes fields. Relationships are always explicitly requested.
 
-Use `content.select(...fields).from(collection)` for SQL-ordered fluent queries and `content.query.posts.findMany({ columns, with, where })` for relational queries. Request related data through fluent `.with(...)` or relational `with`. Body access and built-in rendering are separate explicit operations and do not add fields to a query result.
+Use `content.select(...fields).from(collection)` for SQL-ordered fluent queries and `content.query.posts.findMany({ columns, with, where })` for relational queries. Request related data through fluent `.with(...)` or relational `with`. Bodies and rendered output are payloads: a query loads them only when it explicitly requests them through relational `payloads` or fluent `.withPayload(...)`, under the reserved `_payloads` key rather than as fields. Amended November 2, 2026, replacing separate `readBody()` and `render()` operations.
 
 Selection determines the inferred result type. Unselected fields must also be absent from the actual runtime result, not merely hidden by TypeScript types.
 
@@ -86,7 +86,7 @@ Type-only imports remain available without pulling in query code or content data
 
 ### 5. Make data transfer explicit
 
-Query results are ordinary objects containing values from the [supported data-value contract](#supported-data-values). Bodies, rendered output, and related entries never appear automatically. Built-in rendering returns its own result and does not mutate earlier query results or introduce lazy property access.
+Query results are ordinary objects containing values from the [supported data-value contract](#supported-data-values). Bodies, rendered output, and related entries never appear automatically. Requested payloads are plain detached values under `_payloads`; they introduce no lazy property access and never mutate other results.
 
 Applications own which selected values they expose publicly. Field selection limits data transfer; it does not grant authorization or automatically make a selected field public.
 
@@ -98,15 +98,15 @@ Production queries, body loading, and rendering must work from prepared content 
 
 ### 7. Preserve type safety throughout the pipeline
 
-Infer metadata, computed fields, valid filter operations and values, selected results, relationships, and registered collection names from collection definitions. Invalid field and collection names must not degrade into untyped access. Body/render operations accept every registered collection; an entry without a rendering path fails at runtime with `not-renderable`. Built-in rendering has a library-defined result type; it does not require per-collection output schemas at runtime.
+Infer metadata, computed fields, valid filter operations and values, selected results, relationships, and registered collection names from collection definitions. Invalid field and collection names must not degrade into untyped access. Payload requests are typed per collection: JSON, YAML, and TOML sources and `file()` offer no built-in payloads, and an entry without a rendering path fails at runtime with `not-renderable`. Built-in rendering has a library-defined result type; it does not require per-collection output schemas at runtime.
 
 Validate external data at runtime as well. Apply schema transformations once when preparing data for a source and schema revision, then store their validated results. Loading stored or generated values must not apply the transformations again. Preserve consistent field types and values across development, builds, and backends.
 
 ### 8. Make expensive work explicit
 
-Metadata queries must not load body payloads, load rendered HTML, or invoke rendering. Making a body-derived value queryable deliberately promotes that work into query preparation.
+Queries that request no payloads must not load body payloads, load rendered HTML, or invoke rendering. Making a body-derived value queryable deliberately promotes that work into query preparation.
 
-Body access and `content.render(...)` are explicit, and relationship loading requires `.with(...)`. Production may compile Markdown eagerly while keeping rendered output separate and lazily loaded. Reading an ordinary query-result property or serializing that result must not trigger body work.
+Payload requests are explicit, and relationship loading requires `.with(...)`. Production may compile Markdown eagerly while keeping rendered output separate and lazily loaded. Reading an ordinary query-result property or serializing that result must not trigger body work.
 
 ### 9. Prioritize correctness over caching
 
@@ -313,7 +313,7 @@ type DataEntry = {
 };
 ```
 
-`body` is format-agnostic raw text. A Markdown article can contain Markdown, a custom loader can supply HTML or plain text, and a JSON author can omit it. An empty string is valid. Missing or unretained raw text has value `undefined`; it is not a missing-body error. Do not add collection-level body capability generics merely to gate access. The public `content.readBody(collection, id)` operation reports missing entries and invalid collections as explicit lookup errors, separately from valid absence of retained text.
+`body` is format-agnostic raw text. A Markdown article can contain Markdown, a custom loader can supply HTML or plain text, and a JSON author can omit it. An empty string is valid. Missing or unretained raw text has value `undefined`; it is not a missing-body error. Built-in payload availability is declared per collection: as of 0.2.0, JSON, YAML, and TOML sources and `file()` offer no `_body` or `_rendered` payloads, while other collections offer both. Queries for missing entries return no rows rather than lookup errors.
 
 `rendered` contains prepared HTML and optional metadata. A loader may supply CMS HTML directly or produce HTML during build-time processing. Validate the library-owned payload shape during preparation. When supplied, this output can be rendered without a body or a runtime processor callback. If headings are omitted, the public rendering result uses `[]`. A raw body alone does not identify its format or make a generic entry renderable as Markdown.
 
@@ -323,22 +323,22 @@ Asset delivery is application-owned, agreed on October 18, 2026. Treat image and
 
 The internal diagnostic `LoaderEntry.source` identifies an entry, for example a filename, URL, or CMS identifier. It is separate from the optional loader-defined metadata exposed as `ComputedContext.source`, which is carried privately in `LoaderEntry.sourceData`. Neither introduces an implicit query field, route, version guarantee, or automatic registration of a watched dependency. Loaders and integrations still own source acquisition and update notifications.
 
-| Stage                 | Behavior                                                                                                                                                                      |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Acquire source inputs | Read/fetch metadata and any supplied body or rendered output before returning a snapshot or incremental batch. Do not return source-reading body functions.                   |
-| Prepare query data    | Validate metadata and computed fields. Computed resolvers can explicitly read the captured source text; rendering remains a separate stage.                                   |
-| Package production    | Retain public bodies according to `retainBody`, prepared rendering output, and any private input required for deferred compilation. No deployed source reads are required.    |
-| Select metadata       | Do not load body/rendering payloads because a query selects prepared fields.                                                                                                  |
-| Access raw text       | Call `content.readBody(collection, id)` to explicitly load retained text. An existing entry without retained text returns `undefined`; missing entries produce lookup errors. |
-| Render an entry       | Load supplied/precompiled HTML, or process captured Markdown using the library-owned renderer according to `deferRender`.                                                     |
-| Source update         | Invalidate affected preparation/cache work for future operations; existing operations finish against their pinned prepared revision.                                          |
-| Payload I/O failure   | Surface the failure. Do not confuse a failed read with a valid absent body or silently substitute old content.                                                                |
+| Stage                 | Behavior                                                                                                                                                                   |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Acquire source inputs | Read/fetch metadata and any supplied body or rendered output before returning a snapshot or incremental batch. Do not return source-reading body functions.                |
+| Prepare query data    | Validate metadata and computed fields. Computed resolvers can explicitly read the captured source text; rendering remains a separate stage.                                |
+| Package production    | Retain public bodies according to `retainBody`, prepared rendering output, and any private input required for deferred compilation. No deployed source reads are required. |
+| Select metadata       | Do not load body/rendering payloads because a query selects prepared fields.                                                                                               |
+| Access raw text       | Request the `_body` payload in a query. An existing entry without retained text yields `undefined`; a missing entry yields no row.                                         |
+| Render an entry       | Load supplied/precompiled HTML, or process captured Markdown using the library-owned renderer according to `deferRender`.                                                  |
+| Source update         | Invalidate affected preparation/cache work for future operations; existing operations finish against their pinned prepared revision.                                       |
+| Payload I/O failure   | Surface the failure. Do not confuse a failed read with a valid absent body or silently substitute old content.                                                             |
 
 For ordinary local Markdown, capture the body during the same file read that extracts frontmatter. Other loaders must also capture revision-consistent metadata and text during preparation. Reading multiple mutable sources is still the loader’s responsibility; removing body callbacks does not make arbitrary source reads transactional.
 
 The backend may load captured strings and prepared HTML lazily. This is distinct from postponing source acquisition through a callback. Reuse of loaded payloads must remain revision-aware. Stored fields never contain executable readers or implicit lazy getters.
 
-Explicit raw-body access uses `content.readBody(collection, id): Promise<string | undefined>`. It returns optional text separately from selected query results, while keeping bodies out of default metadata queries. Astro’s `entry.body` is the semantic baseline; asynchronous separate access is the deliberate adaptation for explicit backend payload loading. Application-owned server functions can process retrieved text without generic collection resolvers.
+Explicit raw-body access uses the `_body` payload, typed `string | undefined`. It is returned under `_payloads` only when requested, keeping bodies out of default metadata queries. Astro’s `entry.body` is the semantic baseline; explicit payload requests are the deliberate adaptation for separate backend payload loading. Application-owned server functions can process retrieved text without generic collection resolvers.
 
 Reference: Astro’s [optional body](https://docs.astro.build/en/reference/content-loader-reference/#dataentrybody), [rendered payload](https://docs.astro.build/en/reference/content-loader-reference/#dataentryrendered), and [heading metadata](https://docs.astro.build/en/reference/content-loader-reference/#dataentryrenderedmetadataheadings). These contracts are a baseline; this library retains its own query and framework boundaries.
 
@@ -520,7 +520,7 @@ Preserving authored forward-array order and duplicates follows [Astro's `getEntr
 
 ## Query API
 
-Queries consume the collection definitions above. The five top-level properties on `content` are `select`, `query`, `count`, `readBody`, and `render`. `from()` is available only after `select()`. This section covers builder reuse, filtering, returned fields, sorting, pagination, and explicit relationship loading. Built-in rendering is a separate runtime operation.
+Queries consume the collection definitions above. The top-level properties on `content` are `select`, `query`, and `count`. `from()` is available only after `select()`. This section covers builder reuse, filtering, returned fields, sorting, pagination, explicit relationship loading, and payload requests.
 
 ### Query field checks
 
@@ -649,46 +649,31 @@ Follow the [supported data-value contract](#supported-data-values) for the remai
 
 Status: returned query values and rendering metadata are detached from internal prepared state and caches, agreed on October 18, 2026.
 
-Callers own the returned objects and can mutate them without changing stored content, another operation's results, or subsequent query/render behavior. Apply this to selected nested values, relationship results, and rendering metadata such as the headings array. `readBody()` returns an immutable string value and needs no additional ownership mechanism.
+Callers own the returned objects and can mutate them without changing stored content, another operation's results, or subsequent query/render behavior. Apply this to selected nested values, relationship results, and payload values such as the rendered headings array. A `_body` payload is an immutable string value and needs no additional ownership mechanism.
 
 Clone selected entry graphs with the supported-value semantics: preserve native values, cycles, repeated references, array holes, and selected-property presence. Do not clone each selected field independently when that would break shared references within one returned entry graph. No object identity is promised across distinct entries, duplicate relationship positions, or independent operations. Do not expose internal values through cached result reuse. Plain JSON copying or an unsupported native clone path must not weaken the data-value contract. This requirement does not load unrequested body/rendering payloads.
 
-### Explicit body access and built-in rendering
+### Payloads
 
-Status: `content.readBody(collection, id)`, Astro-style optional bodies, loader-supplied rendered HTML, headings with slugs, and per-operation revision consistency agreed on October 18, 2026. Preserve metadata projection, separate payload access, and framework-independent results. Public snapshot scopes are outside v1.
+Status: Astro-style optional bodies, loader-supplied rendered HTML, headings with slugs, and per-operation revision consistency agreed on October 18, 2026. On November 2, 2026, the separate `content.readBody(collection, id)` and `content.render(collection, id)` operations were replaced by payload requests in queries (0.2.0). Preserve metadata projection, separate payload storage, and framework-independent results. Public snapshot scopes remain outside v1.
 
-Use `.select(...)` for prepared source metadata and computed fields. Raw bodies, rendered HTML, and rendering metadata never appear implicitly on query results or through lazy getters. V1 query builders have no `.resolve(...)` method, including within `.with(...)` callbacks. Queries, including `.count()`, do not trigger rendering.
-
-#### Raw-body access
+Use `.select(...)` or `columns` for prepared source metadata and computed fields. Raw bodies, rendered HTML, and rendering metadata are **payloads**: per-entry data stored and loaded separately from query records. They never appear implicitly on query results or through lazy getters. A query loads them only when it requests them:
 
 ```ts
-const body = await content.readBody("posts", "getting-started");
-// Inferred value: string | undefined
-```
+const post = await content.query.posts.findFirst({
+  where: { id: "getting-started" },
+  columns: { title: true },
+  payloads: { _body: true, _rendered: true },
+});
+post?._payloads._body; // string | undefined
+post?._payloads._rendered; // { html, headings }
 
-The operation accepts any registered collection name and a string entry ID and returns `Promise<string | undefined>`. Collection names remain type-checked; there is no body-capability restriction on which registered collections can be passed.
-
-| Situation                                                      | Result                                                                     |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Existing entry with retained text                              | Return its captured string without compilation or schema transformations.  |
-| Existing entry with no body, or public body retention disabled | Return `undefined`.                                                        |
-| Existing entry with an empty body                              | Return `""`.                                                               |
-| Missing entry                                                  | Reject with `ContentError` code `entry-not-found`.                         |
-| Invalid collection                                             | Reject with `ContentError` code `invalid-query`.                           |
-| Backend I/O failure                                            | Reject with `artifact-error`, preserving the cause; do not return absence. |
-
-Read prepared text through the backend without running loaders or reading original sources. Respect `retainBody: false` even when private compiler input is available for rendering. A valid `undefined` result is not a failed read or a missing-entry result.
-
-Each call reads one prepared revision. Querying metadata and then reading a body are separate operations; they can observe different revisions during development. The body is returned as a value and is not attached to or used to mutate an earlier query result.
-
-The runtime method takes collection/ID arguments. The computed resolver context’s existing `readBody()` helper takes no arguments and reads that preparation entry’s captured source text before public retention is applied. Both are asynchronous; neither compiles Markdown.
-
-#### Rendering
-
-The content runtime owns its backend and prepared collection registry and exposes rendering separately:
-
-```ts
-const { html, headings } = await content.render("posts", "getting-started");
+await content
+  .select("title")
+  .from("posts")
+  .where((fields) => eq(fields.id, "getting-started"))
+  .withPayload("_rendered")
+  .first();
 ```
 
 ```ts
@@ -698,15 +683,47 @@ type ContentRenderResult = {
 };
 ```
 
-The operation accepts a registered collection name and entry ID. It loads supplied/precompiled rendering output, or processes captured Markdown using the library-owned renderer according to [production rendering policy](#preparation-and-production-rendering). It returns framework-independent data; applications own HTML insertion and page components. Returning HTML instead of Astro’s `<Content />` is a deliberate adaptation. Runtime does not import user-supplied processing callbacks or field schemas.
+#### Requests and results
 
-Loader-provided `rendered.html` is usable independently of a raw body. This supports already rendered CMS content and custom build-time processing without making all raw strings implicitly Markdown. Missing heading metadata produces `headings: []`. The built-in renderer returns slugs matching its HTML heading IDs. Additional rendering metadata is outside v1 under the implementation defaults.
+| Rule    | Behavior                                                                                                                                                                                                              |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Request | Relational `payloads` maps payload names to `true`; `false` omits a payload. Fluent `.withPayload(name)` adds one payload; repeating a name rejects with `invalid-query`.                                             |
+| Scopes  | Allowed at the root and inside `with` scopes. Adjacent sibling scopes, including inherited `adjacent: true` scopes, never request payloads.                                                                           |
+| Columns | Omitting `columns` still selects all metadata. `withPayload()` does not count as a selection.                                                                                                                         |
+| Result  | Requested values are own properties of a reserved `_payloads` object on each row. A query that requests no payloads has no `_payloads` key. Metadata, computed fields, and relationships cannot be named `_payloads`. |
+| Order   | Payloads load after filtering, ordering, and pagination, from the revision the query pinned for its records.                                                                                                          |
+| Loading | At most 16 payload loads run at once per query. Each distinct payload loads once per query, and every row receives its own detached copy, including rows that share a related entry.                                  |
+| Counts  | `content.count()` and fluent `.count()` reject payload requests with `invalid-query`. The fluent `count()` terminal is unavailable in the types once `.withPayload()` is called.                                      |
+| Filters | Payloads cannot be selected, filtered, or sorted. A queryable value derived from a body is a computed field.                                                                                                          |
 
-Rendering rejects invalid collection names with `invalid-query`, missing entries with `entry-not-found`, and existing entries without usable output or a supported rendering path with `not-renderable`. Failure to load a prepared payload is `artifact-error`; failure while compiling Markdown is `render-error`. Use the shared [error contract](#errors-and-diagnostics), preserving underlying causes. An absent raw body is independently a valid `undefined` value, not a missing-body error. A successful render includes HTML and headings from one revision. No per-output lazy projection or promise of headings-only parsing is made.
+#### Built-in payloads
 
-Each terminal query pins one consistent revision for selected parent and related data at execution start. Each body access/render operation likewise pins one revision at its start. Existing operations finish against that revision even when a new revision is published or later preparation fails; retain their required payloads until completion. Genuine I/O or rendering failures still reject. New operations use the latest published revision or reject with the current preparation failure. A metadata query followed by rendering is two operations and can observe different revisions during development; passing an ID does not pin the earlier revision. Production v1 uses immutable prepared content. A public `withSnapshot()` scope or cross-operation entry-handle lifetime is not part of v1; see [future notes](./TODO.md#lazy-source-bodies-and-cross-operation-snapshots).
+| Payload     | Value                                                                                                                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `_body`     | The retained captured text, without compilation or schema transformations. `undefined` when the entry has none or `retainBody: false`; `""` for an empty retained body.                    |
+| `_rendered` | Supplied or precompiled HTML and headings, or captured Markdown processed by the library-owned renderer according to [production rendering policy](#preparation-and-production-rendering). |
 
-Explicit `content.readBody(...)` and `content.render(...)` operations remain separate from selected query results. A caller needs neither operation for metadata queries, and rendering does not require calling `readBody()` first. Applications can process retrieved text in ordinary server functions with application-owned validation/caching; those functions are not extracted from `content-query.config`. This intentionally differs from Astro’s full-entry lookup while preserving its optional raw-body value semantics.
+Built-in payload names start with an underscore. Custom payload names declared by a collection cannot, so adding a built-in never collides with an existing payload. Built-in payload availability is a static property of the collection declaration, never of its current entries. Markdown `source` collections, `glob()`, and custom loaders offer `_body` and `_rendered`. JSON, YAML, and TOML `source` collections and `file()` hold data records only: requesting either payload there is a type error and an `invalid-query` at runtime.
+
+Loader-provided `rendered.html` is usable independently of a raw body. This supports already rendered CMS content and custom build-time processing without making all raw strings implicitly Markdown. Missing heading metadata produces `headings: []`. The built-in renderer returns slugs matching its HTML heading IDs. Additional rendering metadata is outside v1 under the implementation defaults. Returning HTML instead of Astro’s `<Content />` is a deliberate adaptation; runtime does not import user-supplied processing callbacks or field schemas.
+
+#### Outcomes
+
+| Situation                                                                                    | Result                                                                             |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Query matches no entry                                                                       | `undefined` or `[]`; no payload loads.                                             |
+| Entry without retained text                                                                  | `body: undefined`.                                                                 |
+| `_rendered` for an entry without usable output or a rendering path                           | The query rejects with `not-renderable`.                                           |
+| Unknown payload name, built-in requested from a record-only collection, or malformed request | `invalid-query`.                                                                   |
+| Variant combination that an entry does not have                                              | `variant-not-found`.                                                               |
+| Prepared payload cannot be loaded or has an invalid shape                                    | `artifact-error`, preserving the cause; a failed load is retried by later queries. |
+| Markdown compilation fails                                                                   | `render-error`.                                                                    |
+
+Read prepared payloads through the backend without running loaders or reading original sources. Respect `retainBody: false` even when private compiler input is available for rendering.
+
+Each terminal query pins one consistent revision for its selected parent rows, related rows, and payloads at execution start. Existing operations finish against that revision even when a new revision is published or later preparation fails; retain their required payloads until completion. New operations use the latest published revision or reject with the current preparation failure. Two separate queries can observe different revisions during development. Production uses immutable prepared content. A public `withSnapshot()` scope is not part of v1; see [future notes](./TODO.md#lazy-source-bodies-and-cross-operation-snapshots).
+
+The computed resolver context’s `readBody()` helper is a separate build-time API: it takes no arguments, reads that preparation entry’s captured source text before public retention is applied, and does not compile Markdown. Applications can process payload values in ordinary server functions with application-owned validation and caching; those functions are not extracted from `content-query.config`.
 
 ### Sorting and pagination
 
@@ -844,8 +861,8 @@ This illustrates diagnostic content, not the final error constructor or an exact
 | Situation                                                                 | Public outcome                                                                                     |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | Query matches nothing                                                     | `.all()` returns `[]`, `.first()` returns `undefined`, and `.count()` returns `0`.                 |
-| Existing entry has no retained body                                       | `readBody()` returns `undefined`; retained empty text remains `""`.                                |
-| Requested body/render entry does not exist                                | `ContentError` with `entry-not-found`.                                                             |
+| Existing entry has no retained body                                       | The `_body` payload is `undefined`; retained empty text remains `""`.                              |
+| Requested payload variant does not exist for an entry                     | `ContentError` with `variant-not-found`.                                                           |
 | Existing entry cannot be rendered                                         | `ContentError` with `not-renderable`.                                                              |
 | Source cannot be read or parsed                                           | `ContentError` with `source-error`, preserving the cause.                                          |
 | Metadata or computed result fails validation                              | `ContentError` with `validation-error`, preserving validation issues.                              |
@@ -855,7 +872,7 @@ This illustrates diagnostic content, not the final error constructor or an exact
 | Prepared payload cannot be loaded or decoded                              | `ContentError` with `artifact-error`, preserving the cause.                                        |
 | Markdown compilation fails                                                | `ContentError` with `render-error`, preserving the cause.                                          |
 
-Ordinary query misses, optional body absence, and filtered-out singular relationships are values under their existing contracts, not library failures. A query miss may become an application-owned 404. Applications may likewise map `entry-not-found` from explicit body/render lookups to their routing behavior; the library does not assign HTTP status codes or routes.
+Ordinary query misses, optional body absence, and filtered-out singular relationships are values under their existing contracts, not library failures. A query miss may become an application-owned 404. Queries that request payloads for a missing entry also return no rows; the library does not assign HTTP status codes or routes.
 
 Invalid synchronous builder calls throw as soon as the invalid configuration is detectable, for example a negative pagination value or a repeated selection. Failures discovered during asynchronous query execution, body access, rendering, or preparation reject the returned promise. The asynchronous body/render APIs also reject invalid arguments rather than changing their return contract. An I/O or compiler failure must not become an empty query result, an absent body, or a stale successful result.
 
@@ -975,7 +992,7 @@ A static-only deployment need not ship the content query/rendering runtime. Modu
 
 The library creates signals for loader attempts, watch sessions, and computed resolvers. When preparation becomes obsolete, abort the relevant attempt and discard its results independently of whether user code cooperates. Loaders can forward signals to source operations; computed resolvers can check them between processing steps. There are no source-body reader callbacks in v1.
 
-Built-in body loading and rendering finish against the revision pinned by their operation. Publishing a newer revision does not abort them or make their results obsolete for their original caller. Cache or publish reusable output only under the revision that produced it, never under a newer revision. Cancellation/discarding of superseded preparation work is separate from user operations already in flight. Cancellation does not forcibly interrupt synchronous JavaScript or Markdown compilation, and source-access permissions do not expand because an operation has a signal. V1 adds no caller-supplied cancellation option to `content.render(...)` or `content.readBody(...)`.
+Payload loading and rendering finish against the revision pinned by their query. Publishing a newer revision does not abort them or make their results obsolete for their original caller. Cache or publish reusable output only under the revision that produced it, never under a newer revision. Cancellation/discarding of superseded preparation work is separate from user operations already in flight. Cancellation does not forcibly interrupt synchronous JavaScript or Markdown compilation, and source-access permissions do not expand because an operation has a signal. V1 adds no caller-supplied cancellation option to queries or payload requests.
 
 ## Backends
 
@@ -1258,7 +1275,7 @@ Link/route/publication policy remains application-owned.
 
 Keep this example synchronized as decisions change. Update collection definitions, source content, queries, returned values, and execution notes together so they continue to describe the same API.
 
-Status: v1 reference example, covered by consumer and conformance tests. `tests/integration/living-example.test.ts` asserts its documented values against both backends. Build-only configuration, Standard Schema validation, field/value/presence contracts, computed fields, the native named `load(context)`/store loader contract, optional captured bodies and supplied HTML, relationships, prepared runtime initialization, built-in Markdown rendering, and `deferRender` follow the agreed design. Built-in sources now use Astro-style `glob()`/`file()` options, slug-based default IDs, and JSON/YAML/TOML parsing. `buildContent` from `content-query/build`, the preparation CLI, generated-backend defaults, and `.content-query/server.js` exporting `content` are agreed. The optional `contentQuery(...)` plugin from `content-query/vite` and `content-query:server` facade work with either backend; Vite embeds in-memory state in its production server bundle. Standalone typed access binds `buildContent<Collections>` and `ContentSession<Collections>` through the registry type; sessions expose `content` and asynchronous `dispose()`, with `watch: false` by default. Watch startup can return an error-state session that recovers after correction. Applications own public asset URLs; asset packaging and URL rewriting are outside the library. There is no public `target` option. The public `ContentError` contract, diagnostic codes, grouped preparation failures, and automatic development recovery are agreed. Collection-grouped query indexes, colocated lazy entry payloads when needed, opaque keys, and synchronous devalue encoding follow the agreed generated storage design. The implementation defaults fix HTML/headings-only rendering, the conventional error/report shape, and routine session/CLI choices. Private module embedding/exports, adapter factories, and detailed helper declarations remain implementation details. Relationship ownership, optionality, singular filtering, and ID-array semantics follow the agreed rules. Raw-body access uses the agreed `content.readBody(collection, id)` operation. Lazy source readers and public snapshot scopes are outside v1. Zod is one example schema provider. Generic deferred field resolvers and `.resolve(...)` are outside v1.
+Status: v1 reference example, covered by consumer and conformance tests. `tests/integration/living-example.test.ts` asserts its documented values against both backends. Build-only configuration, Standard Schema validation, field/value/presence contracts, computed fields, the native named `load(context)`/store loader contract, optional captured bodies and supplied HTML, relationships, prepared runtime initialization, built-in Markdown rendering, and `deferRender` follow the agreed design. Built-in sources now use Astro-style `glob()`/`file()` options, slug-based default IDs, and JSON/YAML/TOML parsing. `buildContent` from `content-query/build`, the preparation CLI, generated-backend defaults, and `.content-query/server.js` exporting `content` are agreed. The optional `contentQuery(...)` plugin from `content-query/vite` and `content-query:server` facade work with either backend; Vite embeds in-memory state in its production server bundle. Standalone typed access binds `buildContent<Collections>` and `ContentSession<Collections>` through the registry type; sessions expose `content` and asynchronous `dispose()`, with `watch: false` by default. Watch startup can return an error-state session that recovers after correction. Applications own public asset URLs; asset packaging and URL rewriting are outside the library. There is no public `target` option. The public `ContentError` contract, diagnostic codes, grouped preparation failures, and automatic development recovery are agreed. Collection-grouped query indexes, colocated lazy entry payloads when needed, opaque keys, and synchronous devalue encoding follow the agreed generated storage design. The implementation defaults fix HTML/headings-only rendering, the conventional error/report shape, and routine session/CLI choices. Private module embedding/exports, adapter factories, and detailed helper declarations remain implementation details. Relationship ownership, optionality, singular filtering, and ID-array semantics follow the agreed rules. Raw-body access and rendering use `_body` and `_rendered` payload requests (0.2.0), replacing `content.readBody(collection, id)` and `content.render(collection, id)`. Lazy source readers and public snapshot scopes are outside v1. Zod is one example schema provider. Generic query-time field resolvers and `.resolve(...)` are outside v1; named per-entry payloads resolved during preparation are planned in [TODO.md](./TODO.md#named-per-entry-payloads).
 
 ### Define the collections
 
@@ -1607,17 +1624,19 @@ TypeScript accepts `subtitle` even if every source entry omits it and rejects a 
 Only request raw text when the application needs to process it. The original Markdown fixture uses `retainBody: true`:
 
 ```ts
-const rawMarkdown = await content.readBody("posts", "getting-started");
+const raw = await content.query.posts.findFirst({
+  where: { id: "getting-started" },
+  columns: {},
+  payloads: { _body: true },
+});
+const rawMarkdown = raw?._payloads._body;
 // string | undefined; for this fixture, the captured Markdown string.
 rawMarkdown?.startsWith("# Getting started"); // true
-
-const authorBody = await content.readBody("authors", "ada");
-// undefined: Ada exists, but the JSON author entry has no body.
 ```
 
-Both collection names are valid regardless of whether their entries have bodies. The Markdown text excludes frontmatter because that is the body captured by this loader. No Markdown compilation, source fetch, or schema transformation occurs. These calls do not add a `body` property to earlier query results.
+The Markdown text excludes frontmatter because that is the body captured by this loader. No Markdown compilation, source fetch, or schema transformation occurs. The authors collection uses `file()`, so it offers no `_body` or `_rendered` payloads: requesting either is a type error and an `invalid-query` at runtime.
 
-Changing the Markdown loader to `retainBody: false` makes the first call return `undefined`; an empty retained body would instead return `""`. Calling `content.readBody("posts", "missing-post")` rejects with `ContentError` code `entry-not-found`. Each call uses its own prepared revision, with no v1 cross-operation snapshot scope.
+Changing the Markdown loader to `retainBody: false` makes the payload `undefined`; an empty retained body would instead be `""`. Querying `missing-post` with the same payload request returns `undefined`.
 
 ### Look up and render a page
 
@@ -1630,16 +1649,17 @@ const post = await content
   .where((fields) =>
     and(eq(fields.slug, "getting-started"), eq(fields.locale, "en"), eq(fields.draft, false)),
   )
+  .withPayload("_rendered")
   .first();
 
 if (post === undefined) {
   throw new Error("Post not found"); // Application-owned 404 handling.
 }
 
-const { html, headings } = await content.render("posts", post.id);
+const { html, headings } = post._payloads._rendered;
 ```
 
-The selected `post` type is `{ id: string; title: string; publishedAt: Date }`. Its date represents `2026-10-17T00:00:00.000Z`. The separate render result has the library-defined type:
+The selected `post` type is `{ id: string; title: string; publishedAt: Date; _payloads: { _rendered: ContentRenderResult } }`. Its date represents `2026-10-17T00:00:00.000Z`. The rendered payload has the library-defined type:
 
 ```ts
 type ContentRenderResult = {
@@ -1666,7 +1686,7 @@ type ContentRenderResult = {
 ];
 ```
 
-The query prepares no rendering output. In production SSR with the example's default `deferRender: false`, `content.render(...)` loads HTML/headings compiled during the build. In development and pure SSG it can compile when requested. To opt into production request-time compilation, change only the loader option:
+Without the payload request, the query loads no rendering output. In production SSR with the example's default `deferRender: false`, the `_rendered` payload loads HTML/headings compiled during the build. In development and pure SSG it can compile when requested. To opt into production request-time compilation, change only the loader option:
 
 ```ts
 loader: glob({
@@ -1676,11 +1696,11 @@ loader: glob({
 }),
 ```
 
-The same render call then uses captured text and the library-owned renderer when no reusable result is available. It never reads original source files or imports configuration. This is built-in Markdown processing, not a generic runtime callback from the collection definition.
+The same query then uses captured text and the library-owned renderer when no reusable result is available. It never reads original source files or imports configuration. This is built-in Markdown processing, not a generic runtime callback from the collection definition.
 
-Rendered values are not added to `post`, cannot be filtered or sorted as implicit query fields, and do not require user-supplied result schemas. The application owns HTML insertion and decides what selected/rendered data to pass to a client. `content.render(...)` returns data rather than an Astro/React component.
+Rendered values appear only under `_payloads` because the query requested them; they cannot be filtered or sorted as implicit query fields and do not require user-supplied result schemas. The application owns HTML insertion and decides what selected/rendered data to pass to a client. The `_rendered` payload is data rather than an Astro/React component.
 
-Within the query, selected metadata and relationships use one revision; within the render operation, HTML/headings use one revision. The two calls may observe different revisions if development content changes between them. Public cross-operation snapshot scopes are outside v1; this example does not claim that an ID pins the metadata query's revision. The fixture values above assume unchanged source content. Each operation finishes against its own pinned revision if an update arrives while it is running. Returned values are detached: mutating a selected `publishedAt` date, Grace's selected `featuredPostIds`, or a returned headings array affects only that result, without changing future queries/rendering.
+Selected metadata, relationships, and payloads in one query use one revision. Separate queries may observe different revisions if development content changes between them; public cross-operation snapshot scopes are outside v1. The fixture values above assume unchanged source content. Each operation finishes against its own pinned revision if an update arrives while it is running. Returned values are detached: mutating a selected `publishedAt` date, Grace's selected `featuredPostIds`, or a returned headings array affects only that result, without changing future queries/rendering.
 
 ### Handle errors and development failures
 
@@ -1691,21 +1711,15 @@ await content
   .select("id")
   .from("posts")
   .where((fields) => eq(fields.id, "missing-post"))
+  .withPayload("_rendered")
   .first(); // undefined
-
-await content.readBody("authors", "ada"); // undefined: entry exists, no body
 ```
 
 These separate operations demonstrate library failures; they are not a script that proceeds past an unhandled rejection:
 
 ```ts
-await content.readBody("posts", "missing-post");
-// Rejects with ContentError code "entry-not-found".
-```
-
-```ts
-await content.render("authors", "ada");
-// Rejects with ContentError code "not-renderable".
+content.query.authors.findFirst({ payloads: { _rendered: true } } as never);
+// Throws synchronously with ContentError code "invalid-query": file() collections offer no payloads.
 ```
 
 ```ts
@@ -1717,7 +1731,7 @@ Applications import the public error from `content-query/runtime`. Grouped prepa
 
 For an independent invalid-source scenario, change `getting-started`'s `publishedAt` to `"not-a-date"` and `upcoming-features`'s `title` to `""`. Preparation reports both independent `validation-error` diagnostics together, with collection/entry/source/field context and the original validation issues. The date diagnostic identifies `posts/getting-started` and `["publishedAt"]`; the title diagnostic identifies `posts/upcoming-features` and `["title"]`. Provider messages may differ. Computed work requiring invalid metadata is skipped, rather than generating follow-on failures.
 
-Publish neither invalid entry nor a partial revision. The integration displays the current preparation failure, and new query executions, `readBody()`, and `render()` reject until a valid replacement preparation succeeds. Watching stays active; correcting both values lets preparation publish atomically and recover automatically. A previous valid revision may remain internally for already-started operations and recovery, but new operations cannot read it as successful current content during the failure.
+Publish neither invalid entry nor a partial revision. The integration displays the current preparation failure, and new query executions, including payload requests, reject until a valid replacement preparation succeeds. Watching stays active; correcting both values lets preparation publish atomically and recover automatically. A previous valid revision may remain internally for already-started operations and recovery, but new operations cannot read it as successful current content during the failure.
 
 These failure scenarios do not alter the baseline fixtures or expected query results in the rest of this example. The route example's query-miss 404 remains application-owned. An actual stored-payload read failure instead uses `artifact-error`, and a compiler failure uses `render-error`, preserving their causes rather than pretending content is absent.
 
@@ -1846,9 +1860,9 @@ All supplied IDs must exist, even if a later query would exclude them. The sourc
 
 ### Loader-supplied HTML and body retention
 
-The Markdown example uses `retainBody: true`, so `content.readBody("posts", "getting-started")` returns its captured Markdown. Changing the loader option to `retainBody: false` makes that public value `undefined` after preparation; computed fields can still use the captured source text while preparing query data.
+The Markdown example uses `retainBody: true`, so the `_body` payload of `getting-started` is its captured Markdown. Changing the loader option to `retainBody: false` makes that public value `undefined` after preparation; computed fields can still use the captured source text while preparing query data.
 
-The default eager SSR policy still serves the compiled HTML/headings. With `deferRender: true`, retain private Markdown input for compilation even when public raw-text access is disabled. The same `content.readBody(...)` call returns `undefined` when public raw-text retention is disabled, even if the renderer still needs private captured input.
+The default eager SSR policy still serves the compiled HTML/headings. With `deferRender: true`, retain private Markdown input for compilation even when public raw-text access is disabled. The same `_body` payload is `undefined` when public raw-text retention is disabled, even if the renderer still needs private captured input.
 
 A custom loader can also supply prepared HTML directly. The following is an independent CMS-entry example and does not change the post/author fixtures or query results above:
 
@@ -1865,7 +1879,7 @@ const loadedNotice = {
 };
 ```
 
-If written with `context.store.set(loadedNotice)` by a registered `notices` loader, `content.render("notices", "service-notice")` returns that HTML and heading metadata without Markdown compilation. `content.readBody("notices", "service-notice")` returns `undefined` because the entry supplies no `body`. If metadata/headings were omitted, rendering would return `headings: []`. The loader function stays in preparation; deployed runtime loads only its prepared data.
+If written with `context.store.set(loadedNotice)` by a registered `notices` loader, a `_rendered` payload request for `service-notice` returns that HTML and heading metadata without Markdown compilation. Its `_body` payload is `undefined` because the entry supplies no `body`. If metadata/headings were omitted, rendering would return `headings: []`. The loader function stays in preparation; deployed runtime loads only its prepared data.
 
 ### Package the example for production
 
@@ -1904,7 +1918,7 @@ export const payloadModules = {
 };
 ```
 
-Importing the collection index does not invoke these payload importers. `content.readBody("posts", "getting-started")` and `content.render("posts", "getting-started")` explicitly load the applicable item payload; querying titles or dates uses only prepared query data. The eager path's payload contains HTML/headings or applicable library-generated rendering code, not an extracted user-defined resolver. The deferred path uses packaged captured text and the library runtime processor. A host may combine or split final chunks.
+Importing the collection index does not invoke these payload importers. A query that requests the `_body` or `_rendered` payload of `getting-started` loads the applicable item payload; querying titles or dates uses only prepared query data. The eager path's payload contains HTML/headings or applicable library-generated rendering code, not an extracted user-defined resolver. The deferred path uses packaged captured text and the library runtime processor. A host may combine or split final chunks.
 
 A changed post payload receives a new opaque key derived from collection, ID, and encoded payload bytes; the new collection index references it. Reuse unchanged payload modules, and retain older ones while operations using the previous revision still need them. Publish the new validated revision after all its artifacts are ready. Manifest format/codec incompatibility produces `artifact-error` and requires regeneration; no SSR source/config import is a fallback.
 

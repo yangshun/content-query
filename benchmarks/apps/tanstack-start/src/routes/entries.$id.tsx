@@ -8,12 +8,13 @@ const getEntry = createServerFn({ method: "GET" })
     const entry = await content.query.entries.findFirst({
       where: { id },
       columns: { id: true, title: true, description: true },
+      payloads: { _rendered: true },
     });
     if (!entry) {
       throw notFound();
     }
-    const { html } = await content.render("entries", id);
-    return { entry, html };
+    const { _payloads, ...metadata } = entry;
+    return { entry: metadata, html: _payloads._rendered.html };
   });
 
 export const Route = createFileRoute("/entries/$id")({

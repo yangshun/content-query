@@ -15,7 +15,7 @@ The relational API exposes `content.query.posts.findMany(options?)` and `findFir
 
 `content.select().from("posts")` and omitted relational `columns` return all prepared metadata. `columns: { title: true }` includes only the named fields; `columns: { draft: false }` excludes them. If any field is `true`, only `true` fields are included. `columns: {}` returns no scalar fields.
 
-Request relationships with fluent `.with(name, configure)` or relational `with: { author: true }`. Nested relational options use the same `columns`, `with`, and `where` shapes. Many relationships also allow ordering and pagination; singular relationships allow filtering. Bodies and rendered output are separate operations.
+Request relationships with fluent `.with(name, configure)` or relational `with: { author: true }`. Nested relational options use the same `columns`, `with`, and `where` shapes. Many relationships also allow ordering and pagination; singular relationships allow filtering. Bodies and rendered output are payloads: request them with relational `payloads: { _rendered: true }` or fluent `.withPayload("_rendered")`, at the root or inside relationship scopes.
 
 ## Filter operators
 

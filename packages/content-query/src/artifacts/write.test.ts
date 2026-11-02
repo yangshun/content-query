@@ -17,7 +17,7 @@ function revision(): PreparedRevision {
     collections: {
       posts: {
         records: Array.from({ length: 24 }, (_, index) => ({ id: String(index) })),
-        payloads: new Map(
+        builtins: new Map(
           Array.from({ length: 24 }, (_, index) => [
             String(index),
             async () => ({ body: `Article ${index}` }),

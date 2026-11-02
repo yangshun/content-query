@@ -15,17 +15,18 @@ export const loader = defineHandler(async (context) => {
     .from("guides")
     .where((fields) => eq(fields.id, id))
     .selectAdjacent((siblings) => siblings.orderBy("order").select("id", "title"))
+    .withPayload("_rendered")
     .first();
 
   if (!guide) {
     return context.notFound();
   }
 
-  const { html } = await content.render("guides", guide.id);
+  const { _adjacent, _payloads, ...metadata } = guide;
   return {
-    guide: { ...guide, html },
-    previous: guide._adjacent.previous,
-    next: guide._adjacent.next,
+    guide: { ...metadata, html: _payloads._rendered.html },
+    previous: _adjacent.previous,
+    next: _adjacent.next,
   };
 });
 

@@ -22,11 +22,12 @@ export async function loadGuide(id: string) {
     where: { id },
     adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
     columns: { id: true, title: true, description: true },
+    payloads: { _rendered: true },
   });
   if (!guide) {
     return null;
   }
-  const { html } = await content.render("guides", id);
+  const { html } = guide._payloads._rendered;
   return {
     guide: { id: guide.id, title: guide.title, description: guide.description, html },
     ...guide._adjacent,

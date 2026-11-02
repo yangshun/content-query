@@ -1,7 +1,7 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { detach, isScalar } from "../shared/values.ts";
 import { and, not, or, validateExpression } from "./operators.ts";
-import { checkedFields, checkedOrder, checkedPagination } from "./clauses.ts";
+import { checkedFields, checkedOrder, checkedPagination, checkedPayloads } from "./clauses.ts";
 import {
   emptyPlan,
   type Expression,
@@ -138,7 +138,10 @@ export function relationalWhere(
   return detach(expression);
 }
 
-/** Compiles Drizzle-style columns/with options into the shared immutable query plan. */
+/**
+ * Compiles Drizzle-style columns/with options into the shared immutable query plan.
+ * Payloads are allowed wherever adjacency is, so sibling scopes never load them.
+ */
 export function relationalPlan(
   registry: QueryRegistry,
   collection: string,
@@ -157,7 +160,7 @@ export function relationalPlan(
     "with",
     ...(many ? ["orderBy"] : []),
     ...(many && pagination ? ["limit", "offset"] : []),
-    ...(allowAdjacent ? ["adjacent"] : []),
+    ...(allowAdjacent ? ["adjacent", "payloads"] : []),
   ];
   if (Object.keys(options).some((key) => !allowed.includes(key))) {
     invalidQuery("Unknown relational query option or unsupported scope option.");
@@ -218,6 +221,13 @@ export function relationalPlan(
   for (const key of ["limit", "offset"] as const) {
     if (options[key] !== undefined) {
       plan[key] = checkedPagination(options[key] as number, many);
+    }
+  }
+  if (options.payloads !== undefined) {
+    record(options.payloads, "payloads");
+    const payloads = checkedPayloads(registry, collection, options.payloads);
+    if (payloads) {
+      plan.payloads = payloads;
     }
   }
   if (options.adjacent !== undefined) {

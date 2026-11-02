@@ -1,0 +1,4 @@
+.content-query/
+dist/
+node_modules/
+*.tsbuildinfo

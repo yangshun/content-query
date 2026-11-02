@@ -10,19 +10,21 @@ export const loader = defineHandler(async (context) => {
     .select("id", "title", "description")
     .from("guides")
     .orderBy("order")
-    .selectAdjacent((siblings) => siblings.orderBy("order").select("id", "title"));
+    .selectAdjacent((siblings) => siblings.orderBy("order").select("id", "title"))
+    .withPayload("_rendered");
   const guide = await (id ? query.where((fields) => eq(fields.id, id)) : query).first();
 
   if (!guide) {
     return context.notFound();
   }
 
-  const { html, headings } = await content.render("guides", guide.id);
+  const { _adjacent, _payloads, ...metadata } = guide;
+  const { html, headings } = _payloads._rendered;
   return {
-    guide: { ...guide, html },
+    guide: { ...metadata, html },
     headings,
-    previous: guide._adjacent.previous,
-    next: guide._adjacent.next,
+    previous: _adjacent.previous,
+    next: _adjacent.next,
   };
 });
 

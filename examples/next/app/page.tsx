@@ -14,6 +14,9 @@ export default async function HomePage() {
       <div className="home-intro">
         <h1>Documentation</h1>
         <p>Sample guides for keeping project notes organized and working with your team.</p>
+        <p>
+          Browse every section on the <Link href="/contents">contents page</Link>.
+        </p>
       </div>
       <section className="guide-index" aria-labelledby="guides-heading">
         <h2 id="guides-heading">Guides</h2>

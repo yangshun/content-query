@@ -1,6 +1,6 @@
 # ContentQuery + Angular
 
-Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
+Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
@@ -32,7 +32,7 @@ The build runs `content-query build` before `ng build`. Deploy `dist/angular/` a
 ## Data and routing
 
 - `src/app/app.routes.ts` defines Angular routes and resolvers. The docs parent owns the sidebar, and the child resolver loads only the selected article.
-- `src/server/content.ts` keeps ContentQuery queries on the server. Home and sidebar queries select metadata only; article queries render Markdown and select `_adjacent` neighbors.
+- `src/server/content.ts` keeps ContentQuery queries on the server. Home and sidebar queries select metadata only; article queries request the rendered Markdown payload and select `_adjacent` neighbors.
 - `src/server.ts` uses Angular's standard Express request handler. Small API routes expose the selected results for client navigation. `GuidesApi` uses Angular `HttpClient`, whose native transfer cache reuses SSR responses during hydration. Its result types are inferred through erased server type imports.
 - Missing guides return 404 from both the API and SSR. Angular owns page titles, descriptions, active sidebar links, and scroll restoration. Internal Markdown links use Angular Router and preserve the docs layout.
 

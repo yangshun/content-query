@@ -1,5 +1,6 @@
 import type {
   CollectionRegistry,
+  PayloadsOf,
   QueryData,
   Relationship,
   RelationshipsOf,
@@ -39,6 +40,12 @@ type QueryInfo<
   readonly [queryType]: { result: Result; selected: Selected; filtered: Filtered };
 };
 type Simplify<Value> = { [Key in keyof Value]: Value[Key] };
+/** Adds one requested payload to a result's `_payloads`, keeping earlier requests. */
+type WithPayload<Result, Key extends PropertyKey, Value> = Omit<Result, "_payloads"> & {
+  _payloads: Simplify<
+    (Result extends { _payloads: infer Existing } ? Existing : {}) & { [Name in Key]: Value }
+  >;
+};
 type ResultOf<Configured> = Configured extends QueryInfo<infer Result> ? Result : never;
 type FilteredOf<Configured> =
   Configured extends QueryInfo<unknown, boolean, infer Filtered> ? Filtered : false;
@@ -190,6 +197,20 @@ export type Query<
     : {}) &
   (AllowAdjacent extends true
     ? {
+        /** Attaches a payload under `_payloads` after filtering, ordering, and pagination. */
+        withPayload<Key extends keyof PayloadsOf<Registry[Name]> & string>(
+          name: Key,
+        ): Query<
+          Registry,
+          Name,
+          WithPayload<Result, Key, PayloadsOf<Registry[Name]>[Key]>,
+          Selected,
+          Many,
+          Root,
+          Filtered,
+          AllowAdjacent,
+          Pagination
+        >;
         selectAdjacent(): Query<
           Registry,
           Name,
@@ -237,7 +258,12 @@ export type Query<
         execute: Selected extends true ? () => Promise<Simplify<Result>[]> : never;
         then: Selected extends true ? Promise<Simplify<Result>[]>["then"] : never;
         first: Selected extends true ? () => Promise<Simplify<Result> | undefined> : never;
-        count(): Promise<number>;
+        /** Counts matching entries; unavailable once payloads are requested. */
+        count: [Result] extends [never]
+          ? () => Promise<number>
+          : [Result] extends [{ _payloads: unknown }]
+            ? never
+            : () => Promise<number>;
       }
     : {});
 

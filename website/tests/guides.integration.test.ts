@@ -77,11 +77,17 @@ describe("ContentQuery website guide routes with the generated backend", () => {
   let workspace: string;
   let server: ViteDevServer;
   let content: typeof import("content-query:server").content;
+  /** Reads one guide's built-in payload through the same query API as the pages. */
+  let guidePayload: <Name extends "body" | "rendered">(
+    id: string,
+    name: Name,
+  ) => Promise<
+    Name extends "body" ? string | undefined : { html: string; headings: { slug: string }[] }
+  >;
   let homeRoute: typeof import("../pages/index.server");
   let guideRoute: typeof import("../pages/docs/[...slug].server");
   let navigationMiddleware: typeof import("../middleware/01.docs").default;
   let startupQueries: number;
-  let startupRenders: number;
 
   beforeAll(async () => {
     workspace = await realpath(
@@ -113,15 +119,24 @@ describe("ContentQuery website guide routes with the generated backend", () => {
       optimizeDeps: { noDiscovery: true },
     });
     ({ content } = await server.ssrLoadModule("content-query:server"));
+    guidePayload = async (id, name) => {
+      const guide = await content.query.guides.findFirst({
+        where: { id },
+        columns: {},
+        payloads: { _body: name === "body", _rendered: name === "rendered" },
+      });
+      if (!guide) {
+        throw new Error(`Guide "${id}" does not exist.`);
+      }
+      return (guide._payloads as Record<string, unknown>)[`_${name}`] as never;
+    };
     const querySpy = vi.spyOn(content, "select");
-    const renderSpy = vi.spyOn(content, "render");
     homeRoute = (await server.ssrLoadModule("/pages/index.server.ts")) as typeof homeRoute;
     guideRoute = (await server.ssrLoadModule(
       "/pages/docs/[...slug].server.ts",
     )) as typeof guideRoute;
     ({ default: navigationMiddleware } = await server.ssrLoadModule("/middleware/01.docs.ts"));
     startupQueries = querySpy.mock.calls.length;
-    startupRenders = renderSpy.mock.calls.length;
     vi.restoreAllMocks();
   }, 20_000);
 
@@ -136,13 +151,12 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     }
   });
 
-  test("imports route modules without querying or rendering content", () => {
+  test("imports route modules without querying content", () => {
     expect(startupQueries).toBe(0);
-    expect(startupRenders).toBe(0);
   });
 
   test("renders a dedicated homepage with all nine examples and real Markdown output", async () => {
-    const renderSpy = vi.spyOn(content, "render");
+    const exampleSpy = vi.spyOn(content.query.examples, "findFirst");
     const props = (await homeRoute.loader(requestContext())) as HomeProps;
 
     expect(props).not.toHaveProperty("guide");
@@ -151,7 +165,11 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     expect(props.renderedExample.headings).toEqual([
       { depth: 2, slug: "hello-world", text: "Hello, world" },
     ]);
-    expect(renderSpy).toHaveBeenCalledExactlyOnceWith("examples", "hello-world");
+    expect(exampleSpy).toHaveBeenCalledExactlyOnceWith({
+      where: { id: "hello-world" },
+      columns: {},
+      payloads: { _rendered: true },
+    });
     const html = renderToStaticMarkup(createElement(Homepage, props));
     for (const id of featureExampleIds) {
       expect(html).toContain(`id="${id}"`);
@@ -184,7 +202,6 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     async (requestPath) => {
       const set = vi.fn();
       const next = vi.fn().mockResolvedValue(undefined);
-      const render = vi.spyOn(content, "render");
       await navigationMiddleware(
         {
           req: { path: requestPath },
@@ -205,13 +222,11 @@ describe("ContentQuery website guide routes with the generated backend", () => {
       for (const guide of shared.guideNavigation) {
         expect(Object.keys(guide).sort()).toEqual(["id", "section", "title"]);
       }
-      expect(render).not.toHaveBeenCalled();
       expect(next).toHaveBeenCalledOnce();
     },
   );
 
   test.each(guideIds)("renders only %s with headings and adjacent guides", async (id) => {
-    const renderSpy = vi.spyOn(content, "render");
     const props = (await guideRoute.loader(requestContext(id))) as GuideProps;
     const currentIndex = guideIds.indexOf(id);
 
@@ -219,7 +234,8 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     expect(props).not.toHaveProperty("guides");
     expect(props.previous?.id ?? null).toBe(guideIds[currentIndex - 1] ?? null);
     expect(props.next?.id ?? null).toBe(guideIds[currentIndex + 1] ?? null);
-    expect(renderSpy).toHaveBeenCalledExactlyOnceWith("guides", id);
+    expect(props.guide).not.toHaveProperty("_payloads");
+    expect(props.guide).not.toHaveProperty("_adjacent");
     expect(props.headings.length).toBeGreaterThan(0);
     for (const heading of props.headings) {
       expect(props.guide.html).toContain(`id="${heading.slug}"`);
@@ -230,7 +246,7 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     const documents = new Map(
       await Promise.all(
         guideIds.map(async (id) => {
-          const rendered = await content.render("guides", id);
+          const rendered = await guidePayload(id, "rendered");
           const pathname = `/docs/${id}`;
           return [pathname, rendered] as const;
         }),
@@ -255,7 +271,7 @@ describe("ContentQuery website guide routes with the generated backend", () => {
   });
 
   test("runs the published quick-start code through preparation and rendering", async () => {
-    const body = (await content.readBody("guides", "quick-start"))!;
+    const body = (await guidePayload("quick-start", "body"))!;
     const blocks = new Map(
       [...body.matchAll(/^```(ts|md|js)\n([\s\S]*?)^```/gm)].map((match) => [match[1]!, match[2]!]),
     );
@@ -283,8 +299,8 @@ describe("ContentQuery website guide routes with the generated backend", () => {
   });
 
   test("executes the Next.js guide and homepage snippets with inferred collection types", async () => {
-    const quickStart = (await content.readBody("guides", "quick-start"))!;
-    const guide = (await content.readBody("guides", "integrations/next"))!;
+    const quickStart = (await guidePayload("quick-start", "body"))!;
+    const guide = (await guidePayload("integrations/next", "body"))!;
     const exampleRoot = path.join(workspace, "next-guide");
     await mkdir(path.join(exampleRoot, "content/posts"), { recursive: true });
     await mkdir(path.join(exampleRoot, "app"));
@@ -557,12 +573,10 @@ content.query.posts.findMany({ columns: { title: true, drafft: true } });
   }, 20_000);
 
   test("returns 404 for a missing guide without rendering it", async () => {
-    const renderSpy = vi.spyOn(content, "render");
     const response = (await guideRoute.loader(requestContext("missing-guide"))) as Response;
 
     expect(response.status).toBe(404);
     expect(await response.text()).toBe("Not Found");
-    expect(renderSpy).not.toHaveBeenCalled();
   });
 
   test("discovers nested new pages without changing the dedicated homepage", async () => {

@@ -1,6 +1,6 @@
 # ContentQuery x Next.js
 
-Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
+Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
@@ -44,9 +44,10 @@ Guide URLs use Next.js's default convention without trailing slashes, such as `/
 - `package.json` maps `#content-query` to `./.content-query/server.js` through its `imports` field. Server Components use `import { content } from "#content-query"` at any directory depth, with inferred types from the adjacent generated declarations.
 - Queries are inline in `app/page.tsx`, `app/docs/layout.tsx`, and `app/docs/[...slug]/page.tsx`. Next.js's `server-only` marker prevents client components from importing these server modules.
 - The homepage queries selected metadata without rendering any guide bodies. `generateMetadata()` also selects metadata only.
+- `app/contents/page.tsx` lists every guide with links to its sections. Its `findMany()` requests the `_rendered` payload for every guide and reads only the headings; this is the one listing that opts into payloads.
 - `generateStaticParams()` maps collection IDs to catch-all route segments. Nested files such as `content/guides/reference/shortcuts.md` become `/docs/reference/shortcuts`.
 - `app/docs/layout.tsx` loads only sidebar IDs/titles and persists across guide navigation. Its small client `sidebar.tsx` updates the active link from `usePathname`; the article page does not load or pass navigation entries.
-- The guide page awaits its route parameters, renders the requested Markdown body, and selects previous/next links with an independent `_adjacent` sibling scope. Detail queries use the object API; the index also demonstrates fluent queries. `dynamicParams = false` rejects paths outside the generated collection.
+- The guide page awaits its route parameters and selects previous/next links with an independent `_adjacent` sibling scope. The same query requests both built-in payloads: `_rendered` for the article and `_body` for a collapsible Markdown source view. Detail queries use the object API; the index also demonstrates fluent queries. `dynamicParams = false` rejects paths outside the generated collection.
 - Source Markdown is trusted repository content. Server Components load and render it; the client presentation component handles internal link clicks. Application code owns routing and presentation.
 
 To add a guide, create a Markdown file under `content/guides/` with `title`, `description`, and numeric `order` frontmatter. Development discovers its route automatically; rebuild the static export to publish it in production.
@@ -61,7 +62,7 @@ vp test run
 vp run --filter @content-query/example-next build
 ```
 
-The integration suite builds a real Next.js consumer through `next.config.mjs`, then checks its exported index, metadata, Markdown rendering, adjacent guides, nested routes, and 404 page after removing source content and configuration. It also checks that invalid content blocks compilation. Development tests run real Turbopack and Webpack servers and exercise metadata/body edits, route additions/renames/deletions, configuration updates, and invalid-content recovery.
+The integration suite builds a real Next.js consumer through `next.config.mjs`, then checks its exported index, metadata, Markdown rendering, Markdown source, contents page, adjacent guides, nested routes, and 404 page after removing source content and configuration. It also checks that invalid content blocks compilation. Development tests run real Turbopack and Webpack servers and exercise metadata/body edits, route additions/renames/deletions, configuration updates, and invalid-content recovery.
 
 The root layout imports its local stylesheet, hardlinked to the common [`../shared/styles.css`](../shared/styles.css) in this workspace, giving all five examples the same header, footer, home index, sidebar, article typography, and responsive layout. Queries stay inline in Server Components and route metadata functions. `app/docs/content.tsx` is a small client presentation boundary that routes internal Markdown links through Next.js while keeping the docs layout mounted.
 

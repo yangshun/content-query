@@ -13,10 +13,11 @@ export async function load({ params }: { params: { slug: string } }) {
     where: { id },
     adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
     columns: { id: true, title: true, description: true },
+    payloads: { _rendered: true },
   });
   if (!guide) {
     error(404, "Guide not found");
   }
-  const { html } = await content.render("guides", id);
-  return { guide: { ...guide, html }, ...guide._adjacent };
+  const { _adjacent, _payloads, ...metadata } = guide;
+  return { guide: { ...metadata, html: _payloads._rendered.html }, ..._adjacent };
 }

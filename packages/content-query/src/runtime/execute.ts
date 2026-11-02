@@ -3,7 +3,7 @@ import { compare, detachSelection, isScalar } from "../shared/values.ts";
 import type { QueryPlan } from "../query/plan.ts";
 import { matches } from "./filter.ts";
 import { relationKey } from "./relationships.ts";
-import type { PreparedRevision, QueryRecord } from "./revision.ts";
+import type { PayloadRequest, PreparedRevision, QueryRecord } from "./revision.ts";
 
 const recordIndexes = new WeakMap<readonly QueryRecord[], ReadonlyMap<string, QueryRecord>>();
 
@@ -126,6 +126,7 @@ function neighborScope(
           exclude: undefined,
           with: {},
           adjacent: undefined,
+          payloads: undefined,
           limit: undefined,
           offset: undefined,
         }
@@ -150,13 +151,17 @@ function neighborScope(
   return scope;
 }
 
-/** Projects one entry and requested relationships/adjacency from one pinned revision. */
+/**
+ * Projects one entry and requested relationships/adjacency from one pinned revision.
+ * Requested payloads are recorded for the caller to load after projection.
+ */
 function project(
   record: QueryRecord,
   plan: QueryPlan,
   revision: PreparedRevision,
   scopes: ProjectionScopes,
   scopeRecords: readonly QueryRecord[],
+  requests: PayloadRequest[],
   preserveScopeOrder = false,
 ): Record<string, unknown> {
   if (!plan.select && !plan.allFields && !plan.adjacent) {
@@ -180,7 +185,7 @@ function project(
       revision.relations.get(relationKey(plan.collection, name))?.get(record.id) ?? [];
     const preserveOrder = relation.referenceSide === "from" && Array.isArray(record[relation.from]);
     const selected = pageRecords(candidates, nested, revision, preserveOrder).map((entry) =>
-      project(entry, nested, revision, scopes, candidates, preserveOrder),
+      project(entry, nested, revision, scopes, candidates, requests, preserveOrder),
     );
     Object.defineProperty(result, name, {
       value: relation.type === "many" ? selected : (selected[0] ?? null),
@@ -197,24 +202,41 @@ function project(
     const previous = index === undefined ? undefined : scope.records[index - 1];
     const next = index === undefined ? undefined : scope.records[index + 1];
     result._adjacent = {
-      previous: previous ? project(previous, scope.plan, revision, scopes, candidates) : null,
-      next: next ? project(next, scope.plan, revision, scopes, candidates) : null,
+      previous: previous
+        ? project(previous, scope.plan, revision, scopes, candidates, requests)
+        : null,
+      next: next ? project(next, scope.plan, revision, scopes, candidates, requests) : null,
     };
+  }
+  if (plan.payloads) {
+    requests.push({
+      target: result,
+      collection: plan.collection,
+      id: record.id,
+      payloads: plan.payloads,
+    });
   }
   return result;
 }
 
-/** Runs the shared JavaScript executor; future adapters can execute the same plan. */
+/**
+ * Runs the shared JavaScript executor; future adapters can execute the same plan.
+ * Rows that requested payloads are appended to `requests` for loading after execution.
+ */
 export async function executeQuery(
   revision: PreparedRevision,
   plan: QueryPlan,
   terminal: "all" | "first" | "count",
+  requests: PayloadRequest[] = [],
 ): Promise<unknown> {
   const collection = revision.collections[plan.collection];
   if (!collection) {
     invalidQuery(`Unknown collection "${plan.collection}".`);
   }
   if (terminal === "count") {
+    if (plan.payloads) {
+      invalidQuery("Counts cannot request payloads.");
+    }
     return queryCandidates(collection.records, plan).filter((record) =>
       plan.filters.every((expression) => matches(record, expression, revision, plan.collection)),
     ).length;
@@ -226,7 +248,9 @@ export async function executeQuery(
   const scopes: ProjectionScopes = new WeakMap();
   return terminal === "first"
     ? records[0]
-      ? project(records[0], plan, revision, scopes, collection.records)
+      ? project(records[0], plan, revision, scopes, collection.records, requests)
       : undefined
-    : records.map((record) => project(record, plan, revision, scopes, collection.records));
+    : records.map((record) =>
+        project(record, plan, revision, scopes, collection.records, requests),
+      );
 }

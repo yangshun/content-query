@@ -2,6 +2,7 @@ import type { MaybePromise } from "../shared/types.ts";
 import type { RenderedContent } from "../runtime/types.ts";
 
 declare const loaderSourceType: unique symbol;
+declare const recordLoaderType: unique symbol;
 
 /** A stored content record, following Astro's build-time DataEntry contract. */
 export type DataEntry<
@@ -135,6 +136,11 @@ export type Loader<out Source = unknown> = {
   schema?: unknown;
   createSchema?(): MaybePromise<{ schema: unknown; types?: string }>;
   load(context: LoaderContext<Source>): Promise<void>;
+};
+/** A loader whose entries are data records without bodies or rendered output, such as `file()`. */
+export type RecordLoader<Source = unknown> = Loader<Source> & {
+  /** Type-only marker: entries never carry built-in `_body` or `_rendered` payloads. */
+  readonly [recordLoaderType]: true;
 };
 /** Infers the source metadata a typed loader supplies to computed resolvers. */
 export type LoaderSource<Value> = Value extends { readonly [loaderSourceType]?: infer Source }

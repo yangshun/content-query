@@ -3,9 +3,17 @@ import { content } from "content-query:server";
 
 export const prerender = true;
 
-export const loader = defineHandler(async () => ({
-  renderedExample: await content.render("examples", "hello-world"),
-}));
+export const loader = defineHandler(async () => {
+  const example = await content.query.examples.findFirst({
+    where: { id: "hello-world" },
+    columns: {},
+    payloads: { _rendered: true },
+  });
+  if (!example) {
+    throw new Error('The "hello-world" rendering example is missing.');
+  }
+  return { renderedExample: example._payloads._rendered };
+});
 
 export type Props = InferProps<typeof loader>;
 

@@ -65,6 +65,7 @@ describe("Next.js example with inline page queries", () => {
     expect(html).toContain("Make a workspace and give your first project a home.");
     expect(html).not.toContain("Start with a workspace");
     expect(html).not.toMatch(/href="\/docs\/[^"]+\/"/);
+    expect(html).toContain('href="/contents"');
   });
 
   test.each(guideIds)("renders %s with metadata and ordered navigation neighbors", async (id) => {
@@ -94,6 +95,24 @@ describe("Next.js example with inline page queries", () => {
       expect(html).toContain("newNoteTemplate");
       expect(html).toContain('href="/docs/organizing-projects"');
     }
+    const source = html.match(/<details class="prose markdown-source">[\s\S]*?<\/details>/)?.[0];
+    expect(source).toContain("<summary>Markdown source</summary>");
+    expect(source).toMatch(/<code>## /);
+    expect(source).not.toContain("<h2");
+  });
+
+  test("lists every guide's sections from rendered payloads on the contents page", async () => {
+    const html = await readFile(path.join(root, "out/contents.html"), "utf8");
+    const list = html.match(/<ol class="contents-list">[\s\S]*?<\/ol>/)?.[0];
+    const ids = [...guideIds, "reference/shortcuts"];
+    const positions = ids.map((id) => list?.indexOf(`href="/docs/${id}"`) ?? -1);
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect(positions).toEqual([...positions].sort((first, second) => first - second));
+    expect(list).toContain('href="/docs/getting-started#start-with-a-workspace"');
+    expect(list).toContain('href="/docs/sharing-a-workspace#keep-the-conversation-close"');
+    expect(list).toContain('href="/docs/reference/shortcuts#moving-around"');
+    expect(html).toContain("<title>Contents | ContentQuery x Next.js</title>");
+    expect(html).not.toContain("A workspace is a shared home");
   });
 
   test("generates nested catch-all routes and their page metadata", async () => {
