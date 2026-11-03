@@ -24,7 +24,7 @@ The relational namespace uses `columns`, `with`, `where`, `orderBy`, `limit`, `o
 | `_body`     | Retained text, or `undefined` when the entry has none.                                         |
 | `_rendered` | `{ html, headings }`; entries without a rendering path reject the query with `not-renderable`. |
 
-Request payloads with relational `payloads: { _rendered: true }` or fluent `.withPayload("_rendered")`. Results carry them under `_payloads`. Payloads load after filtering and pagination, from the same revision, and are unavailable in counts and adjacent entries. JSON, YAML, and TOML sources and `file()` collections offer no payloads.
+Request payloads with relational `payloads: { _rendered: true }` or fluent `.withPayload("_rendered")`. Results carry them under `_payloads`. Payloads load after filtering and pagination, from the same revision, and are unavailable in counts and adjacent entries. JSON, YAML, and TOML sources and `file()` collections offer no payloads, and `BodyLoader` collections offer only `_body`.
 
 ## Generated types
 

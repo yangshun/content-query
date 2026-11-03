@@ -22,7 +22,7 @@ export const collections = {
 };
 ```
 
-The loader supports `pattern` and `generateId`, captures YAML frontmatter and source text, and uses the existing watcher for additions, edits, and deletions. Query metadata normally; rendering stays explicit and separate from queries. Core's `_rendered` payload does not compile MDX bodies.
+The loader supports `pattern` and `generateId`, captures YAML frontmatter and source text, and uses the existing watcher for additions, edits, and deletions. Query metadata normally; rendering stays explicit and separate from queries. Queries can request the raw MDX through the `_body` payload. Core does not compile MDX, so requesting `_rendered` on an MDX collection is a type error.
 
 Add `contentQueryMdx()` from `@content-query/mdx/vite` alongside `contentQuery()` and your React plugin. Its `rendering` option is `"islands"` by default; choose `"react"` to emit ordinary browser document modules or `"both"` to support both modes. MDX declarations and build intermediates live under `.content-query/mdx/`. Ignore `.content-query/` and include `.content-query/**/*.d.ts` in TypeScript to cover both core and MDX declarations.
 

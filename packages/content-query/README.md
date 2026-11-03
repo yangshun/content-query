@@ -75,7 +75,7 @@ Version 0.2.0 removes `content.readBody()` and `content.render()`. Request bodie
 | `await content.render("posts", id)`   | `(await content.query.posts.findFirst({ where: { id }, payloads: { _rendered: true } }))?._payloads._rendered` |
 | Fluent queries                        | Add `.withPayload("_rendered")` or `.withPayload("_body")` before the terminal.                                |
 
-Built-in payload names start with an underscore: `_body` and `_rendered`. A query for a missing entry returns `undefined` instead of rejecting with `entry-not-found`, which no longer exists. JSON, YAML, and TOML sources and `file()` collections offer no payloads. Rebuild generated content after upgrading; 0.1 artifacts are rejected.
+Built-in payload names start with an underscore: `_body` and `_rendered`. A query for a missing entry returns `undefined` instead of rejecting with `entry-not-found`, which no longer exists. JSON, YAML, and TOML sources and `file()` collections offer no payloads, and custom loaders typed as `BodyLoader` offer only `_body`. Rebuild generated content after upgrading; 0.1 artifacts are rejected.
 
 ## Documentation
 

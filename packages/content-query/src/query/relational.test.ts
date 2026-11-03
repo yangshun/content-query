@@ -7,7 +7,7 @@ import { createArtifactRuntime } from "../internal.ts";
 import { ARTIFACT_VERSION, CODEC_VERSION, type EncodedCollection } from "../artifacts/types.ts";
 import { encode } from "../shared/values.ts";
 import { eq, type QueryOptions, type CountOptions } from "../query.ts";
-import { file } from "../loaders.ts";
+import { file, type BodyLoader } from "../loaders.ts";
 import type { Content } from "../runtime.ts";
 
 /** Defines public consumer fixtures with nullable relationships and shared rich values. */
@@ -413,11 +413,13 @@ async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
 }
 void checkTypes;
 
-/** Declares collections whose entries are data records without built-in payloads. */
+/** Declares collections whose entries are data records, or bodies without rendered output. */
 function recordDefinitions() {
   const title = schema.object({ title: schema.string() });
+  const bodies = fixtureLoader(() => []) as BodyLoader;
   return {
     settings: defineCollection({ loader: file("./settings.json"), schema: title }),
+    notes: defineCollection({ loader: bodies, schema: title }),
     data: defineCollection({ source: { type: "json", directory: "./data" }, schema: title }),
     pages: defineCollection({ source: "./pages", schema: title }),
   };
@@ -433,6 +435,14 @@ async function checkRecordTypes(content: Content<ReturnType<typeof recordDefinit
   content.select("id").from("data").withPayload("_body");
   const page = await content.query.pages.findFirst({ payloads: { _rendered: true } });
   const pageHtml: string | undefined = page?._payloads._rendered.html;
-  void pageHtml;
+  // @ts-expect-error Body loaders carry no built-in rendered output.
+  void content.query.notes.findMany({ payloads: { _rendered: true } });
+  // @ts-expect-error Fluent queries reject rendered output from body loaders too.
+  content.select("id").from("notes").withPayload("_rendered");
+  const note = await content.query.notes.findFirst({ payloads: { _body: true } });
+  const noteBody: string | undefined = note?._payloads._body;
+  const fluentNote = await content.select("id").from("notes").withPayload("_body").first();
+  const fluentNoteBody: string | undefined = fluentNote?._payloads._body;
+  void [pageHtml, noteBody, fluentNoteBody];
 }
 void checkRecordTypes;

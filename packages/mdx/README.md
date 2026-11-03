@@ -22,7 +22,7 @@ export const collections = {
 
 `mdx({ base, pattern?, generateId? })` accepts a project-relative directory or a file URL. `pattern` defaults to `**/*.mdx`. IDs use `slug` frontmatter when provided, otherwise slugged relative paths without the extension or trailing `/index`. `generateId({ entry, base, data })` can replace that rule. Empty and duplicate IDs fail preparation.
 
-YAML frontmatter is validated by the collection schema. The `_body` payload returns retained MDX text without frontmatter; core's `_rendered` payload does not compile it. `filePath` and typed loader `source.filePath` remain available to preparation. File additions, changes, deletions, and recovery use the existing ContentQuery watcher.
+YAML frontmatter is validated by the collection schema. Queries can request the `_body` payload, which holds the retained MDX text without frontmatter. `mdx()` returns a core `BodyLoader`, so requesting `_rendered` is a type error; core does not compile MDX. Render documents with `renderMdx()` or `loadMdxDocument()` instead. `filePath` and typed loader `source.filePath` remain available to preparation. File additions, changes, deletions, and recovery use the existing ContentQuery watcher.
 
 ```ts
 // vite.config.ts (use vite-plus instead of vite inside this repository)

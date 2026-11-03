@@ -3,6 +3,7 @@ import type { RenderedContent } from "../runtime/types.ts";
 
 declare const loaderSourceType: unique symbol;
 declare const recordLoaderType: unique symbol;
+declare const bodyLoaderType: unique symbol;
 
 /** A stored content record, following Astro's build-time DataEntry contract. */
 export type DataEntry<
@@ -141,6 +142,14 @@ export type Loader<out Source = unknown> = {
 export type RecordLoader<Source = unknown> = Loader<Source> & {
   /** Type-only marker: entries never carry built-in `_body` or `_rendered` payloads. */
   readonly [recordLoaderType]: true;
+};
+/**
+ * A loader whose entries carry raw bodies but never rendered output, such as a loader for a
+ * format that the host application compiles itself.
+ */
+export type BodyLoader<Source = unknown> = Loader<Source> & {
+  /** Type-only marker: entries offer the built-in `_body` payload but never `_rendered`. */
+  readonly [bodyLoaderType]: true;
 };
 /** Infers the source metadata a typed loader supplies to computed resolvers. */
 export type LoaderSource<Value> = Value extends { readonly [loaderSourceType]?: infer Source }

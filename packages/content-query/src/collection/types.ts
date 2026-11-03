@@ -70,15 +70,13 @@ export type BuiltinPayloads = {
   /** HTML and headings; entries without a rendering path reject with `not-renderable`. */
   _rendered: ContentRenderResult;
 };
-/** Type-only marker recording whether a defined collection carries built-in payloads. */
-export type BuiltinPayloadMarker<Available extends boolean> = {
+/** Type-only marker recording which built-in payloads a defined collection carries. */
+export type BuiltinPayloadMarker<Available extends keyof BuiltinPayloads> = {
   readonly [builtinPayloadsType]?: Available;
 };
 /** Payload names and value types that queries can request for a collection definition. */
 export type PayloadsOf<Definition> = Definition extends {
   readonly [builtinPayloadsType]?: infer Available;
 }
-  ? [Available] extends [false | undefined]
-    ? {}
-    : BuiltinPayloads
+  ? Pick<BuiltinPayloads, Available & keyof BuiltinPayloads>
   : BuiltinPayloads;

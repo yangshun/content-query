@@ -18,6 +18,7 @@ export type {
   FileSource,
   FileEntrySource,
   RecordLoader,
+  BodyLoader,
   LoaderContext,
   LoaderConfig,
   LoaderLogger,

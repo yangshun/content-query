@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import type { FileSource, Loader, LoaderContext } from "content-query/loaders";
+import type { BodyLoader, FileSource, LoaderContext } from "content-query/loaders";
 import { glob } from "tinyglobby";
 import { slug } from "github-slugger";
 import matter from "gray-matter";
@@ -23,8 +23,15 @@ export function readMdx(source: string): { data: Record<string, unknown>; body: 
   return { data: parsed.data, body: parsed.content.replace(/^(?:[ \t]*\r?\n)+/, "") };
 }
 
-/** Declares a local MDX collection using ContentQuery's portable loader and watcher contract. */
-export function mdx(options: MdxLoaderOptions): Loader<FileSource> {
+/**
+ * Declares a local MDX collection using ContentQuery's portable loader and watcher contract.
+ * Entries retain MDX text as the `_body` payload. They carry no `_rendered` payload, because the
+ * Vite integration compiles documents; render them with `renderMdx()` or `loadMdxDocument()`.
+ *
+ * @param options - The base directory, plus an optional glob pattern and ID generator.
+ * @returns A body loader, so queries can request `_body` but not `_rendered`.
+ */
+export function mdx(options: MdxLoaderOptions): BodyLoader<FileSource> {
   if (!options?.base || (typeof options.base !== "string" && !(options.base instanceof URL))) {
     throw new TypeError("mdx() requires a base directory.");
   }
@@ -93,5 +100,5 @@ export function mdx(options: MdxLoaderOptions): Loader<FileSource> {
         }
       });
     },
-  };
+  } as BodyLoader<FileSource>;
 }
