@@ -33,7 +33,7 @@ Markdown defaults to `retainBody: true` and `deferRender: false`. Production pre
 
 The `_body` payload is the retained text, or `undefined` when an entry has none; it never reads original source files. Entries without supplied HTML or a Markdown rendering path reject a `_rendered` request with `not-renderable`. A body provided by a custom loader does not automatically imply Markdown rendering.
 
-Markdown sources, `glob()`, and custom loaders offer `_body` and `_rendered`. JSON, YAML, and TOML sources and `file()` hold data records only, so requesting either payload there is a type error.
+Markdown sources, `glob()`, and custom loaders offer `_body` and `_rendered`. JSON, YAML, and TOML sources and `file()` hold data records only, so requesting either payload there is a type error. Custom loaders typed as `BodyLoader`, such as the MDX loader, offer `_body` only.
 
 Version 0.2.0 replaced `content.render(collection, id)` and `content.readBody(collection, id)` with these payload requests. A query for a missing entry returns `undefined`, so handle page-not-found behavior where you check the result.
 

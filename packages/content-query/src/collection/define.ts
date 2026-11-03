@@ -1,13 +1,20 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type {
   BuiltinPayloadMarker,
+  BuiltinPayloads,
   ComputedContext,
   Relationship,
   Schema,
   SchemaOutput,
 } from "./types.ts";
 import { sourceLoader, type CollectionSource } from "./source.ts";
-import type { FileSource, Loader, LoaderSource, RecordLoader } from "../loaders/types.ts";
+import type {
+  BodyLoader,
+  FileSource,
+  Loader,
+  LoaderSource,
+  RecordLoader,
+} from "../loaders/types.ts";
 
 /** Local sources whose entries are data records, without bodies or rendered output. */
 type RecordSource = Extract<CollectionSource, object> & { type: "json" | "yaml" | "toml" };
@@ -96,10 +103,11 @@ export function defineCollection<
     Relationships,
     FileSource
   >,
-): Defined<SourceSchema, ComputedSchemas, Relationships, Loader> & BuiltinPayloadMarker<false>;
+): Defined<SourceSchema, ComputedSchemas, Relationships, Loader> & BuiltinPayloadMarker<never>;
 /**
  * Declares fields with inferred schema data and optional loader source metadata, plus relationships.
- * Record loaders such as `file()` carry no built-in `_body` or `_rendered` payloads.
+ * Record loaders such as `file()` carry no built-in `_body` or `_rendered` payloads, and body
+ * loaders carry `_body` without `_rendered`.
  */
 export function defineCollection<
   const SourceSchema extends StandardSchemaV1<unknown, Record<string, unknown>> | undefined =
@@ -110,7 +118,13 @@ export function defineCollection<
 >(
   definition: Definition<SourceSchema, ComputedSchemas, Relationships, ContentLoader>,
 ): Defined<SourceSchema, ComputedSchemas, Relationships, ContentLoader> &
-  BuiltinPayloadMarker<[ContentLoader] extends [RecordLoader] ? false : true>;
+  BuiltinPayloadMarker<
+    [ContentLoader] extends [RecordLoader]
+      ? never
+      : [ContentLoader] extends [BodyLoader]
+        ? "_body"
+        : keyof BuiltinPayloads
+  >;
 export function defineCollection(
   definition: Definition<
     StandardSchemaV1<unknown, Record<string, unknown>> | undefined,

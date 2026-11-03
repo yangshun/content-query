@@ -98,7 +98,7 @@ Production queries, body loading, and rendering must work from prepared content 
 
 ### 7. Preserve type safety throughout the pipeline
 
-Infer metadata, computed fields, valid filter operations and values, selected results, relationships, and registered collection names from collection definitions. Invalid field and collection names must not degrade into untyped access. Payload requests are typed per collection: JSON, YAML, and TOML sources and `file()` offer no built-in payloads, and an entry without a rendering path fails at runtime with `not-renderable`. Built-in rendering has a library-defined result type; it does not require per-collection output schemas at runtime.
+Infer metadata, computed fields, valid filter operations and values, selected results, relationships, and registered collection names from collection definitions. Invalid field and collection names must not degrade into untyped access. Payload requests are typed per collection: JSON, YAML, and TOML sources and `file()` offer no built-in payloads, loaders typed as `BodyLoader` offer only `_body`, and an entry without a rendering path fails at runtime with `not-renderable`. Built-in rendering has a library-defined result type; it does not require per-collection output schemas at runtime.
 
 Validate external data at runtime as well. Apply schema transformations once when preparing data for a source and schema revision, then store their validated results. Loading stored or generated values must not apply the transformations again. Preserve consistent field types and values across development, builds, and backends.
 
