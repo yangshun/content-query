@@ -97,8 +97,8 @@ for (const encoded of [false, true]) {
           limit: 1,
         });
         const fluent = await content
-          .select("id", "title")
           .from("posts")
+          .select("id", "title")
           .where((fields) => operators.eq(fields.draft, false))
           .where((fields) => operators.gte(fields.rank, 2))
           .with("author", (author) => author.select("name"))
@@ -110,8 +110,8 @@ for (const encoded of [false, true]) {
         expect(fluent).toEqual(object);
         expect(
           await content
-            .select("id")
             .from("posts")
+            .select("id")
             .with("author", (author) => author.select("name"))
             .all(),
         ).toEqual(
@@ -167,7 +167,7 @@ for (const encoded of [false, true]) {
         ] as const;
         for (const [where, predicate, expected] of cases) {
           const object = await content.query.posts.findMany({ where, columns: { id: true } });
-          const fluent = await content.select("id").from("posts").where(predicate).all();
+          const fluent = await content.from("posts").select("id").where(predicate).all();
           expect(object.map((entry) => entry.id)).toEqual(expected);
           expect(fluent).toEqual(object);
         }
@@ -188,8 +188,8 @@ for (const encoded of [false, true]) {
           limit: 1,
         });
         const fluent = await content
-          .select("id")
           .from("posts")
+          .select("id")
           .where((fields) => operators.eq(fields.draft, false))
           .orderBy("rank")
           .offset(1)
@@ -218,8 +218,8 @@ for (const encoded of [false, true]) {
           columns: { title: true },
         });
         const fluent = await content
-          .select("title")
           .from("posts")
+          .select("title")
           .where((fields) => operators.eq(fields.id, "b"))
           .selectAdjacent((siblings) =>
             siblings

@@ -4,8 +4,8 @@ import { createServerFn } from "@tanstack/react-start";
 const getEntries = createServerFn({ method: "GET" }).handler(async () => {
   const { content } = await import("content-query:server");
   const entries = await content
-    .select("id", "title", "description")
     .from("entries")
+    .select("id", "title", "description")
     .orderBy("order")
     .all();
   if (!entries.length) {

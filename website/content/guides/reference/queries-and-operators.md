@@ -7,15 +7,17 @@ order: 52
 
 ## Query methods
 
-The fluent API starts at `content.select(...fields).from(collection)`. Builders support `where`, `with`, `orderBy`, `offset`, `limit`, and `selectAdjacent`. Await them directly or execute them with `all()`, `execute()`, `first()`, or `count()`.
+The fluent API starts at `content.from(collection)`. Builders support `select`, `where`, `with`, `withPayload`, `orderBy`, `offset`, `limit`, and `selectAdjacent`. Await a selected builder directly or execute it with `all()`, `execute()`, or `first()`; `count()` needs no selection.
 
-The relational API exposes `content.query.posts.findMany(options?)` and `findFirst(options?)` for each registered collection. Options use `columns`, `with`, `where`, `orderBy`, `offset`, `limit`, and `adjacent`. Use `content.count(collection, options?)` for a filtered parent count before pagination.
+The relational API exposes `content.query.posts.findMany(options)` and `findFirst(options)` for each registered collection. Options use `columns`, `with`, `where`, `orderBy`, `offset`, `limit`, `adjacent`, and `payloads`. Use `content.count(collection, options?)` for a filtered parent count before pagination.
 
 ## Selection
 
-`content.select().from("posts")` and omitted relational `columns` return all prepared metadata. `columns: { title: true }` includes only the named fields; `columns: { draft: false }` excludes them. If any field is `true`, only `true` fields are included. `columns: {}` returns no scalar fields.
+Queries return only what they select; nothing is implicit, not even `id`. Every row-returning scope, including nested relationships and adjacent sibling scopes, must select fields, include a relationship, request a payload, or select adjacency. A scope that selects nothing fails to type-check and throws an `invalid-query` error.
 
-Request relationships with fluent `.with(name, configure)` or relational `with: { author: true }`. Nested relational options use the same `columns`, `with`, and `where` shapes. Many relationships also allow ordering and pagination; singular relationships allow filtering. Bodies and rendered output are payloads: request them with relational `payloads: { _rendered: true }` or fluent `.withPayload("_rendered")`, at the root or inside relationship scopes.
+Fluent `.select("title")` and relational `columns: { title: true }` include only the named fields. Columns accept only `true`; there are no exclusions. `columns: {}` selects no fields, for scopes that select only relationships, payloads, or adjacency.
+
+Request relationships with fluent `.with(name, configure)` or relational `with: { author: { columns: { name: true } } }`; `with: { author: true }` is rejected because the relationship would select nothing. Nested relational options use the same `columns`, `with`, and `where` shapes. Many relationships also allow ordering and pagination; singular relationships allow filtering. Bodies and rendered output are payloads: request them with relational `payloads: { _rendered: true }` or fluent `.withPayload("_rendered")`, at the root or inside relationship scopes.
 
 ## Filter operators
 

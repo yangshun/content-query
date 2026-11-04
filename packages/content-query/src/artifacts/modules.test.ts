@@ -84,7 +84,7 @@ const bodies = await Promise.all(["0", "63", "__proto__"].map(async id => ({id, 
 const rendered = await payload("__proto__", "_rendered");
 rendered.headings[0].text = "Caller mutation";
 const next = await payload("__proto__", "_rendered");
-const metadata = await content.select("date", "value").from("posts").first();
+const metadata = await content.from("posts").select("date", "value").first();
 console.log(JSON.stringify({count: await content.count("posts"), bodies, aliases: rendered.headings[0] === rendered.headings[1], detached: next.headings[0].text, html: next.html, date: metadata.date instanceof Date && metadata.date.getTime(), bigint: metadata.value === 10n}));
 `,
           ],

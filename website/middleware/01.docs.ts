@@ -9,8 +9,8 @@ export type NavigationShared = {
 /** Supplies the persistent docs layout independently of the current article loader. */
 export default defineMiddleware(async (context, next) => {
   const guideNavigation = await content
-    .select("id", "title", "section")
     .from("guides")
+    .select("id", "title", "section")
     .orderBy("order")
     .all();
   const shared = context.get("shared");

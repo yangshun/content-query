@@ -54,7 +54,7 @@ describe("Astro content loader compatibility", () => {
       registry,
       watch: true,
     });
-    const title = () => session.content.select("title").from("posts").first();
+    const title = () => session.content.from("posts").select("title").first();
     try {
       await expect(title()).rejects.toMatchObject({ code: "source-error" });
       await writeFile(filename, "Recovered");
@@ -125,7 +125,7 @@ describe("Astro content loader compatibility", () => {
       watch: false,
     });
     try {
-      expect(await session.content.select("title").from("posts").all()).toEqual([
+      expect(await session.content.from("posts").select("title").all()).toEqual([
         { title: "ONE" },
         { title: "TWO" },
       ]);
@@ -179,7 +179,7 @@ describe("Astro content loader compatibility", () => {
       registry,
       watch: true,
     });
-    const title = () => session.content.select("title").from("posts").first();
+    const title = () => session.content.from("posts").select("title").first();
     try {
       await writeFile(filename, "changed");
       await started;
@@ -218,13 +218,13 @@ describe("Astro content loader compatibility", () => {
       watch: true,
     });
     try {
-      expect(await session.content.select("id", "name").from("authors").all()).toEqual([
+      expect(await session.content.from("authors").select("id", "name").all()).toEqual([
         { id: "ada", name: "Ada!" },
       ]);
       expect(transform).toHaveBeenCalledTimes(1);
       await writeFile(filename, "id,name\ngrace,Grace\n");
       await vi.waitFor(async () => {
-        expect(await session.content.select("id", "name").from("authors").all()).toEqual([
+        expect(await session.content.from("authors").select("id", "name").all()).toEqual([
           { id: "grace", name: "Grace!" },
         ]);
       });
@@ -270,7 +270,7 @@ describe("Astro content loader compatibility", () => {
       watch: false,
     });
     try {
-      expect(await session.content.select("id", "title").from("posts").all()).toEqual([
+      expect(await session.content.from("posts").select("id", "title").all()).toEqual([
         { id: "hello", title: "HELLO" },
       ]);
       expect(await bodyOf(session.content, "posts", "hello")).toBe("# Hello\n");

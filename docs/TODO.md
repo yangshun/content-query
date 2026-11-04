@@ -97,9 +97,9 @@ Define whether a singleton is a collection with exactly one entry and a fixed ID
 
 Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
 
-Queries default to all prepared metadata through `content.select().from("posts")` or `content.query.posts.findMany()`, with optional field projection. A relationship declaration still needs `collection`, `type`, `from`, `to`, and `referenceSide`, while Astro uses `reference("authors")` inside the schema. Simplifying those declarations could retain relationship integrity with less authoring overhead.
+Queries return only explicitly selected fields through `content.from("posts").select(...)` or relational `columns`. A relationship declaration still needs `collection`, `type`, `from`, `to`, and `referenceSide`, while Astro uses `reference("authors")` inside the schema. Simplifying those declarations could retain relationship integrity with less authoring overhead.
 
-Candidates that retain [metadata/body separation](./PLAN.md#3-keep-metadata-projection-separate-from-bodies) include relationship shorthands with defaults such as `to: "id"` and a schema-level reference helper that declares the relationship. Default metadata selection is implemented; a synchronous array export remains a separate API decision.
+Candidates that retain [metadata/body separation](./PLAN.md#3-keep-metadata-projection-separate-from-bodies) include relationship shorthands with defaults such as `to: "id"` and a schema-level reference helper that declares the relationship. Explicit selection is implemented; a synchronous array export remains a separate API decision.
 
 ### CMS-specific adapters
 

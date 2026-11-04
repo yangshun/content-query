@@ -6,8 +6,8 @@ import type { CollectionRegistry } from "../collection/types.ts";
 import type { InvalidRelationships } from "../collection/registry-types.ts";
 import { createQueryNamespace, relationalPlan } from "../query/relational.ts";
 import type { RelationalQueries, RelationalCountOptions } from "../query/relational-types.ts";
-import type { SelectFrom } from "../query/select.ts";
-import { createSelect } from "../query/select.ts";
+import { createFrom } from "../query/from.ts";
+import type { Query } from "../query/types.ts";
 import { normalizePlan } from "../query/normalize.ts";
 import { executeQuery } from "./execute.ts";
 import type { BuiltinPayload, ContentState, PayloadRequest, PreparedRevision } from "./revision.ts";
@@ -22,8 +22,11 @@ import {
 
 assertServerOnly();
 type ContentMethods<Registry extends CollectionRegistry = {}> = {
-  /** Starts a SQL-ordered fluent query; field names are checked against the collection in from(). */
-  select<const Keys extends readonly string[]>(...fields: Keys): SelectFrom<Registry, Keys>;
+  /**
+   * Starts a fluent query over one collection. Nothing is selected until `select()`, `with()`,
+   * `withPayload()`, or `selectAdjacent()` requests data, not even `id`.
+   */
+  from<Name extends keyof Registry & string>(collection: Name): Query<Registry, Name>;
   /** Collection-scoped relational queries with typed columns, relationships, payloads, and filters. */
   readonly query: RelationalQueries<Registry>;
   /** Counts matching entries before pagination, like the fluent count terminal. */
@@ -268,9 +271,9 @@ export function createRuntime<
   }
   const queries = createQueryNamespace(registry, run) as RelationalQueries<Registry>;
   const runtime: ContentMethods<Registry> = {
-    select(...fields) {
-      allow("select");
-      return createSelect(registry, run, fields) as never;
+    from(collection) {
+      allow("from");
+      return createFrom(registry, run, collection) as never;
     },
     get query() {
       allow("query");

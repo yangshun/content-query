@@ -51,8 +51,8 @@ import { content } from "./.content-query/server.js";
 import { eq } from "content-query/query";
 
 const posts = await content
-  .select("id", "title")
   .from("posts")
+  .select("id", "title")
   .where((fields) => eq(fields.draft, false))
   .orderBy("title");
 
@@ -62,6 +62,8 @@ const post = await content.query.posts.findFirst({
 });
 const { html, headings } = post!._payloads._rendered;
 ```
+
+Queries return only the data they select, not even `id` implicitly; a query that selects nothing fails to type-check and throws at runtime.
 
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
 

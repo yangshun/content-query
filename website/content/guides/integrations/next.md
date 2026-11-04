@@ -54,7 +54,7 @@ import "server-only";
 import { content } from "#content-query";
 
 export default async function PostsPage() {
-  const posts = await content.select("id", "title").from("posts").all();
+  const posts = await content.from("posts").select("id", "title").all();
 
   return (
     <ul>

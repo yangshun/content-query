@@ -6,7 +6,7 @@ export type QueryStyle = "fluent" | "relational";
  * members, so gating them gates payloads, relationships, and adjacency as well.
  */
 export const queryStyleMembers = {
-  fluent: ["select"],
+  fluent: ["from"],
   relational: ["query", "count"],
 } as const satisfies Record<QueryStyle, readonly string[]>;
 
@@ -18,7 +18,7 @@ export type MembersOf<Style extends QueryStyle> = (typeof queryStyleMembers)[Sty
 
 /**
  * Describes a disabled root member in the type error itself, for example:
- * `content.select is unavailable because content-query.config sets queryStyle to "relational".`
+ * `content.from is unavailable because content-query.config sets queryStyle to "relational".`
  */
 export type QueryStyleDisabled<
   Member extends QueryStyleMember,

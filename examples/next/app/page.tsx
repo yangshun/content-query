@@ -4,8 +4,8 @@ import { content } from "#content-query";
 
 export default async function HomePage() {
   const guides = await content
-    .select("id", "title", "description")
     .from("guides")
+    .select("id", "title", "description")
     .orderBy("order")
     .all();
 

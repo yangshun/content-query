@@ -21,17 +21,17 @@ relationships: {
 
 ## Load related entries
 
-The fluent API selects fields independently at every level:
+Every level selects its own data; nothing is included implicitly, not even `id`. The fluent API selects fields independently at each level:
 
 ```ts
 const posts = await content
-  .select("id", "title")
   .from("posts")
+  .select("id", "title")
   .with("author", (author) => author.select("name"))
   .all();
 ```
 
-The relational API uses `with` and defaults to all metadata at each included level:
+The relational API uses `with` and nested `columns`:
 
 ```ts
 const posts = await content.query.posts.findMany({
@@ -40,7 +40,7 @@ const posts = await content.query.posts.findMany({
 });
 ```
 
-Use `with: { author: true }` for every prepared author field, or `false` to omit the relationship. A parent `where: { author: { name: "Ada" } }` filters posts by author; a `where` inside `with.author` filters only the included author.
+An included relationship must select data, so `with: { author: true }` is rejected; use `false` to omit a relationship. A parent `where: { author: { name: "Ada" } }` filters posts by author; a `where` inside `with.author` filters only the included author.
 
 ContentQuery checks authored references during preparation. Dangling references, ambiguous matches, and invalid singular cardinality fail validation.
 

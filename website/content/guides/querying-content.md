@@ -1,6 +1,6 @@
 ---
 title: Querying content
-description: Select metadata with SQL-ordered fluent queries and collection-scoped relational queries.
+description: Select exactly the metadata you need with collection-first fluent queries and collection-scoped relational queries.
 section: querying
 order: 20
 ---
@@ -9,19 +9,26 @@ Import `content` from `content-query:server` in Vite server modules, or from the
 
 ## Field selection
 
-The fluent API follows SQL order: `content.select(...fields).from(collection)`. The relational API lives under `content.query.<collection>`. These queries return the same fields:
+Fluent queries start from a collection, `content.from(collection)`, and select fields with `.select(...fields)`. The relational API lives under `content.query.<collection>`. These queries return the same fields:
 
 ```ts
-const posts = await content.select("id", "title").from("posts");
+const posts = await content.from("posts").select("id", "title");
 
 const samePosts = await content.query.posts.findMany({ columns: { id: true, title: true } });
 ```
 
-Use `content.select().from("posts")` or `content.query.posts.findMany()` for all prepared metadata, including IDs and computed fields. Neither query loads bodies or HTML. Relationships are included only when requested.
+Queries return only the data they select. Nothing is implicit, not even `id`, so each query shows the data its page needs, and unrequested fields stay out of loader data and client payloads. A query must select fields, include a relationship, request a payload, or select adjacent entries. Otherwise it fails to type-check, and running it throws an `invalid-query` error:
 
-Relational `columns` supports inclusion (`{ title: true }`), exclusion (`{ draft: false }`), and no scalar fields (`{}`). When any column is `true`, only the `true` columns are returned. Explicitly selected optional fields are present with value `undefined` when absent; default metadata results preserve stored property presence.
+```ts
+await content.from("posts"); // Error: nothing is selected.
+await content.query.posts.findMany({ where: { draft: false } }); // Error: filters select nothing.
+```
 
-Fluent field names and result types are checked once `.from()` binds the collection. Builders are immutable and reusable. Await a builder directly, or call `.all()` or `.execute()` for an array. Use `.first()` or relational `.findFirst()` for one entry; they return `undefined` when nothing matches.
+Counts return no rows, so they need no selection. Bodies and HTML load only as requested [payloads](/docs/rendering-content).
+
+Relational `columns` lists fields to include with `true`; there are no exclusions. `columns: {}` selects no fields, for queries that only need relationships, payloads, or adjacent entries. Explicitly selected optional fields are present with value `undefined` when absent.
+
+Fluent field names and result types are checked as soon as `from()` names the collection, so editors complete field names in `.select()`. Builders are immutable and reusable. Await a selected builder directly, or call `.all()` or `.execute()` for an array. Use `.first()` or relational `.findFirst()` for one entry; they return `undefined` when nothing matches.
 
 ## Filtering
 
@@ -29,8 +36,8 @@ Fluent field names and result types are checked once `.from()` binds the collect
 import { eq } from "content-query/query";
 
 const published = await content
-  .select("id", "title")
   .from("posts")
+  .select("id", "title")
   .where((fields) => eq(fields.draft, false));
 
 const samePublished = await content.query.posts.findMany({
@@ -60,7 +67,7 @@ const posts = await content.query.posts.findMany({
 });
 ```
 
-Use `with: { author: true }` to include all author metadata. To filter the parent posts by their author, use `where: { author: { name: "Ada" } }`. A filter inside `with.author` filters only the included author, leaving the parent results unchanged.
+Each relationship selects its own data, so list the related fields you need; `with: { author: true }` is rejected. To filter the parent posts by their author, use `where: { author: { name: "Ada" } }`. A filter inside `with.author` filters only the included author, leaving the parent results unchanged.
 
 ## Previous and next entries
 
@@ -77,8 +84,8 @@ const post = await content.query.posts.findFirst({
 });
 
 const samePost = await content
-  .select("id", "title")
   .from("posts")
+  .select("id", "title")
   .where((fields) => eq(fields.id, "hello"))
   .selectAdjacent((siblings) => siblings.orderBy("title").select("id", "title"))
   .first();
@@ -101,12 +108,9 @@ A fluent application that needs one of these can use the relational API for that
 Fluent builders are immutable, so one base query can serve a page of results and its total without repeating the filter:
 
 ```ts
-const published = content
-  .select("id", "title")
-  .from("posts")
-  .where((fields) => eq(fields.draft, false));
+const published = content.from("posts").where((fields) => eq(fields.draft, false));
 
-const page = await published.orderBy("title").offset(0).limit(10);
+const page = await published.select("id", "title").orderBy("title").offset(0).limit(10);
 const total = await published.count();
 ```
 

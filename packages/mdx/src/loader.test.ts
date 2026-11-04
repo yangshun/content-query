@@ -124,12 +124,12 @@ function mdxDefinitions() {
 async function checkPayloadTypes(content: Content<ReturnType<typeof mdxDefinitions>>) {
   const guide = await content.query.guides.findFirst({ payloads: { _body: true } });
   const body: string | undefined = guide?._payloads._body;
-  const fluent = await content.select("id").from("guides").withPayload("_body").first();
+  const fluent = await content.from("guides").select("id").withPayload("_body").first();
   const fluentBody: string | undefined = fluent?._payloads._body;
   // @ts-expect-error Core cannot render MDX; use renderMdx() or loadMdxDocument().
   void content.query.guides.findMany({ payloads: { _rendered: true } });
   // @ts-expect-error Fluent queries reject rendered MDX output too.
-  content.select("id").from("guides").withPayload("_rendered");
+  content.from("guides").select("id").withPayload("_rendered");
   void [body, fluentBody];
 }
 void checkPayloadTypes;

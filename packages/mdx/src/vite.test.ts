@@ -383,7 +383,7 @@ describe("MDX Vite integration", () => {
     const changed = path.join(host.root, "content/first.mdx");
     try {
       let module = await consumer(server);
-      expect(await module.content.select("title").from("docs")).toEqual([{ title: "First" }]);
+      expect(await module.content.from("docs").select("title")).toEqual([{ title: "First" }]);
       expect(analyzed).not.toHaveBeenCalled();
       const initial = await core.api.prepare();
       expect(initial.entries).toEqual([{ collection: "docs", id: "first", filePath: changed }]);
@@ -410,7 +410,7 @@ describe("MDX Vite integration", () => {
         await vi.waitFor(
           async () => {
             module = await consumer(server);
-            expect(await module.content.select("title").from("docs")).toEqual([{ title }]);
+            expect(await module.content.from("docs").select("title")).toEqual([{ title }]);
             expect((await module.loadMdx("docs", "first")).headings[0].text).toBe(title);
           },
           { timeout: 8000 },

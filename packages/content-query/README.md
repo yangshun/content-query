@@ -51,8 +51,8 @@ import { content } from "./.content-query/server.js";
 import { eq } from "content-query/query";
 
 const posts = await content
-  .select("id", "title")
   .from("posts")
+  .select("id", "title")
   .where((fields) => eq(fields.draft, false))
   .orderBy("title");
 
@@ -63,7 +63,23 @@ const post = await content.query.posts.findFirst({
 const { html, headings } = post!._payloads._rendered;
 ```
 
+Queries return only the data they select, not even `id` implicitly. A query must select fields, include a relationship, request a payload, or select adjacent entries; otherwise it fails to type-check and throws an `invalid-query` error. Counts need no selection.
+
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
+
+## Migrating to explicit selection
+
+Fluent queries now start from the collection, and no query selects data implicitly:
+
+| Before                                        | After                                                       |
+| --------------------------------------------- | ----------------------------------------------------------- |
+| `content.select("id", "title").from("posts")` | `content.from("posts").select("id", "title")`               |
+| `content.select().from("posts")`              | `content.from("posts").select(...)` listing the fields used |
+| `findMany()` or `findMany({ where })`         | Add `columns: { field: true }` for each field used          |
+| `columns: { draft: false }`                   | List the included fields with `true`                        |
+| `with: { author: true }`                      | `with: { author: { columns: { name: true } } }`             |
+
+Results include `id` only when it is selected. Queries that request only payloads, such as `findFirst({ where: { id }, payloads: { _rendered: true } })`, need no columns.
 
 ## Migrating to 0.2
 
@@ -86,7 +102,7 @@ Built-in payload names start with an underscore: `_body` and `_rendered`. A quer
 
 The Vite integration supports Vite 8, and the Next.js integration supports Next.js 15 and 16. Both integrations are optional; standalone builds and queries require neither framework.
 
-To allow only one query API, export `queryStyle` from the config: `export const queryStyle = "relational";` keeps `content.query` and `content.count()`, and `"fluent"` keeps `content.select()`. Generated types report the disabled API in the editor, and the runtime throws an `invalid-query` error for it. See [query style](https://github.com/yangshun/content-query/blob/main/docs/API.md#query-style).
+To allow only one query API, export `queryStyle` from the config: `export const queryStyle = "relational";` keeps `content.query` and `content.count()`, and `"fluent"` keeps `content.from()`. Generated types report the disabled API in the editor, and the runtime throws an `invalid-query` error for it. See [query style](https://github.com/yangshun/content-query/blob/main/docs/API.md#query-style).
 
 Pass `contentQuery()` directly to Vite or Vite+'s `plugins` array. No `Plugin` type cast is needed; workspace consumers share the pinned toolchain versions in the dependency catalog.
 

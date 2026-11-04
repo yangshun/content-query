@@ -5,9 +5,16 @@ import type {
   Relationship,
   RelationshipsOf,
 } from "../collection/types.ts";
-import type { Expression } from "./plan.ts";
+import type { Expression, NO_SELECTION_MESSAGE } from "./plan.ts";
 
 declare const queryType: unique symbol;
+/** Running an unselected query reports the explicit-selection rule as its required `this` type. */
+type UnselectedTerminal = (
+  this: typeof NO_SELECTION_MESSAGE,
+  ...arguments_: readonly unknown[]
+) => never;
+/** A `then` that cannot resolve a value, so awaiting an unselected query fails to compile. */
+type UnselectedThen = (selectBeforeAwaiting: typeof NO_SELECTION_MESSAGE) => never;
 declare const fieldType: unique symbol;
 export type Field<Value> = { readonly name: string; readonly [fieldType]: Value };
 export type Fields<Data> = { readonly [Name in keyof Data]-?: Field<Data[Name]> };
@@ -204,7 +211,7 @@ export type Query<
           Registry,
           Name,
           WithPayload<Result, Key, PayloadsOf<Registry[Name]>[Key]>,
-          Selected,
+          true,
           Many,
           Root,
           Filtered,
@@ -254,11 +261,13 @@ export type Query<
     : {}) &
   (Root extends true
     ? {
-        all: Selected extends true ? () => Promise<Simplify<Result>[]> : never;
-        execute: Selected extends true ? () => Promise<Simplify<Result>[]> : never;
-        then: Selected extends true ? Promise<Simplify<Result>[]>["then"] : never;
-        first: Selected extends true ? () => Promise<Simplify<Result> | undefined> : never;
-        /** Counts matching entries; unavailable once payloads are requested. */
+        all: Selected extends true ? () => Promise<Simplify<Result>[]> : UnselectedTerminal;
+        execute: Selected extends true ? () => Promise<Simplify<Result>[]> : UnselectedTerminal;
+        then: Selected extends true ? Promise<Simplify<Result>[]>["then"] : UnselectedThen;
+        first: Selected extends true
+          ? () => Promise<Simplify<Result> | undefined>
+          : UnselectedTerminal;
+        /** Counts matching entries without a selection; unavailable once payloads are requested. */
         count: [Result] extends [never]
           ? () => Promise<number>
           : [Result] extends [{ _payloads: unknown }]

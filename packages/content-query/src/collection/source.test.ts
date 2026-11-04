@@ -20,8 +20,8 @@ describe("collection source shorthand", () => {
       try {
         expect(
           await session.content
-            .select("title" as never)
             .from("posts" as never)
+            .select("title" as never)
             .all(),
         ).toEqual([{ title: "Getting started" }]);
         expect(
