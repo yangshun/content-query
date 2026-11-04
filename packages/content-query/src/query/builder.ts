@@ -1,6 +1,6 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { detach } from "../shared/values.ts";
-import { validateExpression } from "./operators.ts";
+import { fieldProxy, resolveRelations, validateExpression } from "./operators.ts";
 import { checkedFields, checkedOrder, checkedPagination, checkedPayload } from "./clauses.ts";
 import { objectPlan } from "./object.ts";
 import {
@@ -57,11 +57,11 @@ export function createBuilder(
       if (typeof configure !== "function") {
         invalidQuery("where() requires a configuration callback.");
       }
-      const expression = configure(
-        new Proxy(Object.create(null) as object, { get: (_target, name) => ({ name }) }),
-      );
+      const expression = configure(fieldProxy());
       validateExpression(expression);
-      return branch({ filters: [...plan.filters, detach(expression)] });
+      return branch({
+        filters: [...plan.filters, detach(resolveRelations(registry, plan.collection, expression))],
+      });
     },
     orderBy(field: string, direction: "asc" | "desc" = "asc") {
       return branch({ order: checkedOrder(plan, field, direction, many) });

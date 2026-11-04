@@ -62,6 +62,9 @@ export function matches(
       matches(candidate, expression.expression, revision, expression.target),
     );
   }
+  if (expression.kind === "has") {
+    invalidQuery("has() filters must be passed to a query's where() before execution.");
+  }
   if (expression.kind !== "predicate") {
     return false;
   }

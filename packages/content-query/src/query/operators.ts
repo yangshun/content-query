@@ -1,7 +1,7 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { detach, isScalar } from "../shared/values.ts";
-import type { Expression, PredicateOperator } from "./plan.ts";
-import type { Field, Ordered, Scalar, ScalarField } from "./types.ts";
+import type { Expression, PredicateOperator, QueryRegistry } from "./plan.ts";
+import type { Field, Ordered, RelationField, Scalar, ScalarField } from "./types.ts";
 
 /** Builds a checked, backend-independent predicate instead of a per-entry callback. */
 function predicate(
@@ -110,6 +110,120 @@ export function endsWith<Value>(
 ): Expression {
   return predicate("ends-with", field, value);
 }
+/**
+ * Matches a SQL-style pattern: `%` matches any run of characters and `_` matches one character.
+ * A backslash escapes a wildcard. Matching is case-sensitive.
+ */
+export function like<Value>(
+  field: Field<Value> & (NonNullable<Value> extends string ? unknown : never),
+  pattern: string,
+): Expression {
+  return predicate("like", field, pattern);
+}
+/** Matches a SQL-style pattern like {@link like}, ignoring case. */
+export function ilike<Value>(
+  field: Field<Value> & (NonNullable<Value> extends string ? unknown : never),
+  pattern: string,
+): Expression {
+  return predicate("ilike", field, pattern);
+}
+/** Negates {@link like}; entries without a matching string, including absent values, match. */
+export function notLike<Value>(
+  field: Field<Value> & (NonNullable<Value> extends string ? unknown : never),
+  pattern: string,
+): Expression {
+  return not(like(field, pattern));
+}
+/** Negates {@link ilike}; entries without a matching string, including absent values, match. */
+export function notIlike<Value>(
+  field: Field<Value> & (NonNullable<Value> extends string ? unknown : never),
+  pattern: string,
+): Expression {
+  return not(ilike(field, pattern));
+}
+/** Tests whether every item of an existing scalar array belongs to the candidates. */
+export function arrayContained<Value extends Scalar>(
+  field: Field<readonly Value[] | null | undefined>,
+  values: readonly NoInfer<Value>[],
+): Expression {
+  return predicate("array-contained", field, values);
+}
+/**
+ * Matches entries with at least one related entry. With a filter, a related entry must also match
+ * it, for example `has(fields.author, (author) => eq(author.name, "Ada"))`. Wrap the result in
+ * {@link not} to match entries without such a related entry.
+ *
+ * @param relation - A relationship from the `where()` callback's fields.
+ * @param filter - Optional filter over the related entry's fields and relationships.
+ * @returns An expression that the query resolves against the relationship's target collection.
+ */
+export function has<TargetFields>(
+  relation: RelationField<TargetFields>,
+  filter?: (fields: TargetFields) => Expression,
+): Expression {
+  if (!relation || typeof relation.name !== "string" || !relation.name) {
+    invalidQuery("has() requires a relationship from the where() fields.");
+  }
+  if (filter !== undefined && typeof filter !== "function") {
+    invalidQuery("has() filters must be callbacks over the related entry's fields.");
+  }
+  const expression = filter === undefined ? and() : filter(fieldProxy() as TargetFields);
+  validateExpression(expression);
+  return { kind: "has", field: relation.name, expression };
+}
+/** Creates the field and relationship accessors passed to filter callbacks. */
+export function fieldProxy(): object {
+  return new Proxy(Object.create(null) as object, { get: (_target, name) => ({ name }) });
+}
+/**
+ * Resolves fluent `has()` filters against a scope's declared relationships, producing portable
+ * `relation` expressions that both runtime backends evaluate.
+ *
+ * @param registry - The query registry with each collection's relationships.
+ * @param collection - The collection the expression filters.
+ * @param expression - A validated expression that may contain `has()` filters.
+ * @returns The expression with every `has()` filter resolved.
+ */
+export function resolveRelations(
+  registry: QueryRegistry,
+  collection: string,
+  expression: Expression,
+): Expression {
+  switch (expression.kind) {
+    case "has": {
+      const relationships = registry[collection]?.relationships ?? {};
+      const relation = Object.hasOwn(relationships, expression.field)
+        ? relationships[expression.field]
+        : undefined;
+      if (!relation) {
+        invalidQuery(`Unknown relationship "${expression.field}" in has().`);
+      }
+      return {
+        kind: "relation",
+        collection,
+        field: expression.field,
+        target: relation.collection,
+        expression: resolveRelations(registry, relation.collection, expression.expression),
+      };
+    }
+    case "relation":
+      return {
+        ...expression,
+        expression: resolveRelations(registry, expression.target, expression.expression),
+      };
+    case "and":
+    case "or":
+    case "not":
+      return {
+        ...expression,
+        expressions: expression.expressions.map((child) =>
+          resolveRelations(registry, collection, child),
+        ),
+      };
+    default:
+      return expression;
+  }
+}
 /** Tests scalar membership in an array, ignoring holes. */
 export function arrayContains<Value extends Scalar>(
   field: Field<readonly Value[] | null | undefined>,
@@ -198,6 +312,11 @@ export function validateExpression(expression: Expression): void {
       )
     ) {
       invalidQuery("Relationship filters require registered collection and relationship names.");
+    }
+    validateExpression(expression.expression);
+  } else if (expression.kind === "has") {
+    if (typeof expression.field !== "string" || !expression.field) {
+      invalidQuery("has() requires a relationship from the where() fields.");
     }
     validateExpression(expression.expression);
   } else if (

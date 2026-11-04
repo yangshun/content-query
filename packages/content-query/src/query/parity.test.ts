@@ -176,6 +176,60 @@ for (const encoded of [false, true]) {
       }
     });
 
+    test("shares pattern, contained-array, and relationship filters", async () => {
+      const { content, session } = await setup(encoded);
+      try {
+        const posts = content.from("posts").select("id");
+        const cases: [object, Parameters<typeof posts.where>[0], string[]][] = [
+          [
+            { title: { like: "%a" } },
+            (fields) => operators.like(fields.title, "%a"),
+            ["a", "b", "c"],
+          ],
+          [{ title: { ilike: "a%" } }, (fields) => operators.ilike(fields.title, "a%"), ["a"]],
+          [{ title: { notLike: "%a" } }, (fields) => operators.notLike(fields.title, "%a"), ["d"]],
+          [
+            { title: { notIlike: "b%" } },
+            (fields) => operators.notIlike(fields.title, "b%"),
+            ["a", "c", "d"],
+          ],
+          [
+            { tags: { arrayContained: ["two"] } },
+            (fields) => operators.arrayContained(fields.tags, ["two"]),
+            ["b", "c", "d"],
+          ],
+          [
+            { author: { name: "Ada" } },
+            (fields) => operators.has(fields.author, (author) => operators.eq(author.name, "Ada")),
+            ["a", "b", "c", "d"],
+          ],
+          [
+            { author: { name: "Grace" } },
+            (fields) =>
+              operators.has(fields.author, (author) => operators.eq(author.name, "Grace")),
+            [],
+          ],
+          [{ author: true }, (fields) => operators.has(fields.author), ["a", "b", "c", "d"]],
+          [{ author: false }, (fields) => operators.not(operators.has(fields.author)), []],
+        ];
+        for (const [where, filter, expected] of cases) {
+          const object = await content.query.posts.findMany({
+            where: where as never,
+            columns: { id: true },
+          });
+          const fluent = await posts.where(filter).all();
+          expect(object.map((entry) => entry.id)).toEqual(expected);
+          expect(fluent).toEqual(object);
+        }
+        expect(() => posts.where((fields) => operators.has(fields.title as never))).toThrow(
+          /Unknown relationship "title"/,
+        );
+        expect(() => operators.has({ name: "" } as never)).toThrow(/requires a relationship/);
+      } finally {
+        await session.dispose();
+      }
+    });
+
     test("selects inherited adjacency before pagination with ID-only shorthand", async () => {
       const { content, session } = await setup(encoded);
       try {

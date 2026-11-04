@@ -16,6 +16,12 @@ export {
   arrayContains,
   arrayContainsAny,
   arrayContainsAll,
+  arrayContained,
+  like,
+  ilike,
+  notLike,
+  notIlike,
+  has,
   isNull,
   isUndefined,
   isMissing,
@@ -29,4 +35,13 @@ export type {
   RelationalQueryResult,
   RelationalWhere,
 } from "./query/relational-types.ts";
-export type { Field, Fields, Where, Selection, SelectionResult, Adjacent } from "./query/types.ts";
+export type {
+  Field,
+  Fields,
+  QueryFields,
+  RelationField,
+  Where,
+  Selection,
+  SelectionResult,
+  Adjacent,
+} from "./query/types.ts";

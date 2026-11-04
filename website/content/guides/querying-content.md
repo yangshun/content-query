@@ -67,7 +67,25 @@ const posts = await content.query.posts.findMany({
 });
 ```
 
-Each relationship selects its own data, so list the related fields you need; `with: { author: true }` is rejected. To filter the parent posts by their author, use `where: { author: { name: "Ada" } }`. A filter inside `with.author` filters only the included author, leaving the parent results unchanged.
+Each relationship selects its own data, so list the related fields you need; `with: { author: true }` is rejected.
+
+To filter the parent posts by their author, use fluent `has()` or a relational relationship filter:
+
+```ts
+import { eq, has } from "content-query/query";
+
+const byAda = await content
+  .from("posts")
+  .select("id", "title")
+  .where((fields) => has(fields.author, (author) => eq(author.name, "Ada")));
+
+const sameByAda = await content.query.posts.findMany({
+  columns: { id: true, title: true },
+  where: { author: { name: "Ada" } },
+});
+```
+
+`has(fields.author)` and relational `author: true` match posts with any author; wrap `has()` in `not()`, or use `author: false`, for posts without one. A filter inside `with.author` filters only the included author, leaving the parent results unchanged.
 
 ## Previous and next entries
 
@@ -97,13 +115,7 @@ Neighbors are returned in `_adjacent.previous` and `_adjacent.next`, with `null`
 
 Both APIs compile to the same query plan and run on the same executor, so equivalent queries return the same results at the same cost. Mixing them in one application is safe, but readers then follow two filter vocabularies. Pick one style as the default and use the other for a specific reason.
 
-The relational API supports every fluent filter, plus:
-
-- `like`, `ilike`, `notLike`, and `notIlike` patterns
-- `arrayContained`
-- Filters that traverse relationships, such as `where: { author: { name: "Ada" } }`, and existence checks such as `author: true`
-
-A fluent application that needs one of these can use the relational API for that query.
+Both APIs support the same filters, including `like`-style patterns, `arrayContained`, and filters through relationships, so either style can express every query.
 
 Fluent builders are immutable, so one base query can serve a page of results and its total without repeating the filter:
 

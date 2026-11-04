@@ -18,6 +18,21 @@ type UnselectedThen = (selectBeforeAwaiting: typeof NO_SELECTION_MESSAGE) => nev
 declare const fieldType: unique symbol;
 export type Field<Value> = { readonly name: string; readonly [fieldType]: Value };
 export type Fields<Data> = { readonly [Name in keyof Data]-?: Field<Data[Name]> };
+declare const relationTarget: unique symbol;
+/** A relationship in a fluent `where()` callback, filtered with `has()`. */
+export type RelationField<TargetFields> = {
+  readonly name: string;
+  readonly [relationTarget]: TargetFields;
+};
+/** Fields and relationships available to a fluent `where()` callback. */
+export type QueryFields<
+  Registry extends CollectionRegistry,
+  Name extends keyof Registry & string,
+> = Fields<QueryData<Registry[Name]>> & {
+  readonly [Key in keyof RelationshipsOf<Registry[Name]> & string]-?: RelationField<
+    QueryFields<Registry, RelatedName<Registry, RelationOf<Registry, Name, Key>>>
+  >;
+};
 export type Scalar = string | number | bigint | boolean | Date | null | undefined;
 export type ScalarField<Value> = Field<Value> & ([Value] extends [Scalar] ? unknown : never);
 export type Ordered<Value> =
@@ -130,7 +145,7 @@ export type Query<
     Pagination
   >;
   where(
-    configure: (fields: Fields<QueryData<Registry[Name]>>) => Expression,
+    configure: (fields: QueryFields<Registry, Name>) => Expression,
   ): Query<Registry, Name, Result, Selected, Many, Root, true, AllowAdjacent, Pagination>;
   with<
     Key extends keyof RelationshipsOf<Registry[Name]> & string,
@@ -317,9 +332,7 @@ type ObjectScope<
   Name extends keyof Registry & string,
   Many extends boolean,
 > = {
-  where?:
-    | Where<QueryData<Registry[Name]>>
-    | ((fields: Fields<QueryData<Registry[Name]>>) => Expression);
+  where?: Where<QueryData<Registry[Name]>> | ((fields: QueryFields<Registry, Name>) => Expression);
 } & (Many extends true
   ? {
       orderBy?: OrderBy<QueryData<Registry[Name]>> | readonly OrderBy<QueryData<Registry[Name]>>[];
