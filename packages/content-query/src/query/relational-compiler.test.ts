@@ -140,18 +140,19 @@ describe("relational query namespace", () => {
     const namespace = createQueryNamespace(
       () => current,
       async (plan) => [plan.collection],
-    ) as Record<string, { findMany(): Promise<string[]> }>;
+    ) as Record<string, { findMany(options: object): Promise<string[]> }>;
+    const selection = { adjacent: true };
     const posts = namespace.posts!;
     expect(namespace.posts).toBe(posts);
     for (const name of Object.keys(current)) {
-      expect(await namespace[name]!.findMany()).toEqual([name]);
+      expect(await namespace[name]!.findMany(selection)).toEqual([name]);
       expect(Object.hasOwn(namespace, name)).toBe(true);
     }
     expect(Reflect.get(namespace, Symbol.iterator)).toBeUndefined();
     expect(Reflect.getOwnPropertyDescriptor(namespace, "missing")).toBeUndefined();
     current = { authors: { relationships: {} } };
     expect(namespace.posts).toBeUndefined();
-    expect(() => posts.findMany()).toThrow(/collection/);
-    expect(await namespace.authors!.findMany()).toEqual(["authors"]);
+    expect(() => posts.findMany(selection)).toThrow(/collection/);
+    expect(await namespace.authors!.findMany(selection)).toEqual(["authors"]);
   });
 });

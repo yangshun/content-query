@@ -5,7 +5,7 @@ import type {
   Relationship,
   RelationshipsOf,
 } from "../collection/types.ts";
-import type { Expression } from "./plan.ts";
+import type { Expression, NO_SELECTION_MESSAGE } from "./plan.ts";
 import type { Adjacent, Fields, OrderBy, Ordered, Scalar, RelationshipResult } from "./types.ts";
 
 type RelatedName<
@@ -83,7 +83,11 @@ export type PayloadOptions<
   Name extends keyof Registry & string,
 > = { [Key in keyof PayloadsOf<Registry[Name]>]?: boolean };
 
-/** Collection-scoped metadata queries with Drizzle-style columns, relationships, and filters. */
+/**
+ * Collection-scoped metadata queries with Drizzle-style columns, relationships, and filters.
+ * Nothing is selected implicitly, not even `id`: list fields in `columns`, include relationships
+ * with nested options, request payloads, or select adjacency.
+ */
 export type RelationalQueryOptions<
   Registry extends CollectionRegistry,
   Name extends keyof Registry & string,
@@ -91,11 +95,13 @@ export type RelationalQueryOptions<
   AllowAdjacent extends boolean = true,
   Pagination extends boolean = true,
 > = {
-  columns?: Partial<Record<keyof QueryData<Registry[Name]>, boolean>>;
+  /** Fields to include, each set to `true`. Omitted fields are never returned. */
+  columns?: Partial<Record<keyof QueryData<Registry[Name]>, true>>;
   where?: RelationalWhere<Registry, Name>;
+  /** Related entries to include; each selects its own data. `false` omits a relationship. */
   with?: {
     [Key in keyof RelationshipsOf<Registry[Name]>]?:
-      | boolean
+      | false
       | RelationalQueryOptions<
           Registry,
           RelatedName<Registry, Name, Key>,
@@ -119,19 +125,34 @@ export type RelationalCountOptions<
 > = Pick<RelationalQueryOptions<Registry, Name>, "where" | "orderBy" | "offset" | "limit">;
 
 type ColumnResult<Data, Options> = Options extends { columns: infer Columns }
-  ? keyof Columns extends never
-    ? {}
-    : true extends Columns[keyof Columns]
-      ? {
-          -readonly [
-            Key in keyof Columns as Columns[Key] extends false | undefined ? never : Key
-          ]-?: Key extends keyof Data ? Data[Key] : never;
-        }
-      : Omit<
-          Data,
-          { [Key in keyof Columns]: Columns[Key] extends false ? Key : never }[keyof Columns]
-        >
-  : Data;
+  ? {
+      -readonly [
+        Key in keyof Columns as Columns[Key] extends true ? Key : never
+      ]-?: Key extends keyof Data ? Data[Key] : never;
+    }
+  : {};
+/** Keys whose option values request something, as opposed to `false` or `undefined`. */
+type Requested<Map> = keyof {
+  [Key in keyof Map as Map[Key] extends false | undefined ? never : Key]: unknown;
+};
+/** Whether options select fields, include relationships, request payloads, or select adjacency. */
+type SelectsData<Options> =
+  | (Options extends { columns: infer Columns } ? Requested<Columns> : never)
+  | (Options extends { with: infer Related } ? Requested<Related> : never)
+  | (Options extends { payloads: infer Payloads } ? Requested<Payloads> : never)
+  | (Options extends { adjacent: infer Neighbors }
+      ? Neighbors extends false | undefined
+        ? never
+        : "adjacent"
+      : never) extends never
+  ? false
+  : true;
+/**
+ * Requires a row-returning scope to request data. An unselected scope must supply an impossible
+ * property named after the rule, so the compiler error states it.
+ */
+export type SelectionRequired<Options> =
+  SelectsData<Options> extends true ? unknown : { [Rule in typeof NO_SELECTION_MESSAGE]: never };
 type IncludedResult<
   Registry extends CollectionRegistry,
   Name extends keyof Registry & string,
@@ -144,11 +165,7 @@ type IncludedResult<
         ? RelationshipResult<
             Registry[Name],
             RelationshipsOf<Registry[Name]>[Key] & Relationship,
-            RelationalQueryResult<
-              Registry,
-              RelatedName<Registry, Name, Key>,
-              Related[Key] extends true ? {} : Related[Key]
-            >,
+            RelationalQueryResult<Registry, RelatedName<Registry, Name, Key>, Related[Key]>,
             "where" extends keyof Related[Key] ? true : false
           >
         : never;
@@ -181,7 +198,7 @@ type PayloadResult<
     : { _payloads: Simplify<RequestedPayloads<PayloadsOf<Registry[Name]>, Requested>> }
   : {};
 
-/** Infers selected columns and relationships, preserving optional metadata in default projections. */
+/** Infers exactly the selected columns, relationships, adjacency, and payloads. */
 export type RelationalQueryResult<
   Registry extends CollectionRegistry,
   Name extends keyof Registry & string,
@@ -258,7 +275,7 @@ export type CheckedRelationalOptions<
       : Key extends "with"
         ? {
             [Related in keyof Options[Key]]: Related extends keyof RelationshipsOf<Registry[Name]>
-              ? Options[Key][Related] extends boolean
+              ? Options[Key][Related] extends false | undefined
                 ? Options[Key][Related]
                 : CheckedRelationalOptions<
                     Registry,
@@ -266,14 +283,16 @@ export type CheckedRelationalOptions<
                     Options[Key][Related],
                     IsMany<Registry, Name, Related>,
                     AllowAdjacent
-                  >
+                  > &
+                    SelectionRequired<Options[Key][Related]>
               : never;
           }
         : Key extends "adjacent"
           ? AllowAdjacent extends true
             ? Options[Key] extends true
               ? true
-              : CheckedRelationalOptions<Registry, Name, Options[Key], true, false, false>
+              : CheckedRelationalOptions<Registry, Name, Options[Key], true, false, false> &
+                  SelectionRequired<Options[Key]>
             : never
           : Key extends "payloads"
             ? AllowAdjacent extends true
@@ -315,13 +334,17 @@ export type RelationalQueries<Registry extends CollectionRegistry> = string exte
   ? {}
   : {
       readonly [Name in keyof Registry & string]: {
-        /** Returns matching metadata rows and requested relationships. */
-        findMany<const Options extends RelationalQueryOptions<Registry, Name> = {}>(
-          options?: Options & CheckedRelationalOptions<Registry, Name, NoInfer<Options>>,
+        /** Returns matching rows with exactly the selected data. Options must select something. */
+        findMany<const Options extends RelationalQueryOptions<Registry, Name>>(
+          options: Options &
+            CheckedRelationalOptions<Registry, Name, NoInfer<Options>> &
+            SelectionRequired<NoInfer<Options>>,
         ): Promise<RelationalQueryResult<Registry, Name, Options>[]>;
-        /** Returns the first matching entry, or undefined when none matches. */
-        findFirst<const Options extends RelationalQueryOptions<Registry, Name> = {}>(
-          options?: Options & CheckedRelationalOptions<Registry, Name, NoInfer<Options>>,
+        /** Returns the first matching row, or undefined when none matches. */
+        findFirst<const Options extends RelationalQueryOptions<Registry, Name>>(
+          options: Options &
+            CheckedRelationalOptions<Registry, Name, NoInfer<Options>> &
+            SelectionRequired<NoInfer<Options>>,
         ): Promise<RelationalQueryResult<Registry, Name, Options> | undefined>;
       };
     };

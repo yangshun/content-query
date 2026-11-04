@@ -1,6 +1,6 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { compare, detachSelection, isScalar } from "../shared/values.ts";
-import type { QueryPlan } from "../query/plan.ts";
+import { hasSelection, NO_SELECTION_MESSAGE, type QueryPlan } from "../query/plan.ts";
 import { matches } from "./filter.ts";
 import { relationKey } from "./relationships.ts";
 import type { PayloadRequest, PreparedRevision, QueryRecord } from "./revision.ts";
@@ -122,8 +122,6 @@ function neighborScope(
       ? {
           ...plan,
           select: ["id"],
-          allFields: undefined,
-          exclude: undefined,
           with: {},
           adjacent: undefined,
           payloads: undefined,
@@ -164,13 +162,10 @@ function project(
   requests: PayloadRequest[],
   preserveScopeOrder = false,
 ): Record<string, unknown> {
-  if (!plan.select && !plan.allFields && !plan.adjacent) {
-    invalidQuery("Row-returning queries require select().");
+  if (!hasSelection(plan)) {
+    invalidQuery(NO_SELECTION_MESSAGE);
   }
-  const fields = plan.allFields
-    ? Object.keys(record).filter((field) => !plan.exclude?.includes(field))
-    : (plan.select ?? []);
-  const result = detachSelection(record, fields);
+  const result = detachSelection(record, plan.select ?? []);
   for (const [name, nested] of Object.entries(plan.with)) {
     const relation = revision.registry[plan.collection]!.relationships[name]!;
     if (
@@ -241,8 +236,8 @@ export async function executeQuery(
       plan.filters.every((expression) => matches(record, expression, revision, plan.collection)),
     ).length;
   }
-  if (!plan.select && !plan.allFields && !plan.adjacent) {
-    invalidQuery("Row-returning queries require select().");
+  if (!hasSelection(plan)) {
+    invalidQuery(NO_SELECTION_MESSAGE);
   }
   const records = pageRecords(queryCandidates(collection.records, plan), plan, revision);
   const scopes: ProjectionScopes = new WeakMap();

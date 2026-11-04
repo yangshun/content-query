@@ -8,14 +8,14 @@ export const dynamicParams = false;
 
 /** Enumerates the entire collection for Next.js's native static export. */
 export async function generateStaticParams() {
-  return content.select("id").from("entries").orderBy("order").all();
+  return content.from("entries").select("id").orderBy("order").all();
 }
 
 export default async function EntryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const entry = await content
-    .select("id", "title", "description")
     .from("entries")
+    .select("id", "title", "description")
     .where((fields) => eq(fields.id, id))
     .withPayload("_rendered")
     .first();

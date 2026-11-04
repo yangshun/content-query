@@ -20,13 +20,13 @@ export async function loader({ params }: LoaderFunctionArgs) {
   }
 
   const guides = await content
-    .select("id", "title", "description")
     .from("guides")
+    .select("id", "title", "description")
     .orderBy("order")
     .all();
   const guide = await content
-    .select("id", "title", "description")
     .from("guides")
+    .select("id", "title", "description")
     .where((fields) => eq(fields.id, slug))
     .first();
 

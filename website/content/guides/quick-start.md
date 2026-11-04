@@ -64,7 +64,7 @@ Create `render.mjs` in the project root:
 import { writeFile } from "node:fs/promises";
 import { content } from "./.content-query/server.js";
 
-const post = await content.select("id", "title").from("posts").withPayload("_rendered").first();
+const post = await content.from("posts").select("id", "title").withPayload("_rendered").first();
 if (!post) {
   throw new Error("Add a post before rendering.");
 }

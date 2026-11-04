@@ -64,14 +64,15 @@ type Missing = CollectionData<"missing">;
 // @ts-expect-error Extra object selection fields remain errors through generated declarations.
 content.query.posts.findMany({ columns: { id:true, typo:true } });
 void [title, key, virtualTitle, object];
-const query = content.select("id", "title").from("posts").with("author",author=>author.select("name"));
+const query = content.from("posts").select("id", "title").with("author",author=>author.select("name"));
 const checked: Promise<{id:string;title:string;author:{name:string}}[]> = query.all();
 // @ts-expect-error Invalid fields must remain errors through generated declarations.
-content.select("typo").from("posts");
+content.from("posts").select("typo");
 // @ts-expect-error Field argument types are inferred from schema outputs.
-content.select().from("posts").where(fields=>eq(fields.draft,"false"));
-void content.select().from("posts").all();
-const direct: PromiseLike<{id:string;title:string}[]> = content.select("id", "title").from("posts");
+content.from("posts").where(fields=>eq(fields.draft,"false"));
+// @ts-expect-error Unselected queries cannot run through generated declarations.
+void content.from("posts").all();
+const direct: PromiseLike<{id:string;title:string}[]> = content.from("posts").select("id", "title");
 void direct;
 void checked;
 `,
@@ -97,7 +98,7 @@ void checked;
           [
             "--input-type=module",
             "-e",
-            `const {content}=await import("./.content-query/server.js");console.log(JSON.stringify(await content.select("name").from("authors").with("featuredPosts",posts=>posts.select("id")).all()));`,
+            `const {content}=await import("./.content-query/server.js");console.log(JSON.stringify(await content.from("authors").select("name").with("featuredPosts",posts=>posts.select("id")).all()));`,
           ],
           { cwd: fixture.root },
         );
@@ -130,7 +131,7 @@ void checked;
         [
           "--input-type=module",
           "-e",
-          `const{content}=await import("./.content-query/server.js");const row=await content.select("value", "constructor").from("__proto__").first();console.log(JSON.stringify([row.value,Object.hasOwn(row,"constructor"),row.constructor,(await content.query.__proto__.findFirst({where:{id:"__proto__"},payloads:{_body:true}}))._payloads._body]));`,
+          `const{content}=await import("./.content-query/server.js");const row=await content.from("__proto__").select("value", "constructor").first();console.log(JSON.stringify([row.value,Object.hasOwn(row,"constructor"),row.constructor,(await content.query.__proto__.findFirst({where:{id:"__proto__"},payloads:{_body:true}}))._payloads._body]));`,
         ],
         { cwd: fixture.root },
       );
@@ -179,7 +180,7 @@ void checked;
             "-e",
             `
 const {content} = await import(${JSON.stringify(pathToFileURL(path.join(generated, "server.js")).href)});
-const list = await content.select("title", "date", "upper").from("posts").with("author", author=>author.select("name")).all();
+const list = await content.from("posts").select("title", "date", "upper").with("author", author=>author.select("name")).all();
 const {_payloads: {_body: body, _rendered: rendered}} = await content.query.posts.findFirst({where:{id:"getting-started"},payloads:{_body:true,_rendered:true}});
 console.log(JSON.stringify({list,body,rendered}));
 `,
@@ -212,12 +213,7 @@ console.log(JSON.stringify({list,body,rendered}));
     const fixture = await projectFixture();
     try {
       const session = await buildAtRoot(fixture.root, { backend: "in-memory" });
-      expect(
-        await session.content
-          .select()
-          .from("posts" as never)
-          .count(),
-      ).toBe(1);
+      expect(await session.content.from("posts" as never).count()).toBe(1);
       expect(await readdir(fixture.root)).not.toContain(".content-query");
       await session.dispose();
     } finally {
@@ -238,7 +234,7 @@ console.log(JSON.stringify({list,body,rendered}));
           "-e",
           `
 const {content}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, ".content-query/server.js")).href)});
-console.log(await content.select().from("posts").count());
+console.log(await content.from("posts").count());
 try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads:{_body:true}}); } catch(error) { console.log(error.code); }
 `,
         ],
@@ -410,7 +406,7 @@ try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads
         [
           "--input-type=module",
           "-e",
-          'const { content } = await import("./.content-query/server.js"); console.log(JSON.stringify(await content.select("title").from("posts").first()));',
+          'const { content } = await import("./.content-query/server.js"); console.log(JSON.stringify(await content.from("posts").select("title").first()));',
         ],
         { cwd: fixture.root },
       );
@@ -456,13 +452,13 @@ const titles: Promise<{ title: string }[]> = content.query.posts.findMany({ colu
 const total: Promise<number> = content.count("posts");
 const virtualTitles: Promise<{ title: string }[]> = virtualContent.query.posts.findMany({ columns: { title: true } });
 // @ts-expect-error The generated export follows queryStyle in content-query.config.
-content.select("title").from("posts");
+content.from("posts").select("title");
 // @ts-expect-error The Vite virtual module follows the same setting.
-virtualContent.select("title");
+virtualContent.from("posts");
 const session = await buildContent<typeof collections, typeof queryStyle>({ backend: "in-memory" });
-void session.content.query.posts.findFirst();
+void session.content.query.posts.findFirst({ columns: { title: true } });
 // @ts-expect-error Standalone sessions are narrowed by the style type argument.
-session.content.select("title");
+session.content.from("posts");
 void [titles, total, virtualTitles];
 export {};
 `,
@@ -490,7 +486,7 @@ export {};
             "-e",
             `const {content}=await import("./.content-query/server.js");
 let rejected;
-try { content.select("title"); } catch (error) { rejected = { code: error.code, message: error.message }; }
+try { content.from("posts"); } catch (error) { rejected = { code: error.code, message: error.message }; }
 const titles = await content.query.posts.findMany({ columns: { title: true } });
 console.log(JSON.stringify({ rejected, titles }));`,
           ],
@@ -500,7 +496,7 @@ console.log(JSON.stringify({ rejected, titles }));`,
           rejected: {
             code: "invalid-query",
             message:
-              'content.select is unavailable because content-query.config sets queryStyle to "relational".',
+              'content.from is unavailable because content-query.config sets queryStyle to "relational".',
           },
           titles: [{ title: "Getting started" }],
         });

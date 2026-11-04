@@ -174,8 +174,8 @@ import { content } from "./.content-query/server.js";
 import { eq } from "content-query/query";
 
 const posts = await content
-  .select("id", "title")
   .from("posts")
+  .select("id", "title")
   .where((fields) => eq(fields.draft, false))
   .with("author", (author) => author.select("name"))
   .orderBy("title")
@@ -188,7 +188,9 @@ const post = await content.query.posts.findFirst({
 const { _body: body, _rendered: rendered } = post!._payloads;
 ```
 
-Start fluent queries with `content.select(...fields).from(collection)`; `from()` is available only after `select()`. Builders are immutable and reusable. Await them directly, or call `all()` / `execute()` for an array and `first()` for one entry or `undefined`. `content.select().from("posts")` returns all prepared metadata. `count()` counts filtered parents before pagination. Selected optional properties remain own properties with value `undefined`. Returned graphs and headings are detached from internal state. Queries load bodies or rendered HTML only when they request [payloads](#payloads).
+Start fluent queries with `content.from(collection)` and select fields with `.select(...fields)`; field names are checked and completed as soon as `from()` names the collection. Builders are immutable and reusable. Await a selected builder directly, or call `all()` / `execute()` for an array and `first()` for one entry or `undefined`. `count()` counts filtered parents before pagination and needs no selection.
+
+Queries return only the data they select; nothing is implicit, not even `id`. Every row-returning scope, including relationship and adjacent sibling scopes, must select fields, include a relationship, request a payload, or select adjacency. A scope that selects nothing fails to type-check: awaiting an unselected builder reports "Type of 'await' operand must either be a valid promise…", and its `all()` / `first()` / `execute()` report the rule as their required `this` type. At runtime it throws an `invalid-query` ContentError: "Select fields, relationships, payloads, or adjacent entries before running this query." Selected optional properties remain own properties with value `undefined`. Returned graphs and headings are detached from internal state. Queries load bodies or rendered HTML only when they request [payloads](#payloads).
 
 Queries constrained by ID equality, such as `.where((fields) => eq(fields.id, id))` or `where: { id }`, use a lazily built index for the current immutable collection revision. Repeated detail-page lookups avoid scanning the entire collection. Additional filters, selection, ordering, pagination, counts, and independent adjacency scopes retain their normal semantics. Development revisions receive their own index.
 
@@ -196,11 +198,11 @@ Detachment copies a result directly when it contains only primitives, plain obje
 
 Filtering uses structured expressions from `content-query/query`: scalar equality/comparison/choice operators, literal string matching, scalar-array membership, absence checks, and boolean composition. See the [operator matrix](./PLAN.md#filtering). Sorting uses deterministic Unicode code-point order and ID tie-breakers, with nullish/unordered special values last. Pagination accepts nonnegative safe integers.
 
-Relationships support forward/inverse fields, authored ID arrays, explicit reference ownership, and nested fluent queries. Each fluent relationship scope selects its own fields; relational scopes may default to all metadata. Many scopes support per-parent ordering/pagination; singular scopes support filtering and return `null` if their target is excluded. Preparation rejects dangling/ambiguous authored references and invalid singular cardinality. Array references preserve order and duplicates; inverse membership is distinct.
+Relationships support forward/inverse fields, authored ID arrays, explicit reference ownership, and nested fluent queries. Every relationship scope, fluent or relational, selects its own data. Many scopes support per-parent ordering/pagination; singular scopes support filtering and return `null` if their target is excluded. Preparation rejects dangling/ambiguous authored references and invalid singular cardinality. Array references preserve order and duplicates; inverse membership is distinct.
 
 ## Relational queries and adjacent entries
 
-The collection-scoped relational and SQL-ordered fluent APIs compile to the same normalized query plan and use the same executor, value semantics, validation, and revision pinning:
+The collection-scoped relational and collection-first fluent APIs compile to the same normalized query plan and use the same executor, value semantics, validation, and revision pinning:
 
 ```ts
 const posts = await content.query.posts.findMany({
@@ -214,7 +216,7 @@ const first = await content.query.posts.findFirst({ columns: { id: true } });
 const count = await content.count("posts", { where: { draft: false } });
 ```
 
-`findFirst()` returns `undefined` when no entry matches. Omit `columns` to return all prepared metadata. Use `columns: { title: true }` to include fields, `{ draft: false }` to exclude fields, or `{}` for no scalar fields. If any column is `true`, only `true` columns are returned. Default and exclusion projections preserve stored property presence; explicit inclusions create every selected property. Request related entries through `with`; `true` includes all related metadata, nested options narrow it, and `false` omits the relationship. Singular relationships cannot order or paginate. Count ignores pagination, matching fluent `.count()`.
+`findFirst()` returns `undefined` when no entry matches. `findMany()` and `findFirst()` require options that select data. List fields with `columns: { title: true }`; columns accept only `true`, so there are no exclusions. Omitted columns and `columns: {}` select no fields, for queries that only need relationships, payloads, or adjacency. Explicit inclusions create every selected property. Request related entries through `with` with nested options that select data; `with: { author: true }` is rejected, and `false` omits the relationship. Singular relationships cannot order or paginate. Count ignores pagination, matching fluent `.count()`.
 
 Relational filters support scalar shorthand and `eq`, `ne`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `like`, `ilike`, `notLike`, `notIlike`, `contains`, `startsWith`, `endsWith`, `arrayContains`, `arrayOverlaps`, `arrayContained`, `isNull`, `isNotNull`, `isUndefined`, and `isMissing`, subject to field types. Compose them with query-level or field-level `AND`, `OR`, and `NOT`. Presence predicates accept booleans. `like` uses `%` and `_` wildcards; `ilike` also ignores case. The literal string helpers remain case-sensitive. `where: { author: { name: "Ada" } }` filters parents by related entries; `author: true` and `false` test relationship existence. `where: { RAW: (fields) => eq(fields.AND, value) }` accepts structured expressions for reserved field names, rather than SQL text.
 
@@ -228,7 +230,7 @@ await content.query.posts.findMany({
   adjacent: true,
   columns: { title: true },
 });
-await content.select("title").from("posts").orderBy("title").selectAdjacent().all();
+await content.from("posts").select("title").orderBy("title").selectAdjacent().all();
 
 // A detail lookup needs an independent sibling scope, separate from its ID filter.
 const post = await content.query.posts.findFirst({
@@ -241,8 +243,8 @@ const post = await content.query.posts.findFirst({
   columns: { title: true },
 });
 const same = await content
-  .select("title")
   .from("posts")
+  .select("title")
   .where((fields) => eq(fields.id, currentId))
   .selectAdjacent((siblings) =>
     siblings
@@ -257,7 +259,20 @@ Both return `_adjacent: { previous, next }`, with `null` at boundaries or when t
 
 `content-query/query` exports `QueryOptions<Registry, Name>` (also named `RelationalQueryOptions`), `CountOptions<Registry, Name>`, `RelationalWhere`, and `RelationalQueryResult` for typed helpers. Use `satisfies QueryOptions<...>` to validate reusable options while retaining literal column selections.
 
-The top-level content operations are `select`, `query`, and `count`. Bodies and rendered output are payloads that queries request. This replaces callable `content.query("posts")` and root `content.findMany("posts", options)` / `findFirst`. Migrate fluent calls to `content.select(...).from("posts")`, and object calls to `content.query.posts.findMany({ columns, with, ... })` / `findFirst`. Version 0.2.0 removes `content.readBody()` and `content.render()`; see [Payloads](#payloads) for their replacements.
+The top-level content operations are `from`, `query`, and `count`. Bodies and rendered output are payloads that queries request. This replaces callable `content.query("posts")` and root `content.findMany("posts", options)` / `findFirst`. Migrate fluent calls to `content.from("posts").select(...)`, and object calls to `content.query.posts.findMany({ columns, with, ... })` / `findFirst`. Version 0.2.0 removes `content.readBody()` and `content.render()`; see [Payloads](#payloads) for their replacements.
+
+Explicit selection replaces select-first fluent queries and implicit metadata:
+
+| Before                                        | After                                                                      |
+| --------------------------------------------- | -------------------------------------------------------------------------- |
+| `content.select("id", "title").from("posts")` | `content.from("posts").select("id", "title")`                              |
+| `content.select().from("posts")`              | `content.from("posts").select(...fields)` listing the fields you need      |
+| `findMany()` or `findMany({ where })`         | `findMany({ where, columns: { ... } })`                                    |
+| `columns: { draft: false }`                   | `columns` listing each field to include with `true`                        |
+| `with: { author: true }`                      | `with: { author: { columns: { ... } } }`                                   |
+| `findFirst({ where: { id }, payloads })`      | Unchanged if it reads only `_payloads`; add `columns` for any other fields |
+
+Results include `id` only when it is selected.
 
 ## Query style
 
@@ -267,9 +282,9 @@ Export an optional `queryStyle` from the config to allow only one query API:
 export const queryStyle = "relational"; // or "fluent"
 ```
 
-Omit it to allow both. `"fluent"` keeps `content.select()`; `"relational"` keeps `content.query` and `content.count()`. Every other query API starts from one of those members, so the setting also covers relationships, payloads, adjacency, and counts.
+Omit it to allow both. `"fluent"` keeps `content.from()`; `"relational"` keeps `content.query` and `content.count()`. Every other query API starts from one of those members, so the setting also covers relationships, payloads, adjacency, and counts.
 
-Generated declarations read the export's type, so the editor and `tsc` report a disabled member without a rebuild: `content.select is unavailable because content-query.config sets queryStyle to "relational".` Keep the literal type: use a plain `const` or `satisfies QueryStyle`, not a `: QueryStyle` annotation, which widens the type and allows both styles in types while the runtime still enforces the value.
+Generated declarations read the export's type, so the editor and `tsc` report a disabled member without a rebuild: `content.from is unavailable because content-query.config sets queryStyle to "relational".` Keep the literal type: use a plain `const` or `satisfies QueryStyle`, not a `: QueryStyle` annotation, which widens the type and allows both styles in types while the runtime still enforces the value.
 
 Builds record the style in each revision and in the generated manifest. Accessing or calling a disabled member throws an `invalid-query` ContentError with the same message, which covers JavaScript consumers and casts. Development config edits apply to the next revision. Values other than `"fluent"` and `"relational"` fail configuration loading.
 
@@ -293,7 +308,7 @@ import type { collections } from "./content-query.config";
 
 const session = await buildContent<typeof collections>({ backend: "in-memory" });
 try {
-  const titles = await session.content.select("title").from("posts").all();
+  const titles = await session.content.from("posts").select("title").all();
 } finally {
   await session.dispose();
 }
@@ -386,8 +401,8 @@ const post = await content.query.posts.findFirst({
 const { html, headings } = post!._payloads._rendered;
 
 const same = await content
-  .select("title")
   .from("posts")
+  .select("title")
   .where((fields) => eq(fields.id, id))
   .withPayload("_rendered")
   .withPayload("_body")

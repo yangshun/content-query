@@ -22,10 +22,10 @@ export const queryStyle = "relational"; // or "fluent"
 | Value          | Allowed                            | Disabled                           |
 | -------------- | ---------------------------------- | ---------------------------------- |
 | Omitted        | Both query APIs                    | Nothing                            |
-| `"fluent"`     | `content.select()`                 | `content.query`, `content.count()` |
-| `"relational"` | `content.query`, `content.count()` | `content.select()`                 |
+| `"fluent"`     | `content.from()`                   | `content.query`, `content.count()` |
+| `"relational"` | `content.query`, `content.count()` | `content.from()`                   |
 
-Generated types read the export, so editors and type checks report a disabled member as `content.select is unavailable because content-query.config sets queryStyle to "relational".` Keep the literal type by exporting a plain `const`; a `: QueryStyle` annotation widens it, and only the runtime check applies. At runtime, a disabled member throws an `invalid-query` error with the same message. Other values fail configuration loading.
+Generated types read the export, so editors and type checks report a disabled member as `content.from is unavailable because content-query.config sets queryStyle to "relational".` Keep the literal type by exporting a plain `const`; a `: QueryStyle` annotation widens it, and only the runtime check applies. At runtime, a disabled member throws an `invalid-query` error with the same message. Other values fail configuration loading.
 
 Fluent queries lack `like`-style patterns, `arrayContained`, and filters through relationships. See [choosing a style](/docs/querying-content#choosing-a-style).
 

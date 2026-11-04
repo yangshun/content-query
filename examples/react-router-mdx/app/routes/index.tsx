@@ -4,8 +4,8 @@ import { content } from "content-query:server";
 export async function loader() {
   return {
     guides: await content
-      .select("id", "title", "description")
       .from("guides")
+      .select("id", "title", "description")
       .orderBy("order")
       .all(),
   };

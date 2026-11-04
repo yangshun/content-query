@@ -59,13 +59,13 @@ const input: schema.input<typeof postSchema> = { title: "Post", date: "2026-01-0
 const output: schema.output<typeof postSchema> = { title: "POST", date: new Date(), draft: false };
 const inferred: schema.infer<typeof postSchema> = output;
 const posts: Promise<{title:string;date:Date;draft:boolean;subtitle:string|undefined;titleLength:number}[]> =
-  content.select("title", "date", "draft", "subtitle", "titleLength").from("posts").all();
+  content.from("posts").select("title", "date", "draft", "subtitle", "titleLength").all();
 // @ts-expect-error Outputs include the defaulted boolean.
 const incomplete: schema.output<typeof postSchema> = { title: "Post", date: new Date() };
 // @ts-expect-error Builder exports exclude provider-level parsing utilities.
 void schema.parse;
 // @ts-expect-error Generated queries retain their inferred field types.
-content.select("missing").from("posts");
+content.from("posts").select("missing");
 void [input, inferred, posts, incomplete];`,
       );
       await typecheckConsumer(fixture.root);
@@ -88,7 +88,7 @@ registerHooks({ resolve(specifier, context, next) {
   return next(specifier, context);
 } });
 const { content } = await import("./.content-query/server.js");
-console.log(JSON.stringify(await content.select("title", "date", "draft", "titleLength").from("posts").all()));`,
+console.log(JSON.stringify(await content.from("posts").select("title", "date", "draft", "titleLength").all()));`,
         ],
         { cwd: fixture.root },
       );
@@ -175,8 +175,8 @@ export const collections = { posts: defineCollection({
           try {
             expect(
               await session.content
-                .select("title", "titleLength")
                 .from("posts" as never)
+                .select("title", "titleLength")
                 .all(),
             ).toEqual(expected);
           } finally {
@@ -191,7 +191,7 @@ import { content } from "./.content-query/server.js";
 const metadata: schema.infer<typeof metadataSchema> = {title:"Post"};
 const input: schema.input<typeof lengthSchema> = "Post";
 const output: schema.output<typeof lengthSchema> = 4;
-const posts: Promise<{title:string;titleLength:number}[]> = content.select("title", "titleLength").from("posts").all();
+const posts: Promise<{title:string;titleLength:number}[]> = content.from("posts").select("title", "titleLength").all();
 // @ts-expect-error Provider-independent inference retains the transformed output type.
 const invalid: schema.infer<typeof lengthSchema> = "4";
 void [metadata, input, output, posts, invalid];`,

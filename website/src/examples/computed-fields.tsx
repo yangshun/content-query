@@ -35,7 +35,7 @@ export function ComputedFieldsExample() {
             <CodeExample
               label="Typed query"
               code={
-                'const post = await content.select("title", "readingMinutes").from("posts")\n  .first();'
+                'const post = await content.from("posts").select("title", "readingMinutes")\n  .first();'
               }
               highlight={[".select("]}
             />

@@ -33,8 +33,8 @@ Each helper supplies a result schema and resolver. You choose the field names, a
 
 ```ts
 const posts = await content
-  .select("title", "readingMinutes", "wordCount", "excerpt")
   .from("posts")
+  .select("title", "readingMinutes", "wordCount", "excerpt")
   .all();
 ```
 

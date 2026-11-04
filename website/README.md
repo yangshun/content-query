@@ -1,6 +1,6 @@
 # ContentQuery website
 
-Server metadata queries use `content.select(...fields).from(collection)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
+Server metadata queries use `content.from(collection).select(...fields)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
 
 Collection configs, executable examples, and published guides use `{ schema }` from `content-query/schema`. The quick start installs only ContentQuery. The collections guide documents the selected Zod-backed builders, chaining, inference helpers, and support for other Standard Schema V1 providers.
 

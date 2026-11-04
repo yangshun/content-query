@@ -61,7 +61,7 @@ describe("source watching", () => {
           watch: true,
         });
         expect(sourceSubscriptions).toBe(1);
-        const listing = session.content.select("title").from("posts");
+        const listing = session.content.from("posts").select("title");
         await writeFile(
           filename,
           kind === "glob"
@@ -101,7 +101,7 @@ describe("source watching", () => {
         watch: true,
       });
       try {
-        const listing = session.content.select("title").from("posts");
+        const listing = session.content.from("posts").select("title");
         await mkdir(nested);
         await writeFile(filename, "---\ntitle: First\n---\n");
         await vi.waitFor(async () => expect(await listing.all()).toEqual([{ title: "First" }]), {
@@ -155,7 +155,7 @@ describe("source watching", () => {
         },
         watch: true,
       });
-      const listing = session.content.select("title").from("posts");
+      const listing = session.content.from("posts").select("title");
       await mkdir(base, { recursive: true });
       await writeFile(filename, "---\ntitle: First\n---\n");
       await vi.waitFor(async () => expect(await listing.all()).toEqual([{ title: "First" }]), {
@@ -203,7 +203,7 @@ describe("source watching", () => {
       await settle();
       await sessionInternals(session).idle();
       expect(published).toHaveBeenCalledTimes(initial);
-      expect(await session.content.select("title").from("posts").all()).toEqual([
+      expect(await session.content.from("posts").select("title").all()).toEqual([
         { title: "First" },
       ]);
     } finally {
@@ -222,7 +222,7 @@ describe("source watching", () => {
         };
       }>({ root: fixture.root, config: fixture.config, outDir: ".content-query", watch: true });
       const internal = sessionInternals(session);
-      const listing = session.content.select("title").from("posts");
+      const listing = session.content.from("posts").select("title");
       try {
         const broken =
           failure === "syntax"
@@ -292,7 +292,7 @@ describe("source watching", () => {
           registry,
           watch: true,
         });
-        const listing = session.content.select("title").from("posts");
+        const listing = session.content.from("posts").select("title");
         try {
           await mkdir(base, { recursive: true });
           for (const title of ["First", "Edited"]) {
@@ -362,7 +362,7 @@ describe("source watching", () => {
         watch: true,
       });
       try {
-        const listing = session.content.select("title").from("posts");
+        const listing = session.content.from("posts").select("title");
         for (const title of ["First recovery", "Second recovery"]) {
           await writeFile(filename, JSON.stringify([{ id: "post", title: false }]));
           await vi.waitFor(
@@ -408,7 +408,7 @@ export const collections = {posts: {loader: {name: "fixture", async load({store}
         schema: z.ZodObject<{ title: z.ZodString }>;
       };
     }>({ root, config, outDir: ".content-query", watch: true, change: published });
-    const title = () => session.content.select("title").from("posts").first();
+    const title = () => session.content.from("posts").select("title").first();
     try {
       expect(await title()).toEqual({ title: "Local one" });
       const initial = published.mock.calls.length;
@@ -449,7 +449,7 @@ export const collections = {posts: {loader: {name: "fixture", async load({store}
         schema: z.ZodObject<{ title: z.ZodString }>;
       };
     }>({ root, config, outDir: ".content-query", watch: true });
-    const title = () => session.content.select("title").from("posts").first();
+    const title = () => session.content.from("posts").select("title").first();
     try {
       await writeFile(
         config,
@@ -496,7 +496,7 @@ export const collections = {posts: {loader: {name: "fixture", async load({store}
         watch: true,
         change: published,
       });
-      const titles = () => session.content.select("title").from("posts").all();
+      const titles = () => session.content.from("posts").select("title").all();
       try {
         // Finish any delayed events for the source written before subscription setup.
         await settle();
@@ -536,11 +536,11 @@ describe("queryStyle reloading", () => {
     }>({ root: fixture.root, config: fixture.config, outDir: ".content-query", watch: true });
     const expected = { title: "Getting started" };
     try {
-      expect(await session.content.select("title").from("posts").first()).toEqual(expected);
+      expect(await session.content.from("posts").select("title").first()).toEqual(expected);
 
       await writeFile(fixture.config, `${original}export const queryStyle = "relational";\n`);
       await vi.waitFor(
-        () => expect(() => session.content.select("title")).toThrow(/queryStyle to "relational"/),
+        () => expect(() => session.content.from("posts")).toThrow(/queryStyle to "relational"/),
         { timeout: 3_000 },
       );
       expect(await session.content.query.posts.findFirst({ columns: { title: true } })).toEqual(
@@ -552,7 +552,7 @@ describe("queryStyle reloading", () => {
         () => expect(() => session.content.query).toThrow(/queryStyle to "fluent"/),
         { timeout: 3_000 },
       );
-      expect(await session.content.select("title").from("posts").first()).toEqual(expected);
+      expect(await session.content.from("posts").select("title").first()).toEqual(expected);
 
       await writeFile(fixture.config, original);
       await vi.waitFor(
@@ -562,7 +562,7 @@ describe("queryStyle reloading", () => {
           ),
         { timeout: 3_000 },
       );
-      expect(await session.content.select("title").from("posts").first()).toEqual(expected);
+      expect(await session.content.from("posts").select("title").first()).toEqual(expected);
     } finally {
       await session.dispose();
       await fixture.dispose();

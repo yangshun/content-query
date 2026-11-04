@@ -43,9 +43,9 @@ export const collections = {
           path.join(fixture.root, "consumer.ts"),
           `
 import { content } from "./.content-query/server.js";
-const authors: Promise<{id:string;name:string}[]> = content.select("id", "name").from("authors").all();
+const authors: Promise<{id:string;name:string}[]> = content.from("authors").select("id", "name").all();
 // @ts-expect-error Source schema inference survives the loader and generated declarations.
-content.select("missing").from("authors");
+content.from("authors").select("missing");
 void authors;
 `,
         );
@@ -81,7 +81,7 @@ registerHooks({resolve(specifier,context,next){
   return next(specifier,context);
 }});
 const {content}=await import("./.content-query/server.js");
-console.log(JSON.stringify(await content.select("id", "name").from("authors").all()));
+console.log(JSON.stringify(await content.from("authors").select("id", "name").all()));
 `,
           ],
           { cwd: fixture.root },

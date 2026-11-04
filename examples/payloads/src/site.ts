@@ -46,8 +46,8 @@ const articles = await content.query.articles.findMany({
 
 // 2. Fluent queries add payloads with `.withPayload()`. This loads one article's HTML.
 const latest = await content
-  .select("id", "title")
   .from("articles")
+  .select("id", "title")
   .orderBy("publishedAt", "desc")
   .withPayload("_rendered")
   .first();
@@ -55,6 +55,7 @@ const latest = await content
 // 3. Custom loaders can supply HTML directly. This entry has no body, so `_body` is undefined.
 const announcement = await content.query.announcements.findFirst({
   where: { id: "launch" },
+  columns: { title: true },
   payloads: { _rendered: true, _body: true },
 });
 

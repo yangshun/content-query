@@ -24,7 +24,7 @@ export const sourceToDataExample = {
     }),
   }),
 };`,
-  query: `const posts = await content.select("title", "draft").from("posts")
+  query: `const posts = await content.from("posts").select("title", "draft")
   .all();`,
   data: [{ title: "Hello, world", draft: false }],
 } as const;
@@ -88,8 +88,8 @@ export function queryExampleCode(
   }
   const lines = [
     "const posts = await content",
-    options.fields === "title-and-draft" ? '  .select("title", "draft")' : '  .select("title")',
     '  .from("posts")',
+    options.fields === "title-and-draft" ? '  .select("title", "draft")' : '  .select("title")',
     ...(options.excludeDrafts ? ["  .where((fields) => eq(fields.draft, false))"] : []),
     ...(options.sort === "id-asc"
       ? []
@@ -165,7 +165,7 @@ export const relationshipExampleCode = `relationships: {
   },
 }`;
 
-export const relationshipQueryCode = `const posts = await content.select("title").from("posts")
+export const relationshipQueryCode = `const posts = await content.from("posts").select("title")
   .where((fields) => eq(fields.authorId, "ada"))
   .with("author", (author) => author.select("name"))
   .all();`;

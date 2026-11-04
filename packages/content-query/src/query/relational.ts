@@ -4,6 +4,8 @@ import { and, not, or, validateExpression } from "./operators.ts";
 import { checkedFields, checkedOrder, checkedPagination, checkedPayloads } from "./clauses.ts";
 import {
   emptyPlan,
+  hasSelection,
+  NO_SELECTION_MESSAGE,
   type Expression,
   type PredicateOperator,
   type QueryPlan,
@@ -169,22 +171,14 @@ export function relationalPlan(
   if (options.where !== undefined) {
     plan.filters = [relationalWhere(registry, collection, options.where)];
   }
-  if (options.columns === undefined) {
-    plan.allFields = true;
-  } else {
+  // Omitted columns select no fields; nothing is implicit, not even `id`.
+  if (options.columns !== undefined) {
     record(options.columns, "columns");
     const columns = options.columns;
-    if (Object.values(columns).some((value) => typeof value !== "boolean")) {
-      invalidQuery("Column selection requires boolean values.");
+    if (Object.values(columns).some((value) => value !== true)) {
+      invalidQuery("Columns list the fields to include with `true`; omit fields you do not need.");
     }
-    const names = checkedFields(registry, collection, Object.keys(columns));
-    const included = names.filter((name) => columns[name] === true);
-    if (included.length || !names.length) {
-      plan.select = included;
-    } else {
-      plan.allFields = true;
-      plan.exclude = names;
-    }
+    plan.select = checkedFields(registry, collection, Object.keys(columns));
   }
   if (options.with !== undefined) {
     record(options.with, "with");
@@ -199,12 +193,19 @@ export function relationalPlan(
       if (selected === false || selected === undefined) {
         continue;
       }
-      related[name] = relationalPlan(
-        registry,
-        relation.collection,
-        selected === true ? {} : selected,
-        relation.type === "many",
-        allowAdjacent,
+      if (selected === true) {
+        invalidQuery(
+          `Relationship "${name}" requires nested options that select data, such as { columns: { id: true } }.`,
+        );
+      }
+      related[name] = selectedPlan(
+        relationalPlan(
+          registry,
+          relation.collection,
+          selected,
+          relation.type === "many",
+          allowAdjacent,
+        ),
       );
     }
     plan.with = related;
@@ -234,7 +235,20 @@ export function relationalPlan(
     plan.adjacent =
       options.adjacent === true
         ? true
-        : relationalPlan(registry, collection, options.adjacent, true, false, false);
+        : selectedPlan(relationalPlan(registry, collection, options.adjacent, true, false, false));
+  }
+  return plan;
+}
+
+/**
+ * Rejects a row-returning scope that requests no data.
+ *
+ * @param plan - A root, relationship, or sibling scope.
+ * @returns The same plan when it selects fields, relationships, payloads, or adjacency.
+ */
+export function selectedPlan(plan: QueryPlan): QueryPlan {
+  if (!hasSelection(plan)) {
+    invalidQuery(NO_SELECTION_MESSAGE);
   }
   return plan;
 }
@@ -247,8 +261,10 @@ export function createQueryNamespace(registry: () => QueryRegistry, run: QueryRu
     let cached = queries.get(name);
     if (!cached) {
       cached = {
-        findMany: (options?: unknown) => run(relationalPlan(registry(), name, options), "all"),
-        findFirst: (options?: unknown) => run(relationalPlan(registry(), name, options), "first"),
+        findMany: (options?: unknown) =>
+          run(selectedPlan(relationalPlan(registry(), name, options)), "all"),
+        findFirst: (options?: unknown) =>
+          run(selectedPlan(relationalPlan(registry(), name, options)), "first"),
       };
       queries.set(name, cached);
     }

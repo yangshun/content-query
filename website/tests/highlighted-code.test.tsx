@@ -6,7 +6,7 @@ import { HighlightedCode, type CodeLanguage } from "../src/highlighted-code";
 const examples: { language: CodeLanguage; code: string }[] = [
   {
     language: "typescript",
-    code: 'const posts = await content.select().from("posts")\n  .all();\n',
+    code: 'const posts = await content.from("posts")\n  .select("title")\n  .all();\n',
   },
   {
     language: "markdown",
@@ -32,7 +32,7 @@ describe("homepage code highlighting", () => {
   test("preserves operation and error highlights across syntax tokens", () => {
     const html = renderToStaticMarkup(
       createElement(HighlightedCode, {
-        code: 'content.select("title", "drafft").from("posts");',
+        code: 'content.from("posts").select("title", "drafft");',
         language: "typescript",
         highlight: [".select("],
         invalid: true,

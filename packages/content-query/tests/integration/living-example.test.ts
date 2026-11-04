@@ -27,8 +27,8 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   // Query a listing through the prepared runtime.
   expect(
     await content
-      .select("id", "title", "slug")
       .from("posts")
+      .select("id", "title", "slug")
       .where((fields) => and(eq(fields.locale, "en"), eq(fields.draft, false)))
       .where((fields) => gte(fields.publishedAt, new Date("2026-10-01T00:00:00.000Z")))
       .orderBy("publishedAt", "desc")
@@ -37,10 +37,7 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   ).toStrictEqual([{ id: "getting-started", title: "Getting started", slug: "getting-started" }]);
 
   // Branch from a shared query.
-  const publishedPosts = content
-    .select()
-    .from("posts")
-    .where((fields) => eq(fields.draft, false));
+  const publishedPosts = content.from("posts").where((fields) => eq(fields.draft, false));
   const englishPosts = publishedPosts.where((fields) => eq(fields.locale, "en"));
   const frenchPosts = publishedPosts.where((fields) => eq(fields.locale, "fr"));
   expect(await englishPosts.select("id", "title").all()).toStrictEqual([
@@ -51,8 +48,8 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
 
   // Select optional fields.
   const subtitles = await content
-    .select("id", "subtitle")
     .from("posts")
+    .select("id", "subtitle")
     .where((fields) => eq(fields.locale, "en"))
     .where((fields) => or(isUndefined(fields.subtitle), isNull(fields.subtitle)))
     .all();
@@ -63,8 +60,8 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   expect(subtitles.map((post) => Object.hasOwn(post, "subtitle"))).toEqual([true, true]);
   expect(
     await content
-      .select("subtitel" as never)
       .from("posts")
+      .select("subtitel" as never)
       .first(),
   ).toStrictEqual({ subtitel: undefined });
 
@@ -92,8 +89,8 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
 
   // Look up and render a page.
   const post = await content
-    .select("id", "title", "publishedAt")
     .from("posts")
+    .select("id", "title", "publishedAt")
     .where((fields) =>
       and(eq(fields.slug, "getting-started"), eq(fields.locale, "en"), eq(fields.draft, false)),
     )
@@ -123,23 +120,23 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   // Handle errors.
   expect(
     await content
-      .select("id")
       .from("posts")
+      .select("id")
       .where((fields) => eq(fields.id, "missing-post"))
       .first(),
   ).toBeUndefined();
   expect(() => content.query.authors.findFirst({ payloads: { _rendered: true } } as never)).toThrow(
     expect.objectContaining({ code: "invalid-query" }),
   );
-  expect(() => content.select("id").from("posts").limit(-1)).toThrow(
+  expect(() => content.from("posts").select("id").limit(-1)).toThrow(
     expect.objectContaining({ code: "invalid-query" }),
   );
 
   // Load related entries in both directions.
   expect(
     await content
-      .select("id", "title")
       .from("posts")
+      .select("id", "title")
       .where((fields) => eq(fields.draft, false))
       .with("author", (author) => author.select("name"))
       .all(),
@@ -148,8 +145,8 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   ]);
   expect(
     await content
-      .select("id")
       .from("posts")
+      .select("id")
       .where((fields) => eq(fields.draft, false))
       .with("author", (author) =>
         author.select("name").where((fields) => eq(fields.name, "Grace Hopper")),
@@ -158,8 +155,8 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   ).toStrictEqual([{ id: "getting-started", author: null }]);
   expect(
     await content
-      .select("id", "name")
       .from("authors")
+      .select("id", "name")
       .with("posts", (posts) =>
         posts
           .select("id", "title")
@@ -178,10 +175,7 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   ]);
 
   // Load an authored ID array.
-  const grace = content
-    .select()
-    .from("authors")
-    .where((fields) => eq(fields.id, "grace"));
+  const grace = content.from("authors").where((fields) => eq(fields.id, "grace"));
   expect(
     await grace
       .select("id")
@@ -205,8 +199,8 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   ).toStrictEqual({ id: "grace", featuredPosts: [{ id: "getting-started" }] });
   expect(
     await content
-      .select("id")
       .from("authors")
+      .select("id")
       .where((fields) => eq(fields.id, "ada"))
       .with("featuredPosts", (posts) => posts.select("id"))
       .first(),
@@ -226,8 +220,8 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   curated!.featuredPostIds.length = 0;
   expect(
     await content
-      .select("publishedAt")
       .from("posts")
+      .select("publishedAt")
       .where((fields) => eq(fields.id, "getting-started"))
       .first(),
   ).toStrictEqual({ publishedAt: new Date("2026-10-17T00:00:00.000Z") });

@@ -131,7 +131,7 @@ describe("ContentQuery website guide routes with the generated backend", () => {
       }
       return (guide._payloads as Record<string, unknown>)[`_${name}`] as never;
     };
-    const querySpy = vi.spyOn(content, "select");
+    const querySpy = vi.spyOn(content, "from");
     homeRoute = (await server.ssrLoadModule("/pages/index.server.ts")) as typeof homeRoute;
     guideRoute = (await server.ssrLoadModule(
       "/pages/docs/[...slug].server.ts",
@@ -332,7 +332,7 @@ import configure from "./next.config.mjs";
 const config = await configure(PHASE_PRODUCTION_BUILD, { defaultConfig: {} });
 assert.equal(config.trailingSlash, true);
 const { content } = await import("#content-query");
-assert.deepEqual(await content.select("id", "title").from("posts").all(), [
+assert.deepEqual(await content.from("posts").select("id", "title").all(), [
   { id: "hello", title: "Hello ContentQuery" },
 ]);
 `,
@@ -491,7 +491,7 @@ assert.deepEqual(${resultName}, ${JSON.stringify(queryExamplePosts(options))});
     );
     const sourceChecks = sourceExamples.map(
       (source) =>
-        `assert.deepEqual(await content.select("id", "title", "draft", "authorId").from("${source.format}").first(), ${JSON.stringify(examplePosts[0])});`,
+        `assert.deepEqual(await content.from("${source.format}").select("id", "title", "draft", "authorId").first(), ${JSON.stringify(examplePosts[0])});`,
     );
     await writeFile(
       path.join(exampleRoot, "verify.mjs"),
@@ -501,8 +501,8 @@ import { content } from "./.content-query/server.js";
 import { eq } from "content-query/query";
 ${queryChecks.join("\n")}
 ${sourceChecks.join("\n")}
-assert.deepEqual(await content.select("readingMinutes").from("posts").where((fields) => eq(fields.id, "hello-world")).first(), { readingMinutes: 3 });
-const derived = await content.select("wordCount", "excerpt").from("posts").first();
+assert.deepEqual(await content.from("posts").select("readingMinutes").where((fields) => eq(fields.id, "hello-world")).first(), { readingMinutes: 3 });
+const derived = await content.from("posts").select("wordCount", "excerpt").first();
 assert.equal(derived.wordCount, 600);
 assert.equal(derived.excerpt.length, 160);
 assert.ok(derived.excerpt.endsWith("…"));
@@ -539,7 +539,7 @@ return actual;
 import { content } from "./.content-query/server.js";
 ${typeChecks.join("\n")}
 // @ts-expect-error The typed-query example deliberately misspells this field.
-content.select("title", "drafft").from("posts");
+content.from("posts").select("title", "drafft");
 // @ts-expect-error Object selection rejects the same misspelled field.
 content.query.posts.findMany({ columns: { title: true, drafft: true } });
 `,

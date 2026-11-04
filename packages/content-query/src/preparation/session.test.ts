@@ -140,13 +140,13 @@ describe("watch lifecycle and revision publication", () => {
         await gate;
         return { html: body, headings: [] };
       };
-      const oldQuery = session.content.select("title").from("posts").first();
+      const oldQuery = session.content.from("posts").select("title").first();
       const oldRender = renderedOf(session.content, "posts", "one");
       records.context.update({
         upsert: [{ id: "one", data: { title: "B" }, rendered: { html: "B" } }],
       });
       await sessionInternals(session).idle();
-      expect(await session.content.select("title").from("posts").first()).toEqual({ title: "B" });
+      expect(await session.content.from("posts").select("title").first()).toEqual({ title: "B" });
       expect((await renderedOf(session.content, "posts", "one")).html).toBe("B");
       finish!();
       expect(await oldQuery).toEqual({ title: "A" });
@@ -203,12 +203,12 @@ describe("watch lifecycle and revision publication", () => {
       watch: true,
     });
     try {
-      await expect(session.content.select("title").from("posts").all()).rejects.toMatchObject({
+      await expect(session.content.from("posts").select("title").all()).rejects.toMatchObject({
         code: "validation-error",
       });
       records.context.update({ upsert: [{ id: "one", data: { title: "Corrected" } }] });
       await sessionInternals(session).idle();
-      expect(await session.content.select("title").from("posts").all()).toEqual([
+      expect(await session.content.from("posts").select("title").all()).toEqual([
         { title: "Corrected" },
       ]);
       records.context.error(new Error("subscription lost"));
@@ -218,7 +218,7 @@ describe("watch lifecycle and revision publication", () => {
       });
       records.replace([{ id: "one", data: { title: "Recovered again" } }]);
       await sessionInternals(session).idle();
-      expect(await session.content.select("title").from("posts").first()).toEqual({
+      expect(await session.content.from("posts").select("title").first()).toEqual({
         title: "Recovered again",
       });
     } finally {
@@ -261,12 +261,12 @@ describe("watch lifecycle and revision publication", () => {
     try {
       posts.context.update({ remove: ["one"], upsert: [{ id: "two", data: { title: "Edited" } }] });
       await sessionInternals(session).idle();
-      await expect(session.content.select().from("posts").count()).rejects.toMatchObject({
+      await expect(session.content.from("posts").count()).rejects.toMatchObject({
         code: "invalid-reference",
       });
       authors.context.update({ upsert: [{ id: "ada", data: { featured: [] } }] });
       await sessionInternals(session).idle();
-      expect(await session.content.select("id", "title").from("posts").all()).toEqual([
+      expect(await session.content.from("posts").select("id", "title").all()).toEqual([
         { id: "two", title: "Edited" },
       ]);
     } finally {
@@ -302,7 +302,7 @@ describe("watch lifecycle and revision publication", () => {
       expect(await bodyOf(session.content, "posts", "one")).toBe("B body");
       records.context.update({ upsert: [{ id: "one", data: { title: false } }] });
       await sessionInternals(session).idle();
-      await expect(session.content.select().from("posts").count()).rejects.toMatchObject({
+      await expect(session.content.from("posts").count()).rejects.toMatchObject({
         code: "validation-error",
       });
       finish!({ body: "A body" });
@@ -354,12 +354,12 @@ describe("watch lifecycle and revision publication", () => {
       await processing;
       records.context.update({ upsert: [{ id: "one", data: { title: "latest" } }] });
       await sessionInternals(session).idle();
-      expect(await session.content.select("processed").from("posts").first()).toEqual({
+      expect(await session.content.from("posts").select("processed").first()).toEqual({
         processed: "latest",
       });
       finish!();
       await Promise.resolve();
-      expect(await session.content.select("title").from("posts").first()).toEqual({
+      expect(await session.content.from("posts").select("title").first()).toEqual({
         title: "latest",
       });
     } finally {

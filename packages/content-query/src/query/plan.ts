@@ -28,9 +28,8 @@ export type Expression =
 
 export type QueryPlan = {
   collection: string;
+  /** Explicitly selected fields; scopes never include unselected fields, including `id`. */
   select?: readonly string[];
-  allFields?: boolean;
-  exclude?: readonly string[];
   filters: readonly Expression[];
   order: readonly { field: string; direction: "asc" | "desc" }[];
   limit?: number;
@@ -63,13 +62,23 @@ export function emptyPlan(collection: string): QueryPlan {
   return { collection, filters: [], order: [], with: {} };
 }
 
-/** Treats explicitly selected relationships and adjacency as row projections too. */
+/** Explains the explicit-selection rule wherever a scope returns rows without selecting data. */
+export const NO_SELECTION_MESSAGE =
+  "Select fields, relationships, payloads, or adjacent entries before running this query." as const;
+
+/**
+ * Checks whether a row-returning scope explicitly requests data. Nothing is implicit, not even
+ * `id`: a scope must select fields, include a relationship, request a payload, or select adjacency.
+ *
+ * @param plan - The scope to check; `undefined` when a callback returned no builder.
+ * @returns `true` when the scope requests at least one kind of data.
+ */
 export function hasSelection(plan: QueryPlan | undefined): plan is QueryPlan {
   return (
     !!plan &&
-    (plan.select !== undefined ||
-      !!plan.allFields ||
+    (!!plan.select?.length ||
       !!plan.adjacent ||
-      Object.keys(plan.with).length > 0)
+      Object.keys(plan.with).length > 0 ||
+      Object.keys(plan.payloads ?? {}).length > 0)
   );
 }

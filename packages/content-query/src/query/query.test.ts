@@ -149,20 +149,20 @@ describe("builder structure and scalar sorting", () => {
       registry,
     });
     expect(
-      (await session.content.select("id").from("values").orderBy("value").all()).map(
+      (await session.content.from("values").select("id").orderBy("value").all()).map(
         (entry) => entry.id,
       ),
     ).toEqual(["e", "d", "c", "a", "b"]);
     expect(
-      (await session.content.select("id").from("values").orderBy("value", "desc").all()).map(
+      (await session.content.from("values").select("id").orderBy("value", "desc").all()).map(
         (entry) => entry.id,
       ),
     ).toEqual(["d", "e", "c", "a", "b"]);
     expect(
       (
         await session.content
-          .select("id")
           .from("values")
+          .select("id")
           .orderBy("bool")
           .orderBy("id", "desc")
           .all()
@@ -192,22 +192,21 @@ describe("builder structure and scalar sorting", () => {
     });
     await expect(
       session.content
-        .select("id")
         .from("values")
+        .select("id")
         .orderBy("mixed" as never)
         .all(),
     ).rejects.toMatchObject({ code: "invalid-query" });
     await expect(
       session.content
-        .select("id")
         .from("values")
+        .select("id")
         .orderBy("rich" as never)
         .all(),
     ).rejects.toMatchObject({ code: "invalid-query" });
     // Counting ignores sorting and relationship loading, as specified.
     expect(
       await session.content
-        .select()
         .from("values")
         .orderBy("rich" as never)
         .count(),

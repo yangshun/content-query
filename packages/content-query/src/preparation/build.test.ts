@@ -42,8 +42,8 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
       const session = await buildContent<Registry>({ config: filename, backend: "in-memory" });
       try {
         const selected: { title: string } | undefined = await session.content
-          .select("title")
           .from("posts")
+          .select("title")
           .first();
         expect(selected).toEqual({
           title: "Standalone",
@@ -155,7 +155,7 @@ ${declaration}`,
           posts: CollectionDefinition<undefined, {}, {}>;
         }>(root, {});
         try {
-          expect(await session.content.select("title").from("posts").first()).toEqual({
+          expect(await session.content.from("posts").select("title").first()).toEqual({
             title: "Discovered",
           });
           expect(await readFile(path.join(root, ".content-query/server.d.ts"), "utf8")).toContain(
@@ -279,8 +279,8 @@ ${extra}`,
           id: "one",
         });
         expect(() =>
-          (session.content as unknown as ContentSession<Registry>["content"]).select("id"),
-        ).toThrow(/content\.select is unavailable because content-query\.config sets queryStyle/);
+          (session.content as unknown as ContentSession<Registry>["content"]).from("posts"),
+        ).toThrow(/content\.from is unavailable because content-query\.config sets queryStyle/);
       } finally {
         await session.dispose();
       }

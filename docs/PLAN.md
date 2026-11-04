@@ -68,9 +68,9 @@ Choosing a backend must not silently change query results, field types, or the m
 
 ### 3. Keep metadata projection separate from bodies
 
-Queries can return all prepared metadata: use `content.select().from("posts")` or omit relational `columns`. Narrow fields with fluent `select(...fields)` or relational `columns`; `{}` selects no scalar fields, inclusion selects `true` fields, and false-only selection excludes fields. Relationships are always explicitly requested.
+Queries return only the data they select; nothing is implicit, not even `id`. Select fields with fluent `select(...fields)` or relational `columns`, whose values are `true`; `{}` selects no scalar fields. Every row-returning scope must select fields, include a relationship, request a payload, or select adjacency, or it fails to type-check and throws `invalid-query`. Counts need no selection. Relationships are always explicitly requested. Amended November 4, 2026, replacing default all-metadata projections, exclusion columns, and `with: true`; this keeps unrequested fields out of loader data and client payloads.
 
-Use `content.select(...fields).from(collection)` for SQL-ordered fluent queries and `content.query.posts.findMany({ columns, with, where })` for relational queries. Request related data through fluent `.with(...)` or relational `with`. Bodies and rendered output are payloads: a query loads them only when it explicitly requests them through relational `payloads` or fluent `.withPayload(...)`, under the reserved `_payloads` key rather than as fields. Amended November 2, 2026, replacing separate `readBody()` and `render()` operations.
+Use `content.from(collection).select(...fields)` for collection-first fluent queries (amended November 4, 2026, from SQL-ordered `select(...fields).from(collection)` so field names are checked and completed as soon as the collection is known) and `content.query.posts.findMany({ columns, with, where })` for relational queries. Request related data through fluent `.with(...)` or relational `with`. Bodies and rendered output are payloads: a query loads them only when it explicitly requests them through relational `payloads` or fluent `.withPayload(...)`, under the reserved `_payloads` key rather than as fields. Amended November 2, 2026, replacing separate `readBody()` and `render()` operations.
 
 Selection determines the inferred result type. Unselected fields must also be absent from the actual runtime result, not merely hidden by TypeScript types.
 
@@ -669,8 +669,8 @@ post?._payloads._body; // string | undefined
 post?._payloads._rendered; // { html, headings }
 
 await content
-  .select("title")
   .from("posts")
+  .select("title")
   .where((fields) => eq(fields.id, "getting-started"))
   .withPayload("_rendered")
   .first();
@@ -731,8 +731,8 @@ Status: agreed on October 17, 2026. These rules describe the redesign API, not t
 
 ```ts
 const posts = await content
-  .select("id", "title")
   .from("posts")
+  .select("id", "title")
   .orderBy("publishedAt", "desc")
   .orderBy("title", "asc")
   .limit(20)
@@ -756,7 +756,7 @@ Sorting may use query fields that are absent from the selection. Raw bodies and 
 | Repeated pagination calls           | Reject a second `.limit(...)` or `.offset(...)` call on the same query, even when the value is unchanged.                                                                                                                                   |
 | Execution order                     | Apply filtering, sorting, offset, and limit in that order, regardless of method-call order. Load requested relationships for the returned entries.                                                                                          |
 
-Fluent root queries start with `select(...fields).from(collection)`; an empty field list selects all prepared metadata. Awaiting the builder, `.all()`, and `.execute()` return the requested page. Other terminal methods are:
+Fluent root queries start with `from(collection)` and select data with `select(...fields)`, `with()`, `withPayload()`, or `selectAdjacent()`. Awaiting a selected builder, `.all()`, and `.execute()` return the requested page; an unselected builder rejects. Other terminal methods are:
 
 | Method     | Result                                   | Pagination behavior                                                                |
 | ---------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
@@ -776,15 +776,15 @@ Use **relationship loading** for requests such as "get posts with their authors.
 
 ```ts
 const posts = await content
-  .select("id", "title")
   .from("posts")
+  .select("id", "title")
   .with("author", (author) => author.select("name"))
   .all();
 ```
 
 Each result contains the selected post fields and a nested `author` object containing only the selected author fields. Neither the post nor the author receives an implicit `id` or any other unselected field. Relationship names and selected fields are typed from collection definitions.
 
-Every fluent relationship scope requires its own field selection. Relational `with: { author: true }` explicitly requests all author metadata; nested `columns` narrows it. Related entries, further relationships, bodies, and rendered output are never loaded implicitly. Further nested relationships require explicit requests at each level. Loading an author alone does not recursively load that author's posts.
+Every relationship scope, fluent or relational, requires its own selection. Relational `with: { author: true }` is rejected; nested `columns` lists the author fields. Related entries, further relationships, bodies, and rendered output are never loaded implicitly. Further nested relationships require explicit requests at each level. Loading an author alone does not recursively load that author's posts.
 
 Use one fluent query API at every depth. `.with(name, configure)` passes a builder scoped to the related collection to a synchronous configuration callback. The callback returns the configured builder and runs once while constructing the query, not once per parent entry. Use the same applicable `.select(...)`, `.where(...)`, `.orderBy(...)`, `.limit(...)`, `.offset(...)`, and `.with(...)` methods within it. Only the root builder exposes terminal methods such as `.all()`, `.first()`, and `.count()`; the relationship declaration determines whether nested results are singular or arrays. Nested relationship queries use this callback form rather than an options-object overload.
 
@@ -810,8 +810,8 @@ All nested builders support `.select(...)`, `.where(...)`, and `.with(...)`. Onl
 
 ```ts
 const authors = await content
-  .select("id", "name")
   .from("authors")
+  .select("id", "name")
   .with("posts", (posts) =>
     posts
       .select("title", "slug")
@@ -826,7 +826,7 @@ This requests up to five published posts per returned author. A filter inside `.
 
 Nested filtering, ordering, offset, and limit apply independently to each parent's related entries. Parent pagination happens before relationship loading. Related limits must not become one global limit across all parents. Reuse the root query's scalar sorting and pagination validation rules. Forward ID-array references preserve authored order and duplicates by default, as defined under [ID-array relationships](#id-array-relationships).
 
-Return plain nested objects and arrays containing the requested fields; relational scopes with omitted `columns` include all prepared metadata. The selected parent data and related entries use one consistent content revision. Relationship cycles in the declarations do not cause automatic traversal: the query explicitly bounds which relationships are loaded.
+Return plain nested objects and arrays containing only the requested fields; relational scopes with omitted `columns` include no fields. The selected parent data and related entries use one consistent content revision. Relationship cycles in the declarations do not cause automatic traversal: the query explicitly bounds which relationships are loaded.
 
 The backend-independent query plan must support batched relationship lookup and per-parent processing. In-memory and generated backends can share the JavaScript executor; a future SQLite adapter must preserve the same semantics through its own query and index strategy. Delivery can proceed in layers while retaining this public model.
 
@@ -1263,7 +1263,7 @@ These cases belong in the redesigned implementation's shared tests. The shared c
 Status: implemented October 18, 2026. These additions share the loader, runtime, and backend contracts. Metadata projection supports all prepared fields by default or explicit subsets. The [package guide](./API.md#relational-queries-and-adjacent-entries) contains complete callsites and the [TODO list](./TODO.md) tracks outstanding work and future design notes.
 
 - `defineCollection({ source: "./content/posts", schema })` is shorthand for the built-in Markdown glob loader. Explicit source objects require `type` (`markdown`, `json`, `yaml`, or `toml`) and `directory`; optional include patterns and body/ID policies reuse glob behavior. `source` and `loader` are mutually exclusive.
-- `content.select(...fields).from(collection)` is the only fluent root entry. `content.query.<collection>.findMany()` and `findFirst()` use Drizzle-style `columns`, `with`, `where`, and `orderBy` options; `content.count(collection, options)` counts matching parents before pagination. Omitted `columns` returns all prepared metadata, false-only columns exclude fields, and `{}` selects no scalars. Included relationships use nested options or `true` for all related metadata. Their compilers share checked clauses, normalized plans, and the pinned-revision executor. Singular scopes cannot order or paginate. `findFirst` returns `undefined`. Conformance tests compare both backends and type-check consumer projections.
+- `content.from(collection)` is the only fluent root entry. `content.query.<collection>.findMany()` and `findFirst()` use Drizzle-style `columns`, `with`, `where`, and `orderBy` options; `content.count(collection, options)` counts matching parents before pagination. Columns accept only `true`; omitted columns and `{}` select no scalars, and options must select data. Included relationships use nested options that select data. Their compilers share checked clauses, normalized plans, and the pinned-revision executor. Singular scopes cannot order or paginate. `findFirst` returns `undefined`. Conformance tests compare both backends and type-check consumer projections.
 - Relational `adjacent: true` and fluent `.selectAdjacent()` add `{ previous: { id } | null, next: { id } | null }`. Shorthand uses the current scope's filters and stable order before pagination. Relational `{ where?, orderBy?, columns?, with? }` defines an independent sibling scope over the same collection; the fluent callback and `{ where?, orderBy?, select }` options overload provide the same behavior. Each neighbor is projected from the same revision, boundaries and excluded current entries yield `null`, and siblings cannot paginate or select adjacency recursively. Authored relationship array order is retained in shorthand, with duplicate IDs treated as one neighbor position. `_adjacent` is reserved in metadata, computed fields, and relationships.
 - Generated `server.d.ts` and `types.d.ts` export `CollectionKey`, `CollectionData<Name>`, and `Collections` (a map of collection data types). Type-only config references preserve inference; executable runtime code never imports configuration. Vite always writes its facade declarations to `.content-query/types.d.ts`; generated standalone preparation writes declarations beside its server entry. Apps include generated declarations in TypeScript and remove handwritten ambient duplicates.
 - Vite's server facade is `content-query:server`. The browser-safe `content-query:client` module exports `onContentUpdate`, serializes revalidation callbacks, coalesces edits, cleans up subscriptions, and becomes a production no-op. Successful publication updates server modules before notifying clients. Subscribed routers refresh their data; clients without a bridge retain full-document reload fallback. Void's root bridge flushes cached data and refreshes with preserved state/scroll. Production compiler servers with watching disabled do not start content watchers. Runtime Markdown dependencies are optimized before initial server rendering to avoid optimizer-induced reloads.
@@ -1396,7 +1396,7 @@ const session = await buildContent<typeof collections>({
 });
 
 try {
-  const summaries = await session.content.select("id", "title").from("posts").all();
+  const summaries = await session.content.from("posts").select("id", "title").all();
   // Use the same prepared fixtures and query behavior without backend content files.
 } finally {
   await session.dispose();
@@ -1542,8 +1542,8 @@ import { and, eq, gte, isNull, isUndefined, or } from "content-query/query";
 import { content } from "content-query:server";
 
 const summaries = await content
-  .select("id", "title", "slug")
   .from("posts")
+  .select("id", "title", "slug")
   .where((fields) => and(eq(fields.locale, "en"), eq(fields.draft, false)))
   .where((fields) => gte(fields.publishedAt, new Date("2026-10-01T00:00:00.000Z")))
   .orderBy("publishedAt", "desc")
@@ -1570,10 +1570,7 @@ The filters combine with AND and exclude the draft. The date comparison uses tim
 Reuse a published-posts query to construct independent locale-specific queries:
 
 ```ts
-const publishedPosts = content
-  .select()
-  .from("posts")
-  .where((fields) => eq(fields.draft, false));
+const publishedPosts = content.from("posts").where((fields) => eq(fields.draft, false));
 
 const englishPosts = publishedPosts.where((fields) => eq(fields.locale, "en"));
 const frenchPosts = publishedPosts.where((fields) => eq(fields.locale, "fr"));
@@ -1594,8 +1591,8 @@ The getting-started post omits `subtitle`; the upcoming-features post explicitly
 
 ```ts
 const subtitles = await content
-  .select("id", "subtitle")
   .from("posts")
+  .select("id", "subtitle")
   .where((fields) => eq(fields.locale, "en"))
   .where((fields) => or(isUndefined(fields.subtitle), isNull(fields.subtitle)))
   .all();
@@ -1644,8 +1641,8 @@ A server-side route can query the application's slug/locale and explicitly selec
 
 ```ts
 const post = await content
-  .select("id", "title", "publishedAt")
   .from("posts")
+  .select("id", "title", "publishedAt")
   .where((fields) =>
     and(eq(fields.slug, "getting-started"), eq(fields.locale, "en"), eq(fields.draft, false)),
   )
@@ -1708,8 +1705,8 @@ The examples below use the unchanged valid fixtures. A query miss is an ordinary
 
 ```ts
 await content
-  .select("id")
   .from("posts")
+  .select("id")
   .where((fields) => eq(fields.id, "missing-post"))
   .withPayload("_rendered")
   .first(); // undefined
@@ -1723,7 +1720,7 @@ content.query.authors.findFirst({ payloads: { _rendered: true } } as never);
 ```
 
 ```ts
-content.select("id").from("posts").limit(-1);
+content.from("posts").select("id").limit(-1);
 // Throws synchronously with ContentError code "invalid-query".
 ```
 
@@ -1741,8 +1738,8 @@ Posts can explicitly request selected author data:
 
 ```ts
 const postsWithAuthors = await content
-  .select("id", "title")
   .from("posts")
+  .select("id", "title")
   .where((fields) => eq(fields.draft, false))
   .with("author", (author) => author.select("name"))
   .all();
@@ -1784,8 +1781,8 @@ A query can also filter a required singular reference:
 
 ```ts
 const postsWithMatchingAuthors = await content
-  .select("id")
   .from("posts")
+  .select("id")
   .where((fields) => eq(fields.draft, false))
   .with("author", (author) =>
     author.select("name").where((fields) => eq(fields.name, "Grace Hopper")),
@@ -1801,8 +1798,8 @@ Authors can request their posts through the inverse mapping using the same fluen
 
 ```ts
 const authorsWithPosts = await content
-  .select("id", "name")
   .from("authors")
+  .select("id", "name")
   .with("posts", (posts) =>
     posts
       .select("id", "title")
@@ -1838,8 +1835,8 @@ Grace's `featuredPosts` maps her `featuredPostIds` to post IDs with `referenceSi
 
 ```ts
 const graceWithFeaturedPosts = await content
-  .select("id")
   .from("authors")
+  .select("id")
   .where((fields) => eq(fields.id, "grace"))
   .with("featuredPosts", (posts) => posts.select("id", "title"))
   .first();

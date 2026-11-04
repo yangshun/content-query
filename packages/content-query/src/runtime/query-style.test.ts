@@ -43,12 +43,12 @@ describe("styleOfMember", () => {
 
 describe("queryStyleDisabledMessage", () => {
   test("names the disabled member and the configured style", () => {
-    const message: QueryStyleDisabled<"select", "relational"> = queryStyleDisabledMessage(
-      "select",
+    const message: QueryStyleDisabled<"from", "relational"> = queryStyleDisabledMessage(
+      "from",
       "relational",
     );
     expect(message).toBe(
-      'content.select is unavailable because content-query.config sets queryStyle to "relational".',
+      'content.from is unavailable because content-query.config sets queryStyle to "relational".',
     );
     expect(queryStyleDisabledMessage("count", "fluent")).toBe(
       'content.count is unavailable because content-query.config sets queryStyle to "fluent".',

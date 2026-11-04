@@ -6,6 +6,7 @@ import { objectPlan } from "./object.ts";
 import {
   emptyPlan,
   hasSelection,
+  NO_SELECTION_MESSAGE,
   type Expression,
   type QueryPlan,
   type QueryRegistry,
@@ -50,11 +51,7 @@ export function createBuilder(
           "select() requires distinct prepared fields and can be called once per scope.",
         );
       }
-      return branch({
-        select: checkedFields(registry, plan.collection, fields),
-        allFields: undefined,
-        exclude: undefined,
-      });
+      return branch({ select: checkedFields(registry, plan.collection, fields) });
     },
     where(configure: (fields: object) => Expression) {
       if (typeof configure !== "function") {
@@ -162,24 +159,16 @@ export function createBuilder(
       return branch({ adjacent });
     },
     all() {
-      if (!root) {
-        invalidQuery("Nested builders have no terminal methods.");
-      }
-      return run(plan, "all");
+      return rows("all");
     },
     /** Executes a selected root query, matching direct await behavior. */
     execute() {
-      if (!root) {
-        invalidQuery("Nested builders have no terminal methods.");
-      }
-      return run(plan, "all");
+      return rows("all");
     },
     first() {
-      if (!root) {
-        invalidQuery("Nested builders have no terminal methods.");
-      }
-      return run(plan, "first");
+      return rows("first");
     },
+    /** Counts matching entries; counting returns no rows, so it needs no selection. */
     count() {
       if (!root) {
         invalidQuery("Nested builders have no terminal methods.");
@@ -187,14 +176,35 @@ export function createBuilder(
       return run(plan, "count");
     },
   };
-  if (root && hasSelection(plan)) {
+  if (root) {
     // oxlint-disable-next-line unicorn/no-thenable -- Fluent queries intentionally execute when awaited.
     Object.defineProperty(builder, "then", {
       value: (
         fulfilled: Parameters<Promise<unknown>["then"]>[0],
         rejected: Parameters<Promise<unknown>["then"]>[1],
-      ) => run(plan, "all").then(fulfilled, rejected),
+      ) => {
+        let result: Promise<unknown>;
+        try {
+          result = rows("all");
+        } catch (cause) {
+          result = Promise.reject(cause);
+        }
+        return result.then(fulfilled, rejected);
+      },
     });
+  }
+  /**
+   * Runs a row-returning terminal. Awaiting an unselected root rejects rather than resolving to the
+   * builder, so a missing selection fails loudly in JavaScript as well as in TypeScript.
+   */
+  function rows(terminal: "all" | "first"): Promise<unknown> {
+    if (!root) {
+      invalidQuery("Nested builders have no terminal methods.");
+    }
+    if (!hasSelection(plan)) {
+      invalidQuery(NO_SELECTION_MESSAGE);
+    }
+    return run(plan, terminal);
   }
   /** Checks pagination before creating an independent branch. */
   function pagination(key: "limit" | "offset", value: number): unknown {

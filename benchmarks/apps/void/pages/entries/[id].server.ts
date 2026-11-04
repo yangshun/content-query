@@ -10,8 +10,8 @@ export const loader = defineHandler(async (context) => {
     return context.notFound();
   }
   const entry = await content
-    .select("id", "title", "description")
     .from("entries")
+    .select("id", "title", "description")
     .where((fields) => eq(fields.id, id))
     .withPayload("_rendered")
     .first();
@@ -23,6 +23,6 @@ export const loader = defineHandler(async (context) => {
 });
 
 export async function getPrerenderPaths() {
-  const entries = await content.select("id").from("entries").orderBy("order").all();
+  const entries = await content.from("entries").select("id").orderBy("order").all();
   return entries.map(({ id }) => ({ id }));
 }

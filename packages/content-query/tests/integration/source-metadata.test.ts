@@ -61,11 +61,11 @@ export const collections = {
       await writeFile(
         path.join(fixture.root, "consumer.ts"),
         `import { content } from "./.content-query/server.js";
-const files: Promise<{sourceFile:string|undefined}[]> = content.select("sourceFile").from("posts").all();
-const keys: Promise<{recordKey:string|undefined}[]> = content.select("recordKey").from("authors").all();
-const urls: Promise<{url:string}[]> = content.select("url").from("remote").all();
+const files: Promise<{sourceFile:string|undefined}[]> = content.from("posts").select("sourceFile").all();
+const keys: Promise<{recordKey:string|undefined}[]> = content.from("authors").select("recordKey").all();
+const urls: Promise<{url:string}[]> = content.from("remote").select("url").all();
 // @ts-expect-error Source metadata is not an implicit query field.
-content.select("source").from("remote");
+content.from("remote").select("source");
 void [files, keys, urls];
 `,
       );
@@ -100,9 +100,9 @@ void [files, keys, urls];
           "--input-type=module",
           "-e",
           `const {content}=await import("./.content-query/server.js"); console.log(JSON.stringify({
-posts:await content.select("id", "sourceFile").from("posts").all(),
-authors:await content.select("recordKey").from("authors").all(),
-remote:await content.select("url").from("remote").all(),
+posts:await content.from("posts").select("id", "sourceFile").all(),
+authors:await content.from("authors").select("recordKey").all(),
+remote:await content.from("remote").select("url").all(),
 }));`,
         ],
         { cwd: fixture.root },

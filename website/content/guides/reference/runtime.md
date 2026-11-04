@@ -7,15 +7,15 @@ order: 53
 
 ## Content operations
 
-| Property or method            | Purpose                                                                                                      |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `select(...fields)`           | Starts a fluent query; `.from(collection)` binds its collection. No arguments selects all prepared metadata. |
-| `query`                       | Collection namespace: `query.posts.findMany(options?)` and `query.posts.findFirst(options?)`.                |
-| `count(collection, options?)` | Filtered parent count before pagination.                                                                     |
+| Property or method            | Purpose                                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------- |
+| `from(collection)`            | Starts a fluent query that selects nothing until `.select(...fields)` or another request.   |
+| `query`                       | Collection namespace: `query.posts.findMany(options)` and `query.posts.findFirst(options)`. |
+| `count(collection, options?)` | Filtered parent count before pagination.                                                    |
 
-Await a fluent builder directly or call `.all()` / `.execute()` to return an array. `.first()` returns one entry or `undefined`; `.count()` returns the matching parent count. `from()` is available only after `select()`.
+Await a selected fluent builder directly or call `.all()` / `.execute()` to return an array. `.first()` returns one entry or `undefined`; `.count()` returns the matching parent count and needs no selection.
 
-The relational namespace uses `columns`, `with`, `where`, `orderBy`, `limit`, `offset`, `adjacent`, and `payloads` options. Omitting `columns` returns all prepared metadata. Relationships, bodies, and rendered output remain explicit requests.
+The relational namespace uses `columns`, `with`, `where`, `orderBy`, `limit`, `offset`, `adjacent`, and `payloads` options. Queries return only what they select, not even `id` implicitly: omitting `columns` selects no fields, and a query must select fields, relationships, payloads, or adjacency.
 
 ## Payloads
 
