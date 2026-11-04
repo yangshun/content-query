@@ -24,6 +24,8 @@ export type PredicateOperator =
 export type Expression =
   | { kind: "predicate"; operator: PredicateOperator; field: string; value?: unknown }
   | { kind: "relation"; collection: string; field: string; target: string; expression: Expression }
+  /** A fluent `has()` filter that query builders resolve into a `relation` expression. */
+  | { kind: "has"; field: string; expression: Expression }
   | { kind: "and" | "or" | "not"; expressions: readonly Expression[] };
 
 export type QueryPlan = {

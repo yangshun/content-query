@@ -1,6 +1,6 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { detach, isScalar } from "../shared/values.ts";
-import { and, not, or, validateExpression } from "./operators.ts";
+import { and, fieldProxy, not, or, resolveRelations, validateExpression } from "./operators.ts";
 import { checkedFields, checkedOrder, checkedPagination, checkedPayloads } from "./clauses.ts";
 import {
   emptyPlan,
@@ -112,11 +112,9 @@ export function relationalWhere(
       if (typeof condition !== "function") {
         invalidQuery("RAW requires a structured-expression callback.");
       }
-      const expression = condition(
-        new Proxy(Object.create(null) as object, { get: (_target, name) => ({ name }) }),
-      ) as Expression;
+      const expression = condition(fieldProxy()) as Expression;
       validateExpression(expression);
-      expressions.push(expression);
+      expressions.push(resolveRelations(registry, collection, expression));
     } else if (Object.hasOwn(registry[collection]!.relationships, field)) {
       const relation = registry[collection]!.relationships[field]!;
       const expression: Expression = {

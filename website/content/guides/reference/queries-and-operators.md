@@ -23,23 +23,24 @@ Request relationships with fluent `.with(name, configure)` or relational `with: 
 
 Import fluent operators from `content-query/query`.
 
-| Fluent                                 | Relational filter                                             |
-| -------------------------------------- | ------------------------------------------------------------- |
-| `eq`, `ne`                             | `eq`, `ne`; scalar shorthand means equality                   |
-| `gt`, `gte`, `lt`, `lte`               | Same names                                                    |
-| `inArray`, `notInArray`                | `in`, `notIn`                                                 |
-| `contains`, `startsWith`, `endsWith`   | Same names; literal, case-sensitive matching                  |
-| Structured relational predicates       | `like`, `ilike`, `notLike`, `notIlike`; `%` and `_` wildcards |
-| `arrayContains(field, item)`           | `arrayContains: [item]`                                       |
-| `arrayContainsAny`, `arrayContainsAll` | `arrayOverlaps`, `arrayContains`                              |
-| Structured relational predicates       | `arrayContained`                                              |
-| `isNull`                               | `isNull`, `isNotNull` with boolean values                     |
-| `isUndefined`, `isMissing`             | Same names with boolean values                                |
-| `and`, `or`, `not`                     | `AND`, `OR`, `NOT` at query or field scope                    |
+| Fluent                                 | Relational filter                                  |
+| -------------------------------------- | -------------------------------------------------- |
+| `eq`, `ne`                             | `eq`, `ne`; scalar shorthand means equality        |
+| `gt`, `gte`, `lt`, `lte`               | Same names                                         |
+| `inArray`, `notInArray`                | `in`, `notIn`                                      |
+| `contains`, `startsWith`, `endsWith`   | Same names; literal, case-sensitive matching       |
+| `like`, `ilike`, `notLike`, `notIlike` | Same names; `%` and `_` wildcards                  |
+| `arrayContains(field, item)`           | `arrayContains: [item]`                            |
+| `arrayContainsAny`, `arrayContainsAll` | `arrayOverlaps`, `arrayContains`                   |
+| `arrayContained`                       | Same name                                          |
+| `isNull`                               | `isNull`, `isNotNull` with boolean values          |
+| `isUndefined`, `isMissing`             | Same names with boolean values                     |
+| `and`, `or`, `not`                     | `AND`, `OR`, `NOT` at query or field scope         |
+| `has(fields.author, filter?)`          | `author: { ... }`, `author: true`, `author: false` |
 
 Operators are checked against field types. `ilike` ignores case; the other string patterns are case-sensitive. A backslash escapes pattern wildcards. Null, undefined, and missing properties have distinct semantics.
 
-Relational filters can traverse declared relationships: `where: { author: { name: "Ada" } }` matches parents with a matching author. `author: true` tests existence and `author: false` tests absence. Filters inside `with` affect included relationships rather than parent membership.
+Both APIs filter through declared relationships. Fluent `has(fields.author, (author) => eq(author.name, "Ada"))` and relational `where: { author: { name: "Ada" } }` match parents with a matching author. `has(fields.author)` and `author: true` test existence; `not(has(fields.author))` and `author: false` test absence. A `has()` filter uses the related collection's fields and can nest further relationships. Filters inside `with` affect included relationships rather than parent membership.
 
 For fields named `AND`, `OR`, `NOT`, or `RAW`, use `where: { RAW: (fields) => eq(fields.AND, value) }`. `RAW` accepts a structured expression callback, not a SQL string.
 

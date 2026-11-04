@@ -6,7 +6,7 @@ import { createSession, sessionInternals } from "../preparation/session.ts";
 import { createArtifactRuntime } from "../internal.ts";
 import { ARTIFACT_VERSION, CODEC_VERSION, type EncodedCollection } from "../artifacts/types.ts";
 import { encode } from "../shared/values.ts";
-import { eq, type QueryOptions, type CountOptions } from "../query.ts";
+import { eq, has, like, type QueryOptions, type CountOptions } from "../query.ts";
 import { file, type BodyLoader } from "../loaders.ts";
 import type { Content } from "../runtime.ts";
 
@@ -410,6 +410,14 @@ async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
   void relatedName;
   // @ts-expect-error Unselected fields, including id, are absent from the result.
   void relatedOnly[0]!.id;
+  void posts.where((fields) => has(fields.author, (author) => eq(author.name, "Ada")));
+  void posts.where((fields) => like(fields.title, "A%"));
+  // @ts-expect-error has() accepts only relationships.
+  void posts.where((fields) => has(fields.title));
+  // @ts-expect-error like() requires a string field.
+  void posts.where((fields) => like(fields.rank, "1%"));
+  // @ts-expect-error Related filters use the related collection's fields.
+  void posts.where((fields) => has(fields.author, (author) => eq(author.title, "Alpha")));
   // @ts-expect-error query is a collection namespace, not a callable builder.
   content.query("posts");
   // @ts-expect-error Relational entry points live under their collection namespace.

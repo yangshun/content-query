@@ -75,7 +75,7 @@ Outstanding tasks and future design notes. Implemented capabilities are document
 
 Status: deferred beyond v1 on October 18, 2026.
 
-Relational parent predicates over declared relationships are implemented through `where: { author: { name: "Ada" } }` and relationship existence booleans. Composite multi-field matching and automatic traversal through linking collections still need separate query and declaration contracts. No composite-key or `through` public syntax is selected. Applications can query declared links and request bounded nested relationships in v1. General-purpose joins remain a separate future capability.
+Relational parent predicates over declared relationships are implemented through `where: { author: { name: "Ada" } }` and relationship existence booleans, and fluent queries express the same filters with `has()`. Composite multi-field matching and automatic traversal through linking collections still need separate query and declaration contracts. No composite-key or `through` public syntax is selected. Applications can query declared links and request bounded nested relationships in v1. General-purpose joins remain a separate future capability.
 
 ### Schema generation and inference
 

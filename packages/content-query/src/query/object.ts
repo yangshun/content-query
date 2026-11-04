@@ -1,6 +1,6 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { detach, isScalar } from "../shared/values.ts";
-import { and, not, or, validateExpression } from "./operators.ts";
+import { and, fieldProxy, not, or, resolveRelations, validateExpression } from "./operators.ts";
 import { checkedFields, checkedOrder, checkedPagination } from "./clauses.ts";
 import {
   emptyPlan,
@@ -112,12 +112,10 @@ export function objectPlan(
   if (options.where !== undefined) {
     const expression =
       typeof options.where === "function"
-        ? (options.where(
-            new Proxy(Object.create(null) as object, { get: (_target, name) => ({ name }) }),
-          ) as Expression)
+        ? (options.where(fieldProxy()) as Expression)
         : objectWhere(options.where);
     validateExpression(expression);
-    plan.filters = [detach(expression)];
+    plan.filters = [detach(resolveRelations(registry, collection, expression))];
   }
   if (options.orderBy !== undefined) {
     for (const order of Array.isArray(options.orderBy) ? options.orderBy : [options.orderBy]) {

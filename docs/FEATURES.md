@@ -18,6 +18,7 @@
 - Single-record queries avoid redundant default sorting, and built-in glob acquisition bounds outstanding file reads to 64 while retaining deterministic snapshots and grouped diagnostics.
 - Markdown folder `source` shorthand and explicit Markdown/JSON/YAML/TOML source objects alongside native loaders.
 - Relational `adjacent` and fluent `selectAdjacent()` projections under `_adjacent`, default ID neighbors, independent filtered/ordered sibling scopes, and typed nested neighbor selection.
+- Fluent operators cover every relational filter: `like`, `ilike`, `notLike`, `notIlike`, `arrayContained`, and `has()` relationship filters with existence checks and nested related-field filters.
 - Generated `CollectionKey`, `CollectionData`, and `Collections` aliases for physical and `content-query:server` entries.
 - Browser-safe `content-query:client` update subscriptions with serialized router revalidation and full-reload fallback; Void preserves component state and scroll.
 - Forward/inverse relationships, explicit reference ownership, authored arrays, nested selection, and per-parent pagination.

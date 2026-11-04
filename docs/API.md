@@ -196,7 +196,7 @@ Queries constrained by ID equality, such as `.where((fields) => eq(fields.id, id
 
 Detachment copies a result directly when it contains only primitives, plain objects, dense arrays, and dates. This covers typical field selections and `_rendered` payloads, including long HTML strings. A result containing any other value, such as a `Map` or an array hole, is detached as a whole through the devalue round trip. Repeated references, cycles, mutation isolation, and the supported-value rules are the same on both paths.
 
-Filtering uses structured expressions from `content-query/query`: scalar equality/comparison/choice operators, literal string matching, scalar-array membership, absence checks, and boolean composition. See the [operator matrix](./PLAN.md#filtering). Sorting uses deterministic Unicode code-point order and ID tie-breakers, with nullish/unordered special values last. Pagination accepts nonnegative safe integers.
+Filtering uses structured expressions from `content-query/query`: scalar equality/comparison/choice operators, literal string matching, `like`/`ilike`/`notLike`/`notIlike` patterns, scalar-array membership including `arrayContained`, absence checks, boolean composition, and relationship filters. `has(fields.author, (author) => eq(author.name, "Ada"))` matches parents with a matching related entry; `has(fields.author)` tests existence, and `not(has(...))` tests absence. The fluent operators cover every relational filter. See the [operator matrix](./PLAN.md#filtering). Sorting uses deterministic Unicode code-point order and ID tie-breakers, with nullish/unordered special values last. Pagination accepts nonnegative safe integers.
 
 Relationships support forward/inverse fields, authored ID arrays, explicit reference ownership, and nested fluent queries. Every relationship scope, fluent or relational, selects its own data. Many scopes support per-parent ordering/pagination; singular scopes support filtering and return `null` if their target is excluded. Preparation rejects dangling/ambiguous authored references and invalid singular cardinality. Array references preserve order and duplicates; inverse membership is distinct.
 
@@ -290,7 +290,7 @@ Builds record the style in each revision and in the generated manifest. Accessin
 
 `QueryStyle` is exported from `content-query` and `content-query/runtime`, and `Content<Registry, Style>` takes the style as an optional second type argument. Standalone `buildContent<Registry, Style>()` sessions are typed by their type arguments, for example `buildContent<typeof collections, typeof queryStyle>()`; without `Style`, they type both APIs and rely on the runtime check.
 
-Fluent queries do not support `like`, `ilike`, `notLike`, `notIlike`, `arrayContained`, or filters through relationships. Choose `"fluent"` only when those queries are unnecessary.
+Both styles support the same filters, so either value can express every query.
 
 ## Backends and Vite
 
