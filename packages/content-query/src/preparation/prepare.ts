@@ -23,15 +23,26 @@ import type {
   PayloadDefinition,
 } from "../collection/types.ts";
 import type { LoaderEntry } from "../loaders/types.ts";
+import path from "node:path";
+import { createEntryFiles, entryFolder, type Dependency } from "./files.ts";
 
 export type CandidateSources = Map<string, Map<string, LoaderEntry>>;
-type PreparedEntry = {
+/** One resolved payload variant: its value, encoded module text, and the files it read. */
+export type PayloadNode = { value: unknown; encoded: string; dependencies: readonly Dependency[] };
+/** A payload's variant combinations for one entry and the variants resolved so far. */
+export type CachedPayload = {
+  combinations: readonly Record<string, string>[];
+  nodes: Map<string, PayloadNode>;
+};
+export type PreparedEntry = {
   signature?: string;
   definition: CollectionDefinition;
   record: QueryRecord;
   payload: BuiltinPayload;
-  /** Resolved custom payload values by name and canonical variant key, reused while unchanged. */
-  payloads?: Map<string, Map<string, unknown>>;
+  /** Files computed resolvers read; an edit to one re-prepares the whole entry. */
+  dependencies: readonly Dependency[];
+  /** Resolved custom payloads by name, reused per variant while unchanged. */
+  payloads?: Map<string, CachedPayload>;
 };
 /** A custom payload declaration as preparation calls it, independent of its inferred types. */
 type Payload = PayloadDefinition<Record<string, unknown>, unknown, Record<string, string>>;
@@ -39,7 +50,10 @@ export type PreparationCache = Map<string, PreparedEntry>;
 
 import { isRecord, validate, renderedPayload } from "./validation.ts";
 
-/** Prepares one immutable revision with loader-defined source metadata, aggregating failures. */
+/**
+ * Prepares one immutable revision with loader-defined source metadata, aggregating failures.
+ * `root` is the project root that entry folders and `sharedFiles` resolve against.
+ */
 export async function prepareRevision(
   registry: CollectionRegistry,
   sources: CandidateSources,
@@ -51,6 +65,7 @@ export async function prepareRevision(
     string,
     WeakMap<object, import("../collection/types.ts").Schema | undefined>
   >,
+  { root = process.cwd() }: { root?: string } = {},
 ): Promise<PreparedRevision> {
   const diagnostics: ContentDiagnostic[] = [...sourceDiagnostics];
   const collections: Record<string, PreparedCollection> = Object.create(null) as Record<
@@ -76,7 +91,9 @@ export async function prepareRevision(
       });
       continue;
     }
-    const payloadProblem = invalidPayloads(definition.payloads, declarationNames);
+    const payloadProblem =
+      invalidPayloads(definition.payloads, declarationNames) ??
+      invalidSharedFiles(definition.sharedFiles);
     if (payloadProblem) {
       diagnostics.push({
         code: "validation-error",
@@ -87,6 +104,7 @@ export async function prepareRevision(
       continue;
     }
     const descriptor = builtinLoader(definition.loader);
+    const shared = (definition.sharedFiles ?? []).map((directory) => path.resolve(root, directory));
     for (const entry of sources.get(collectionName)?.values() ?? []) {
       signal.throwIfAborted();
       const context = {
@@ -138,6 +156,16 @@ export async function prepareRevision(
         const metadata = detach(validated);
         const values: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
         const before = diagnostics.length;
+        // Files computed resolvers read belong to the entry: editing one re-prepares it.
+        const dependencies: Dependency[] = [];
+        const files = createEntryFiles({
+          root,
+          folder: entryFolder(root, entry.sourceData),
+          shared,
+          entry: entry.id,
+          signal,
+          dependencies,
+        });
         for (const [field, computedField] of Object.entries(computed)) {
           try {
             const result = await computedField.resolve({
@@ -146,6 +174,7 @@ export async function prepareRevision(
               source: detach(entry.sourceData) as never,
               data: detach(metadata) as never,
               readBody: async () => entry.body,
+              files,
               signal,
             });
             values[field] = await validate(computedField.schema, result, {
@@ -154,7 +183,7 @@ export async function prepareRevision(
             });
           } catch (cause) {
             diagnostics.push(
-              ...contentError(cause, {
+              ...located(cause, {
                 ...context,
                 path: [field],
                 code: "validation-error",
@@ -196,7 +225,7 @@ export async function prepareRevision(
           }
         }
         encode(payload);
-        cache.set(key, { definition, signature, record, payload });
+        cache.set(key, { definition, signature, record, payload, dependencies });
         records.push(record);
         if (Object.keys(payload).length) {
           builtins.set(entry.id, async () => payload);
@@ -261,6 +290,12 @@ export async function prepareRevision(
           cache,
           signal,
           diagnostics,
+          {
+            root,
+            shared: (definition.sharedFiles ?? []).map((directory) =>
+              path.resolve(root, directory),
+            ),
+          },
         );
       }
     }
@@ -292,7 +327,8 @@ function invalidPayloads(
     if (!name || name.startsWith("_") || declarationNames.includes(name)) {
       return `Custom payload "${name}" must be named without a leading "_" and must not repeat a computed field or relationship.`;
     }
-    const { schema, resolve, variants, combinations } = (declaration ?? {}) as Partial<Payload>;
+    const { schema, resolve, variants, combinations, cache } = (declaration ??
+      {}) as Partial<Payload>;
     if (
       !schema ||
       typeof schema !== "object" ||
@@ -322,6 +358,9 @@ function invalidPayloads(
       (typeof combinations !== "function" || !Object.keys(variants ?? {}).length)
     ) {
       return `Payload "${name}" combinations() must be a function and requires declared variants.`;
+    }
+    if (cache !== undefined && typeof cache !== "boolean") {
+      return `Payload "${name}" cache must be a boolean.`;
     }
   }
   return undefined;
@@ -385,8 +424,49 @@ async function variantCombinations(
 }
 
 /**
+ * Adds the location of a resolver failure to every diagnostic that lacks it. A `files` helper error
+ * keeps its own source file and field path; the entry, payload, and variant come from `location`.
+ *
+ * @param cause - The resolver failure.
+ * @param location - The entry, and the payload and variant when resolving one.
+ * @returns A contextual error whose diagnostics all name the location.
+ */
+function located(cause: unknown, location: ContentDiagnostic): ContentError {
+  if (!(cause instanceof ContentError)) {
+    return contentError(cause, location);
+  }
+  return groupDiagnostics(
+    cause.diagnostics.map((diagnostic) => ({
+      ...location,
+      ...Object.fromEntries(Object.entries(diagnostic).filter(([, value]) => value !== undefined)),
+    })),
+  );
+}
+
+/**
+ * Checks a collection's `sharedFiles` directories.
+ *
+ * @param sharedFiles - The declared shared directories.
+ * @returns A diagnostic message, or undefined when the declaration is valid.
+ */
+function invalidSharedFiles(sharedFiles: unknown): string | undefined {
+  if (
+    sharedFiles !== undefined &&
+    (!Array.isArray(sharedFiles) ||
+      !sharedFiles.every((directory) => typeof directory === "string" && directory))
+  ) {
+    return "sharedFiles must list directories as nonempty strings.";
+  }
+  return undefined;
+}
+
+/** A payload loader that also carries its encoded module text, so publishing skips re-encoding. */
+export type PayloadLoader = (() => Promise<unknown>) & { readonly encoded?: string };
+
+/**
  * Resolves, validates, and encodes a collection's custom payloads for every entry and variant.
- * Entries unchanged since the previous revision reuse their cached values.
+ * Each variant is cached on its own with the files it read, so unchanged entries reuse every
+ * variant and an invalidated variant re-resolves alone.
  *
  * @returns Lazy loaders by payload name, entry ID, and canonical variant key.
  */
@@ -398,46 +478,43 @@ async function preparePayloads(
   cache: PreparationCache,
   signal: AbortSignal,
   diagnostics: ContentDiagnostic[],
+  roots: { root: string; shared: readonly string[] },
 ): Promise<PreparedCollection["payloads"]> {
   const table = new Map(
-    Object.keys(payloads).map((name) => [
-      name,
-      new Map<string, Map<string, () => Promise<unknown>>>(),
-    ]),
+    Object.keys(payloads).map((name) => [name, new Map<string, Map<string, PayloadLoader>>()]),
   );
   for (const record of records) {
     const entry = sources?.get(record.id);
     const cached = cache.get(JSON.stringify([collection, record.id]));
     // Resolvers receive metadata plus computed fields; the ID is a separate context property.
     const data = Object.fromEntries(Object.entries(record).filter(([field]) => field !== "id"));
+    const folder = entryFolder(roots.root, entry?.sourceData);
+    /** Each resolver receives its own copies, so it cannot change another's inputs. */
+    const context = () => ({
+      collection,
+      id: record.id,
+      source: detach(entry?.sourceData) as never,
+      data: detach(data),
+      signal,
+    });
     for (const [name, payload] of Object.entries(payloads)) {
       signal.throwIfAborted();
-      let values = cached?.payloads?.get(name);
-      if (!values) {
-        const resolved = new Map<string, unknown>();
-        let complete = true;
-        const base: ContentDiagnostic = {
-          code: "validation-error",
-          operation: "build",
-          collection,
-          id: record.id,
-          source: entry?.source,
-          payload: name,
-          message: "",
-        };
-        /** Each resolver receives its own copies, so it cannot change another's inputs. */
-        const context = () => ({
-          collection,
-          id: record.id,
-          source: detach(entry?.sourceData) as never,
-          data: detach(data),
-          signal,
-        });
-        let combinations: Record<string, string>[] = [];
+      const reuse = payload.cache !== false;
+      const previous = reuse ? cached?.payloads?.get(name) : undefined;
+      const base: ContentDiagnostic = {
+        code: "validation-error",
+        operation: "build",
+        collection,
+        id: record.id,
+        source: entry?.source,
+        payload: name,
+        message: "",
+      };
+      let combinations = previous?.combinations;
+      if (!combinations) {
         try {
           combinations = await variantCombinations(name, payload, { ...context(), variants: {} });
         } catch (cause) {
-          complete = false;
           diagnostics.push(
             ...contentError(cause, {
               ...base,
@@ -445,50 +522,72 @@ async function preparePayloads(
                 cause instanceof Error ? cause.message : `Payload "${name}" variants failed.`,
             }).diagnostics,
           );
-        }
-        for (const variant of combinations) {
-          signal.throwIfAborted();
-          const location = { ...base, variant };
-          try {
-            const result = await payload.resolve({
-              ...context(),
-              variant: { ...variant },
-              readBody: async () => entry?.body,
-            });
-            const value = detach(await validate(payload.schema, result, location));
-            encode(value);
-            resolved.set(variantKey(variant), value);
-          } catch (cause) {
-            complete = false;
-            const formatted =
-              cause &&
-              typeof cause === "object" &&
-              "path" in cause &&
-              typeof cause.path === "string"
-                ? cause.path
-                : "";
-            diagnostics.push(
-              ...contentError(cause, {
-                ...location,
-                path: formatted ? valuePath(formatted) : undefined,
-                message: `Payload ${payloadIdentity(name, variant)} failed: ${cause instanceof Error ? cause.message : String(cause)}${formatted ? ` (at ${formatted})` : ""}`,
-              }).diagnostics,
-            );
-          }
-        }
-        signal.throwIfAborted();
-        if (!complete) {
           continue;
         }
-        values = resolved;
-        if (cached) {
-          cached.payloads ??= new Map();
-          cached.payloads.set(name, values);
+      }
+      const nodes = new Map<string, PayloadNode>();
+      let complete = true;
+      for (const variant of combinations) {
+        signal.throwIfAborted();
+        const key = variantKey(variant);
+        const reused = previous?.nodes.get(key);
+        if (reused) {
+          nodes.set(key, reused);
+          continue;
         }
+        const location = { ...base, variant };
+        const dependencies: Dependency[] = [];
+        try {
+          const result = await payload.resolve({
+            ...context(),
+            variant: { ...variant },
+            readBody: async () => entry?.body,
+            files: createEntryFiles({
+              root: roots.root,
+              folder,
+              shared: roots.shared,
+              entry: record.id,
+              signal,
+              dependencies,
+            }),
+          });
+          const value = detach(await validate(payload.schema, result, location));
+          nodes.set(key, { value, encoded: encode(value), dependencies });
+        } catch (cause) {
+          complete = false;
+          const formatted =
+            cause && typeof cause === "object" && "path" in cause && typeof cause.path === "string"
+              ? cause.path
+              : "";
+          diagnostics.push(
+            ...located(cause, {
+              ...location,
+              path: formatted ? valuePath(formatted) : undefined,
+              message: `Payload ${payloadIdentity(name, variant)} failed: ${cause instanceof Error ? cause.message : String(cause)}${formatted ? ` (at ${formatted})` : ""}`,
+            }).diagnostics,
+          );
+        }
+      }
+      signal.throwIfAborted();
+      // Resolved variants are kept even when another fails, so a retry resolves only the failures.
+      if (cached && reuse) {
+        cached.payloads ??= new Map();
+        cached.payloads.set(name, { combinations, nodes });
+      }
+      if (!complete) {
+        continue;
       }
       table
         .get(name)!
-        .set(record.id, new Map([...values].map(([key, value]) => [key, async () => value])));
+        .set(
+          record.id,
+          new Map(
+            [...nodes].map(([key, node]) => [
+              key,
+              Object.assign(async () => node.value, { encoded: node.encoded }),
+            ]),
+          ),
+        );
     }
   }
   return table;

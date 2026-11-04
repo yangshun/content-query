@@ -10,7 +10,15 @@ import type { ContentState, PreparedRevision } from "../runtime/revision.ts";
 import type { CollectionRegistry } from "../collection/types.ts";
 import type { LoaderCleanup } from "../loaders/types.ts";
 import { loadRegistry } from "./config.ts";
-import { watchProject, watchSources, type SourceWatchOptions } from "./watch.ts";
+import { watchDependencies, watchProject, watchSources, type SourceWatchOptions } from "./watch.ts";
+import {
+  dependencyIndex,
+  dependencyPaths,
+  dependents,
+  invalidateNodes,
+  type DependencyIndex,
+  type DependentNode,
+} from "./dependencies.ts";
 import { createLoaderSession, type LoaderSession } from "./loaders/session.ts";
 import { queryRegistry } from "../collection/registry.ts";
 
@@ -55,6 +63,8 @@ export type SessionOptions = {
 };
 type Command =
   | { kind: "invalidate"; collection: string }
+  /** Files that resolvers read changed; only these entries and payload variants re-resolve. */
+  | { kind: "payloads"; nodes: readonly DependentNode[] }
   | { kind: "error"; cause: unknown }
   | { kind: "config" };
 export type SessionInternals = {
@@ -168,8 +178,27 @@ export async function createSession<
     dependencies: () => configDependencies,
     configChanged: () => enqueue({ kind: "config" }),
     invalidated: (collection) => enqueue({ kind: "invalidate", collection }),
+    dependencyChanged: (event, filename) => dependencyChanged(event, filename),
     failed: (cause) => enqueue({ kind: "error", cause }),
   };
+  // Files and globs that cached nodes read, rebuilt lazily after the cache changes.
+  let index: DependencyIndex | undefined;
+  // Events seen while an attempt prepares, replayed once its nodes are cached.
+  let preparing = false;
+  const recentEvents: [event: string, filename: string][] = [];
+  const dependencyWatcher = options.watch ? watchDependencies(watchOptions) : undefined;
+
+  /** Invalidates only the cached nodes that read a changed file. */
+  function dependencyChanged(event: string, filename: string): void {
+    if (preparing) {
+      recentEvents.push([event, filename]);
+    }
+    index ??= dependencyIndex(cache);
+    const nodes = dependents(index, event, filename);
+    if (nodes.length) {
+      enqueue({ kind: "payloads", nodes });
+    }
+  }
 
   /** Queues ordered notifications and makes any in-flight preparation obsolete. */
   function enqueue(command: Command): void {
@@ -340,6 +369,7 @@ export async function createSession<
     state.registry = queryRegistry(registry);
     candidates.clear();
     cache.clear();
+    index = undefined;
     loadFailures.clear();
     configurationError = undefined;
     installed = true;
@@ -349,6 +379,20 @@ export async function createSession<
   }
   /** Acquires invalidated snapshots and publishes only the complete current attempt. */
   async function prepare(names: Set<string>): Promise<void> {
+    preparing = true;
+    try {
+      await prepareAttempt(names);
+    } finally {
+      preparing = false;
+      index = undefined;
+      // A resolver may have read a file before an edit that arrived while it was resolving.
+      for (const [event, filename] of recentEvents.splice(0)) {
+        dependencyChanged(event, filename);
+      }
+    }
+  }
+  /** Acquires snapshots, prepares, and publishes one attempt. */
+  async function prepareAttempt(names: Set<string>): Promise<void> {
     const currentGeneration = generation;
     attempt = new AbortController();
     const signal = attempt.signal;
@@ -392,6 +436,7 @@ export async function createSession<
         options.watch,
         failures.flatMap((error) => error.diagnostics),
         new Map([...loaders].map(([name, loader]) => [name, loader.parsed])),
+        { root: options.root },
       );
       if (disposed || currentGeneration !== generation) {
         return;
@@ -405,6 +450,7 @@ export async function createSession<
       }
       state.revision = revision;
       state.error = undefined;
+      dependencyWatcher?.add(dependencyPaths((index = dependencyIndex(cache))));
       options.change?.(state);
       notifySources({ type: "ready", snapshot: sources() });
     } catch (cause) {
@@ -451,6 +497,9 @@ export async function createSession<
             }
           } else if (command.kind === "invalidate") {
             stale.add(command.collection);
+          } else if (command.kind === "payloads") {
+            invalidateNodes(cache, command.nodes);
+            index = undefined;
           }
         } catch (cause) {
           if (command.kind === "config") {
@@ -484,6 +533,7 @@ export async function createSession<
     attempt?.abort();
     const results = await Promise.allSettled([
       watcher?.close() ?? Promise.resolve(),
+      dependencyWatcher?.close() ?? Promise.resolve(),
       releaseSubscriptions(),
     ]);
     const failed = results.find((result) => result.status === "rejected");

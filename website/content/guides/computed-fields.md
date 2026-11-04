@@ -96,7 +96,7 @@ computed: {
 
 Resolvers run during preparation and can be asynchronous. Their results are validated by the field schema and stored for runtime queries.
 
-Resolvers receive the registry key `collection`, entry `id`, validated `data`, optional loader-defined `source` metadata, captured `readBody()` text when available, and cancellation `signal`. They work on one entry; collection-wide calculations belong in application queries.
+Resolvers receive the registry key `collection`, entry `id`, validated `data`, optional loader-defined `source` metadata, captured `readBody()` text when available, tracked [`files` helpers](/docs/payloads#read-related-files) for files beside the entry, and cancellation `signal`. They work on one entry; collection-wide calculations belong in application queries. During development, editing a file a resolver read through `files` prepares that entry again.
 
 ## Loader-specific source metadata
 

@@ -435,8 +435,8 @@ const coding = defineCollection({
     detail: {
       schema: schema.object({ hints: schema.string() }),
       variants: { locale: "locales" },
-      resolve: async ({ source, variant }) => ({
-        hints: await readHints(source!.filePath, variant.locale),
+      resolve: async ({ files, variant }) => ({
+        hints: await files.text(`hints/${variant.locale}.md`),
       }),
     },
   },
@@ -448,9 +448,10 @@ const exercise = await content.query.coding.findFirst({
 });
 ```
 
-- **Declarations.** Each payload has a `schema` and `resolve(context)`, where `context` holds `collection`, `id`, `data` (validated metadata plus computed fields), `source`, `variant`, `readBody()`, and `signal`. Names cannot start with `_` or repeat a computed field or relationship.
+- **Declarations.** Each payload has a `schema` and `resolve(context)`, where `context` holds `collection`, `id`, `data` (validated metadata plus computed fields), `source`, `variant`, `readBody()`, tracked `files` helpers, and `signal`. Names cannot start with `_` or repeat a computed field or relationship.
 - **Variants.** `variants` maps each key to the name of a string-array data field, read per entry (a missing value means none), or to a fixed list. Preparation resolves the cross product of the keys' values, or the combinations `combinations({ ...context, variants })` returns; each must give every key one listed value. Variant values are not callbacks, so TypeScript can infer variant keys inline; derive values that need logic in a computed field.
-- **Preparation.** Payloads resolve after relationships validate, are schema-validated and encoded, and are cached per entry, so unchanged entries reuse their values. Generated output stores one module per entry and variant at `collections/<collection>/payloads/<payload>/<hash>.js`. Files a resolver reads besides the entry are not yet tracked during development.
+- **Preparation.** Payloads resolve after relationships validate, are schema-validated and encoded, and are cached per variant, so unchanged entries reuse their values and publishing reuses their encodings. Generated output stores one module per entry and variant at `collections/<collection>/payloads/<payload>/<hash>.js`.
+- **Related files.** Computed and payload resolvers receive tracked `files` helpers: `text(path)`, `bytes(path)`, `glob({ pattern, base?, generateId?, retainBody?, schema? })` and `file(path, { parser?, schema? })`, which parse like the `glob()` and `file()` loaders and return `{ id, data, body?, filePath }` entries, and `renderMarkdown(body)`. Paths are relative to the entry's folder (its file's folder, or a custom loader's `source.directory`) and must stay inside it or a directory in the collection's `sharedFiles`. Schema failures name the file as `source` and the field as `path`. During development, an edit to a read file re-resolves only the payload variants that read it, a glob that gains or loses a match re-resolves its readers, and a file a computed field read re-prepares that entry. `cache: false` resolves a payload again in every revision, for inputs `files` cannot track.
 - **Requests.** Variant requests name every key: relational `payloads: { detail: { locale: "fr-FR" } }` or fluent `.withPayload("detail", { locale: "fr-FR" })`. A combination the entry lacks rejects with `variant-not-found`, whose `payload` and `variant` properties name it.
 - **Types.** Payload values and variant keys are inferred from the declaration. `content-query` exports `PayloadData<Definition, Name>` and `VariantOf<Definition, Name>`, and generated declarations export `CollectionPayload<Collection, Payload>`.
 - **Diagnostics.** Payload failures carry `payload` and `variant` with the collection, entry, source, and field `path`, through the Vite development transport, and the CLI prints them as `detail[locale=fr-FR]`.

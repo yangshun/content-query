@@ -138,14 +138,14 @@ Reference: [Astro's live collections](https://docs.astro.build/en/guides/content
 
 ### Named per-entry payloads
 
-Status: built-in `_body` and `_rendered` payloads and payload queries shipped in 0.2.0 on November 2, 2026. Custom payloads (step 1 below) were implemented on November 4, 2026; the remaining steps are agreed but not implemented. Variants name a string-array data field or list fixed values instead of taking enumerator callbacks, because TypeScript cannot infer variant keys from an object of unannotated callbacks.
+Status: built-in `_body` and `_rendered` payloads and payload queries shipped in 0.2.0 on November 2, 2026. Custom payloads and tracked related files (steps 1 and 2 below) were implemented on November 4, 2026. Steps 3 and 4 are agreed but deferred until later. Variants name a string-array data field or list fixed values instead of taking enumerator callbacks, because TypeScript cannot infer variant keys from an object of unannotated callbacks.
 
 Entries assembled from many files, such as an exercise folder with a manifest, Markdown sections, per-language code, and test cases, need large typed data that catalog queries never load. Planned work, in order:
 
 1. **Custom payloads (implemented).** `defineCollection({ payloads: { detail: { schema, variants?, combinations?, resolve } } })`, resolved and schema-validated during preparation and stored one module per entry and variant. Custom payload names cannot start with an underscore, which is reserved for built-ins such as `_body` and `_rendered`. Variant keys are required with no fallback; a missing combination fails with `variant-not-found`. Diagnostics gain `payload` and `variant` fields.
-2. **Tracked related files.** `files.glob()`, `files.file()`, `files.renderMarkdown()`, `files.text()`, and `files.bytes()` mirror the loaders, are rooted at the manifest's folder, and record dependencies so edits, additions, and deletions re-resolve only affected payloads.
-3. **Bounded preparation.** Concurrent payload resolution with streamed writes, a persistent preparation cache, on-demand payload resolution in Vite development and tests, a `content-query check` command, and cross-entry validators.
-4. **Assets and delivery.** Content-hashed `AssetRef<Value>` payloads read with `content.readAsset(ref)`, and `bundle` or `files` delivery with Node and Cloudflare Workers readers.
+2. **Tracked related files (implemented).** `files.glob()`, `files.file()`, `files.renderMarkdown()`, `files.text()`, and `files.bytes()` mirror the loaders, are rooted at the entry's folder plus the collection's `sharedFiles`, and record dependencies so edits, additions, and deletions re-resolve only affected payload variants. `cache: false` opts out for untracked inputs. Dependency content hashes and a payload `version` option move to step 3, where the persistent cache needs them; within a session, file events drive invalidation.
+3. **Bounded preparation (deferred).** Concurrent payload resolution with streamed writes, a persistent preparation cache, on-demand payload resolution in Vite development and tests, a `content-query check` command, and cross-entry validators.
+4. **Assets and delivery (deferred).** Content-hashed `AssetRef<Value>` payloads read with `content.readAsset(ref)`, and `bundle` or `files` delivery with Node and Cloudflare Workers readers.
 
 ### Build-time transforms
 
@@ -161,7 +161,7 @@ Before implementation, define output type inference and validation, execution or
 
 Status: deferred beyond v1 on October 18, 2026, from the [library comparison](./COMPARISONS.md#gaps).
 
-`ComputedContext` exposes one entry's `collection`, `id`, optional loader-defined `source`, `data`, `readBody()`, and `signal`. Per-tag counts and sidebar order require application queries after preparation. Previous/next entries are available through the query-time `_adjacent` projection, with explicitly selected neighbor fields through relational `adjacent: { scope: "results", columns }` and fluent `selectAdjacent(...fields)`. Content Collections exposes `documents()` and `collection.documents()` in `transform`, and Velite's `prepare` hook receives every collection. Ordering files such as `meta.json` remain [parked](#parked).
+`ComputedContext` exposes one entry's `collection`, `id`, optional loader-defined `source`, `data`, `readBody()`, tracked `files` helpers for files beside the entry, and `signal`. Per-tag counts and sidebar order require application queries after preparation. Previous/next entries are available through the query-time `_adjacent` projection, with explicitly selected neighbor fields through relational `adjacent: { scope: "results", columns }` and fluent `selectAdjacent(...fields)`. Content Collections exposes `documents()` and `collection.documents()` in `transform`, and Velite's `prepare` hook receives every collection. Ordering files such as `meta.json` remain [parked](#parked).
 
 A collection-wide context changes invalidation: one edit can affect every dependent computed value, possibly across collections. Define whether the context exposes validated metadata only or earlier computed results, how dependency cycles are rejected, how cross-collection reads relate to declared relationships, and how watch updates recompute dependents. Use the existing query-time adjacency APIs when collection-wide preparation is unnecessary.
 

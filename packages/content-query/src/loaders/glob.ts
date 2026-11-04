@@ -40,11 +40,21 @@ export function glob(options: GlobOptions): Loader<FileSource> {
   } as MarkedLoader<FileSource>;
 }
 
-/** Captures complete matching Markdown and data sources before deployment. */
+/**
+ * Captures complete matching Markdown and data sources before deployment.
+ *
+ * @param descriptor - The glob loader's options.
+ * @param root - The project root that relative bases and source paths use.
+ * @param signal - Cancels outstanding reads.
+ * @param options - `warnEmpty: false` skips the warning when nothing matches, for callers where an
+ * empty result is expected, such as resolvers' `files.glob()`.
+ * @returns Loader entries in sorted path order.
+ */
 export async function loadGlob(
   descriptor: Extract<BuiltinLoader, { kind: "glob" }>,
   root: string,
   signal: AbortSignal,
+  { warnEmpty = true }: { warnEmpty?: boolean } = {},
 ): Promise<LoaderEntry<FileSource>[]> {
   const resolved = builtinPath(descriptor, root);
   const entries = await discover(descriptor.options.pattern, {
@@ -52,7 +62,7 @@ export async function loadGlob(
     onlyFiles: true,
     dot: false,
   });
-  if (entries.length === 0) {
+  if (entries.length === 0 && warnEmpty) {
     console.warn(
       `[content-query] No content matched ${JSON.stringify(descriptor.options.pattern)} in ${resolved}.`,
     );

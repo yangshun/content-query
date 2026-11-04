@@ -14,6 +14,7 @@ Import `defineCollection` from `content-query`. A definition contains:
 - Optional `computed` fields with their own schemas and resolvers.
 - Optional `relationships` connecting collection fields.
 - Optional [custom `payloads`](/docs/payloads): schema-validated per-entry data, with optional variants, loaded only when a query requests it.
+- Optional `sharedFiles`: directories, relative to the project root, that resolvers' [`files` helpers](/docs/payloads#read-related-files) may read besides each entry's folder.
 
 ## Built-in loaders
 

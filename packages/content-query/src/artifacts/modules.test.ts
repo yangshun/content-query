@@ -242,3 +242,24 @@ console.log(JSON.stringify({ english: english.hints, date: english.date instance
     }
   });
 });
+
+describe("prepared payload encodings", () => {
+  test("publishes a node's encoded text without loading or re-encoding its value", async () => {
+    const revision = customPayloadRevision();
+    const encoded = JSON.stringify('["Prepared once"]');
+    const load = Object.assign(
+      async () => {
+        throw new Error("Prepared nodes are not loaded again to publish.");
+      },
+      { encoded: '["Prepared once"]' },
+    );
+    revision.collections.coding!.payloads = new Map([
+      ["detail", new Map([["two-sum", new Map([['{"locale":"en-US"}', load]])]])],
+    ]);
+    const modules = await revisionModules(revision);
+    const [source] = [...modules]
+      .filter(([filename]) => filename.includes("/payloads/detail/"))
+      .map(([, code]) => code);
+    expect(source).toBe(`export default ${encoded};\n`);
+  });
+});

@@ -25,6 +25,8 @@ export type SourceWatchOptions = {
   dependencies(): ReadonlySet<string> | undefined;
   configChanged(): void;
   invalidated(collection: string): void;
+  /** Receives every file event, so files that resolvers read can invalidate their nodes. */
+  dependencyChanged?(event: string, filename: string): void;
   failed(cause: unknown): void;
 };
 
@@ -108,6 +110,7 @@ export async function watchProject(
   register(watcher);
   watcher.on("all", (event, filename) => {
     // File-add notifications arrive after the new directory's children are subscribed.
+    options.dependencyChanged?.(event, filename);
     if (event === "addDir") {
       return;
     }
@@ -203,6 +206,10 @@ export async function watchSources(
       }
       if (dedicated) {
         external.on("all", changed);
+        // A dedicated watcher reports files the project watcher ignores, such as content/dist/.
+        if (external !== shared) {
+          external.on("all", (event, filename) => options.dependencyChanged?.(event, filename));
+        }
         external.on("error", (cause) => options.failed(cause));
         if (builtin.kind === "glob") {
           recheckNewDirectories(
@@ -290,4 +297,47 @@ function recheckNewDirectories(
     pending.clear();
     reported.clear();
   });
+}
+
+/**
+ * Watches files and directories that resolvers read when no other watcher reports them: paths
+ * outside the project root or below a directory the project watcher ignores, such as `dist/`.
+ *
+ * @param options - Watch options with the project root and the dependency callback.
+ * @returns `add()` to watch further dependency paths, and `close()` to stop watching.
+ */
+export function watchDependencies(options: SourceWatchOptions): {
+  add(paths: Iterable<string>): void;
+  close(): Promise<void>;
+} {
+  const ignoredByProject = projectIgnored(options);
+  const watched = new Set<string>();
+  let watcher: FSWatcher | undefined;
+  return {
+    add(paths) {
+      const uncovered = [...paths].filter(
+        (filename) =>
+          !watched.has(filename) &&
+          (ignoredByProject(filename) ||
+            !(
+              withinDirectory(options.root, filename) ||
+              withinDirectory(path.dirname(options.config), filename)
+            )),
+      );
+      if (!uncovered.length) {
+        return;
+      }
+      uncovered.forEach((filename) => watched.add(filename));
+      if (watcher) {
+        watcher.add(uncovered);
+        return;
+      }
+      watcher = watch(uncovered, { ignoreInitial: true, awaitWriteFinish });
+      watcher.on("all", (event, filename) => options.dependencyChanged?.(event, filename));
+      watcher.on("error", (cause) => options.failed(cause));
+    },
+    async close() {
+      await watcher?.close();
+    },
+  };
 }

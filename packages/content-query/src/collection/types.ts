@@ -1,6 +1,7 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
+import type { FileOptions, GlobOptions } from "../loaders/descriptor.ts";
 import type { Loader } from "../loaders/types.ts";
-import type { ContentRenderResult } from "../runtime/types.ts";
+import type { ContentRenderResult, RenderedContent } from "../runtime/types.ts";
 
 declare const builtinPayloadsType: unique symbol;
 declare const customPayloadsType: unique symbol;
@@ -9,6 +10,37 @@ export type Schema = StandardSchemaV1;
 export type SchemaOutput<Value> = Value extends StandardSchemaV1
   ? StandardSchemaV1.InferOutput<Value>
   : Record<string, unknown>;
+/** One file or record that a `files` helper read, shaped like a loader entry. */
+export type FileEntry<Data = Record<string, unknown>> = {
+  id: string;
+  data: Data;
+  /** The Markdown body, when the file is Markdown and `retainBody` is not `false`. */
+  body?: string;
+  /** The file's path relative to the project root. */
+  filePath: string;
+};
+/**
+ * Tracked file access for computed and payload resolvers. Paths are relative to the entry's
+ * folder and must stay inside it or one of the collection's `sharedFiles` directories. Every read
+ * is recorded, so editing, adding, or removing a file re-resolves only what read it.
+ */
+export type EntryFiles = {
+  /** Lists and parses files like `glob()`, with `base` relative to the entry's folder. */
+  glob<FileSchema extends Schema | undefined = undefined>(
+    options: Omit<GlobOptions, "base" | "deferRender"> & { base?: string; schema?: FileSchema },
+  ): Promise<FileEntry<SchemaOutput<FileSchema>>[]>;
+  /** Parses one data file's records like `file()`, returning one entry per record. */
+  file<FileSchema extends Schema | undefined = undefined>(
+    filePath: string,
+    options?: FileOptions & { schema?: FileSchema },
+  ): Promise<FileEntry<SchemaOutput<FileSchema>>[]>;
+  /** Reads a file as UTF-8 text. */
+  text(filePath: string): Promise<string>;
+  /** Reads a file's bytes. */
+  bytes(filePath: string): Promise<Uint8Array>;
+  /** Renders Markdown with the built-in renderer, like a loader's `renderMarkdown()`. */
+  renderMarkdown(body: string): Promise<RenderedContent>;
+};
 export type ComputedContext<Data, Source = unknown> = {
   /** The collection's key in the configured registry. */
   collection: string;
@@ -17,6 +49,8 @@ export type ComputedContext<Data, Source = unknown> = {
   source?: Source extends object ? Readonly<Source> : Source;
   data: Readonly<Data>;
   readBody(this: void): Promise<string | undefined>;
+  /** Tracked reads of files beside the entry; edits re-prepare the entry. */
+  files: EntryFiles;
   signal: AbortSignal;
 };
 export type ComputedDefinition<Data = Record<string, unknown>, Source = unknown> = {
@@ -39,6 +73,8 @@ export type PayloadContext<Data, Source = unknown, Variant = {}> = VariantContex
   /** The variant combination being resolved; empty for payloads without variants. */
   variant: Readonly<Variant>;
   readBody(this: void): Promise<string | undefined>;
+  /** Tracked reads of files beside the entry; edits re-resolve only this variant. */
+  files: EntryFiles;
 };
 /** Data fields, including computed fields, whose values are string arrays. */
 export type VariantField<Data> = {
@@ -68,6 +104,11 @@ export type PayloadDefinition<Data = Record<string, unknown>, Source = unknown, 
     },
   ): Iterable<Variant> | PromiseLike<Iterable<Variant>>;
   resolve(context: PayloadContext<Data, Source, Variant>): unknown;
+  /**
+   * Set to `false` to resolve again in every revision, for resolvers that read data `files` cannot
+   * track, such as a remote API. Defaults to `true`.
+   */
+  cache?: boolean;
 };
 /**
  * Any payload declaration once its inferred types are erased, as registries and preparation see
@@ -78,6 +119,7 @@ export type PayloadDeclaration = {
   variants?: Record<string, string | readonly string[]>;
   combinations?(context: never): unknown;
   resolve(context: never): unknown;
+  cache?: boolean;
 };
 export type Relationship = {
   collection: string;
@@ -99,6 +141,8 @@ export type CollectionDefinition<
   computed?: Computed;
   relationships?: Relationships;
   payloads?: Record<string, PayloadDeclaration>;
+  /** Directories, relative to the project root, that every entry's `files` helpers may read. */
+  sharedFiles?: readonly string[];
 };
 export type CollectionRegistry = Record<string, CollectionDefinition>;
 export type EntryData<Definition> = Definition extends {
