@@ -85,3 +85,31 @@ const samePost = await content
 ```
 
 Neighbors are returned in `_adjacent.previous` and `_adjacent.next`, with `null` at each boundary. Sibling scopes cannot paginate or recursively request adjacency.
+
+## Choosing a style
+
+Both APIs compile to the same query plan and run on the same executor, so equivalent queries return the same results at the same cost. Mixing them in one application is safe, but readers then follow two filter vocabularies. Pick one style as the default and use the other for a specific reason.
+
+The relational API supports every fluent filter, plus:
+
+- `like`, `ilike`, `notLike`, and `notIlike` patterns
+- `arrayContained`
+- Filters that traverse relationships, such as `where: { author: { name: "Ada" } }`, and existence checks such as `author: true`
+
+A fluent application that needs one of these can use the relational API for that query.
+
+Fluent builders are immutable, so one base query can serve a page of results and its total without repeating the filter:
+
+```ts
+const published = content
+  .select("id", "title")
+  .from("posts")
+  .where((fields) => eq(fields.draft, false));
+
+const page = await published.orderBy("title").offset(0).limit(10);
+const total = await published.count();
+```
+
+Relational options are plain objects. Share them across modules and check them with `satisfies QueryOptions<...>` from `content-query/query`, which keeps literal column selections.
+
+Operator names differ between the styles; see the [operator reference](/docs/reference/queries-and-operators#filter-operators). Take care with `arrayContains`: fluent `arrayContains(fields.tags, "news")` matches one item, while relational `tags: { arrayContains: ["news", "guide"] }` requires every listed item, like fluent `arrayContainsAll`.
