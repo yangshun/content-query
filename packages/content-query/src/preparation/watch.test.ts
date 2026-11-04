@@ -207,6 +207,9 @@ describe("source watching", () => {
       registry,
       watch: true,
     });
+    // Late native events for files written before startup can still reload once; let them settle.
+    await settle();
+    await sessionInternals(session).idle();
     const events: string[] = [];
     const unsubscribe = session.subscribe((event) => events.push(event.type));
     try {
