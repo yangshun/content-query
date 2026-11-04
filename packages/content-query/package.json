@@ -1,6 +1,6 @@
 {
   "name": "content-query",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Typed, framework-independent content collections, queries, and rendering.",
   "homepage": "https://github.com/yangshun/content-query#readme",
   "bugs": {
