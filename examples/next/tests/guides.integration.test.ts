@@ -1,54 +1,46 @@
 import { execFile } from "node:child_process";
-import { cp, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
-import os from "node:os";
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { afterAll, beforeAll, describe, expect, test } from "vite-plus/test";
+import { appRoot, bundlerArguments, createFixture, nextReleases } from "./next-releases";
 
 const execute = promisify(execFile);
-const appRoot = fileURLToPath(new URL("../", import.meta.url));
 const guideIds = ["getting-started", "organizing-projects", "sharing-a-workspace"];
+// Next.js 15.0 has no Turbopack production builds.
+const builds = nextReleases.flatMap((release) =>
+  (["webpack", "turbopack"] as const)
+    .filter((bundler) => bundler === "webpack" || release.packageName !== "next-15.0")
+    .map((bundler) => ({ release, bundler, label: `Next.js ${release.version} ${bundler}` })),
+);
 
-describe("Next.js example with inline page queries", () => {
+describe.each(builds)("$label example with inline page queries", ({ release, bundler }) => {
   let root: string;
   let workspace: string;
 
   beforeAll(async () => {
-    workspace = await realpath(await mkdtemp(path.join(os.tmpdir(), "content-query-next-test-")));
-    root = path.join(workspace, "app");
-    await mkdir(root);
-    for (const source of [
-      "app",
-      "content",
-      "content-query.config.ts",
-      "next.config.mjs",
-      "package.json",
-      "tsconfig.json",
-    ]) {
-      await cp(path.join(appRoot, source), path.join(root, source), { recursive: true });
-    }
-    await symlink(path.join(appRoot, "node_modules"), path.join(root, "node_modules"), "dir");
+    const fixture = await createFixture(release);
+    ({ root, workspace } = fixture);
     await mkdir(path.join(root, "content/guides/reference"));
     await writeFile(
       path.join(root, "content/guides/reference/shortcuts.md"),
       "---\ntitle: Shortcuts\ndescription: Keep your hands on the keyboard.\norder: 4\n---\n## Moving around\nUse the keyboard to move between notes.\n",
     );
 
-    // Build the actual page modules; Webpack supports the fixture's external dependency symlink.
+    // Build the actual page modules, then remove the sources the export must not need.
     await execute(
       process.execPath,
-      [path.join(appRoot, "node_modules/next/dist/bin/next"), "build", "--webpack"],
+      [fixture.next, "build", ...bundlerArguments(release, bundler)],
       {
         cwd: root,
         env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
         maxBuffer: 2_000_000,
-        timeout: 60_000,
+        timeout: 90_000,
       },
     );
     await rm(path.join(root, "content"), { recursive: true });
     await rm(path.join(root, "content-query.config.ts"));
-  }, 70_000);
+  }, 100_000);
 
   afterAll(async () => {
     if (workspace) {

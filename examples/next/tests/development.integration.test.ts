@@ -1,48 +1,22 @@
 import { spawn } from "node:child_process";
-import {
-  cp,
-  mkdir,
-  mkdtemp,
-  readFile,
-  readdir,
-  rename,
-  rm,
-  symlink,
-  writeFile,
-} from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, test, vi } from "vite-plus/test";
+import { bundlerArguments, createFixture, nextReleases } from "./next-releases";
 
-const appRoot = fileURLToPath(new URL("../", import.meta.url));
-const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
-
-/** Creates an isolated app inside the monorepo so Turbopack can resolve its workspace packages. */
-async function developmentFixture() {
-  const temporaryRoot = path.join(repositoryRoot, ".content-query");
-  await mkdir(temporaryRoot, { recursive: true });
-  const workspace = await mkdtemp(path.join(temporaryRoot, "next-test-"));
-  const root = path.join(workspace, "app");
-  await mkdir(root);
-  for (const source of [
-    "app",
-    "content",
-    "content-query.config.ts",
-    "next.config.mjs",
-    "package.json",
-    "tsconfig.json",
-  ]) {
-    await cp(path.join(appRoot, source), path.join(root, source), { recursive: true });
-  }
-  await symlink(path.join(appRoot, "node_modules"), path.join(root, "node_modules"), "dir");
-  return { root, workspace };
-}
+const servers = nextReleases.flatMap((release) =>
+  (["turbopack", "webpack"] as const).map((bundler) => ({
+    release,
+    bundler,
+    label: `Next.js ${release.version} ${bundler}`,
+  })),
+);
 
 describe("Next.js development content integration", () => {
-  test.each(["turbopack", "webpack"])(
-    "%s serves published content changes and recovers from invalid edits without restarting",
-    async (bundler) => {
-      const fixture = await developmentFixture();
+  test.each(servers)(
+    "$label serves published content changes and recovers from invalid edits without restarting",
+    async ({ release, bundler }) => {
+      const fixture = await createFixture(release);
       const outDir = path.join(fixture.root, ".content-query");
       const payloadDirectory = path.join(outDir, "collections/guides/entries");
       const stalePayload = path.join(payloadDirectory, `${"0".repeat(64)}.js`);
@@ -53,9 +27,9 @@ describe("Next.js development content integration", () => {
       const child = spawn(
         process.execPath,
         [
-          path.join(appRoot, "node_modules/next/dist/bin/next"),
+          fixture.next,
           "dev",
-          `--${bundler}`,
+          ...bundlerArguments(release, bundler),
           "--hostname",
           "127.0.0.1",
           "--port",
@@ -191,7 +165,7 @@ describe("Next.js development content integration", () => {
           ? await readFile(path.join(fixture.root, ".content-query", collection), "utf8")
           : entry;
         console.error(
-          `Next.js ${bundler} diagnostics:\n${output.slice(-4_000)}\nPublished collection:\n${index.slice(-3_000)}`,
+          `Next.js ${release.version} ${bundler} diagnostics:\n${output.slice(-4_000)}\nPublished collection:\n${index.slice(-3_000)}`,
         );
         throw cause;
       } finally {

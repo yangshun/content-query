@@ -84,7 +84,7 @@ Built-in payload names start with an underscore: `_body` and `_rendered`. A quer
 - [API and usage](https://github.com/yangshun/content-query/blob/main/docs/API.md)
 - [Guides and reference](https://github.com/yangshun/content-query/blob/main/docs/README.md)
 
-The Vite integration supports Vite 8, and the Next.js integration supports Next.js 16. Both integrations are optional; standalone builds and queries require neither framework.
+The Vite integration supports Vite 8, and the Next.js integration supports Next.js 15 and 16. Both integrations are optional; standalone builds and queries require neither framework.
 
 Pass `contentQuery()` directly to Vite or Vite+'s `plugins` array. No `Plugin` type cast is needed; workspace consumers share the pinned toolchain versions in the dependency catalog.
 

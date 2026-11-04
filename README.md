@@ -65,7 +65,7 @@ const { html, headings } = post!._payloads._rendered;
 
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
 
-The Vite integration supports Vite 8, and the Next.js integration supports Next.js 16. Both integrations are optional; standalone builds and queries require neither framework.
+The Vite integration supports Vite 8, and the Next.js integration supports Next.js 15 and 16. Both integrations are optional; standalone builds and queries require neither framework.
 
 ## Documentation
 

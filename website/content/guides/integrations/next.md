@@ -5,7 +5,7 @@ section: integrations
 order: 41
 ---
 
-Use `withContentQuery()` in an existing Next.js 16 App Router application. The adapter builds content before Next.js compiles and watches it during development.
+Use `withContentQuery()` in an existing Next.js 15 or 16 App Router application. The adapter builds content before Next.js compiles and watches it during development.
 
 ## Install and define content
 
