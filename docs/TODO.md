@@ -138,7 +138,7 @@ Reference: [Astro's live collections](https://docs.astro.build/en/guides/content
 
 ### Named per-entry payloads
 
-Status: built-in `_body` and `_rendered` payloads and payload queries shipped in 0.2.0 on November 2, 2026. Custom payloads and tracked related files (steps 1 and 2 below) were implemented on November 4, 2026. Steps 3 and 4 are agreed but deferred until later. Variants name a string-array data field or list fixed values instead of taking enumerator callbacks, because TypeScript cannot infer variant keys from an object of unannotated callbacks.
+Status: built-in `_body` and `_rendered` payloads and payload queries shipped in 0.2.0 on November 2, 2026. Custom payloads and tracked related files (steps 1 and 2 below) shipped in 0.4.0 on November 4, 2026. Steps 3 and 4 are agreed but deferred until later. Variants name a string-array data field or list fixed values instead of taking enumerator callbacks, because TypeScript cannot infer variant keys from an object of unannotated callbacks.
 
 Entries assembled from many files, such as an exercise folder with a manifest, Markdown sections, per-language code, and test cases, need large typed data that catalog queries never load. Planned work, in order:
 
