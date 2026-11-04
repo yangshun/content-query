@@ -26,6 +26,8 @@ The sidebar follows the reader's workflow: Getting started, Defining content, Qu
 
 The querying guide documents revision-scoped ID indexes for fluent and object detail-page queries, including additional filters and development freshness.
 
+The querying guide's "Choosing a style" section explains when to mix fluent and relational queries: both share one executor, relational filters add pattern matching, `arrayContained`, and relationship traversal, fluent builders reuse a base query for pages and counts, and `arrayContains` differs between the two styles.
+
 The sources guide explains recovery for initially missing files and glob directories, including the path-level metadata fallback for lost creation notifications.
 
 All guides are prerendered at `/docs/<guide-id>`. The sidebar and previous/next links follow their `order`. Adding or reordering guides does not change the homepage.
