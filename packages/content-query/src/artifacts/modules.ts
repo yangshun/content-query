@@ -101,7 +101,8 @@ export async function revisionModules(
       for (const [id, variants] of entries) {
         const loaders: string[] = [];
         for (const [variant, load] of variants) {
-          const encoded = encode(await load());
+          // Prepared nodes carry their encoded text, so republishing skips re-encoding them.
+          const encoded = (load as { encoded?: string }).encoded ?? encode(await load());
           const key = digest([name, payload, id, variant, encoded]);
           publishPayload(
             `${directory}/${payloadDirectory}/${key}.js`,

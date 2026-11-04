@@ -26,7 +26,7 @@ The sidebar follows the reader's workflow: Getting started, Defining content, Qu
 
 The querying guide documents revision-scoped ID indexes for fluent and object detail-page queries, including additional filters and development freshness.
 
-The [custom payloads guide](./content/guides/payloads.md) covers declaring payloads in `defineCollection`, variants from data fields or fixed lists, `combinations()`, typed requests, `variant-not-found`, `CollectionPayload`, payload diagnostics, and the current limit on tracking files a resolver reads.
+The [custom payloads guide](./content/guides/payloads.md) covers declaring payloads in `defineCollection`, variants from data fields or fixed lists, `combinations()`, typed requests, `variant-not-found`, `CollectionPayload`, payload diagnostics, tracked `files` helpers with `sharedFiles`, and development updates that re-resolve only the payload variants whose files change.
 
 The querying guide's "Choosing a style" section explains when to mix fluent and relational queries: both share one executor and the same filters, fluent builders reuse a base query for pages and counts, and `arrayContains` differs between the two styles. The guide also documents fluent `has()` relationship filters and explicit neighbor selection with `.selectAdjacent(...fields)` and relational `scope: "results"`.
 

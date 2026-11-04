@@ -1,4 +1,5 @@
-import { readFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test, vi } from "vite-plus/test";
@@ -19,17 +20,12 @@ import type { PreparedRevision } from "../runtime/revision.ts";
 const root = fileURLToPath(new URL("../../tests/fixtures/exercises", import.meta.url));
 const base = path.join(root, "coding");
 
-/** Reads a file next to an exercise's manifest. */
-function exerciseFile(filePath: string, ...segments: string[]): Promise<string> {
-  return readFile(path.join(root, path.dirname(filePath), ...segments), "utf8");
-}
-
 /** Declares exercises from `*\/exercise.json` with localized hints and a single walkthrough. */
-function exercises() {
+function exercises(exerciseBase = base, resolved: string[] = []) {
   return {
     coding: defineCollection({
       loader: glob({
-        base,
+        base: exerciseBase,
         pattern: "*/exercise.json",
         generateId: ({ entry }) => entry.split("/")[0]!,
       }),
@@ -38,20 +34,37 @@ function exercises() {
         difficulty: schema.enum(["easy", "medium", "hard"]),
         locales: schema.array(schema.string()),
       }),
+      computed: {
+        walkthroughWords: {
+          schema: schema.number(),
+          resolve: async ({ files }) =>
+            (await files.text("walkthrough.md")).trim().split(/\s+/).length,
+        },
+      },
       payloads: {
         detail: {
           schema: schema.object({ locale: schema.string(), hints: schema.string() }),
           variants: { locale: "locales" },
-          resolve: async ({ source, variant }) => ({
-            locale: variant.locale,
-            hints: (await exerciseFile(source!.filePath, "hints", `${variant.locale}.md`)).trim(),
-          }),
+          resolve: async ({ id, files, variant }) => {
+            resolved.push(`${id}:detail:${variant.locale}`);
+            return {
+              locale: variant.locale,
+              hints: (await files.text(`hints/${variant.locale}.md`)).trim(),
+            };
+          },
         },
         walkthrough: {
           schema: schema.object({ markdown: schema.string() }),
-          resolve: async ({ source }) => ({
-            markdown: (await exerciseFile(source!.filePath, "walkthrough.md")).trim(),
+          resolve: async ({ files }) => ({
+            markdown: (await files.text("walkthrough.md")).trim(),
           }),
+        },
+        solutions: {
+          schema: schema.array(schema.string()),
+          resolve: async ({ id, files }) => {
+            resolved.push(`${id}:solutions`);
+            return (await files.glob({ pattern: "solution/*.md" })).map((entry) => entry.filePath);
+          },
         },
       },
     }),
@@ -212,10 +225,99 @@ for (const encoded of [false, true]) {
   });
 }
 
+/** Gives the watcher time to report an event, if it were going to. */
+function settle(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 400));
+}
+
+describe("tracked payload files in watch mode", () => {
+  test("re-resolves only the nodes whose files change, including through glob membership", async () => {
+    const projectRoot = await realpath(
+      await mkdtemp(path.join(os.tmpdir(), "content-query-tracked-")),
+    );
+    const coding = path.join(projectRoot, "content/coding");
+    await cp(base, coding, { recursive: true });
+    const resolved: string[] = [];
+    const registry = exercises(coding, resolved);
+    const session = await createSession<typeof registry>({
+      root: projectRoot,
+      config: "unused",
+      outDir: ".content-query",
+      watch: true,
+      registry,
+    });
+    const content = session.content;
+    /** Reads one exercise's metadata and payloads from the current revision. */
+    const exercise = (id: string, locale: string) =>
+      content.query.coding.findFirst({
+        where: { id },
+        columns: { walkthroughWords: true },
+        payloads: { detail: { locale }, solutions: true },
+      });
+    try {
+      // Every variant resolved once, at startup.
+      expect(resolved.sort()).toEqual([
+        "reverse-list:detail:en-US",
+        "reverse-list:solutions",
+        "two-sum:detail:en-US",
+        "two-sum:detail:fr-FR",
+        "two-sum:solutions",
+      ]);
+      await settle();
+      await sessionInternals(session).idle();
+      resolved.length = 0;
+
+      await writeFile(path.join(coding, "two-sum/hints/fr-FR.md"), "Utilisez un dictionnaire.\n");
+      await vi.waitFor(
+        async () =>
+          expect((await exercise("two-sum", "fr-FR"))?._payloads.detail.hints).toBe(
+            "Utilisez un dictionnaire.",
+          ),
+        { timeout: 5_000 },
+      );
+      expect(resolved).toEqual(["two-sum:detail:fr-FR"]);
+      await settle();
+      await sessionInternals(session).idle();
+      resolved.length = 0;
+
+      await mkdir(path.join(coding, "reverse-list/solution"));
+      await writeFile(path.join(coding, "reverse-list/solution/iterative.md"), "Walk once.\n");
+      await vi.waitFor(
+        async () =>
+          expect((await exercise("reverse-list", "en-US"))?._payloads.solutions).toEqual([
+            "content/coding/reverse-list/solution/iterative.md",
+          ]),
+        { timeout: 5_000 },
+      );
+      // The new directory and its file each re-read the glob; nothing else re-resolves.
+      await settle();
+      await sessionInternals(session).idle();
+      expect(new Set(resolved)).toEqual(new Set(["reverse-list:solutions"]));
+      resolved.length = 0;
+
+      // A computed field's file re-prepares the entry and every payload variant it owns.
+      await writeFile(path.join(coding, "two-sum/walkthrough.md"), "Look up each complement.\n");
+      await vi.waitFor(
+        async () => expect((await exercise("two-sum", "en-US"))?.walkthroughWords).toBe(4),
+        { timeout: 5_000 },
+      );
+      expect(resolved.sort()).toEqual([
+        "two-sum:detail:en-US",
+        "two-sum:detail:fr-FR",
+        "two-sum:solutions",
+      ]);
+      expect((await exercise("reverse-list", "en-US"))?.walkthroughWords).toBe(11);
+    } finally {
+      await session.dispose();
+      await rm(projectRoot, { recursive: true, force: true });
+    }
+  });
+});
+
 /** Prepares a one-collection registry from fixture entries, without a session. */
 async function prepareEntries(
   definition: ReturnType<typeof defineCollection>,
-  entries: { id: string; data: Record<string, unknown> }[],
+  entries: { id: string; data: Record<string, unknown>; sourceData?: unknown }[],
   cache: PreparationCache = new Map(),
 ) {
   const sources: CandidateSources = new Map([
@@ -234,6 +336,59 @@ async function prepareEntries(
 }
 
 describe("preparePayloads", () => {
+  test("re-resolves a payload with cache: false in every revision", async () => {
+    const resolve = vi.fn(({ id }: { id: string }) => id);
+    const definition = defineCollection({
+      loader: fixtureLoader(() => []),
+      payloads: { live: { schema: schema.string(), cache: false, resolve } },
+    });
+    const cache: PreparationCache = new Map();
+    await prepareEntries(definition, [{ id: "a", data: {} }], cache);
+    await prepareEntries(definition, [{ id: "a", data: {} }], cache);
+    expect(resolve).toHaveBeenCalledTimes(2);
+  });
+
+  test("reports files failures with the payload, variant, file, and field", async () => {
+    const directory = await realpath(await mkdtemp(path.join(os.tmpdir(), "content-query-cases-")));
+    await writeFile(path.join(directory, "cases.json"), JSON.stringify([{ id: "one", input: 1 }]));
+    try {
+      const definition = defineCollection({
+        loader: fixtureLoader(() => []),
+        schema: schema.object({ locales: schema.array(schema.string()) }),
+        payloads: {
+          cases: {
+            schema: schema.array(schema.unknown()),
+            variants: { locale: "locales" },
+            resolve: ({ files }) =>
+              files.file("cases.json", { schema: schema.object({ input: schema.string() }) }),
+          },
+        },
+      });
+      const failure = await prepareEntries(definition, [
+        { id: "with-folder", data: { locales: ["en"] }, sourceData: { directory } },
+        { id: "without-folder", data: { locales: ["en"] } },
+      ]).catch((error: unknown) => error);
+      expect((failure as ContentError).diagnostics).toEqual([
+        expect.objectContaining({
+          collection: "items",
+          id: "with-folder",
+          payload: "cases",
+          variant: { locale: "en" },
+          source: `${path.join(directory, "cases.json")}#0`,
+          path: ["input"],
+        }),
+        expect.objectContaining({
+          id: "without-folder",
+          payload: "cases",
+          variant: { locale: "en" },
+          message: expect.stringContaining("has no folder for files helpers"),
+        }),
+      ]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("uses combinations() to override the cross product", async () => {
     const definition = defineCollection({
       loader: fixtureLoader(() => []),

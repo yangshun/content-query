@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vite-plus/test";
-import type { ComputedContext } from "../collection/types.ts";
+import type { ComputedContext, EntryFiles } from "../collection/types.ts";
 import { excerpt, readingTime, wordCount, type TextOptions } from "../computed.ts";
 
 /** Creates a resolver context with captured body text and a typed structured-data field. */
@@ -10,6 +10,8 @@ function context(body?: string): ComputedContext<{ description: string }, { key:
     data: { description: "Selected description" },
     source: { key: "source-key" },
     readBody: vi.fn(async () => body),
+    // The text helpers read only bodies and data, never related files.
+    files: {} as EntryFiles,
     signal: new AbortController().signal,
   };
 }

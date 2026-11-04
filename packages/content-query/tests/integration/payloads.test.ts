@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { cp, mkdir, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, test } from "vite-plus/test";
@@ -7,15 +7,9 @@ import { packageRoot, projectFixture } from "../helpers/project.ts";
 
 const execute = promisify(execFile);
 
-const config = `import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { defineCollection } from "content-query";
+const config = `import { defineCollection } from "content-query";
 import { glob } from "content-query/loaders";
 import { schema } from "content-query/schema";
-
-/** Reads a file beside an exercise manifest, relative to the project root. */
-const read = (filePath: string, ...segments: string[]) =>
-  readFile(path.join(path.dirname(filePath), ...segments), "utf8").then((text) => text.trim());
 
 const coding = defineCollection({
   loader: glob({ base: "./content/coding", pattern: "*/exercise.json", generateId: ({ entry }) => entry.split("/")[0]! }),
@@ -24,11 +18,11 @@ const coding = defineCollection({
     detail: {
       schema: schema.object({ locale: schema.string(), hints: schema.string() }),
       variants: { locale: "locales" },
-      resolve: async ({ source, variant }) => ({ locale: variant.locale, hints: await read(source!.filePath, "hints", \`\${variant.locale}.md\`) }),
+      resolve: async ({ files, variant }) => ({ locale: variant.locale, hints: (await files.text(\`hints/\${variant.locale}.md\`)).trim() }),
     },
     walkthrough: {
       schema: schema.string(),
-      resolve: ({ source }) => read(source!.filePath, "walkthrough.md"),
+      resolve: async ({ files }) => (await files.text("walkthrough.md")).trim(),
     },
   },
 });
@@ -59,13 +53,6 @@ describe("custom payloads in generated builds", () => {
         { recursive: true },
       );
       await writeFile(fixture.config, config);
-      // Generated declarations read the config's types, which import Node built-ins.
-      await mkdir(path.join(fixture.root, "node_modules/@types"), { recursive: true });
-      await symlink(
-        path.join(packageRoot, "node_modules/@types/node"),
-        path.join(fixture.root, "node_modules/@types/node"),
-        "dir",
-      );
       await execute(
         process.execPath,
         [
@@ -92,8 +79,6 @@ describe("custom payloads in generated builds", () => {
           "--target",
           "esnext",
           "--allowImportingTsExtensions",
-          "--types",
-          "node",
           "consumer.ts",
         ],
         { cwd: fixture.root },

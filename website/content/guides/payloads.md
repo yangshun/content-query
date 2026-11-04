@@ -12,15 +12,9 @@ Metadata is what lists, filters, and sorting need. Some entries also carry large
 Each payload has a `schema` and a `resolve()` function:
 
 ```ts
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { defineCollection } from "content-query";
 import { glob } from "content-query/loaders";
 import { schema } from "content-query/schema";
-
-/** Reads a file beside an exercise's manifest. */
-const read = (filePath: string, ...segments: string[]) =>
-  readFile(path.join(path.dirname(filePath), ...segments), "utf8");
 
 const coding = defineCollection({
   loader: glob({
@@ -33,21 +27,50 @@ const coding = defineCollection({
     detail: {
       schema: schema.object({ hints: schema.string() }),
       variants: { locale: "locales" },
-      resolve: async ({ source, variant }) => ({
-        hints: await read(source!.filePath, "hints", `${variant.locale}.md`),
+      resolve: async ({ files, variant }) => ({
+        hints: await files.text(`hints/${variant.locale}.md`),
       }),
     },
     walkthrough: {
       schema: schema.string(),
-      resolve: ({ source }) => read(source!.filePath, "walkthrough.md"),
+      resolve: ({ files }) => files.text("walkthrough.md"),
     },
   },
 });
 ```
 
-A resolver receives the entry's `collection`, `id`, `data` (validated metadata plus [computed fields](/docs/computed-fields)), loader `source` metadata, the `variant` being resolved, `readBody()`, and an abort `signal`. Its result is validated against the payload's schema and must use the same serializable values as metadata.
+A resolver receives the entry's `collection`, `id`, `data` (validated metadata plus [computed fields](/docs/computed-fields)), loader `source` metadata, the `variant` being resolved, `readBody()`, tracked `files` helpers, and an abort `signal`. Its result is validated against the payload's schema and must use the same serializable values as metadata.
 
 Payload names cannot start with `_`, which built-in payloads such as `_rendered` use, and cannot repeat a computed field or relationship name.
+
+## Read related files
+
+Resolvers read files beside the entry through `files`, so ContentQuery knows what each payload variant depends on:
+
+| Helper                            | Reads                                                                                     |
+| --------------------------------- | ----------------------------------------------------------------------------------------- |
+| `files.text(path)`                | A file as UTF-8 text                                                                      |
+| `files.bytes(path)`               | A file's bytes                                                                            |
+| `files.glob({ pattern, schema })` | Matching files, parsed like `glob()`: frontmatter and bodies for Markdown, data otherwise |
+| `files.file(path, { schema })`    | One data file's records, parsed like `file()`                                             |
+| `files.renderMarkdown(body)`      | Nothing; renders Markdown like a loader's `renderMarkdown()`                              |
+
+Paths are relative to the entry's folder: the folder of a `glob()` or `file()` entry's file, or the `source.directory` a custom loader sets. They must stay inside that folder or a directory listed in the collection's `sharedFiles` option, which `..` paths can reach:
+
+```ts
+const coding = defineCollection({
+  // ...
+  sharedFiles: ["./content/coding/_shared"],
+  payloads: {
+    harness: {
+      schema: schema.string(),
+      resolve: ({ files }) => files.text("../_shared/harness.ts"),
+    },
+  },
+});
+```
+
+A `schema` validates each file's data, and a failure names that file and field. `files.glob()` and `files.file()` return entries shaped like loader entries: `{ id, data, body?, filePath }`.
 
 ## Variants
 
@@ -106,4 +129,6 @@ A resolver failure or schema violation fails preparation. Each diagnostic names 
 
 ## Development updates
 
-A payload is resolved again when its entry changes. ContentQuery does not yet track other files a resolver reads, such as `hints/fr-FR.md`, so edit the entry or restart development to pick up changes to them.
+During development, ContentQuery records every file and glob a resolver reads through `files`. Editing `hints/fr-FR.md` resolves only the `detail[locale=fr-FR]` variant again, adding a file that a `files.glob()` pattern matches resolves the payloads that globbed it, and editing a file a computed field read prepares that entry again. Editing the entry itself, such as its `exercise.json`, prepares the entry and its payloads again.
+
+Files read without `files`, such as through `node:fs` or a network request, are not tracked. Set `cache: false` on a payload that depends on them, and it is resolved again in every revision.

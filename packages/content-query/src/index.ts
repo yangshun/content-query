@@ -5,6 +5,8 @@ export type {
   CollectionDefinition,
   CollectionRegistry,
   ComputedContext,
+  EntryFiles,
+  FileEntry,
   PayloadContext,
   PayloadData,
   PayloadDeclaration,

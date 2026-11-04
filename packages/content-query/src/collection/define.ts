@@ -68,6 +68,8 @@ type PayloadDeclarations<
         VariantRecord<NoInfer<PayloadVariants>[Name]>
       >,
     ): unknown;
+    /** Set to `false` to resolve again in every revision. */
+    cache?: boolean;
   };
 } & ReservedPayloadNames<NoInfer<PayloadSchemas>>;
 
@@ -108,6 +110,8 @@ type CollectionFields<
         string;
     };
   };
+  /** Directories, relative to the project root, that resolvers' `files` helpers may also read. */
+  sharedFiles?: readonly string[];
   /** Named per-entry data resolved during preparation and loaded only when a query requests it. */
   payloads?: PayloadDeclarations<
     SourceSchema,

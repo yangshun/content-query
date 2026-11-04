@@ -8,6 +8,7 @@ import { z } from "zod";
 import { defineCollection } from "../collection/define.ts";
 import { file, glob } from "../loaders.ts";
 import { createSession, sessionInternals } from "./session.ts";
+import { watchDependencies } from "./watch.ts";
 import { projectFixture } from "../../tests/helpers/project.ts";
 import { bodyOf } from "../../tests/helpers/payloads.ts";
 
@@ -222,6 +223,44 @@ describe("source watching", () => {
       unsubscribe();
       await session.dispose();
       await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("watches dependency files outside the project and leaves covered ones alone", async () => {
+    const workspace = await realpath(
+      await mkdtemp(path.join(os.tmpdir(), "content-query-dependency-watch-")),
+    );
+    const root = path.join(workspace, "project");
+    const outside = path.join(workspace, "shared/notes.md");
+    const inside = path.join(root, "content/notes.md");
+    await mkdir(path.dirname(outside), { recursive: true });
+    await mkdir(path.dirname(inside), { recursive: true });
+    await writeFile(outside, "Shared");
+    await writeFile(inside, "Inside");
+    const events: [string, string][] = [];
+    const watcher = watchDependencies({
+      root,
+      config: path.join(root, "content-query.config.ts"),
+      registry: () => ({}),
+      dependencies: () => undefined,
+      configChanged: () => {},
+      invalidated: () => {},
+      dependencyChanged: (event, filename) => events.push([event, filename]),
+      failed: () => {},
+    });
+    try {
+      watcher.add([inside]);
+      watcher.add([outside, outside]);
+      await settle();
+      await writeFile(inside, "Inside, edited");
+      await writeFile(outside, "Shared, edited");
+      await vi.waitFor(() => expect(events).toContainEqual(["change", outside]), {
+        timeout: 3_000,
+      });
+      expect(events.some(([, filename]) => filename === inside)).toBe(false);
+    } finally {
+      await watcher.close();
+      await rm(workspace, { recursive: true, force: true });
     }
   });
 
