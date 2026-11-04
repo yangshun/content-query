@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -102,6 +103,9 @@ describe("source watching", () => {
       });
       try {
         const listing = session.content.from("posts").select("title");
+        // macOS starts native directory subscriptions asynchronously after the watcher is ready, so
+        // a directory created immediately can go unreported. Let the base subscription start first.
+        await settle();
         await mkdir(nested);
         await writeFile(filename, "---\ntitle: First\n---\n");
         await vi.waitFor(async () => expect(await listing.all()).toEqual([{ title: "First" }]), {
@@ -119,6 +123,104 @@ describe("source watching", () => {
       }
     },
   );
+
+  test("finds a file created between a new directory's read and its subscription", async () => {
+    const root = await realpath(
+      await mkdtemp(path.join(os.tmpdir(), "content-query-new-directory-")),
+    );
+    const base = path.join(root, "content");
+    const nested = path.join(base, "dist");
+    const filename = path.join(nested, "post.md");
+    await mkdir(base);
+    // oxlint-disable-next-line typescript-eslint/unbound-method
+    const subscribe = NodeFsHandler.prototype._watchWithNodeFs;
+    let written: Promise<void> | undefined;
+    const subscriptions = vi
+      .spyOn(NodeFsHandler.prototype, "_watchWithNodeFs")
+      .mockImplementation(function (
+        this: NodeFsHandler,
+        ...arguments_: Parameters<typeof subscribe>
+      ) {
+        // Chokidar has already read the new directory. Model a write that lands after its reads
+        // but before a working subscription, so no watcher event ever reports the file.
+        if (path.resolve(arguments_[0]) === nested) {
+          written ??= new Promise((resolve) => {
+            setTimeout(() => {
+              writeFileSync(filename, "---\ntitle: First\n---\n");
+              resolve();
+            }, 50);
+          });
+          return () => {};
+        }
+        return subscribe.apply(this, arguments_);
+      });
+    const registry = {
+      posts: defineCollection({
+        loader: glob({ pattern: "**/*.md", base }),
+        schema: z.object({ title: z.string() }),
+      }),
+    };
+    const session = await createSession<typeof registry>({
+      root,
+      config: "unused",
+      outDir: ".content-query",
+      registry,
+      watch: true,
+    });
+    try {
+      // Let the base directory's native subscription start before creating the directory.
+      await settle();
+      await mkdir(nested);
+      await vi.waitFor(() => expect(written).toBeDefined());
+      await written;
+      await vi.waitFor(
+        async () =>
+          expect(await session.content.from("posts").select("title").all()).toEqual([
+            { title: "First" },
+          ]),
+        { timeout: 3_000 },
+      );
+    } finally {
+      subscriptions.mockRestore();
+      await session.dispose();
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("does not reload for a new directory without matching files", async () => {
+    const root = await realpath(
+      await mkdtemp(path.join(os.tmpdir(), "content-query-unrelated-directory-")),
+    );
+    const base = path.join(root, "content");
+    await mkdir(base);
+    await writeFile(path.join(base, "post.md"), "---\ntitle: First\n---\n");
+    const registry = {
+      posts: defineCollection({
+        loader: glob({ pattern: "**/*.md", base }),
+        schema: z.object({ title: z.string() }),
+      }),
+    };
+    const session = await createSession<typeof registry>({
+      root,
+      config: "unused",
+      outDir: ".content-query",
+      registry,
+      watch: true,
+    });
+    const events: string[] = [];
+    const unsubscribe = session.subscribe((event) => events.push(event.type));
+    try {
+      await mkdir(path.join(base, "dist", "images"), { recursive: true });
+      await writeFile(path.join(base, "dist", "images", "cover.png"), "");
+      // Outlast both new-directory rechecks.
+      await new Promise((resolve) => setTimeout(resolve, 1_300));
+      expect(events).toEqual([]);
+    } finally {
+      unsubscribe();
+      await session.dispose();
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 
   test("recovers a missing source directory when its ancestor creation event is lost", async () => {
     const root = await realpath(await mkdtemp(path.join(os.tmpdir(), "content-query-watch-gap-")));

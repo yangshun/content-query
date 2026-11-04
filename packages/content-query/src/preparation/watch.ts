@@ -1,6 +1,6 @@
 import path from "node:path";
 import { realpathSync, watchFile, unwatchFile, type Stats } from "node:fs";
-import { access } from "node:fs/promises";
+import { access, readdir } from "node:fs/promises";
 import { watch, type FSWatcher } from "chokidar";
 import { builtinLoader, builtinPath } from "../loaders/descriptor.ts";
 import { affectsSnapshot } from "../loaders/match.ts";
@@ -10,6 +10,9 @@ import type { LoaderCleanup } from "../loaders/types.ts";
 
 // Settled writes bypass Chokidar's change-event throttle, which can drop a rapid correction.
 const awaitWriteFinish = { stabilityThreshold: 50, pollInterval: 10 };
+// Chokidar reads a new directory before subscribing to it, so a file created in between emits no
+// event. Recheck new glob directories from disk after the subscription normally settles.
+const NEW_DIRECTORY_RECHECKS_MS = [100, 1_000];
 
 export type SourceWatchOptions = {
   root: string;
@@ -201,8 +204,90 @@ export async function watchSources(
       if (dedicated) {
         external.on("all", changed);
         external.on("error", (cause) => options.failed(cause));
+        if (builtin.kind === "glob") {
+          recheckNewDirectories(
+            external,
+            shared,
+            (filename) => affectsSnapshot(builtin, target, "add", filename),
+            () => options.invalidated(name),
+            register,
+          );
+        }
         await ready(external);
       }
     }
   }
+}
+
+/**
+ * Invalidates a glob collection when a new directory holds matching files that no watcher event
+ * reported. Chokidar subscribes to a new directory only after reading it, so a file created in
+ * that gap is otherwise missed until something else reloads the collection.
+ *
+ * @param directories - The watcher that reports new directories under the glob base.
+ * @param shared - The project watcher, which reports ordinary files when it covers the base.
+ * @param matches - Whether a file belongs to the collection's snapshot.
+ * @param invalidate - Reloads the collection from disk.
+ * @param register - Registers cleanup for pending rechecks and listeners.
+ */
+function recheckNewDirectories(
+  directories: FSWatcher,
+  shared: FSWatcher | undefined,
+  matches: (filename: string) => boolean,
+  invalidate: () => void,
+  register: (cleanup: LoaderCleanup) => void,
+): void {
+  const pending = new Set<ReturnType<typeof setTimeout>>();
+  // Files that events reported while rechecks were pending; those already trigger a reload.
+  const reported = new Set<string>();
+  let closed = false;
+  /** Records added or changed files while a recheck could otherwise report them twice. */
+  function track(event: string, filename: string): void {
+    if (pending.size && (event === "add" || event === "change")) {
+      reported.add(path.resolve(filename));
+    }
+  }
+  /** Reloads only when the directory holds a matching file that no event reported. */
+  async function recheck(directory: string): Promise<void> {
+    let files: string[];
+    try {
+      const entries = await readdir(directory, { recursive: true, withFileTypes: true });
+      files = entries
+        .filter((entry) => entry.isFile())
+        .map((entry) => path.resolve(entry.parentPath, entry.name));
+    } catch {
+      // A directory removed before the recheck has nothing left to report.
+      return;
+    }
+    if (!closed && files.some((filename) => matches(filename) && !reported.has(filename))) {
+      invalidate();
+    }
+  }
+  /** Schedules rechecks for a newly created directory. */
+  function added(directory: string): void {
+    for (const delay of NEW_DIRECTORY_RECHECKS_MS) {
+      const timer = setTimeout(() => {
+        void recheck(directory).finally(() => {
+          pending.delete(timer);
+          if (!pending.size) {
+            reported.clear();
+          }
+        });
+      }, delay);
+      timer.unref();
+      pending.add(timer);
+    }
+  }
+  directories.on("all", track);
+  directories.on("addDir", added);
+  shared?.on("all", track);
+  register(() => {
+    closed = true;
+    directories.off("all", track);
+    directories.off("addDir", added);
+    shared?.off("all", track);
+    pending.forEach(clearTimeout);
+    pending.clear();
+    reported.clear();
+  });
 }
