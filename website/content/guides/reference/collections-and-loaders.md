@@ -13,6 +13,7 @@ Import `defineCollection` from `content-query`. A definition contains:
 - An optional `schema` for metadata validation and precise type inference.
 - Optional `computed` fields with their own schemas and resolvers.
 - Optional `relationships` connecting collection fields.
+- Optional [custom `payloads`](/docs/payloads): schema-validated per-entry data, with optional variants, loaded only when a query requests it.
 
 ## Built-in loaders
 

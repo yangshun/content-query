@@ -92,6 +92,8 @@ export function serializeContentError(error: ContentError): string {
     id: error.id,
     source: error.source,
     path: error.path,
+    payload: error.payload,
+    variant: error.variant,
     issues: error.issues,
     cause: error.cause,
     diagnostics: error.diagnostics,

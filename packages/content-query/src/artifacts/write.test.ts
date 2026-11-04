@@ -36,6 +36,38 @@ function revision(): PreparedRevision {
   };
 }
 
+describe("custom payload publication", () => {
+  test("writes payload modules immutably and prunes those a later revision drops", async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), "content-query-payload-writes-"));
+    const config = path.join(directory, "content-query.config.ts");
+    const payloads = path.join(directory, "collections/posts/payloads/summary");
+    /** Prepares posts whose summaries come from the given text, or no summary payload at all. */
+    const prepared = (summary?: string): PreparedRevision => {
+      const base = revision();
+      if (summary !== undefined) {
+        base.collections.posts!.payloads = new Map([
+          ["summary", new Map([["0", new Map([["{}", async () => summary]])]])],
+        ]);
+        base.registry.posts!.payloads = { summary: { variants: [] } };
+      }
+      return base;
+    };
+    try {
+      await writeArtifacts(prepared("First"), directory, config, { prune: true });
+      const [first] = await readdir(payloads);
+      expect(first).toMatch(/^[a-f0-9]{64}\.js$/);
+      await writeArtifacts(prepared("Second"), directory, config, { prune: true });
+      const second = await readdir(payloads);
+      expect(second).toHaveLength(1);
+      expect(second[0]).not.toBe(first);
+      await writeArtifacts(prepared(), directory, config, { prune: true });
+      await expect(readdir(path.dirname(payloads))).rejects.toMatchObject({ code: "ENOENT" });
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+});
+
 describe("artifact publication", () => {
   test("reuses unchanged immutable files without staging new writes", async () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), "content-query-artifact-writes-"));

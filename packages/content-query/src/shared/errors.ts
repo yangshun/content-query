@@ -16,6 +16,10 @@ export type ContentDiagnostic = {
   id?: string;
   source?: string;
   path?: readonly PropertyKey[];
+  /** The custom payload being resolved or loaded. */
+  payload?: string;
+  /** The payload's variant combination, with keys in sorted order. */
+  variant?: Readonly<Record<string, string>>;
   issues?: readonly unknown[];
   cause?: unknown;
 };
@@ -37,6 +41,8 @@ export class ContentError extends Error {
   readonly id?: string;
   readonly source?: string;
   readonly path?: readonly PropertyKey[];
+  readonly payload?: string;
+  readonly variant?: Readonly<Record<string, string>>;
   readonly issues?: readonly unknown[];
   readonly diagnostics: readonly ContentDiagnostic[];
 
@@ -51,9 +57,28 @@ export class ContentError extends Error {
     this.id = options.id;
     this.source = options.source;
     this.path = options.path;
+    this.payload = options.payload;
+    this.variant = options.variant;
     this.issues = options.issues;
     this.diagnostics = options.diagnostics ?? [{ ...options }];
   }
+}
+
+/**
+ * Formats a payload and its variant as a readable identity, such as `detail[locale=en-US]`.
+ *
+ * @param payload - The payload name.
+ * @param variant - The variant combination; keys are listed in sorted order.
+ * @returns The payload name, followed by its variant pairs when it has any.
+ */
+export function payloadIdentity(
+  payload: string,
+  variant: Readonly<Record<string, string>> = {},
+): string {
+  const pairs = Object.keys(variant)
+    .sort()
+    .map((key) => `${key}=${variant[key]}`);
+  return pairs.length ? `${payload}[${pairs.join(",")}]` : payload;
 }
 
 /** Rejects invalid query structure before any execution or payload access. */

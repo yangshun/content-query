@@ -80,6 +80,21 @@ describe("payloads example", () => {
     },
   );
 
+  test("builds a feed from one requested variant of a custom payload", async () => {
+    const feed = JSON.parse(await read("feed.json")) as {
+      items: { url: string; title: string; summary: string }[];
+    };
+    expect(feed.items.map((item) => item.url)).toEqual([
+      "/articles/writing-for-the-web.html",
+      "/articles/keeping-html-ready.html",
+      "/articles/choosing-what-to-load.html",
+    ]);
+    expect(feed.items.at(-1)!.summary).toBe(
+      "An index page shows a title and a summary for each article. Loading every article's HTML to draw that list wastes time and memory.",
+    );
+    expect(feed.items.every((item) => item.summary && !item.summary.includes("\n"))).toBe(true);
+  });
+
   test("loads payloads inside relationship scopes for each author's newest article", async () => {
     const ada = await read("authors/ada.html");
     expect(ada).toContain('Newest: <a href="/articles/keeping-html-ready.html">');

@@ -15,4 +15,6 @@ export type EncodedCollection = {
   records: readonly string[];
   /** Lazy encoded built-in payloads, keyed by entry ID. */
   builtins: Record<string, () => Promise<{ default: string }>>;
+  /** Lazy encoded custom payloads by payload name, entry ID, and canonical variant key. */
+  payloads?: Record<string, Record<string, Record<string, () => Promise<{ default: string }>>>>;
 };

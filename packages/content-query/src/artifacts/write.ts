@@ -76,7 +76,8 @@ async function writeImmutable(filename: string, source: string): Promise<void> {
   }
 }
 
-const immutableModule = /\/(?:entries\/[a-f0-9]{64}|index-[a-f0-9]{64})\.js$/;
+const immutableModule =
+  /\/(?:entries\/[a-f0-9]{64}|payloads\/[^/]+\/[a-f0-9]{64}|index-[a-f0-9]{64})\.js$/;
 
 /** Lists one directory's entries, treating a missing directory or a file as empty. */
 async function entriesOf(directory: string): Promise<string[]> {
@@ -113,10 +114,19 @@ async function pruneArtifacts(outDir: string, modules: ReadonlyMap<string, strin
   for (const directory of await entriesOf(collections)) {
     const owned = path.join(collections, directory);
     const entries = path.join(owned, "entries");
+    const payloads = path.join(owned, "payloads");
+    const payloadDirectories = await entriesOf(payloads);
     const candidates = [
       ...(await entriesOf(owned)).map((name) => `collections/${directory}/${name}`),
       ...(await entriesOf(entries)).map((name) => `collections/${directory}/entries/${name}`),
     ];
+    for (const payload of payloadDirectories) {
+      candidates.push(
+        ...(await entriesOf(path.join(payloads, payload))).map(
+          (name) => `collections/${directory}/payloads/${payload}/${name}`,
+        ),
+      );
+    }
     for (const filename of candidates) {
       const generated =
         immutableModule.test(`/${filename}`) || filename.endsWith(`/${directory}/index.js`);
@@ -125,6 +135,10 @@ async function pruneArtifacts(outDir: string, modules: ReadonlyMap<string, strin
       }
     }
     await removeIfEmpty(entries);
+    for (const payload of payloadDirectories) {
+      await removeIfEmpty(path.join(payloads, payload));
+    }
+    await removeIfEmpty(payloads);
     await removeIfEmpty(owned);
   }
 }

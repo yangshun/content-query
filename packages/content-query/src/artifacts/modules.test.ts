@@ -146,3 +146,99 @@ describe("query style manifest", () => {
     expect(Object.hasOwn(manifestIn(modules.get("server.js")!), "queryStyle")).toBe(false);
   });
 });
+
+/** Prepares a revision with a variant payload, a single payload, and an unsafe payload name. */
+function customPayloadRevision(): PreparedRevision {
+  const variants = (entries: Record<string, unknown>) =>
+    new Map(Object.entries(entries).map(([key, value]) => [key, async () => value]));
+  return {
+    collections: {
+      coding: {
+        records: [{ id: "two-sum" }, { id: "reverse-list" }],
+        builtins: new Map(),
+        relationships: {},
+        payloads: new Map([
+          [
+            "detail",
+            new Map([
+              [
+                "two-sum",
+                variants({
+                  '{"locale":"en-US"}': { hints: ["Use a map"], date: new Date(0) },
+                  '{"locale":"fr-FR"}': { hints: ["Utilisez une table"] },
+                }),
+              ],
+              [
+                "reverse-list",
+                variants({ '{"locale":"en-US"}': { hints: ["Track the previous node"] } }),
+              ],
+            ]),
+          ],
+          ["step one", new Map([["two-sum", variants({ "{}": "Scan once." })]])],
+        ]),
+      },
+    },
+    registry: {
+      coding: {
+        relationships: {},
+        payloads: { detail: { variants: ["locale"] }, "step one": { variants: [] } },
+      },
+    },
+    relations: new Map(),
+    active: 0,
+    payloadCache: new Map(),
+    renderCache: new Map(),
+  };
+}
+
+describe("custom payload modules", () => {
+  test("emits one module per entry and variant, loaded through the collection's payload table", async () => {
+    const fixture = await projectFixture();
+    try {
+      const modules = await revisionModules(customPayloadRevision());
+      const payloadModules = [...modules.keys()].filter((filename) =>
+        filename.includes("/payloads/"),
+      );
+      expect(payloadModules).toHaveLength(4);
+      expect(
+        payloadModules.filter((filename) =>
+          /^collections\/coding\/payloads\/detail\/[a-f0-9]{64}\.js$/.test(filename),
+        ),
+      ).toHaveLength(3);
+      expect(
+        payloadModules.filter((filename) => filename.startsWith("collections/coding/payloads/~")),
+      ).toHaveLength(1);
+      for (const [filename, source] of modules) {
+        const destination = path.join(fixture.root, "portable", filename);
+        await mkdir(path.dirname(destination), { recursive: true });
+        await writeFile(destination, source);
+      }
+      const { stdout } = await execute(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          `
+const {content} = await import("./portable/server.js");
+const detail = async (id, locale) => (await content.query.coding.findFirst({ where: { id }, payloads: { detail: { locale } } }))._payloads.detail;
+const english = await detail("two-sum", "en-US");
+const french = await detail("two-sum", "fr-FR");
+const step = (await content.query.coding.findFirst({ where: { id: "two-sum" }, payloads: { "step one": true } }))._payloads["step one"];
+const missing = await detail("reverse-list", "fr-FR").catch(error => ({ code: error.code, payload: error.payload, variant: error.variant }));
+console.log(JSON.stringify({ english: english.hints, date: english.date instanceof Date && english.date.getTime(), french: french.hints, step, missing }));
+`,
+        ],
+        { cwd: fixture.root },
+      );
+      expect(JSON.parse(stdout)).toEqual({
+        english: ["Use a map"],
+        date: 0,
+        french: ["Utilisez une table"],
+        step: "Scan once.",
+        missing: { code: "variant-not-found", payload: "detail", variant: { locale: "fr-FR" } },
+      });
+    } finally {
+      await fixture.dispose();
+    }
+  });
+});

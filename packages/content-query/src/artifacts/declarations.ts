@@ -23,6 +23,7 @@ export function contentDeclarations(directory: string, config: string): string {
     `export type CollectionKey = keyof Registry & string;`,
     `export type CollectionData<Name extends CollectionKey> = import("content-query").QueryData<Registry[Name]>;`,
     `export type Collections = { [Name in CollectionKey]: CollectionData<Name> };`,
+    `export type CollectionPayload<Name extends CollectionKey, Payload extends keyof import("content-query").PayloadsOf<Registry[Name]>> = import("content-query").PayloadData<Registry[Name], Payload>;`,
     `export declare const content: import("content-query/runtime").Content<Registry, ConfiguredQueryStyle>;`,
     ``,
   ].join("\n");

@@ -410,7 +410,7 @@ const same = await content
   .first();
 ```
 
-- **Requests.** Relational `payloads` maps payload names to `true`; `false` omits a payload. It is accepted at the root and inside `with` scopes. Fluent `.withPayload(name)` does the same on root and relationship builders; requesting the same payload twice throws. Omitting `columns` still returns all metadata alongside the payloads.
+- **Requests.** Relational `payloads` maps payload names to `true`, or to a record naming every variant key for a payload with variants; `false` omits a payload. It is accepted at the root and inside `with` scopes. Fluent `.withPayload(name)` does the same on root and relationship builders; requesting the same payload twice throws. Omitting `columns` still returns all metadata alongside the payloads.
 - **Results.** Requested values appear under the reserved `_payloads` key, which metadata, computed fields, and relationships cannot use. A query that requests no payloads has no `_payloads` key.
 - **Loading.** Payloads load after filtering, ordering, and pagination, from the same pinned revision as the records, with at most 16 loads in flight per query. Each distinct payload loads once per query, and every row receives its own detached copy, including rows that share a related entry. Adjacent sibling scopes never request payloads.
 - **Limits.** Payloads are never selectable, filterable, sortable, or countable. `content.count()` and fluent `.count()` reject payload requests, and the fluent `count()` terminal is unavailable in the types once `.withPayload()` is called.
@@ -422,6 +422,38 @@ Payloads never read original sources. Custom loaders can provide optional text a
 Markdown defaults to `retainBody: true` and `deferRender: false`. Production preparation compiles eagerly and packages HTML/headings for lazy loading. `deferRender: true` packages captured input and the library-owned renderer. Development compiles when a query first requests `_rendered`. Disabling public retention still preserves private input needed by deferred rendering. Built-in HTML includes matching unique heading IDs and syntax-highlighted fenced code. Headings carry IDs only; permalink anchors and other heading presentation are application-owned. Authored image/link URLs remain application-owned and are not rewritten or copied.
 
 `_rendered` contains HTML and headings, with no framework components or user-defined runtime resolvers. Records and payloads from one query always come from the same revision; separate queries may observe different development revisions. Production content is immutable.
+
+### Custom payloads
+
+Collections declare their own payloads for large per-entry data that queries load only on request:
+
+```ts
+const coding = defineCollection({
+  loader: glob({ base: "./content/coding", pattern: "*/exercise.json", generateId }),
+  schema: schema.object({ title: schema.string(), locales: schema.array(schema.string()) }),
+  payloads: {
+    detail: {
+      schema: schema.object({ hints: schema.string() }),
+      variants: { locale: "locales" },
+      resolve: async ({ source, variant }) => ({
+        hints: await readHints(source!.filePath, variant.locale),
+      }),
+    },
+  },
+});
+
+const exercise = await content.query.coding.findFirst({
+  where: { id: "two-sum" },
+  payloads: { detail: { locale: "fr-FR" } },
+});
+```
+
+- **Declarations.** Each payload has a `schema` and `resolve(context)`, where `context` holds `collection`, `id`, `data` (validated metadata plus computed fields), `source`, `variant`, `readBody()`, and `signal`. Names cannot start with `_` or repeat a computed field or relationship.
+- **Variants.** `variants` maps each key to the name of a string-array data field, read per entry (a missing value means none), or to a fixed list. Preparation resolves the cross product of the keys' values, or the combinations `combinations({ ...context, variants })` returns; each must give every key one listed value. Variant values are not callbacks, so TypeScript can infer variant keys inline; derive values that need logic in a computed field.
+- **Preparation.** Payloads resolve after relationships validate, are schema-validated and encoded, and are cached per entry, so unchanged entries reuse their values. Generated output stores one module per entry and variant at `collections/<collection>/payloads/<payload>/<hash>.js`. Files a resolver reads besides the entry are not yet tracked during development.
+- **Requests.** Variant requests name every key: relational `payloads: { detail: { locale: "fr-FR" } }` or fluent `.withPayload("detail", { locale: "fr-FR" })`. A combination the entry lacks rejects with `variant-not-found`, whose `payload` and `variant` properties name it.
+- **Types.** Payload values and variant keys are inferred from the declaration. `content-query` exports `PayloadData<Definition, Name>` and `VariantOf<Definition, Name>`, and generated declarations export `CollectionPayload<Collection, Payload>`.
+- **Diagnostics.** Payload failures carry `payload` and `variant` with the collection, entry, source, and field `path`, through the Vite development transport, and the CLI prints them as `detail[locale=fr-FR]`.
 
 ## Errors and extension points
 

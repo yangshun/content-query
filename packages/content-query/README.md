@@ -10,6 +10,7 @@ Use it with your existing framework. Your application owns its routes, layouts, 
 - **Flexible sources.** Load local files, use Astro-compatible content loaders, or write your own loader.
 - **Queries and relationships.** Select fields, filter, sort, paginate, and load related entries with validated references.
 - **Markdown rendering.** Request HTML, headings, and syntax highlighting as query payloads, loaded only when a query asks for them.
+- **Custom payloads.** Declare schema-validated per-entry data, optionally by variant such as locale, resolved during the build and loaded only when a query names it.
 - **Optional MDX companion.** [`@content-query/mdx`](https://github.com/yangshun/content-query/tree/main/packages/mdx) supplies React islands and ordinary React document modules with Vite SSR. Core has no MDX or React dependency.
 - **Framework integrations.** Use Vite, Next.js, or the standalone CLI, with content updates during development.
 

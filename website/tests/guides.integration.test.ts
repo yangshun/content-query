@@ -42,6 +42,7 @@ const guideIds = [
   "sources-and-loaders",
   "computed-fields",
   "relationships",
+  "payloads",
   "querying-content",
   "rendering-content",
   "mdx-and-islands",

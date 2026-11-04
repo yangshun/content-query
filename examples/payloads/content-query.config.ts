@@ -2,7 +2,19 @@ import { defineCollection, type Loader } from "content-query";
 import { file } from "content-query/loaders";
 import { schema } from "content-query/schema";
 
-/** Markdown articles offer the built-in `body` and `rendered` payloads. */
+/** The body's first paragraph, skipping headings, collapsed to one line. */
+function firstParagraph(body: string): string {
+  const paragraph = body
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .find((block) => block && !block.startsWith("#"));
+  return paragraph?.replace(/\s+/g, " ") ?? "";
+}
+
+/**
+ * Markdown articles offer the built-in `_body` and `_rendered` payloads, plus a custom `excerpt`
+ * payload with a `length` variant.
+ */
 const articles = defineCollection({
   source: "./content/articles",
   schema: schema.object({
@@ -18,6 +30,19 @@ const articles = defineCollection({
       from: "authorId",
       to: "id",
       referenceSide: "from",
+    },
+  },
+  // Custom payloads are resolved during the build and load only when a query names the variant.
+  payloads: {
+    excerpt: {
+      schema: schema.string(),
+      variants: { length: ["short", "long"] },
+      resolve: async ({ readBody, variant }) => {
+        const paragraph = firstParagraph((await readBody()) ?? "");
+        return variant.length === "short"
+          ? (paragraph.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? paragraph)
+          : paragraph;
+      },
     },
   },
 });

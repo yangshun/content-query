@@ -111,11 +111,24 @@ describe("standalone command interface", () => {
               message: "Title required",
             },
             { code: "source-error", message: "Offline" },
+            {
+              code: "validation-error",
+              collection: "coding",
+              id: "two-sum",
+              source: "two-sum/exercise.json",
+              payload: "detail",
+              variant: { locale: "en-US" },
+              path: ["hints", 0],
+              message: "Required",
+            },
           ],
         }),
       );
       expect(output.mock.calls[0]![0]).toContain("posts one post.md: Title required");
       expect(output.mock.calls[1]![0]).toContain("source-error");
+      expect(output.mock.calls[2]![0]).toContain(
+        "coding two-sum two-sum/exercise.json detail[locale=en-US] at hints.0: Required",
+      );
       report(new Error("Other failure"));
       report("Plain failure");
       expect(output).toHaveBeenCalledWith("Other failure");
