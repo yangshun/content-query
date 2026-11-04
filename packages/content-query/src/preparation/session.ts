@@ -5,6 +5,7 @@ import { ContentError, contentError, groupDiagnostics, withContext } from "../sh
 import { prepareRevision, type CandidateSources, type PreparationCache } from "./prepare.ts";
 import { normalizeSnapshot } from "./validation.ts";
 import { createRuntime, type Content } from "../runtime/content.ts";
+import type { QueryStyle } from "../runtime/query-style.ts";
 import type { ContentState, PreparedRevision } from "../runtime/revision.ts";
 import type { CollectionRegistry } from "../collection/types.ts";
 import type { LoaderCleanup } from "../loaders/types.ts";
@@ -25,8 +26,12 @@ export type ContentSourceEvent =
   | { type: "ready"; snapshot: ContentSourceSnapshot }
   | { type: "error"; error: ContentError };
 
-export type ContentSession<Registry extends CollectionRegistry = {}> = {
-  content: Content<Registry>;
+export type ContentSession<
+  Registry extends CollectionRegistry = {},
+  Style extends QueryStyle = QueryStyle,
+> = {
+  /** Root query APIs are typed by `Style`; the configured `queryStyle` is enforced at runtime. */
+  content: Content<Registry, Style>;
   /** Reads the latest successful source snapshot; current preparation errors are rethrown. */
   sources(): ContentSourceSnapshot;
   /** Observes subsequent publications and failures; returns an idempotent unsubscribe function. */
@@ -39,6 +44,8 @@ export type SessionOptions = {
   watch: boolean;
   outDir: string;
   registry?: CollectionRegistry;
+  /** Query style for an in-memory `registry`; config-backed sessions read `queryStyle` instead. */
+  queryStyle?: QueryStyle;
   publish?(
     revision: PreparedRevision,
     registry: CollectionRegistry,
@@ -66,10 +73,17 @@ export function sessionInternals(session: ContentSession): SessionInternals {
   return internal;
 }
 
-/** Creates a preparation session with ordered source commands and atomic revision publication. */
-export async function createSession<Registry extends CollectionRegistry = {}>(
-  options: SessionOptions,
-): Promise<ContentSession<Registry>> {
+/**
+ * Creates a preparation session with ordered source commands and atomic revision publication.
+ *
+ * @param options - Root, configuration, watch, and publication settings.
+ * @returns A session whose `content` is typed by `Style`; each published revision carries the
+ * configured `queryStyle`, which the runtime enforces.
+ */
+export async function createSession<
+  Registry extends CollectionRegistry = {},
+  Style extends QueryStyle = QueryStyle,
+>(options: SessionOptions): Promise<ContentSession<Registry, Style>> {
   options = {
     ...options,
     root: path.resolve(options.root),
@@ -129,6 +143,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
   let registry: CollectionRegistry = {};
   let loaders = new Map<string, LoaderSession>();
   let configDependencies: ReadonlySet<string> | undefined;
+  let queryStyle: QueryStyle | undefined;
   let configurationError: ContentError | undefined;
   const candidates: CandidateSources = new Map();
   const cache: PreparationCache = new Map();
@@ -227,7 +242,12 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
     configDependencies = undefined;
     // A configuration that fails to load never takes over; earlier subscriptions keep recovery alive.
     const loaded = options.registry
-      ? { registry: options.registry, dependencies: new Set<string>(), loaderConfig: undefined }
+      ? {
+          registry: options.registry,
+          dependencies: new Set<string>(),
+          loaderConfig: undefined,
+          queryStyle: options.queryStyle,
+        }
       : await loadRegistry(options.config);
     const nextSubscriptions = new AbortController();
     const nextCleanups: LoaderCleanup[] = [];
@@ -316,6 +336,7 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
     registry = nextRegistry;
     loaders = nextLoaders;
     configDependencies = loaded.dependencies;
+    queryStyle = loaded.queryStyle;
     state.registry = queryRegistry(registry);
     candidates.clear();
     cache.clear();
@@ -361,6 +382,8 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
     });
     try {
       const failures = [...loadFailures.values()];
+      // Read with the registry so the revision carries the style of the configuration it used.
+      const style = queryStyle;
       const revision = await prepareRevision(
         registry,
         candidates,
@@ -372,6 +395,9 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
       );
       if (disposed || currentGeneration !== generation) {
         return;
+      }
+      if (style) {
+        revision.queryStyle = style;
       }
       await options.publish?.(revision, registry, signal);
       if (disposed || currentGeneration !== generation) {
@@ -469,8 +495,8 @@ export async function createSession<Registry extends CollectionRegistry = {}>(
       });
     }
   }
-  const session: ContentSession<Registry> = {
-    content: createRuntime<Registry>(state),
+  const session: ContentSession<Registry, Style> = {
+    content: createRuntime<Registry, Style>(state),
     sources,
     subscribe(listener) {
       if (disposed) {

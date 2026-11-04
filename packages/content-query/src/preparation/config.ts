@@ -3,12 +3,15 @@ import path from "node:path";
 import { createJiti } from "jiti";
 import type { CollectionRegistry } from "../collection/types.ts";
 import type { LoaderConfig } from "../loaders/types.ts";
+import { isQueryStyle, type QueryStyle } from "../runtime/query-style.ts";
 
 export type LoadedConfiguration = {
   registry: CollectionRegistry;
   /** Modules whose edits a reload can observe: the config and every module Jiti transpiled. */
   dependencies: ReadonlySet<string>;
   loaderConfig?: Partial<LoaderConfig>;
+  /** The optional `queryStyle` export; absent allows both query styles. */
+  queryStyle?: QueryStyle;
 };
 
 /** Loads build-only configuration without retaining a previous config module value. */
@@ -32,7 +35,10 @@ export async function loadRegistry(config: string): Promise<LoadedConfiguration>
     filename,
     async: true,
     forceTranspile: true,
-  })) as { collections?: unknown; loaderConfig?: Partial<LoaderConfig> };
+  })) as { collections?: unknown; loaderConfig?: Partial<LoaderConfig>; queryStyle?: unknown };
+  if (imported.queryStyle !== undefined && !isQueryStyle(imported.queryStyle)) {
+    throw new Error('content-query.config queryStyle must be "fluent" or "relational".');
+  }
   if (
     imported.loaderConfig !== undefined &&
     (!imported.loaderConfig ||
@@ -66,5 +72,6 @@ export async function loadRegistry(config: string): Promise<LoadedConfiguration>
     registry: registry as CollectionRegistry,
     dependencies,
     loaderConfig: imported.loaderConfig,
+    queryStyle: imported.queryStyle,
   };
 }

@@ -10,6 +10,7 @@ export type {
   Relationship,
 } from "./collection/types.ts";
 export type { ContentHeading, ContentRenderResult, RenderedContent } from "./runtime/types.ts";
+export type { QueryStyle } from "./runtime/query-style.ts";
 export type {
   DataEntry,
   DataStore,

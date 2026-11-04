@@ -2,6 +2,7 @@ import type { ContentError } from "../shared/errors.ts";
 import type { QueryPlan, QueryRegistry } from "../query/plan.ts";
 import type { Relationship } from "../collection/types.ts";
 import type { ContentRenderResult } from "./types.ts";
+import type { QueryStyle } from "./query-style.ts";
 
 export type QueryRecord = Record<string, unknown> & { id: string };
 /** The built-in side payload shared by an entry's `_body` and `_rendered` payloads. */
@@ -25,6 +26,8 @@ export type PreparedRevision = {
   payloadCache: Map<string, Promise<BuiltinPayload>>;
   renderCache: Map<string, Promise<ContentRenderResult>>;
   renderMarkdown?: (body: string) => Promise<ContentRenderResult>;
+  /** The only query style this revision's configuration allows; absent allows both. */
+  queryStyle?: QueryStyle;
   execute?: (
     plan: QueryPlan,
     terminal: "all" | "first" | "count",

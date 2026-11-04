@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
-import { ARTIFACT_VERSION, CODEC_VERSION } from "./types.ts";
+import { ARTIFACT_VERSION, CODEC_VERSION, type ArtifactManifest } from "./types.ts";
 import type { PreparedRevision } from "../runtime/revision.ts";
 import { encode } from "../shared/values.ts";
 
@@ -33,10 +33,11 @@ export async function revisionModules(
   { payloadChunkBytes = 0 }: { payloadChunkBytes?: number } = {},
 ): Promise<Map<string, string>> {
   const modules = new Map<string, string>();
-  const manifest = {
+  const manifest: ArtifactManifest = {
     version: ARTIFACT_VERSION,
     codec: CODEC_VERSION,
     collections: revision.registry,
+    ...(revision.queryStyle ? { queryStyle: revision.queryStyle } : {}),
   };
   const imports: string[] = [];
   const names: string[] = [];

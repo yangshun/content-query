@@ -113,3 +113,5 @@ const total = await published.count();
 Relational options are plain objects. Share them across modules and check them with `satisfies QueryOptions<...>` from `content-query/query`, which keeps literal column selections.
 
 Operator names differ between the styles; see the [operator reference](/docs/reference/queries-and-operators#filter-operators). Take care with `arrayContains`: fluent `arrayContains(fields.tags, "news")` matches one item, while relational `tags: { arrayContains: ["news", "guide"] }` requires every listed item, like fluent `arrayContainsAll`.
+
+To enforce one style, export `queryStyle` from the config. Type checks and the runtime then reject the other API; see [query style](/docs/reference/configuration#query-style).

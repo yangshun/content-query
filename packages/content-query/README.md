@@ -86,6 +86,8 @@ Built-in payload names start with an underscore: `_body` and `_rendered`. A quer
 
 The Vite integration supports Vite 8, and the Next.js integration supports Next.js 15 and 16. Both integrations are optional; standalone builds and queries require neither framework.
 
+To allow only one query API, export `queryStyle` from the config: `export const queryStyle = "relational";` keeps `content.query` and `content.count()`, and `"fluent"` keeps `content.select()`. Generated types report the disabled API in the editor, and the runtime throws an `invalid-query` error for it. See [query style](https://github.com/yangshun/content-query/blob/main/docs/API.md#query-style).
+
 Pass `contentQuery()` directly to Vite or Vite+'s `plugins` array. No `Plugin` type cast is needed; workspace consumers share the pinned toolchain versions in the dependency catalog.
 
 Repository development checks package types and isolated consumers with [tsrs](https://github.com/oxc-project/tsrs). Run `vp run check` in the package directory for formatting, linting, and type checks; build tools use the shared TypeScript 6 compatibility package for its `6.0.3` JavaScript API. Native TypeScript `7.1.0-beta` is available at the repository root as `vp exec tsc`.
