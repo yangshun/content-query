@@ -11,3 +11,5 @@ apps/*/.tanstack/
 apps/*/.void-wrangler.jsonc
 apps/*/void.lock.json
 apps/spotlight-probe/
+apps/loopstride/
+apps/loopstride-raw/
