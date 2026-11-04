@@ -4,6 +4,7 @@ import type {
   QueryData,
   Relationship,
   RelationshipsOf,
+  VariantOf,
 } from "../collection/types.ts";
 import type { Expression, NO_SELECTION_MESSAGE } from "./plan.ts";
 
@@ -222,6 +223,9 @@ export type Query<
         /** Attaches a payload under `_payloads` after filtering, ordering, and pagination. */
         withPayload<Key extends keyof PayloadsOf<Registry[Name]> & string>(
           name: Key,
+          ...variant: keyof VariantOf<Registry[Name], Key> extends never
+            ? []
+            : [variant: Readonly<VariantOf<Registry[Name], Key>>]
         ): Query<
           Registry,
           Name,

@@ -4,6 +4,7 @@ import type {
   QueryData,
   Relationship,
   RelationshipsOf,
+  VariantOf,
 } from "../collection/types.ts";
 import type { Expression, NO_SELECTION_MESSAGE } from "./plan.ts";
 import type { Adjacent, Fields, OrderBy, Ordered, Scalar, RelationshipResult } from "./types.ts";
@@ -77,11 +78,21 @@ export type RelationalWhere<
   RAW?: (fields: Fields<QueryData<Registry[Name]>>) => Expression;
 };
 
+/** Requests one payload: `true` without variants, or a record giving every variant key. */
+export type PayloadRequest<Variant> = keyof Variant extends never ? true : Readonly<Variant>;
 /** Payloads to attach under `_payloads`; payloads set to false are omitted. */
 export type PayloadOptions<
   Registry extends CollectionRegistry,
   Name extends keyof Registry & string,
-> = { [Key in keyof PayloadsOf<Registry[Name]>]?: boolean };
+> = {
+  [Key in keyof PayloadsOf<Registry[Name]>]?:
+    | false
+    | PayloadRequest<VariantOf<Registry[Name], Key>>;
+};
+/** Rejects variant keys a payload does not declare, including through inferred variables. */
+type CheckedPayloadRequest<Request, Variant> = Request extends boolean
+  ? Request
+  : { [Key in keyof Request]: Key extends keyof Variant ? string : never };
 
 /**
  * Collection-scoped metadata queries with Drizzle-style columns, relationships, and filters.
@@ -313,7 +324,10 @@ export type CheckedRelationalOptions<
             ? AllowAdjacent extends true
               ? {
                   [Payload in keyof Options[Key]]: Payload extends keyof PayloadsOf<Registry[Name]>
-                    ? Options[Key][Payload]
+                    ? CheckedPayloadRequest<
+                        Options[Key][Payload],
+                        VariantOf<Registry[Name], Payload>
+                      >
                     : never;
                 }
               : never

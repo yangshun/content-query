@@ -118,7 +118,33 @@ ${rendered.html}
   }
 }
 
-// 5. Payloads also work inside relationship scopes. Authors come from `file()` and have no
+// 5. Custom payloads hold data that list queries never load. The feed requests each article's
+// long excerpt; the short variant is never loaded.
+const feed = await content.query.articles.findMany({
+  columns: { id: true, title: true, publishedAt: true },
+  orderBy: { publishedAt: "desc" },
+  payloads: { excerpt: { length: "long" } },
+});
+await emit(
+  "feed.json",
+  `${JSON.stringify(
+    {
+      version: "https://jsonfeed.org/version/1.1",
+      title: "Field notes",
+      items: feed.map((article) => ({
+        id: `/articles/${article.id}.html`,
+        url: `/articles/${article.id}.html`,
+        title: article.title,
+        summary: article._payloads.excerpt,
+        date_published: article.publishedAt.toISOString(),
+      })),
+    },
+    null,
+    2,
+  )}\n`,
+);
+
+// 6. Payloads also work inside relationship scopes. Authors come from `file()` and have no
 // payloads of their own, but their related articles do. Here only each author's newest
 // article loads its HTML.
 const authors = await content.query.authors.findMany({

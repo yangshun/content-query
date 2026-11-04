@@ -93,6 +93,28 @@ export async function revisionModules(
       );
     }
     flushBatch();
+    // Each custom payload variant is its own module; the variant key is folded into the hash.
+    const custom: string[] = [];
+    for (const [payload, entries] of collection.payloads ?? []) {
+      const payloadDirectory = `payloads/${directoryName(payload)}`;
+      const rows: string[] = [];
+      for (const [id, variants] of entries) {
+        const loaders: string[] = [];
+        for (const [variant, load] of variants) {
+          const encoded = encode(await load());
+          const key = digest([name, payload, id, variant, encoded]);
+          publishPayload(
+            `${directory}/${payloadDirectory}/${key}.js`,
+            `export default ${JSON.stringify(encoded)};\n`,
+          );
+          loaders.push(
+            `${JSON.stringify(variant)}: () => import(${JSON.stringify(`./${payloadDirectory}/${key}.js`)})`,
+          );
+        }
+        rows.push(`${JSON.stringify(id)}: { ${loaders.join(", ")} }`);
+      }
+      custom.push(`${JSON.stringify(payload)}: {\n${rows.join(",\n")}\n}`);
+    }
     const recordSource = JSON.stringify(collection.records.map(encode));
     const compressedRecords = compactJson(recordSource);
     const helpers = [
@@ -106,7 +128,8 @@ export async function revisionModules(
       ? `createPayloadLoaders([${chunks.join(",\n")}])`
       : `{ ${payloads.join(",\n")} }`;
     const records = compressedRecords ? `decodeCompressed(${compressedRecords})` : recordSource;
-    const code = `${loaders}export default { records: ${records}, builtins: ${loading} };\n`;
+    const table = custom.length ? `, payloads: {\n${custom.join(",\n")}\n}` : "";
+    const code = `${loaders}export default { records: ${records}, builtins: ${loading}${table} };\n`;
     const index = `index-${digest(code)}.js`;
     modules.set(`${directory}/${index}`, code);
     modules.set(

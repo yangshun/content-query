@@ -344,13 +344,10 @@ for (const backend of ["in-memory", "encoded"] as const) {
         count(): Promise<number>;
       };
       await expect(counted.count()).rejects.toMatchObject({ code: "invalid-query" });
-      expect(() =>
-        content
-          .from("posts")
-          .select("id")
-          .withPayload("_body")
-          .withPayload("_body" as never),
-      ).toThrow(/cannot be repeated/);
+      const repeated = content.from("posts").select("id").withPayload("_body") as unknown as {
+        withPayload(name: string): unknown;
+      };
+      expect(() => repeated.withPayload("_body")).toThrow(/cannot be repeated/);
     });
     test("payloads never reach adjacent rows, and shared related rows get their own copies", async () => {
       const { content } = await setup();

@@ -5,9 +5,17 @@ export type {
   CollectionDefinition,
   CollectionRegistry,
   ComputedContext,
+  PayloadContext,
+  PayloadData,
+  PayloadDeclaration,
+  PayloadDefinition,
   PayloadsOf,
   QueryData,
   Relationship,
+  VariantContext,
+  VariantField,
+  VariantOf,
+  VariantValues,
 } from "./collection/types.ts";
 export type { ContentHeading, ContentRenderResult, RenderedContent } from "./runtime/types.ts";
 export type { QueryStyle } from "./runtime/query-style.ts";

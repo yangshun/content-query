@@ -25,10 +25,25 @@ export function hasBuiltinPayloads(definition: CollectionDefinition): boolean {
 }
 
 /**
+ * Describes a collection's custom payloads by their sorted variant keys. Underscore names belong
+ * to built-ins, so an invalid declaration never shadows them; preparation reports it instead.
+ *
+ * @param definition - A collection definition.
+ * @returns Payload descriptors keyed by custom payload name.
+ */
+function customPayloads(definition: CollectionDefinition): Record<string, PayloadDescriptor> {
+  return Object.fromEntries(
+    Object.entries(definition.payloads ?? {})
+      .filter(([name]) => !name.startsWith("_"))
+      .map(([name, payload]) => [name, { variants: Object.keys(payload?.variants ?? {}).sort() }]),
+  );
+}
+
+/**
  * Builds the query registry that runtimes validate queries against, without resolvers or schemas.
  *
  * @param registry - The configured collection definitions.
- * @returns Relationship and payload descriptors for each collection.
+ * @returns Relationship and payload descriptors for each collection, built-in and custom.
  */
 export function queryRegistry(registry: CollectionRegistry): QueryRegistry {
   return Object.fromEntries(
@@ -36,7 +51,10 @@ export function queryRegistry(registry: CollectionRegistry): QueryRegistry {
       name,
       {
         relationships: definition.relationships ?? {},
-        payloads: hasBuiltinPayloads(definition) ? { ...builtinPayloads } : {},
+        payloads: {
+          ...(hasBuiltinPayloads(definition) ? builtinPayloads : {}),
+          ...customPayloads(definition),
+        },
       },
     ]),
   );

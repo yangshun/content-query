@@ -138,11 +138,11 @@ Reference: [Astro's live collections](https://docs.astro.build/en/guides/content
 
 ### Named per-entry payloads
 
-Status: built-in `_body` and `_rendered` payloads and payload queries shipped in 0.2.0 on November 2, 2026. The remaining milestones are agreed but not implemented.
+Status: built-in `_body` and `_rendered` payloads and payload queries shipped in 0.2.0 on November 2, 2026. Custom payloads (step 1 below) were implemented on November 4, 2026; the remaining steps are agreed but not implemented. Variants name a string-array data field or list fixed values instead of taking enumerator callbacks, because TypeScript cannot infer variant keys from an object of unannotated callbacks.
 
 Entries assembled from many files, such as an exercise folder with a manifest, Markdown sections, per-language code, and test cases, need large typed data that catalog queries never load. Planned work, in order:
 
-1. **Custom payloads.** `defineCollection({ payloads: { detail: { schema, variants?, combinations?, resolve } } })`, resolved and schema-validated during preparation and stored one module per entry and variant. Custom payload names cannot start with an underscore, which is reserved for built-ins such as `_body` and `_rendered`. Variant keys are required with no fallback; a missing combination fails with `variant-not-found`. Diagnostics gain `payload` and `variant` fields.
+1. **Custom payloads (implemented).** `defineCollection({ payloads: { detail: { schema, variants?, combinations?, resolve } } })`, resolved and schema-validated during preparation and stored one module per entry and variant. Custom payload names cannot start with an underscore, which is reserved for built-ins such as `_body` and `_rendered`. Variant keys are required with no fallback; a missing combination fails with `variant-not-found`. Diagnostics gain `payload` and `variant` fields.
 2. **Tracked related files.** `files.glob()`, `files.file()`, `files.renderMarkdown()`, `files.text()`, and `files.bytes()` mirror the loaders, are rooted at the manifest's folder, and record dependencies so edits, additions, and deletions re-resolve only affected payloads.
 3. **Bounded preparation.** Concurrent payload resolution with streamed writes, a persistent preparation cache, on-demand payload resolution in Vite development and tests, a `content-query check` command, and cross-entry validators.
 4. **Assets and delivery.** Content-hashed `AssetRef<Value>` payloads read with `content.readAsset(ref)`, and `bundle` or `files` delivery with Node and Cloudflare Workers readers.

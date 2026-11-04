@@ -7,9 +7,9 @@ order: 55
 
 ## Content errors
 
-Import `ContentError` from `content-query/runtime`. Inspect its stable `code` and contextual `diagnostics`, including collection, entry, source, field path, and underlying cause where available.
+Import `ContentError` from `content-query/runtime`. Inspect its stable `code` and contextual `diagnostics`, including collection, entry, source, field path, payload, variant, and underlying cause where available.
 
-Codes include `source-error`, `validation-error`, `duplicate-id`, `invalid-reference`, `invalid-query`, `variant-not-found`, `not-renderable`, `artifact-error`, and `render-error`.
+Codes include `source-error`, `validation-error`, `duplicate-id`, `invalid-reference`, `invalid-query`, `variant-not-found`, `not-renderable`, `artifact-error`, and `render-error`. `variant-not-found` means an entry has no requested [custom payload](/docs/payloads) variant; its `payload` and `variant` properties name it.
 
 ## Common checks
 

@@ -5,6 +5,27 @@ import type { ContentRenderResult } from "./types.ts";
 import type { QueryStyle } from "./query-style.ts";
 
 export type QueryRecord = Record<string, unknown> & { id: string };
+/** Custom payload loaders by payload name, entry ID, and canonical variant key. */
+export type CustomPayloadTable = ReadonlyMap<
+  string,
+  ReadonlyMap<string, ReadonlyMap<string, () => Promise<unknown>>>
+>;
+/**
+ * Serializes a variant combination with sorted keys, so preparation, artifacts, and query plans
+ * agree on one identity. A payload without variants uses `{}`.
+ *
+ * @param variant - The variant combination.
+ * @returns The canonical variant key.
+ */
+export function variantKey(variant: Readonly<Record<string, string>>): string {
+  return JSON.stringify(
+    Object.fromEntries(
+      Object.keys(variant)
+        .sort()
+        .map((key) => [key, variant[key]]),
+    ),
+  );
+}
 /** The built-in side payload shared by an entry's `_body` and `_rendered` payloads. */
 export type BuiltinPayload = {
   body?: string;
@@ -16,6 +37,11 @@ export type PreparedCollection = {
   relationships: Record<string, Relationship>;
   /** Lazy built-in payloads, present only for entries with a body or rendered output. */
   builtins: ReadonlyMap<string, () => Promise<BuiltinPayload>>;
+  /**
+   * Lazy custom payloads by payload name, entry ID, and canonical variant key. A missing variant
+   * key means the entry has no such combination.
+   */
+  payloads?: CustomPayloadTable;
   sources?: ReadonlyMap<string, string | undefined>;
 };
 export type PreparedRevision = {
@@ -23,7 +49,8 @@ export type PreparedRevision = {
   collections: Record<string, PreparedCollection>;
   relations: Map<string, Map<string, readonly QueryRecord[]>>;
   active: number;
-  payloadCache: Map<string, Promise<BuiltinPayload>>;
+  /** Built-in payloads keyed by collection and ID; custom payloads also by name and variant. */
+  payloadCache: Map<string, Promise<unknown>>;
   renderCache: Map<string, Promise<ContentRenderResult>>;
   renderMarkdown?: (body: string) => Promise<ContentRenderResult>;
   /** The only query style this revision's configuration allows; absent allows both. */

@@ -12,13 +12,13 @@ vp run --filter content-query build
 vp run --filter @content-query/example-payloads build
 ```
 
-The build script runs `content-query build`, then `node src/site.ts`, which writes HTML and Markdown files to `dist/`. Node.js runs the TypeScript script directly.
+The build script runs `content-query build`, then `node src/site.ts`, which writes HTML pages, Markdown sources, and a JSON feed to `dist/`. Node.js runs the TypeScript script directly.
 
 ## Collections
 
 `content-query.config.ts` declares three collections:
 
-- `articles` uses the Markdown `source` shorthand, so its entries offer the built-in `_body` and `_rendered` payloads.
+- `articles` uses the Markdown `source` shorthand, so its entries offer the built-in `_body` and `_rendered` payloads. It also declares a custom `excerpt` payload with a `length` variant listing `short` and `long`, resolved from each body's first paragraph during the build.
 - `authors` uses `file()`. Its entries are data records, so requesting a payload from it is a type error and an `invalid-query` at runtime.
 - `announcements` uses a custom loader that supplies finished HTML, as a CMS would. Its `_rendered` payload needs no Markdown compilation, and its `_body` payload is `undefined`.
 
@@ -29,9 +29,10 @@ The build script runs `content-query build`, then `node src/site.ts`, which writ
 | Page               | Query                                                                                                       | Loads                                                |
 | ------------------ | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | Index list         | `query.articles.findMany({ columns, orderBy, with })`                                                       | Metadata only                                        |
-| Index "Latest"     | `select("id", "title").from("articles").orderBy(...).withPayload("_rendered").first()`                      | One article's HTML                                   |
+| Index "Latest"     | `from("articles").select("id", "title").orderBy(...).withPayload("_rendered").first()`                      | One article's HTML                                   |
 | Index announcement | `query.announcements.findFirst({ payloads: { _rendered: true, _body: true } })`                             | Supplied HTML; `_body` is `undefined`                |
 | Article pages      | `query.articles.findFirst({ where: { id }, with: { author }, payloads: { _rendered: true, _body: true } })` | HTML, headings, and the raw Markdown, from one query |
+| JSON feed          | `query.articles.findMany({ columns, orderBy, payloads: { excerpt: { length: "long" } } })`                  | One custom payload variant per article               |
 | Author pages       | `query.authors.findMany({ with: { articles: { limit: 1, payloads: { _rendered: true } } } })`               | Each author's newest article only                    |
 
 Requested values appear under `_payloads` on each row:

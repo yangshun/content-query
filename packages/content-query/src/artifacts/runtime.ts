@@ -2,7 +2,12 @@ import { ContentError } from "../shared/errors.ts";
 import { decode } from "../shared/values.ts";
 import { createRuntime } from "../runtime/content.ts";
 import { prepareRelationships } from "../runtime/relationships.ts";
-import type { BuiltinPayload, PreparedRevision, QueryRecord } from "../runtime/revision.ts";
+import type {
+  BuiltinPayload,
+  PreparedCollection,
+  PreparedRevision,
+  QueryRecord,
+} from "../runtime/revision.ts";
 import type { CollectionRegistry } from "../collection/types.ts";
 import type { ContentRenderResult } from "../runtime/types.ts";
 import { isQueryStyle } from "../runtime/query-style.ts";
@@ -12,6 +17,55 @@ import {
   type ArtifactManifest,
   type EncodedCollection,
 } from "./types.ts";
+
+/** Checks that a value is a plain record before reading generated payload tables from it. */
+function isTable(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Restores lazy custom payload loaders from a generated payload table.
+ *
+ * @param collection - The collection name, for error messages.
+ * @param payloads - Encoded loaders by payload name, entry ID, and canonical variant key.
+ * @returns Decoding loaders with the same keys.
+ */
+function customPayloadTable(
+  collection: string,
+  payloads: NonNullable<EncodedCollection["payloads"]>,
+): NonNullable<PreparedCollection["payloads"]> {
+  if (!isTable(payloads)) {
+    throw new Error(`Invalid payload table for collection "${collection}".`);
+  }
+  return new Map(
+    Object.entries(payloads).map(([payload, entries]) => {
+      if (!isTable(entries)) {
+        throw new Error(`Invalid payload table for collection "${collection}".`);
+      }
+      return [
+        payload,
+        new Map(
+          Object.entries(entries).map(([id, variants]) => {
+            if (
+              !isTable(variants) ||
+              Object.values(variants).some((load) => typeof load !== "function")
+            ) {
+              throw new Error(`Invalid payload table for collection "${collection}".`);
+            }
+            return [
+              id,
+              new Map(
+                Object.entries(variants as Record<string, () => Promise<{ default: string }>>).map(
+                  ([variant, load]) => [variant, async () => decode((await load()).default)],
+                ),
+              ),
+            ];
+          }),
+        ),
+      ];
+    }),
+  );
+}
 
 /** Initializes generated/embedded prepared content. This versioned wiring is internal. */
 export function createArtifactRevision(
@@ -67,6 +121,7 @@ export function createArtifactRevision(
             async () => decode<BuiltinPayload>((await load()).default),
           ]),
         ),
+        ...(encoded.payloads ? { payloads: customPayloadTable(name, encoded.payloads) } : {}),
       };
     }
     const errors = prepareRelationships(revision);
