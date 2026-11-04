@@ -203,12 +203,60 @@ for (const encoded of [false, true]) {
             where: { draft: false },
             orderBy: { rank: "asc" },
             columns: {},
-            adjacent: true,
+            adjacent: { scope: "results", columns: { title: true } },
           }),
         ).toEqual([
-          { _adjacent: { previous: null, next: { id: "b" } } },
-          { _adjacent: { previous: { id: "a" }, next: null } },
+          { _adjacent: { previous: null, next: { title: "Beta" } } },
+          { _adjacent: { previous: { title: "Alpha" }, next: null } },
         ]);
+      } finally {
+        await session.dispose();
+      }
+    });
+    test("selects results-scope neighbors explicitly, including within a relationship", async () => {
+      const { content, session } = await setup(encoded);
+      try {
+        const expected = {
+          name: "Ada",
+          posts: [
+            { id: "a", _adjacent: { previous: null, next: { title: "Draft" } } },
+            { id: "c", _adjacent: { previous: { title: "Alpha" }, next: null } },
+          ],
+        };
+        expect(
+          await content.query.authors.findFirst({
+            columns: { name: true },
+            with: {
+              posts: {
+                columns: { id: true },
+                orderBy: { rank: "asc" },
+                adjacent: { scope: "results", columns: { title: true } },
+              },
+            },
+          }),
+        ).toEqual(expected);
+        expect(
+          await content
+            .from("authors")
+            .select("name")
+            .with("posts", (posts) => posts.select("id").orderBy("rank").selectAdjacent("title"))
+            .first(),
+        ).toEqual(expected);
+        const findMany = (options: unknown) => content.query.posts.findMany(options as never);
+        expect(() => findMany({ columns: { id: true }, adjacent: true })).toThrow(
+          /select their own data/,
+        );
+        expect(() =>
+          findMany({
+            columns: { id: true },
+            adjacent: { scope: "results", columns: { id: true }, where: { draft: false } },
+          }),
+        ).toThrow(/share the query's filters and order/);
+        const unselectedNeighbors = content.from("posts").select("id") as unknown as {
+          selectAdjacent(...fields: unknown[]): unknown;
+        };
+        expect(() => unselectedNeighbors.selectAdjacent()).toThrow(/neighbor fields/);
+        expect(() => unselectedNeighbors.selectAdjacent("id", 1)).toThrow(/neighbor fields/);
       } finally {
         await session.dispose();
       }
@@ -324,7 +372,10 @@ for (const encoded of [false, true]) {
           _adjacent: { previous: { id: "a", title: "Alpha" }, next: null },
         });
         expect(
-          await content.query.posts.findFirst({ where: { id: "a" }, adjacent: true }),
+          await content.query.posts.findFirst({
+            where: { id: "a" },
+            adjacent: { scope: "results", columns: { id: true } },
+          }),
         ).toMatchObject({ _adjacent: { previous: null, next: null } });
         expect(
           await content
@@ -410,6 +461,25 @@ async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
   void relatedName;
   // @ts-expect-error Unselected fields, including id, are absent from the result.
   void relatedOnly[0]!.id;
+  // @ts-expect-error Fluent neighbors select their own fields.
+  void posts.select("id").selectAdjacent();
+  // @ts-expect-error Relational neighbors select their own data.
+  void content.query.posts.findMany({ columns: { id: true }, adjacent: true });
+  void content.query.posts.findMany({
+    columns: { id: true },
+    // @ts-expect-error Results-scope neighbors share the query's filters and order.
+    adjacent: { scope: "results", columns: { id: true }, orderBy: { rank: "asc" } },
+  });
+  const neighbors = await content.query.posts.findMany({
+    columns: { id: true },
+    adjacent: { scope: "results", columns: { title: true } },
+  });
+  const neighborTitle: string | undefined = neighbors[0]!._adjacent.next?.title;
+  const fluentNeighbors = await posts.select("id").selectAdjacent("title", "rank").all();
+  const neighborRank: number | undefined = fluentNeighbors[0]!._adjacent.previous?.rank;
+  void [neighborTitle, neighborRank];
+  // @ts-expect-error Neighbor selections include only the named fields.
+  void neighbors[0]!._adjacent.next?.id;
   void posts.where((fields) => has(fields.author, (author) => eq(author.name, "Ada")));
   void posts.where((fields) => like(fields.title, "A%"));
   // @ts-expect-error has() accepts only relationships.

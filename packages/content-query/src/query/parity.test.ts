@@ -230,12 +230,12 @@ for (const encoded of [false, true]) {
       }
     });
 
-    test("selects inherited adjacency before pagination with ID-only shorthand", async () => {
+    test("selects results-scope adjacency before pagination", async () => {
       const { content, session } = await setup(encoded);
       try {
         const object = await content.query.posts.findMany({
           where: { draft: false },
-          adjacent: true,
+          adjacent: { scope: "results", columns: { id: true } },
           columns: { id: true },
           orderBy: { rank: "asc" },
           offset: 1,
@@ -248,7 +248,7 @@ for (const encoded of [false, true]) {
           .orderBy("rank")
           .offset(1)
           .limit(1)
-          .selectAdjacent()
+          .selectAdjacent("id")
           .all();
         expect(object).toEqual([
           { id: "b", _adjacent: { previous: { id: "a" }, next: { id: "c" } } },
@@ -288,7 +288,11 @@ for (const encoded of [false, true]) {
         });
         expect(fluent).toEqual(object);
         expect(
-          await content.query.posts.findFirst({ where: { id: "a" }, adjacent: true, columns: {} }),
+          await content.query.posts.findFirst({
+            where: { id: "a" },
+            adjacent: { scope: "results", columns: { id: true } },
+            columns: {},
+          }),
         ).toEqual({ _adjacent: { previous: null, next: null } });
       } finally {
         await session.dispose();

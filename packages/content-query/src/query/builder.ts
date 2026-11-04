@@ -118,19 +118,33 @@ export function createBuilder(
         },
       });
     },
-    selectAdjacent(configure?: object | ((siblings: unknown) => unknown)) {
+    /**
+     * Selects previous and next entries. Field names select neighbors within this scope's results;
+     * a callback or options object describes an independent sibling scope.
+     */
+    selectAdjacent(...arguments_: unknown[]) {
       if (!allowAdjacent || plan.adjacent !== undefined) {
         invalidQuery("Adjacency cannot be repeated or selected recursively.");
       }
-      if (configure === undefined) {
-        return branch({ adjacent: true });
+      const [configure] = arguments_;
+      if (configure === undefined || typeof configure === "string") {
+        if (!arguments_.length || arguments_.some((field) => typeof field !== "string")) {
+          invalidQuery(
+            'selectAdjacent() requires neighbor fields, such as selectAdjacent("id"), or a sibling query.',
+          );
+        }
+        const selection = {
+          ...emptyPlan(plan.collection),
+          select: checkedFields(registry, plan.collection, arguments_ as string[]),
+        };
+        return branch({ adjacent: { scope: "results", plan: selection } });
       }
       if (typeof configure !== "function") {
         const adjacent = objectPlan(registry, plan.collection, configure, true, false, false);
-        if (!adjacent.select) {
+        if (!hasSelection(adjacent)) {
           invalidQuery("Adjacent entries require explicit selection.");
         }
-        return branch({ adjacent });
+        return branch({ adjacent: { scope: "collection", plan: adjacent } });
       }
       const nestedScope = {};
       const configured = configure(
@@ -156,7 +170,7 @@ export function createBuilder(
       ) {
         invalidQuery("selectAdjacent() must return its explicitly selected sibling query.");
       }
-      return branch({ adjacent });
+      return branch({ adjacent: { scope: "collection", plan: adjacent } });
     },
     all() {
       return rows("all");

@@ -89,7 +89,23 @@ const sameByAda = await content.query.posts.findMany({
 
 ## Previous and next entries
 
-Use `.selectAdjacent()` or relational `adjacent: true` for neighbor IDs in the ordered result. Detail pages can give adjacency its own sibling scope, independent of the current ID filter:
+Neighbors select their own fields, like any other data. Name the fields to find neighbors within the query's own filtered and ordered results, before pagination:
+
+```ts
+const posts = await content
+  .from("posts")
+  .select("id", "title")
+  .orderBy("title")
+  .selectAdjacent("id", "title");
+
+const samePosts = await content.query.posts.findMany({
+  columns: { id: true, title: true },
+  orderBy: { title: "asc" },
+  adjacent: { scope: "results", columns: { id: true, title: true } },
+});
+```
+
+Inside a relationship, results-scope neighbors come from the parent's related entries, such as a course's lessons in authored order. Detail pages can give adjacency its own sibling scope, independent of the current ID filter:
 
 ```ts
 const post = await content.query.posts.findFirst({

@@ -48,7 +48,7 @@ const invalidRegistry = { authors, posts: badTarget };
 /** Verifies the public inference boundary without executing preparation or invalid calls. */
 function check(content: Content<typeof registry>, invalid: Content<typeof invalidRegistry>) {
   const object = content.query.posts.findMany({
-    adjacent: true,
+    adjacent: { scope: "results", columns: { id: true } },
     columns: { subtitle: true },
     with: { author: { columns: { name: true } } },
   });

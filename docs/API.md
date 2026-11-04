@@ -223,14 +223,14 @@ Relational filters support scalar shorthand and `eq`, `ne`, `in`, `notIn`, `gt`,
 Select previous/next entries without loading bodies:
 
 ```ts
-// Shorthand: neighbors expose IDs within the filtered/ordered result before pagination.
+// Results scope: neighbors within the filtered/ordered result before pagination.
 await content.query.posts.findMany({
   where: { draft: false },
   orderBy: { title: "asc" },
-  adjacent: true,
+  adjacent: { scope: "results", columns: { id: true } },
   columns: { title: true },
 });
-await content.from("posts").select("title").orderBy("title").selectAdjacent().all();
+await content.from("posts").select("title").orderBy("title").selectAdjacent("id").all();
 
 // A detail lookup needs an independent sibling scope, separate from its ID filter.
 const post = await content.query.posts.findFirst({
@@ -255,7 +255,7 @@ const same = await content
   .first();
 ```
 
-Both return `_adjacent: { previous, next }`, with `null` at boundaries or when the current entry is outside the sibling scope. The fluent `.selectAdjacent(options)` overload retains its explicit `{ where?, orderBy?, select }` scope; relational `adjacent` uses `{ where?, orderBy?, columns?, with? }`. Sibling scopes select their own neighbor fields and cannot paginate or recursively select adjacency, including through relationships. `_adjacent` is a reserved field name. Stable ID tie-breakers apply in both APIs.
+Both return `_adjacent: { previous, next }`, with `null` at boundaries or when the current entry is outside the sibling scope. Neighbors select their own data; nothing is implicit, not even `id`. Results-scope neighbors (`.selectAdjacent(...fields)` or `adjacent: { scope: "results", columns, with? }`) share the scope's filters and order, and inside a relationship they come from the parent's related entries in their declared or authored order. `adjacent: true` and an empty `.selectAdjacent()` are rejected. The fluent `.selectAdjacent(options)` overload retains its explicit `{ where?, orderBy?, select }` scope; relational `adjacent` uses `{ scope?: "collection", where?, orderBy?, columns?, with? }`. Sibling scopes select their own neighbor fields and cannot paginate or recursively select adjacency, including through relationships. `_adjacent` is a reserved field name. Stable ID tie-breakers apply in both APIs.
 
 `content-query/query` exports `QueryOptions<Registry, Name>` (also named `RelationalQueryOptions`), `CountOptions<Registry, Name>`, `RelationalWhere`, and `RelationalQueryResult` for typed helpers. Use `satisfies QueryOptions<...>` to validate reusable options while retaining literal column selections.
 
@@ -263,14 +263,15 @@ The top-level content operations are `from`, `query`, and `count`. Bodies and re
 
 Explicit selection replaces select-first fluent queries and implicit metadata:
 
-| Before                                        | After                                                                      |
-| --------------------------------------------- | -------------------------------------------------------------------------- |
-| `content.select("id", "title").from("posts")` | `content.from("posts").select("id", "title")`                              |
-| `content.select().from("posts")`              | `content.from("posts").select(...fields)` listing the fields you need      |
-| `findMany()` or `findMany({ where })`         | `findMany({ where, columns: { ... } })`                                    |
-| `columns: { draft: false }`                   | `columns` listing each field to include with `true`                        |
-| `with: { author: true }`                      | `with: { author: { columns: { ... } } }`                                   |
-| `findFirst({ where: { id }, payloads })`      | Unchanged if it reads only `_payloads`; add `columns` for any other fields |
+| Before                                        | After                                                                              |
+| --------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `content.select("id", "title").from("posts")` | `content.from("posts").select("id", "title")`                                      |
+| `content.select().from("posts")`              | `content.from("posts").select(...fields)` listing the fields you need              |
+| `findMany()` or `findMany({ where })`         | `findMany({ where, columns: { ... } })`                                            |
+| `columns: { draft: false }`                   | `columns` listing each field to include with `true`                                |
+| `with: { author: true }`                      | `with: { author: { columns: { ... } } }`                                           |
+| `adjacent: true` or `.selectAdjacent()`       | `adjacent: { scope: "results", columns: { id: true } }` or `.selectAdjacent("id")` |
+| `findFirst({ where: { id }, payloads })`      | Unchanged if it reads only `_payloads`; add `columns` for any other fields         |
 
 Results include `id` only when it is selected.
 

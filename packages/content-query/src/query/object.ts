@@ -4,6 +4,8 @@ import { and, fieldProxy, not, or, resolveRelations, validateExpression } from "
 import { checkedFields, checkedOrder, checkedPagination } from "./clauses.ts";
 import {
   emptyPlan,
+  hasSelection,
+  type AdjacentPlan,
   type Expression,
   type PredicateOperator,
   type QueryPlan,
@@ -92,6 +94,37 @@ export function objectWhere(where: unknown): Expression {
 }
 
 /** Compiles explicit object options into the backend-independent fluent query contract. */
+/**
+ * Compiles an object-form `_adjacent` selection. `{ scope: "results", select }` selects neighbors
+ * within the current results; other options describe an independent sibling scope.
+ *
+ * @param registry - The query registry.
+ * @param collection - The collection whose neighbors are selected.
+ * @param selection - The `_adjacent` value from an object selection.
+ * @returns The adjacency plan, which always selects explicit data.
+ */
+function objectAdjacent(
+  registry: QueryRegistry,
+  collection: string,
+  selection: unknown,
+): AdjacentPlan {
+  record(selection, "_adjacent");
+  const { scope, ...options } = selection;
+  if (scope !== undefined && scope !== "results" && scope !== "collection") {
+    invalidQuery('Adjacent scope must be "results" or "collection".');
+  }
+  if (scope === "results" && Object.keys(options).some((key) => key !== "select")) {
+    invalidQuery(
+      "Results-scope neighbors only select data; they share the query's filters and order.",
+    );
+  }
+  const plan = objectPlan(registry, collection, options, true, false, false);
+  if (!hasSelection(plan)) {
+    invalidQuery("Adjacent entries require explicit selection.");
+  }
+  return { scope: scope === "results" ? "results" : "collection", plan };
+}
+
 export function objectPlan(
   registry: QueryRegistry,
   collection: string,
@@ -148,13 +181,7 @@ export function objectPlan(
         if (!allowAdjacent) {
           invalidQuery("Adjacency cannot be selected recursively.");
         }
-        plan.adjacent =
-          selection === true
-            ? true
-            : objectPlan(registry, collection, selection, true, false, false);
-        if (plan.adjacent !== true && !plan.adjacent.select) {
-          invalidQuery("Adjacent entries require explicit selection.");
-        }
+        plan.adjacent = objectAdjacent(registry, collection, selection);
       } else if (Object.hasOwn(registry[collection]!.relationships, name)) {
         const relation = registry[collection]!.relationships[name]!;
         const nested = objectPlan(

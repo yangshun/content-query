@@ -37,10 +37,16 @@ export type QueryPlan = {
   limit?: number;
   offset?: number;
   with: Readonly<Record<string, QueryPlan>>;
-  adjacent?: true | QueryPlan;
+  adjacent?: AdjacentPlan;
   /** Payloads to attach under `_payloads` after filtering, ordering, and pagination. */
   payloads?: Readonly<Record<string, PlanPayload>>;
 };
+/**
+ * Selects previous and next entries. `results` finds neighbors within the scope's own filtered and
+ * ordered entries, or a parent's related entries, and `plan` holds only their selection;
+ * `collection` finds neighbors in an independent sibling scope described by `plan`.
+ */
+export type AdjacentPlan = { scope: "results" | "collection"; plan: QueryPlan };
 /** One requested payload; variant keys are empty for payloads without variants. */
 export type PlanPayload = { variant: Readonly<Record<string, string>> };
 

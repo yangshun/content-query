@@ -108,7 +108,11 @@ describe("relational query compilation", () => {
     { with: { author: null } },
     { limit: -1 },
     { offset: 0.5 },
-    { adjacent: { with: { author: { adjacent: true } } } },
+    { adjacent: { with: { author: { adjacent: { scope: "results", columns: { id: true } } } } } },
+    { adjacent: true },
+    { adjacent: { scope: "results" } },
+    { adjacent: { scope: "results", columns: { id: true }, orderBy: { id: "asc" } } },
+    { adjacent: { scope: "invalid", columns: { id: true } } },
   ])("rejects malformed options %j", (options) => {
     expect(() => relationalPlan(registry, "posts", options)).toThrow();
   });
@@ -141,7 +145,7 @@ describe("relational query namespace", () => {
       () => current,
       async (plan) => [plan.collection],
     ) as Record<string, { findMany(options: object): Promise<string[]> }>;
-    const selection = { adjacent: true };
+    const selection = { adjacent: { scope: "results", columns: { id: true } } };
     const posts = namespace.posts!;
     expect(namespace.posts).toBe(posts);
     for (const name of Object.keys(current)) {
