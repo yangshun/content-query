@@ -68,11 +68,11 @@ Queries return only the data they select, not even `id` implicitly. A query must
 
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
 
-## Migrating to explicit selection
+## Migrating to 0.4
 
-Fluent queries now start from the collection, and no query selects data implicitly:
+Version 0.4.0 starts fluent queries from the collection and selects no data implicitly:
 
-| Before                                        | After                                                                              |
+| 0.3                                           | 0.4                                                                                |
 | --------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `content.select("id", "title").from("posts")` | `content.from("posts").select("id", "title")`                                      |
 | `content.select().from("posts")`              | `content.from("posts").select(...)` listing the fields used                        |
