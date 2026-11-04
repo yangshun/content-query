@@ -6,6 +6,7 @@ import { assertServerOnly } from "../shared/server-only.ts";
 import type { CollectionRegistry } from "../collection/types.ts";
 import type { InvalidRelationships } from "../collection/registry-types.ts";
 import type { PreparedRevision } from "../runtime/revision.ts";
+import type { QueryStyle } from "../runtime/query-style.ts";
 import { canonicalPath, withinDirectory } from "../shared/paths.ts";
 import { resolveConfigPath } from "./config-path.ts";
 
@@ -24,21 +25,39 @@ export type BuildContentOptions = {
 /**
  * Builds content independently of a bundler; bind the registry through an erased type import.
  * Generated watch sessions prune previous-run artifacts after their first successful publication.
+ *
+ * @param arguments_ - Optional build options.
+ * @returns A session whose `content` exposes the root query APIs allowed by `Style`. Pass
+ * `typeof queryStyle` from the config to type it; the configured `queryStyle` is always enforced
+ * at runtime.
  */
-export async function buildContent<Registry extends CollectionRegistry = {}>(
+export async function buildContent<
+  Registry extends CollectionRegistry = {},
+  Style extends QueryStyle = QueryStyle,
+>(
   ...arguments_: InvalidRelationships<Registry> extends never
     ? [options?: BuildContentOptions]
     : [invalidRegistry: never]
-): Promise<ContentSession<Registry>> {
-  return buildAtRoot<Registry>(process.cwd(), arguments_[0] ?? {});
+): Promise<ContentSession<Registry, Style>> {
+  return buildAtRoot<Registry, Style>(process.cwd(), arguments_[0] ?? {});
 }
 
-/** Resolves host paths and prunes previous-run artifacts on the first successful publication. */
-export async function buildAtRoot<Registry extends CollectionRegistry = {}>(
+/**
+ * Resolves host paths and prunes previous-run artifacts on the first successful publication.
+ *
+ * @param root - Application root that relative config and output paths resolve against.
+ * @param options - Build options.
+ * @param change - Optional state observer for host integrations.
+ * @returns A session typed by `Registry` and `Style`.
+ */
+export async function buildAtRoot<
+  Registry extends CollectionRegistry = {},
+  Style extends QueryStyle = QueryStyle,
+>(
   root: string,
   options: BuildContentOptions,
   change?: Parameters<typeof createSession>[0]["change"],
-): Promise<ContentSession<Registry>> {
+): Promise<ContentSession<Registry, Style>> {
   const { backend = "generated", watch = false } = options;
   if (
     !["generated", "in-memory"].includes(backend) ||
@@ -89,7 +108,7 @@ export async function buildAtRoot<Registry extends CollectionRegistry = {}>(
     publication = pending;
     return pending;
   }
-  return createSession<Registry>({
+  return createSession<Registry, Style>({
     root,
     config,
     outDir,

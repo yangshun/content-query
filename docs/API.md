@@ -259,6 +259,24 @@ Both return `_adjacent: { previous, next }`, with `null` at boundaries or when t
 
 The top-level content operations are `select`, `query`, and `count`. Bodies and rendered output are payloads that queries request. This replaces callable `content.query("posts")` and root `content.findMany("posts", options)` / `findFirst`. Migrate fluent calls to `content.select(...).from("posts")`, and object calls to `content.query.posts.findMany({ columns, with, ... })` / `findFirst`. Version 0.2.0 removes `content.readBody()` and `content.render()`; see [Payloads](#payloads) for their replacements.
 
+## Query style
+
+Export an optional `queryStyle` from the config to allow only one query API:
+
+```ts
+export const queryStyle = "relational"; // or "fluent"
+```
+
+Omit it to allow both. `"fluent"` keeps `content.select()`; `"relational"` keeps `content.query` and `content.count()`. Every other query API starts from one of those members, so the setting also covers relationships, payloads, adjacency, and counts.
+
+Generated declarations read the export's type, so the editor and `tsc` report a disabled member without a rebuild: `content.select is unavailable because content-query.config sets queryStyle to "relational".` Keep the literal type: use a plain `const` or `satisfies QueryStyle`, not a `: QueryStyle` annotation, which widens the type and allows both styles in types while the runtime still enforces the value.
+
+Builds record the style in each revision and in the generated manifest. Accessing or calling a disabled member throws an `invalid-query` ContentError with the same message, which covers JavaScript consumers and casts. Development config edits apply to the next revision. Values other than `"fluent"` and `"relational"` fail configuration loading.
+
+`QueryStyle` is exported from `content-query` and `content-query/runtime`, and `Content<Registry, Style>` takes the style as an optional second type argument. Standalone `buildContent<Registry, Style>()` sessions are typed by their type arguments, for example `buildContent<typeof collections, typeof queryStyle>()`; without `Style`, they type both APIs and rely on the runtime check.
+
+Fluent queries do not support `like`, `ilike`, `notLike`, `notIlike`, `arrayContained`, or filters through relationships. Choose `"fluent"` only when those queries are unnecessary.
+
 ## Backends and Vite
 
 The Vite plugin defaults to `backend: "in-memory"`: `contentQuery()` serves virtual modules in development, bundles prepared content for production, and writes only `.content-query/types.d.ts`. Use `contentQuery({ backend: "generated" })` to also publish standalone runtime artifacts. The standalone CLI, `buildContent()`, and Next.js adapter continue to default to generated storage.

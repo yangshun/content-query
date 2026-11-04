@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import { describe, expect, test } from "vite-plus/test";
 import { projectFixture } from "../../tests/helpers/project.ts";
 import type { BuiltinPayload, PreparedRevision } from "../runtime/revision.ts";
+import type { QueryStyle } from "../runtime/query-style.ts";
 import { revisionModules } from "./modules.ts";
 
 const execute = promisify(execFile);
@@ -108,4 +109,40 @@ console.log(JSON.stringify({count: await content.count("posts"), bodies, aliases
       }
     },
   );
+});
+
+describe("query style manifest", () => {
+  /** A one-entry revision without payloads, optionally restricted to one query style. */
+  function smallRevision(queryStyle?: QueryStyle): PreparedRevision {
+    return {
+      collections: { posts: { records: [{ id: "one" }], builtins: new Map(), relationships: {} } },
+      registry: { posts: { relationships: {}, payloads: {} } },
+      relations: new Map(),
+      active: 0,
+      payloadCache: new Map(),
+      renderCache: new Map(),
+      ...(queryStyle ? { queryStyle } : {}),
+    };
+  }
+
+  /** Reads the manifest literal that a generated module passes to JSON.parse. */
+  function manifestIn(source: string): Record<string, unknown> {
+    const literal = /JSON\.parse\(("(?:[^"\\]|\\.)*")\)/.exec(source)?.[1];
+    if (!literal) {
+      throw new Error("Missing manifest literal.");
+    }
+    return JSON.parse(JSON.parse(literal) as string) as Record<string, unknown>;
+  }
+
+  test("records the configured style in the manifest and server modules", async () => {
+    const modules = await revisionModules(smallRevision("relational"));
+    expect(manifestIn(modules.get("manifest.js")!)).toMatchObject({ queryStyle: "relational" });
+    expect(manifestIn(modules.get("server.js")!)).toMatchObject({ queryStyle: "relational" });
+  });
+
+  test("omits the style when both query styles are allowed", async () => {
+    const modules = await revisionModules(smallRevision());
+    expect(Object.hasOwn(manifestIn(modules.get("manifest.js")!), "queryStyle")).toBe(false);
+    expect(Object.hasOwn(manifestIn(modules.get("server.js")!), "queryStyle")).toBe(false);
+  });
 });

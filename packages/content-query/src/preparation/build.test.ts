@@ -256,3 +256,70 @@ ${declaration}`,
     }
   });
 });
+
+describe("queryStyle configuration", () => {
+  /** Writes a one-collection config whose source text ends with the given extra export. */
+  async function styledRoot(extra: string) {
+    const root = await mkdtemp(path.join(os.tmpdir(), "content-query-query-style-"));
+    await writeFile(
+      path.join(root, "content-query.config.ts"),
+      `export const collections = {posts: {loader: {name: "fixture", async load({store}) { store.set({id: "one", data: {title: "Styled"}}); }}}};
+${extra}`,
+    );
+    return root;
+  }
+  type Registry = { posts: CollectionDefinition<undefined, {}, {}> };
+
+  test("applies an exported queryStyle to the session runtime", async () => {
+    const root = await styledRoot('export const queryStyle = "relational";');
+    try {
+      const session = await buildAtRoot<Registry, "relational">(root, { backend: "in-memory" });
+      try {
+        expect(await session.content.query.posts.findFirst({ columns: { id: true } })).toEqual({
+          id: "one",
+        });
+        expect(() =>
+          (session.content as unknown as ContentSession<Registry>["content"]).select("id"),
+        ).toThrow(/content\.select is unavailable because content-query\.config sets queryStyle/);
+      } finally {
+        await session.dispose();
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  for (const value of ['"sql"', '"Relational"', "1", '["fluent"]']) {
+    test(`rejects an unsupported queryStyle export: ${value}`, async () => {
+      const root = await styledRoot(`export const queryStyle = ${value};`);
+      try {
+        await expect(buildAtRoot(root, { backend: "in-memory" })).rejects.toMatchObject({
+          code: "source-error",
+          cause: expect.objectContaining({
+            message: 'content-query.config queryStyle must be "fluent" or "relational".',
+          }),
+        });
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  test("generates declarations that read queryStyle from the config module type", async () => {
+    const root = await styledRoot('export const queryStyle = "fluent";');
+    try {
+      const session = await buildAtRoot(root, {});
+      await session.dispose();
+      const declarations = await readFile(path.join(root, ".content-query/server.d.ts"), "utf8");
+      expect(declarations).toContain(
+        'type ConfiguredQueryStyle = typeof import("../content-query.config.ts") extends { queryStyle: infer Style',
+      );
+      expect(declarations).toContain("Content<Registry, ConfiguredQueryStyle>");
+      expect(await readFile(path.join(root, ".content-query/manifest.js"), "utf8")).toContain(
+        '\\"queryStyle\\":\\"fluent\\"',
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+});

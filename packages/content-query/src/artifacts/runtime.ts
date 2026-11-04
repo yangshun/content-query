@@ -5,6 +5,7 @@ import { prepareRelationships } from "../runtime/relationships.ts";
 import type { BuiltinPayload, PreparedRevision, QueryRecord } from "../runtime/revision.ts";
 import type { CollectionRegistry } from "../collection/types.ts";
 import type { ContentRenderResult } from "../runtime/types.ts";
+import { isQueryStyle } from "../runtime/query-style.ts";
 import {
   ARTIFACT_VERSION,
   CODEC_VERSION,
@@ -22,6 +23,9 @@ export function createArtifactRevision(
     if (manifest.version !== ARTIFACT_VERSION || manifest.codec !== CODEC_VERSION) {
       throw new Error("Incompatible content artifact or codec version; regenerate content.");
     }
+    if (manifest.queryStyle !== undefined && !isQueryStyle(manifest.queryStyle)) {
+      throw new Error("Invalid query style in content artifact; regenerate content.");
+    }
     const revision: PreparedRevision = {
       registry: manifest.collections,
       collections: Object.create(null) as PreparedRevision["collections"],
@@ -30,6 +34,7 @@ export function createArtifactRevision(
       payloadCache: new Map(),
       renderCache: new Map(),
       renderMarkdown,
+      ...(manifest.queryStyle ? { queryStyle: manifest.queryStyle } : {}),
     };
     for (const [name, descriptor] of Object.entries(manifest.collections)) {
       const encoded = collections[name];

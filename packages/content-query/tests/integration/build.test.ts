@@ -426,6 +426,90 @@ try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads
       await fixture.dispose();
     }
   });
+  test(
+    "queryStyle narrows generated declarations and is enforced by the generated server",
+    { timeout: 30_000 },
+    async () => {
+      const fixture = await projectFixture();
+      try {
+        await writeFile(
+          fixture.config,
+          `${await readFile(fixture.config, "utf8")}export const queryStyle = "relational";\n`,
+        );
+        await execute(
+          process.execPath,
+          [
+            "--input-type=module",
+            "-e",
+            'const { buildContent } = await import("content-query/build"); const session = await buildContent(); await session.dispose();',
+          ],
+          { cwd: fixture.root },
+        );
+        await writeFile(
+          path.join(fixture.root, "consumer.ts"),
+          `/// <reference path="./.content-query/types.d.ts" />
+import { content } from "./.content-query/server.js";
+import { content as virtualContent } from "content-query:server";
+import { buildContent } from "content-query/build";
+import type { collections, queryStyle } from "./content-query.config.ts";
+const titles: Promise<{ title: string }[]> = content.query.posts.findMany({ columns: { title: true } });
+const total: Promise<number> = content.count("posts");
+const virtualTitles: Promise<{ title: string }[]> = virtualContent.query.posts.findMany({ columns: { title: true } });
+// @ts-expect-error The generated export follows queryStyle in content-query.config.
+content.select("title").from("posts");
+// @ts-expect-error The Vite virtual module follows the same setting.
+virtualContent.select("title");
+const session = await buildContent<typeof collections, typeof queryStyle>({ backend: "in-memory" });
+void session.content.query.posts.findFirst();
+// @ts-expect-error Standalone sessions are narrowed by the style type argument.
+session.content.select("title");
+void [titles, total, virtualTitles];
+export {};
+`,
+        );
+        await execute(
+          process.execPath,
+          [
+            path.join(packageRoot, "node_modules/tsrs/bin/tsrs"),
+            "--noEmit",
+            "--strict",
+            "--skipLibCheck",
+            "--module",
+            "nodenext",
+            "--target",
+            "esnext",
+            "--allowImportingTsExtensions",
+            "consumer.ts",
+          ],
+          { cwd: fixture.root },
+        );
+        const { stdout } = await execute(
+          process.execPath,
+          [
+            "--input-type=module",
+            "-e",
+            `const {content}=await import("./.content-query/server.js");
+let rejected;
+try { content.select("title"); } catch (error) { rejected = { code: error.code, message: error.message }; }
+const titles = await content.query.posts.findMany({ columns: { title: true } });
+console.log(JSON.stringify({ rejected, titles }));`,
+          ],
+          { cwd: fixture.root },
+        );
+        expect(JSON.parse(stdout)).toEqual({
+          rejected: {
+            code: "invalid-query",
+            message:
+              'content.select is unavailable because content-query.config sets queryStyle to "relational".',
+          },
+          titles: [{ title: "Getting started" }],
+        });
+      } finally {
+        await fixture.dispose();
+      }
+    },
+  );
+
   test("incompatible artifact and codec versions require regeneration", () => {
     expect(() =>
       createArtifactRuntime({ version: 999, codec: "devalue-6", collections: {} }, {}),

@@ -523,3 +523,49 @@ export const collections = {posts: {loader: {name: "fixture", async load({store}
     });
   }
 });
+
+describe("queryStyle reloading", () => {
+  test("applies queryStyle edits from configuration reloads to the live runtime", async () => {
+    const fixture = await projectFixture();
+    const original = await readFile(fixture.config, "utf8");
+    const session = await createSession<{
+      posts: {
+        loader: import("../loaders/types.ts").Loader;
+        schema: z.ZodObject<{ title: z.ZodString }>;
+      };
+    }>({ root: fixture.root, config: fixture.config, outDir: ".content-query", watch: true });
+    const expected = { title: "Getting started" };
+    try {
+      expect(await session.content.select("title").from("posts").first()).toEqual(expected);
+
+      await writeFile(fixture.config, `${original}export const queryStyle = "relational";\n`);
+      await vi.waitFor(
+        () => expect(() => session.content.select("title")).toThrow(/queryStyle to "relational"/),
+        { timeout: 3_000 },
+      );
+      expect(await session.content.query.posts.findFirst({ columns: { title: true } })).toEqual(
+        expected,
+      );
+
+      await writeFile(fixture.config, `${original}export const queryStyle = "fluent";\n`);
+      await vi.waitFor(
+        () => expect(() => session.content.query).toThrow(/queryStyle to "fluent"/),
+        { timeout: 3_000 },
+      );
+      expect(await session.content.select("title").from("posts").first()).toEqual(expected);
+
+      await writeFile(fixture.config, original);
+      await vi.waitFor(
+        async () =>
+          expect(await session.content.query.posts.findFirst({ columns: { title: true } })).toEqual(
+            expected,
+          ),
+        { timeout: 3_000 },
+      );
+      expect(await session.content.select("title").from("posts").first()).toEqual(expected);
+    } finally {
+      await session.dispose();
+      await fixture.dispose();
+    }
+  });
+});

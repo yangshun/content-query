@@ -25,7 +25,8 @@ import { createArtifactRuntime } from "../internal.ts";
 import { encode } from "../shared/values.ts";
 import { ContentError } from "../shared/errors.ts";
 import { ARTIFACT_VERSION, CODEC_VERSION, type EncodedCollection } from "../artifacts/types.ts";
-import type { Content } from "../runtime.ts";
+import type { Content, QueryStyle } from "../runtime.ts";
+import type { ContentSession } from "../preparation/session.ts";
 
 /** Builds typed fixtures covering scalars, absence, rendering, and relationship directions. */
 function fixture() {
@@ -897,6 +898,156 @@ describe("prepared values and errors", () => {
   });
 });
 
+/** Runs a synchronous action that must throw and returns what it threw. */
+function thrownBy(action: () => unknown): unknown {
+  try {
+    action();
+  } catch (error) {
+    return error;
+  }
+  throw new Error("Expected the action to throw.");
+}
+
+/** Widens a style-restricted runtime so tests can reach its disabled members. */
+function unrestricted(content: unknown): Content<ReturnType<typeof fixture>> {
+  return content as Content<ReturnType<typeof fixture>>;
+}
+
+describe("query style gating", () => {
+  /** Prepares the shared fixture in a session that allows only one query style. */
+  function styledSession<Style extends QueryStyle>(queryStyle: Style) {
+    const registry = fixture();
+    return createSession<typeof registry, Style>({
+      root: process.cwd(),
+      config: "unused",
+      outDir: "unused",
+      registry,
+      watch: false,
+      queryStyle,
+    });
+  }
+
+  test("relational style rejects fluent queries but keeps relational queries and counts", async () => {
+    const session = await styledSession("relational");
+    try {
+      const content = unrestricted(session.content);
+      expect(thrownBy(() => content.select("id"))).toMatchObject({
+        code: "invalid-query",
+        message:
+          'content.select is unavailable because content-query.config sets queryStyle to "relational".',
+      });
+      expect(
+        await session.content.query.posts.findMany({ columns: { id: true }, limit: 1 }),
+      ).toEqual([{ id: "first" }]);
+      expect(await session.content.count("posts")).toBe(3);
+    } finally {
+      await session.dispose();
+    }
+  });
+
+  test("fluent style rejects relational access and counts but keeps fluent queries", async () => {
+    const session = await styledSession("fluent");
+    try {
+      const content = unrestricted(session.content);
+      expect(thrownBy(() => content.query)).toMatchObject({
+        code: "invalid-query",
+        message:
+          'content.query is unavailable because content-query.config sets queryStyle to "fluent".',
+      });
+      expect(thrownBy(() => content.count("posts"))).toMatchObject({
+        code: "invalid-query",
+        message:
+          'content.count is unavailable because content-query.config sets queryStyle to "fluent".',
+      });
+      expect(await session.content.select("id").from("posts").count()).toBe(3);
+      expect(
+        await session.content
+          .select("id")
+          .from("posts")
+          .with("author", (author) => author.select("name"))
+          .first(),
+      ).toEqual({ id: "first", author: { name: "Ada" } });
+    } finally {
+      await session.dispose();
+    }
+  });
+
+  test("sessions without a style allow both query APIs", async () => {
+    const registry = fixture();
+    const session = await createSession<typeof registry>({
+      root: process.cwd(),
+      config: "unused",
+      outDir: "unused",
+      registry,
+      watch: false,
+    });
+    try {
+      expect(await session.content.select("id").from("posts").count()).toBe(3);
+      expect(await session.content.count("posts")).toBe(3);
+      expect(await session.content.query.posts.findFirst({ columns: { id: true } })).toEqual({
+        id: "first",
+      });
+    } finally {
+      await session.dispose();
+    }
+  });
+
+  /** Encodes a styled session's revision as the generated modules would. */
+  async function encodedRevision(queryStyle: QueryStyle) {
+    const session = await styledSession(queryStyle);
+    try {
+      const revision = sessionInternals(session as never).state.revision!;
+      return {
+        queryStyle: revision.queryStyle,
+        manifest: {
+          version: ARTIFACT_VERSION,
+          codec: CODEC_VERSION,
+          collections: revision.registry,
+        },
+        collections: Object.fromEntries(
+          Object.entries(revision.collections).map(([name, collection]) => [
+            name,
+            { records: collection.records.map(encode), builtins: {} },
+          ]),
+        ),
+      };
+    } finally {
+      await session.dispose();
+    }
+  }
+
+  test("artifact runtimes enforce the style carried by the manifest", async () => {
+    const encoded = await encodedRevision("relational");
+    expect(encoded.queryStyle).toBe("relational");
+    const content = unrestricted(
+      createArtifactRuntime<ReturnType<typeof fixture>>(
+        { ...encoded.manifest, queryStyle: "relational" },
+        encoded.collections,
+      ),
+    );
+    expect(thrownBy(() => content.select("id"))).toMatchObject({ code: "invalid-query" });
+    expect(await content.count("posts")).toBe(3);
+    expect(await content.query.posts.findFirst({ columns: { id: true } })).toEqual({
+      id: "first",
+    });
+  });
+
+  test("artifact runtimes reject an unknown manifest style", async () => {
+    const encoded = await encodedRevision("fluent");
+    expect(
+      thrownBy(() =>
+        createArtifactRuntime(
+          { ...encoded.manifest, queryStyle: "sql" as QueryStyle },
+          encoded.collections,
+        ),
+      ),
+    ).toMatchObject({
+      code: "artifact-error",
+      cause: { message: "Invalid query style in content artifact; regenerate content." },
+    });
+  });
+});
+
 /** Type-only consumer checks: invalid calls must fail without weakening result inference. */
 function checkTypes(content: Content<ReturnType<typeof fixture>>) {
   // @ts-expect-error Registered collection names are required.
@@ -921,3 +1072,28 @@ function checkTypes(content: Content<ReturnType<typeof fixture>>) {
   selected.with("author", (author) => author.select("name").limit(1));
 }
 void checkTypes;
+
+/** Type-only checks: `Style` removes the other style's root members without widening results. */
+function checkQueryStyleTypes(
+  relational: Content<ReturnType<typeof fixture>, "relational">,
+  fluent: Content<ReturnType<typeof fixture>, "fluent">,
+  session: ContentSession<ReturnType<typeof fixture>, "relational">,
+) {
+  void relational.query.posts.findMany({ columns: { title: true } });
+  void relational.count("posts");
+  // @ts-expect-error A relational-only content export has no fluent root.
+  relational.select("id");
+  // @ts-expect-error The message type also rejects calls without arguments.
+  relational.select();
+  void fluent.select("title").from("posts").count();
+  // @ts-expect-error A fluent-only content export has no relational namespace.
+  void fluent.query.posts;
+  // @ts-expect-error Counting by collection name is relational.
+  void fluent.count("posts");
+  const titles: Promise<{ title: string }[]> = fluent.select("title").from("posts").all();
+  void titles;
+  // Restricted sessions stay assignable to sessions with a wider registry.
+  const wide: ContentSession<{}, "relational"> = session;
+  void wide;
+}
+void checkQueryStyleTypes;
