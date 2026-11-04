@@ -71,13 +71,14 @@ Add `.content-query/` to `.gitignore`. Follow the quick start for a complete wal
 
 Fluent queries now start from the collection, and no query selects data implicitly:
 
-| Before                                        | After                                                       |
-| --------------------------------------------- | ----------------------------------------------------------- |
-| `content.select("id", "title").from("posts")` | `content.from("posts").select("id", "title")`               |
-| `content.select().from("posts")`              | `content.from("posts").select(...)` listing the fields used |
-| `findMany()` or `findMany({ where })`         | Add `columns: { field: true }` for each field used          |
-| `columns: { draft: false }`                   | List the included fields with `true`                        |
-| `with: { author: true }`                      | `with: { author: { columns: { name: true } } }`             |
+| Before                                        | After                                                                              |
+| --------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `content.select("id", "title").from("posts")` | `content.from("posts").select("id", "title")`                                      |
+| `content.select().from("posts")`              | `content.from("posts").select(...)` listing the fields used                        |
+| `findMany()` or `findMany({ where })`         | Add `columns: { field: true }` for each field used                                 |
+| `columns: { draft: false }`                   | List the included fields with `true`                                               |
+| `with: { author: true }`                      | `with: { author: { columns: { name: true } } }`                                    |
+| `adjacent: true` or `.selectAdjacent()`       | `adjacent: { scope: "results", columns: { id: true } }` or `.selectAdjacent("id")` |
 
 Results include `id` only when it is selected. Queries that request only payloads, such as `findFirst({ where: { id }, payloads: { _rendered: true } })`, need no columns.
 

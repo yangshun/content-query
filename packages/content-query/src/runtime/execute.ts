@@ -116,20 +116,21 @@ function neighborScope(
   scopes: ProjectionScopes,
   revision: PreparedRevision,
 ): NeighborScope {
-  const selection = plan.adjacent!;
+  const { scope: neighborsScope, plan: selection } = plan.adjacent!;
+  // Results-scope neighbors share the outer filters and order but select their own data.
   const siblingPlan: QueryPlan =
-    selection === true
+    neighborsScope === "results"
       ? {
           ...plan,
-          select: ["id"],
-          with: {},
+          select: selection.select,
+          with: selection.with,
           adjacent: undefined,
           payloads: undefined,
           limit: undefined,
           offset: undefined,
         }
       : selection;
-  const key = selection === true ? plan : siblingPlan;
+  const key = neighborsScope === "results" ? plan : siblingPlan;
   let candidates = scopes.get(key);
   if (!candidates) {
     candidates = new WeakMap();
@@ -138,7 +139,12 @@ function neighborScope(
   let scope = candidates.get(records);
   if (!scope) {
     const unique = [...new Map(records.map((entry) => [entry.id, entry])).values()];
-    const ordered = pageRecords(unique, siblingPlan, revision, selection === true && preserveOrder);
+    const ordered = pageRecords(
+      unique,
+      siblingPlan,
+      revision,
+      neighborsScope === "results" && preserveOrder,
+    );
     scope = {
       plan: siblingPlan,
       records: ordered,
@@ -191,7 +197,9 @@ function project(
   }
   if (plan.adjacent) {
     const candidates =
-      plan.adjacent === true ? scopeRecords : revision.collections[plan.collection]!.records;
+      plan.adjacent.scope === "results"
+        ? scopeRecords
+        : revision.collections[plan.collection]!.records;
     const scope = neighborScope(plan, candidates, preserveScopeOrder, scopes, revision);
     const index = scope.positions.get(record.id);
     const previous = index === undefined ? undefined : scope.records[index - 1];

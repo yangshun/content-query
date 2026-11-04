@@ -23,7 +23,9 @@ describe("hasSelection", () => {
     expect(hasSelection(plan({ select: ["title"] }))).toBe(true);
     expect(hasSelection(plan({ with: { author: plan({ select: ["name"] }) } }))).toBe(true);
     expect(hasSelection(plan({ select: [], payloads: { _rendered: { variant: {} } } }))).toBe(true);
-    expect(hasSelection(plan({ adjacent: true }))).toBe(true);
+    expect(
+      hasSelection(plan({ adjacent: { scope: "results", plan: plan({ select: ["id"] }) } })),
+    ).toBe(true);
   });
 });
 

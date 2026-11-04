@@ -6,6 +6,7 @@ import {
   emptyPlan,
   hasSelection,
   NO_SELECTION_MESSAGE,
+  type AdjacentPlan,
   type Expression,
   type PredicateOperator,
   type QueryPlan,
@@ -230,12 +231,47 @@ export function relationalPlan(
     }
   }
   if (options.adjacent !== undefined) {
-    plan.adjacent =
-      options.adjacent === true
-        ? true
-        : selectedPlan(relationalPlan(registry, collection, options.adjacent, true, false, false));
+    plan.adjacent = relationalAdjacent(registry, collection, options.adjacent);
   }
   return plan;
+}
+
+/**
+ * Compiles relational `adjacent` options. `{ scope: "results", columns, with }` selects neighbors
+ * within the current results; other options describe an independent sibling scope.
+ *
+ * @param registry - The query registry.
+ * @param collection - The collection whose neighbors are selected.
+ * @param adjacent - The `adjacent` option value.
+ * @returns The adjacency plan, which always selects explicit data.
+ */
+function relationalAdjacent(
+  registry: QueryRegistry,
+  collection: string,
+  adjacent: unknown,
+): AdjacentPlan {
+  if (adjacent === true) {
+    invalidQuery(
+      'Adjacent entries select their own data, such as { scope: "results", columns: { id: true } }.',
+    );
+  }
+  record(adjacent, "adjacent");
+  const { scope, ...options } = adjacent;
+  if (scope !== undefined && scope !== "results" && scope !== "collection") {
+    invalidQuery('Adjacent scope must be "results" or "collection".');
+  }
+  if (
+    scope === "results" &&
+    Object.keys(options).some((key) => key !== "columns" && key !== "with")
+  ) {
+    invalidQuery(
+      "Results-scope neighbors only select data; they share the query's filters and order.",
+    );
+  }
+  return {
+    scope: scope === "results" ? "results" : "collection",
+    plan: selectedPlan(relationalPlan(registry, collection, options, true, false, false)),
+  };
 }
 
 /**

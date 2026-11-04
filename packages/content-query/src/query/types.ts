@@ -233,10 +233,23 @@ export type Query<
           AllowAdjacent,
           Pagination
         >;
-        selectAdjacent(): Query<
+        /** Selects neighbor fields within this scope's filtered and ordered results. */
+        selectAdjacent<
+          const Keys extends readonly [
+            keyof QueryData<Registry[Name]> & string,
+            ...(keyof QueryData<Registry[Name]> & string)[],
+          ],
+        >(
+          ...fields: Keys
+        ): Query<
           Registry,
           Name,
-          Result & { _adjacent: Adjacent<{ id: string }> },
+          Result & {
+            _adjacent: Adjacent<{
+              [Key in Keys[number]]: QueryData<Registry[Name]>[Key &
+                keyof QueryData<Registry[Name]>];
+            }>;
+          },
           true,
           Many,
           Root,
@@ -371,7 +384,13 @@ export type Selection<
         AllowAdjacent
       >
     | false;
-} & (AllowAdjacent extends true ? { _adjacent?: true | AdjacentOptions<Registry, Name> } : {});
+} & (AllowAdjacent extends true
+    ? {
+        _adjacent?:
+          | { scope: "results"; select: Selection<Registry, Name, false> }
+          | (AdjacentOptions<Registry, Name> & { scope?: "collection" });
+      }
+    : {});
 type ObjectRelationValue<
   Registry extends CollectionRegistry,
   Name extends keyof Registry & string,
@@ -400,11 +419,9 @@ export type SelectionResult<
   -readonly [
     Key in keyof Projection as Projection[Key] extends false | undefined ? never : Key
   ]-?: Key extends "_adjacent"
-    ? Projection[Key] extends true
-      ? Adjacent<{ id: string }>
-      : Projection[Key] extends { select: infer Neighbors }
-        ? Adjacent<SelectionResult<Registry, Name, Neighbors>>
-        : never
+    ? Projection[Key] extends { select: infer Neighbors }
+      ? Adjacent<SelectionResult<Registry, Name, Neighbors>>
+      : never
     : Key extends keyof RelationshipsOf<Registry[Name]>
       ? ObjectRelationValue<Registry, Name, Key, Projection[Key]>
       : Key extends keyof QueryData<Registry[Name]>
@@ -443,9 +460,17 @@ type CheckedSelection<
 > = {
   [Key in keyof Projection]: Key extends "_adjacent"
     ? AllowAdjacent extends true
-      ? Projection[Key] extends true
-        ? true
-        : CheckedOptions<Registry, Name, Projection[Key], true, false, false>
+      ? Projection[Key] extends { scope: "results" }
+        ? {
+            [Option in keyof Projection[Key]]: Option extends "scope"
+              ? "results"
+              : Option extends "select"
+                ? CheckedSelection<Registry, Name, Projection[Key][Option], false>
+                : never;
+          }
+        : CheckedOptions<Registry, Name, Omit<Projection[Key], "scope">, true, false, false> & {
+            scope?: "collection";
+          }
       : never
     : Key extends keyof RelationshipsOf<Registry[Name]>
       ? Projection[Key] extends false

@@ -14,6 +14,8 @@ export function normalizePlan(plan: QueryPlan): QueryPlan {
     with: Object.fromEntries(
       Object.entries(plan.with).map(([name, nested]) => [name, normalizePlan(nested)]),
     ),
-    ...(plan.adjacent && plan.adjacent !== true ? { adjacent: normalizePlan(plan.adjacent) } : {}),
+    ...(plan.adjacent
+      ? { adjacent: { scope: plan.adjacent.scope, plan: normalizePlan(plan.adjacent.plan) } }
+      : {}),
   };
 }

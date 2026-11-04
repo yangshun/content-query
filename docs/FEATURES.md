@@ -17,7 +17,7 @@
 - Revision-scoped lazy ID indexes for equality-constrained root queries in both runtime backends, avoiding repeated collection scans while preserving filtering, projection, pagination, count, and adjacency semantics.
 - Single-record queries avoid redundant default sorting, and built-in glob acquisition bounds outstanding file reads to 64 while retaining deterministic snapshots and grouped diagnostics.
 - Markdown folder `source` shorthand and explicit Markdown/JSON/YAML/TOML source objects alongside native loaders.
-- Relational `adjacent` and fluent `selectAdjacent()` projections under `_adjacent`, default ID neighbors, independent filtered/ordered sibling scopes, and typed nested neighbor selection.
+- Relational `adjacent` and fluent `selectAdjacent()` projections under `_adjacent` with explicit neighbor selection: results-scope neighbors (`.selectAdjacent(...fields)`, `scope: "results"`), including within a parent's related entries, independent filtered/ordered sibling scopes, and typed nested neighbor selection.
 - Fluent operators cover every relational filter: `like`, `ilike`, `notLike`, `notIlike`, `arrayContained`, and `has()` relationship filters with existence checks and nested related-field filters.
 - Generated `CollectionKey`, `CollectionData`, and `Collections` aliases for physical and `content-query:server` entries.
 - Browser-safe `content-query:client` update subscriptions with serialized router revalidation and full-reload fallback; Void preserves component state and scroll.

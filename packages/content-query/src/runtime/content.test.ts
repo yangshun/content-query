@@ -357,7 +357,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
       expect(
         await content.query.posts.findMany({
           columns: { id: true },
-          adjacent: true,
+          adjacent: { scope: "results", columns: { id: true } },
           payloads: { _body: true },
           limit: 1,
         }),

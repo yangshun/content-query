@@ -113,7 +113,16 @@ export type RelationalQueryOptions<
   (Many extends true ? (Pagination extends true ? { limit?: number; offset?: number } : {}) : {}) &
   (AllowAdjacent extends true
     ? {
-        adjacent?: true | RelationalQueryOptions<Registry, Name, true, false, false>;
+        /**
+         * Previous and next entries, which select their own data. `scope: "results"` finds
+         * neighbors within these results; other options describe an independent sibling scope.
+         */
+        adjacent?:
+          | ({ scope: "results" } & Pick<
+              RelationalQueryOptions<Registry, Name, true, false, false>,
+              "columns" | "with"
+            >)
+          | ({ scope?: "collection" } & RelationalQueryOptions<Registry, Name, true, false, false>);
         payloads?: PayloadOptions<Registry, Name>;
       }
     : {});
@@ -177,9 +186,7 @@ type AdjacentResult<
   Options,
 > = Options extends { adjacent: infer Neighbors }
   ? {
-      _adjacent: Neighbors extends true
-        ? Adjacent<{ id: string }>
-        : Adjacent<RelationalQueryResult<Registry, Name, Neighbors>>;
+      _adjacent: Adjacent<RelationalQueryResult<Registry, Name, Neighbors>>;
     }
   : {};
 type Simplify<Value> = { [Key in keyof Value]: Value[Key] };
@@ -289,10 +296,18 @@ export type CheckedRelationalOptions<
           }
         : Key extends "adjacent"
           ? AllowAdjacent extends true
-            ? Options[Key] extends true
-              ? true
-              : CheckedRelationalOptions<Registry, Name, Options[Key], true, false, false> &
-                  SelectionRequired<Options[Key]>
+            ? CheckedRelationalOptions<
+                Registry,
+                Name,
+                Omit<Options[Key], "scope">,
+                true,
+                false,
+                false
+              > &
+                SelectionRequired<Options[Key]> &
+                (Options[Key] extends { scope: "results" }
+                  ? { scope: "results"; where?: never; orderBy?: never }
+                  : { scope?: "collection" })
             : never
           : Key extends "payloads"
             ? AllowAdjacent extends true

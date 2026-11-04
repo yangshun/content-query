@@ -49,12 +49,12 @@ describe("object query compilation", () => {
       .select("id")
       .orderBy("rank")
       .limit(2)
-      .selectAdjacent()
+      .selectAdjacent("id")
       .all();
     const object = normalizePlan(
       objectPlan(registry, "posts", {
         where: { draft: false, rank: { gte: 2 } },
-        select: { id: true, _adjacent: true },
+        select: { id: true, _adjacent: { scope: "results", select: { id: true } } },
         orderBy: { rank: "asc" },
         limit: 2,
       }),
@@ -110,8 +110,25 @@ describe("object query compilation", () => {
     { select: { author: { select: { id: true }, limit: 1 } } },
     { select: { _adjacent: {} } },
     { select: { _adjacent: { select: { id: true }, limit: 1 } } },
-    { select: { _adjacent: { select: { id: true, _adjacent: true } } } },
-    { select: { _adjacent: { select: { author: { select: { _adjacent: true } } } } } },
+    {
+      select: {
+        _adjacent: { select: { id: true, _adjacent: { scope: "results", select: { id: true } } } },
+      },
+    },
+    { select: { id: true, _adjacent: true } },
+    {
+      select: {
+        id: true,
+        _adjacent: { scope: "results", select: { id: true }, orderBy: { id: "asc" } },
+      },
+    },
+    {
+      select: {
+        _adjacent: {
+          select: { author: { select: { _adjacent: { scope: "results", select: { id: true } } } } },
+        },
+      },
+    },
     { where: { title: { typo: "x" } } },
     { where: { title: { isNull: 1 } } },
     { where: { title: { contains: 2 } } },
@@ -129,17 +146,17 @@ describe("object query compilation", () => {
       limit(value: number): typeof builder;
       with(name: string, configure: (nested: typeof builder) => unknown): typeof builder;
     };
-    expect(() => builder.selectAdjacent().selectAdjacent()).toThrow();
+    expect(() => builder.selectAdjacent("id").selectAdjacent("id")).toThrow();
     expect(() => builder.selectAdjacent({})).toThrow();
     expect(() => builder.selectAdjacent(() => builder.select("id"))).toThrow();
     expect(() =>
-      builder.selectAdjacent((siblings: typeof builder) => siblings.selectAdjacent()),
+      builder.selectAdjacent((siblings: typeof builder) => siblings.selectAdjacent("id")),
     ).toThrow();
     expect(() => builder.selectAdjacent((siblings: typeof builder) => siblings.limit(1))).toThrow();
     expect(() => builder.select("_adjacent")).toThrow();
     expect(() =>
       builder.selectAdjacent((siblings: typeof builder) =>
-        siblings.with("author", (author) => author.selectAdjacent()),
+        siblings.with("author", (author) => author.selectAdjacent("id")),
       ),
     ).toThrow();
   });

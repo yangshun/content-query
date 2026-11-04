@@ -58,7 +58,7 @@ void session;
 const title: CollectionData<"posts">["title"] = "Example";
 const key: CollectionKey = "posts";
 const virtualTitle: VirtualData<"posts">["title"] = title;
-const object: Promise<{title:string;_adjacent:{previous:{id:string}|null;next:{id:string}|null}}[]> = virtualContent.query.posts.findMany({ adjacent: true, columns: { title:true } });
+const object: Promise<{title:string;_adjacent:{previous:{id:string}|null;next:{id:string}|null}}[]> = virtualContent.query.posts.findMany({ adjacent: { scope: "results", columns: { id: true } }, columns: { title:true } });
 // @ts-expect-error Generated aliases only accept registered collection names.
 type Missing = CollectionData<"missing">;
 // @ts-expect-error Extra object selection fields remain errors through generated declarations.
