@@ -285,3 +285,11 @@ export type VariantOf<Definition, Name> = Name extends keyof CustomPayloadsOf<De
     ? Variant
     : {}
   : {};
+/**
+ * How a query requests a payload variant: each key gives one value, or a nonempty list of values
+ * to try in order, such as `{ locale: ["fr-FR", "en-US"] }`. The query returns the first
+ * combination the entry has; with lists for several keys, earlier keys change slowest.
+ */
+export type VariantRequest<Variant> = {
+  readonly [Key in keyof Variant]: Variant[Key] | readonly [Variant[Key], ...Variant[Key][]];
+};

@@ -111,6 +111,23 @@ const sameExercise = await coding
 
 Each request loads only the modules it names, and catalog queries load none. Requesting a combination that an entry lacks, such as `fr-FR` for an exercise with only English hints, rejects with `variant-not-found`. The error's `payload` and `variant` properties name what was missing.
 
+## Fallback variants
+
+To fall back when an entry lacks a variant, list values to try in order. Each entry returns the first combination it has, and only that one loads:
+
+```ts
+const exercises = await coding
+  .select("id", "title")
+  .withPayload("detail", { locale: ["fr-FR", "en-US"] });
+
+const sameExercises = await coding.findMany({
+  columns: { id: true, title: true },
+  payloads: { detail: { locale: ["fr-FR", "en-US"] } },
+});
+```
+
+Here an exercise with French hints returns them, and one with only English hints returns English. With lists for several keys, earlier keys in the request change slowest. An entry with none of the combinations rejects with `variant-not-found`, which lists every combination tried. The request decides the order, so each page can choose its own fallbacks. To show which variant an entry returned, such as for a `lang` attribute, include it in the payload's value, as the `detail` resolver above could with `locale: variant.locale`.
+
 ## Types
 
 Payload values and variant keys are inferred from the declaration, so queries check payload names and variant keys. The collection's entry also exports a [payload type](/docs/reference/runtime#generated-types) named after the collection:
@@ -121,7 +138,7 @@ import type { ContentCodingPayload } from "content-query:collections/coding";
 type Detail = ContentCodingPayload<"detail">; // { hints: string }
 ```
 
-`content-query` exports `PayloadData` and `VariantOf` for helpers that take a collection definition.
+`content-query` exports `PayloadData`, `VariantOf`, and `VariantRequest` (the request a payload's variants accept) for helpers that take a collection definition.
 
 ## Errors
 

@@ -69,8 +69,14 @@ export type PaginatePlan =
  * `collection` finds neighbors in an independent sibling scope described by `plan`.
  */
 export type AdjacentPlan = { scope: "results" | "collection"; plan: QueryPlan };
-/** One requested payload; variant keys are empty for payloads without variants. */
-export type PlanPayload = { variant: Readonly<Record<string, string>> };
+/**
+ * One requested payload; variant keys are empty for payloads without variants. `fallbacks` lists
+ * further combinations to try, in order, when the entry lacks `variant`.
+ */
+export type PlanPayload = {
+  variant: Readonly<Record<string, string>>;
+  fallbacks?: readonly Readonly<Record<string, string>>[];
+};
 
 /** How a plan returns its results; `paginate` requires the plan's `paginate` request. */
 export type QueryTerminal = "all" | "first" | "count" | "paginate";

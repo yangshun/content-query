@@ -8,6 +8,7 @@ import type {
   UnavailableRelationship,
   UnavailableRelationshipsOf,
   VariantOf,
+  VariantRequest,
 } from "../collection/types.ts";
 import type { Unavailable } from "../shared/types.ts";
 import type { Expression, NO_SELECTION_MESSAGE, PAGINATE_AFTER_LIMIT_MESSAGE } from "./plan.ts";
@@ -284,7 +285,7 @@ export type Query<
           name: Key,
           ...variant: keyof VariantOf<Registry[Name], Key> extends never
             ? []
-            : [variant: Readonly<VariantOf<Registry[Name], Key>>]
+            : [variant: VariantRequest<VariantOf<Registry[Name], Key>>]
         ): Query<
           Registry,
           Name,

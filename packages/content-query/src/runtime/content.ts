@@ -2,7 +2,7 @@ import { ContentError, contentError, invalidQuery, payloadIdentity } from "../sh
 import { mapConcurrent } from "../shared/concurrency.ts";
 import { assertServerOnly } from "../shared/server-only.ts";
 import { detach } from "../shared/values.ts";
-import type { QueryRunner } from "../query/plan.ts";
+import type { PlanPayload, QueryRunner } from "../query/plan.ts";
 import { normalizePlan } from "../query/normalize.ts";
 import { executeQuery } from "./execute.ts";
 import {
@@ -135,20 +135,27 @@ async function renderedPayload(revision: PreparedRevision, collection: string, i
   return rendered;
 }
 
-/** Lazily loads one custom payload variant once per revision, retrying after failures. */
+/**
+ * Lazily loads one custom payload variant once per revision, retrying after failures. The request's
+ * combinations are tried in order, and only the first one the entry has is loaded.
+ */
 function loadCustom(
   revision: PreparedRevision,
   collection: string,
   id: string,
   name: string,
-  variant: Readonly<Record<string, string>>,
+  request: PlanPayload,
 ): Promise<unknown> {
   const entries = revision.collections[collection]!.payloads?.get(name);
   if (!entries) {
     invalidQuery(`Payload "${name}" no longer matches the prepared collection.`);
   }
-  const load = entries.get(id)?.get(variantKey(variant));
-  if (!load) {
+  const candidates = [request.variant, ...(request.fallbacks ?? [])];
+  const variants = entries.get(id);
+  const variant = candidates.find((candidate) => variants?.has(variantKey(candidate)));
+  const load = variant && variants!.get(variantKey(variant));
+  if (!variant || !load) {
+    const tried = candidates.map((candidate) => payloadIdentity(name, candidate));
     return Promise.reject(
       new ContentError({
         code: "variant-not-found",
@@ -156,8 +163,11 @@ function loadCustom(
         collection,
         id,
         payload: name,
-        variant,
-        message: `Entry "${id}" has no ${payloadIdentity(name, variant)} payload.`,
+        variant: request.variant,
+        message:
+          tried.length === 1
+            ? `Entry "${id}" has no ${tried[0]} payload.`
+            : `Entry "${id}" has none of the ${tried.join(", ")} payloads.`,
       }),
     );
   }
@@ -188,7 +198,7 @@ async function loadPayload(
   collection: string,
   id: string,
   name: string,
-  variant: Readonly<Record<string, string>>,
+  request: PlanPayload,
 ): Promise<unknown> {
   if (name === "_body") {
     return (await loadBuiltin(revision, collection, id)).body;
@@ -196,7 +206,7 @@ async function loadPayload(
   if (name === "_rendered") {
     return renderedPayload(revision, collection, id);
   }
-  return loadCustom(revision, collection, id, name, variant);
+  return loadCustom(revision, collection, id, name, request);
 }
 
 /**
@@ -212,7 +222,7 @@ async function attachPayloads(
   }
   const loads = new Map<
     string,
-    { collection: string; id: string; name: string; variant: Readonly<Record<string, string>> }
+    { collection: string; id: string; name: string; request: PlanPayload }
   >();
   for (const request of requests) {
     for (const name of Object.keys(request.payloads)) {
@@ -222,15 +232,15 @@ async function attachPayloads(
           collection: request.collection,
           id: request.id,
           name,
-          variant: request.payloads[name]!.variant,
+          request: request.payloads[name]!,
         });
       }
     }
   }
   const keys = [...loads.keys()];
   const values = await mapConcurrent(keys, PAYLOAD_CONCURRENCY, (key) => {
-    const { collection, id, name, variant } = loads.get(key)!;
-    return loadPayload(revision, collection, id, name, variant);
+    const { collection, id, name, request } = loads.get(key)!;
+    return loadPayload(revision, collection, id, name, request);
   });
   const loaded = new Map(keys.map((key, index) => [key, values[index]]));
   for (const request of requests) {
