@@ -16,7 +16,7 @@ The root and package READMEs introduce ContentQuery. Detailed package usage and 
 
 Bundled builders from `content-query/schema` are implemented. The [collections and schemas guide](../website/content/guides/collections-and-schemas.md) covers the selected builders, provider-independent input/output inference, and support for other Standard Schema V1 validators.
 
-The [computed fields guide](../website/content/guides/computed-fields.md) covers reusable reading time, word count, and excerpt helpers from `content-query/computed`, including typed selectors for structured text and HTML.
+The [computed fields guide](../website/content/guides/computed-fields.md) covers reusable reading time, word count, and excerpt helpers from `content-query/computed`, including typed selectors for structured text and HTML, and `computedFields()` for fields that share one resolver call.
 
 The [querying guide](../website/content/guides/querying-content.md) covers collection-first fluent queries and collection-scoped relational queries, including explicit selection, `columns`, `with`, and filters.
 

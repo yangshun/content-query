@@ -76,7 +76,7 @@ Builders run during preparation. Generated runtime JavaScript imports neither th
 
 ## Reusable computed fields
 
-`content-query/computed` exports `readingTime()`, `wordCount()`, and `excerpt()`. They return ordinary `{ schema, resolve }` definitions with Standard Schema result types, and can sit alongside custom computed fields:
+`content-query/computed` exports the text helpers `readingTime()`, `wordCount()`, and `excerpt()`, and [`computedFields()`](#fields-that-share-one-resolver) for fields that one resolver fills. The text helpers return ordinary `{ schema, resolve }` definitions with Standard Schema result types, and can sit alongside custom computed fields:
 
 ```ts
 import { excerpt, readingTime, wordCount } from "content-query/computed";
@@ -107,6 +107,31 @@ computed: {
 Supply loader metadata as the second type argument when selecting from `source`. `ReadingTimeOptions<Data, Source>` adds finite positive `wordsPerMinute`; `ExcerptOptions<Data, Source>` adds positive-safe-integer `maxLength`. Bad options fail at declaration time. Selectors must return a string or `undefined`; failures become normal contextual preparation diagnostics, and helpers honor the resolver's abort signal.
 
 Results become ordinary typed fields for selection, filtering, and sorting. Helpers run during preparation, including with `retainBody: false`; deployed queries import neither these helpers nor their text-processing dependencies. Text helpers use a Markdown parser without initializing syntax highlighting. See the [computed fields guide](../website/content/guides/computed-fields.md) for complete configurations and queries.
+
+### Fields that share one resolver
+
+`computedFields({ fields, resolve })` declares several computed fields that one resolver call fills, for values that come from the same read. Spread its result into `computed`:
+
+```ts
+import { computedFields } from "content-query/computed";
+
+computed: {
+  ...computedFields({
+    fields: {
+      /** The challenge's name. */
+      title: schema.string(),
+      description: schema.string(),
+    },
+    resolve: async ({ files }) => JSON.parse(await files.text("info/en-US.json")),
+  }),
+}
+```
+
+- **Resolution.** `resolve` runs once per entry each time the entry is prepared and returns an object with one value per field. Fields whose schema accepts `undefined` may be omitted. A result that is not an object fails preparation.
+- **Fields.** Each field is validated by its own schema and is selected, filtered, and sorted like any other computed field. A JSDoc comment on a key in `fields` documents that field on entry types and query results.
+- **Context.** `resolve` receives the ordinary [computed context](#define-collections), and files it reads through `files` are tracked. Annotate the context, such as `(context: ComputedContext<Post>)`, to type `data`.
+- **Errors.** A failing resolver reports a diagnostic for each field it fills, with that field as the `path`. Declaring no fields, a field without a Standard Schema, or no `resolve` throws a `TypeError`.
+- **Types.** `content-query/computed` exports `ComputedFieldsOptions<Fields, Data, Source>`, `ComputedFieldSchemas`, `ComputedFieldValues<Fields>` (what `resolve` returns), and `ComputedFieldDefinitions<Fields, Data, Source>`.
 
 ## Astro-compatible content loaders
 
