@@ -70,12 +70,25 @@ type QueryInfo<
 > = {
   readonly [queryType]: { result: Result; selected: Selected; filtered: Filtered };
 };
-type Simplify<Value> = { [Key in keyof Value]: Value[Key] };
-/** Adds one requested payload to a result's `_payloads`, keeping earlier requests. */
-type WithPayload<Result, Key extends PropertyKey, Value> = Omit<Result, "_payloads"> & {
-  _payloads: Simplify<
-    (Result extends { _payloads: infer Existing } ? Existing : {}) & { [Name in Key]: Value }
-  >;
+/**
+ * Flattens an intersection into one object type, keeping each property's declaration. The
+ * conditional resolves to a mapped type that no alias owns, so TypeScript compares two rows by
+ * their properties instead of by the collection definitions in their type arguments. Comparing
+ * those definitions computes variances deep inside schema libraries such as Zod, which can exceed
+ * the instantiation limit when `Promise.all()` or `Awaited` infers a query's result.
+ */
+type Simplify<Value> = Value extends infer Shape ? { [Key in keyof Shape]: Shape[Key] } : never;
+/** One returned entry: the accumulated result, flattened, with its `_payloads` flattened too. */
+type Row<Result> = Result extends infer Shape
+  ? { [Key in keyof Shape]: Key extends "_payloads" ? Simplify<Shape[Key]> : Shape[Key] }
+  : never;
+/**
+ * Adds one requested payload under `_payloads`. Intersecting with earlier requests merges their
+ * `_payloads` objects; {@link Row} flattens them when the query returns. Unlike `Omit`, this adds
+ * no type that later calls must re-evaluate, so long chains stay cheap to check.
+ */
+type WithPayload<Result, Key extends PropertyKey, Value> = Result & {
+  _payloads: { [Name in Key]: Value };
 };
 type ResultOf<Configured> = Configured extends QueryInfo<infer Result> ? Result : never;
 type FilteredOf<Configured> =
@@ -113,7 +126,7 @@ export type RelationshipResult<
 type RelationValue<Definition, Relation extends Relationship, Configured> = RelationshipResult<
   Definition,
   Relation,
-  ResultOf<Configured>,
+  Row<ResultOf<Configured>>,
   FilteredOf<Configured>
 >;
 export type Query<
@@ -324,9 +337,9 @@ export type Query<
   (Root extends true
     ? (Many extends true
         ? {
-            all: Selected extends true ? () => Promise<Simplify<Result>[]> : UnselectedTerminal;
-            execute: Selected extends true ? () => Promise<Simplify<Result>[]> : UnselectedTerminal;
-            then: Selected extends true ? Promise<Simplify<Result>[]>["then"] : UnselectedThen;
+            all: Selected extends true ? () => Promise<Row<Result>[]> : UnselectedTerminal;
+            execute: Selected extends true ? () => Promise<Row<Result>[]> : UnselectedTerminal;
+            then: Selected extends true ? Promise<Row<Result>[]>["then"] : UnselectedThen;
             /**
              * Returns one page from one revision: `{ page, size }` for page numbers, or
              * `{ size, after?, before?, total? }` for cursors. Unavailable after `limit()` or
@@ -335,21 +348,17 @@ export type Query<
             paginate: Selected extends true
               ? [Paged] extends [true]
                 ? PaginateAfterLimit
-                : Paginate<Simplify<Result>>
+                : Paginate<Row<Result>>
               : UnselectedTerminal;
           }
         : {
             /** Runs a `byId()` query, matching direct await: the entry, or `undefined`. */
             execute: Selected extends true
-              ? () => Promise<Simplify<Result> | undefined>
+              ? () => Promise<Row<Result> | undefined>
               : UnselectedTerminal;
-            then: Selected extends true
-              ? Promise<Simplify<Result> | undefined>["then"]
-              : UnselectedThen;
+            then: Selected extends true ? Promise<Row<Result> | undefined>["then"] : UnselectedThen;
           }) & {
-        first: Selected extends true
-          ? () => Promise<Simplify<Result> | undefined>
-          : UnselectedTerminal;
+        first: Selected extends true ? () => Promise<Row<Result> | undefined> : UnselectedTerminal;
         /** Counts matching entries without a selection; unavailable once payloads are requested. */
         count: [Result] extends [never]
           ? () => Promise<number>
