@@ -5,6 +5,7 @@ import type {
   RelationalCountOptions,
 } from "../query/relational-types.ts";
 import type { Query } from "../query/types.ts";
+import type { Unavailable } from "../shared/types.ts";
 import type { MembersOf, QueryStyle, QueryStyleDisabled, QueryStyleMember } from "./query-style.ts";
 
 declare const collectionType: unique symbol;
@@ -45,15 +46,11 @@ type CollectionMethods<
   HandleStarters<Registry, Name> &
   RelationalCollectionQueries<Registry, Name>;
 
-/**
- * Members outside the allowed style. Calls report the message as the required `this` type,
- * whatever arguments they pass.
- */
+/** Members outside the allowed style. They are not callable, and their type gives the message. */
 type DisabledMembers<Name extends string, Style extends QueryStyle> = {
-  readonly [Member in Exclude<FluentMember | RelationalMember, MembersOf<Style>>]: (
-    this: QueryStyleDisabled<Name, Member & QueryStyleMember, Style>,
-    ...arguments_: readonly unknown[]
-  ) => never;
+  readonly [Member in Exclude<FluentMember | RelationalMember, MembersOf<Style>>]: Unavailable<
+    QueryStyleDisabled<Name, Member & QueryStyleMember, Style>
+  >;
 };
 
 /** `count()` counts every entry in both styles; options take relational filters. */
