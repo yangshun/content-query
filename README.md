@@ -64,7 +64,7 @@ const post = await posts.findFirst({
 const { html, headings } = post!._payloads._rendered;
 ```
 
-Queries return only the data they select, not even `id` implicitly; a query that selects nothing fails to type-check and throws at runtime. An entry loads only its own collection: pass related collections to `using()`, such as `posts.using(authors)`, to follow relationships. Vite apps import `content-query:collections/posts`, and a `package.json` mapping from `#content-query/*` to `./.content-query/collections/*/server.js` gives other hosts `#content-query/posts`. Upgrading from 0.4? See [migrating to 0.5](./packages/content-query/README.md#migrating-to-05).
+Queries return only the data they select, not even `id` implicitly; a query that selects nothing fails to type-check and throws at runtime. An entry loads only its own collection: pass related collections to `using()`, such as `posts.using(authors)`, to follow relationships. Vite apps import `content-query:collections/posts`, and a `package.json` mapping from `#content-query/*` to `./.content-query/collections/*/server.js` gives other hosts `#content-query/posts`.
 
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
 
