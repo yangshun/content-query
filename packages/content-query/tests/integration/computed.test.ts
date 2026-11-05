@@ -90,11 +90,11 @@ try {
           await writeFile(
             path.join(fixture.root, "consumer.ts"),
             `
-import {content, type CollectionData} from "./.content-query/server.js";
+import {content, type CollectionEntry} from "./.content-query/server.js";
 const selected:Promise<{words:number;readingMinutes:number;summary:string}[]> = content.from("posts").select("words", "readingMinutes", "summary").all();
-const words:CollectionData<"articles">["words"] = 3;
+const words:CollectionEntry<"articles">["words"] = 3;
 // @ts-expect-error Computed number fields do not become strings through generated declarations.
-const wrong:CollectionData<"posts">["readingMinutes"] = "one";
+const wrong:CollectionEntry<"posts">["readingMinutes"] = "one";
 void [selected,words,wrong];
 `,
           );

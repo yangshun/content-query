@@ -30,6 +30,18 @@ Collections can also declare [custom payloads](/docs/payloads). Request one with
 
 ## Generated types
 
-Both the physical server entry and `content-query:server` export `CollectionKey`, `CollectionData<"posts">`, `Collections`, and `CollectionPayload<"coding", "detail">` as types. `CollectionData` includes the ID, validated metadata, and computed fields; `CollectionPayload` is one payload's value.
+Both the physical server entry and `content-query:server` export `CollectionKey`, `CollectionEntry<"posts">`, `Collections`, and `CollectionPayload<"coding", "detail">` as types. `CollectionEntry` includes the ID, validated metadata, and computed fields; `CollectionPayload` is one payload's value.
+
+Queries return only the fields they select. Pass those field names as the second type argument to type the results, for example as component props:
+
+```ts
+import { content, type CollectionEntry } from "content-query:server";
+
+type GuideLink = CollectionEntry<"guides", "id" | "title">;
+
+const links: GuideLink[] = await content.from("guides").select("id", "title").all();
+```
+
+A picked entry has every selected key, and an optional field that an entry omits reads as `undefined`, so it matches what the query returns. Field names the collection does not define are type errors.
 
 Keep runtime imports on the server. See [querying content](/docs/querying-content) and [rendering content](/docs/rendering-content) for usage.

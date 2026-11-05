@@ -40,8 +40,9 @@ describe("portable content builds and production consumption", () => {
         await writeFile(
           path.join(fixture.root, "consumer.ts"),
           `/// <reference path="./.content-query/types.d.ts" />
-import { content, type CollectionData, type CollectionKey } from "./.content-query/server.js";
-import { content as virtualContent, type CollectionData as VirtualData } from "content-query:server";
+import { content, type CollectionEntry, type CollectionKey, type Collections } from "./.content-query/server.js";
+import { content as virtualContent, type CollectionEntry as VirtualEntry } from "content-query:server";
+import type { QueryData } from "content-query";
 import { eq } from "content-query/query";
 import { buildContent, type BuildContentOptions, type ContentSession } from "content-query/build";
 import { withContentQuery, type NextContentOptions } from "content-query/next";
@@ -55,12 +56,23 @@ void configured;
 const buildOptions: BuildContentOptions = { backend: "in-memory" };
 const session: Promise<ContentSession<typeof collections>> = buildContent<typeof collections>(buildOptions);
 void session;
-const title: CollectionData<"posts">["title"] = "Example";
+const title: CollectionEntry<"posts">["title"] = "Example";
 const key: CollectionKey = "posts";
-const virtualTitle: VirtualData<"posts">["title"] = title;
+const virtualTitle: VirtualEntry<"posts">["title"] = title;
+type Equal<Left, Right> = (<Value>() => Value extends Left ? 1 : 2) extends (<Value>() => Value extends Right ? 1 : 2) ? true : false;
+const fullEntry: Equal<CollectionEntry<"posts">, QueryData<typeof collections.posts>> = true;
+const mappedEntry: Equal<Collections["posts"], CollectionEntry<"posts">> = true;
+const fluentPicked = content.from("posts").select("id", "title", "subtitle").all();
+const fluentEntry: Equal<Awaited<typeof fluentPicked>[number], CollectionEntry<"posts", "id" | "title" | "subtitle">> = true;
+const relationalPicked = virtualContent.query.posts.findMany({ columns: { id: true, subtitle: true } });
+const relationalEntry: Equal<Awaited<typeof relationalPicked>[number], VirtualEntry<"posts", "id" | "subtitle">> = true;
+const pickedSubtitle: Equal<CollectionEntry<"posts", "subtitle">, { subtitle: string | null | undefined }> = true;
+void [fullEntry, mappedEntry, fluentEntry, relationalEntry, pickedSubtitle];
+// @ts-expect-error Picked fields must belong to the collection.
+type MissingField = CollectionEntry<"posts", "typo">;
 const object: Promise<{title:string;_adjacent:{previous:{id:string}|null;next:{id:string}|null}}[]> = virtualContent.query.posts.findMany({ adjacent: { scope: "results", columns: { id: true } }, columns: { title:true } });
 // @ts-expect-error Generated aliases only accept registered collection names.
-type Missing = CollectionData<"missing">;
+type Missing = CollectionEntry<"missing">;
 // @ts-expect-error Extra object selection fields remain errors through generated declarations.
 content.query.posts.findMany({ columns: { id:true, typo:true } });
 void [title, key, virtualTitle, object];

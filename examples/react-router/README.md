@@ -28,7 +28,7 @@ The example prerenders the homepage and guide pages. ContentQuery's Vite integra
 
 Queries are inline in native route loaders. `app/routes/docs.tsx` fetches IDs/titles for a persistent docs layout with an `Outlet`; `app/routes/guide.tsx` loads only the current article and its neighbors. `NavLink` keeps the active sidebar item in sync. There is no separate content-loading helper. Generated data and declarations are ignored by Git.
 
-Development subscribes to `content-query:client` and calls `useRevalidator().revalidate()` after publication. The generated `content-query:server` types include `CollectionKey`, `CollectionData`, and `Collections`; there is no handwritten declaration file. `source: "./content/guides"` defaults to Markdown. The production output is `build/client/`.
+Development subscribes to `content-query:client` and calls `useRevalidator().revalidate()` after publication. The generated `content-query:server` types include `CollectionKey`, `CollectionEntry`, and `Collections`; there is no handwritten declaration file. `source: "./content/guides"` defaults to Markdown. The production output is `build/client/`.
 
 Run `vp test run examples/react-router/tests` from the repository root to build an isolated copy, add a nested guide, and verify ordered metadata, Markdown, and previous/next links after deleting the source files.
 

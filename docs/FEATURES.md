@@ -19,7 +19,7 @@
 - Markdown folder `source` shorthand and explicit Markdown/JSON/YAML/TOML source objects alongside native loaders.
 - Relational `adjacent` and fluent `selectAdjacent()` projections under `_adjacent` with explicit neighbor selection: results-scope neighbors (`.selectAdjacent(...fields)`, `scope: "results"`), including within a parent's related entries, independent filtered/ordered sibling scopes, and typed nested neighbor selection.
 - Fluent operators cover every relational filter: `like`, `ilike`, `notLike`, `notIlike`, `arrayContained`, and `has()` relationship filters with existence checks and nested related-field filters.
-- Generated `CollectionKey`, `CollectionData`, and `Collections` aliases for physical and `content-query:server` entries.
+- Generated `CollectionKey`, `CollectionEntry`, `Collections`, and `CollectionPayload` aliases for physical and `content-query:server` entries. `CollectionEntry<"posts", "id" | "title">` picks the fields a query selects and matches its results.
 - Browser-safe `content-query:client` update subscriptions with serialized router revalidation and full-reload fallback; Void preserves component state and scroll.
 - Forward/inverse relationships, explicit reference ownership, authored arrays, nested selection, and per-parent pagination.
 - Rich value/presence preservation through synchronous devalue encoding and detached results. Plain selections and rendered payloads are copied directly, without an encode/decode round trip.
