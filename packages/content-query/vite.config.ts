@@ -1,5 +1,16 @@
 import { defineConfig } from "vite-plus";
 
+/**
+ * Matches a package's root import and its subpath imports. A bare name in `deps.alwaysBundle`
+ * matches only the root import, so a subpath such as `fflate/browser` would stay external.
+ *
+ * @param name - The package name.
+ * @returns A pattern for `name` and `name/...` specifiers.
+ */
+function packageImports(name: string): RegExp {
+  return new RegExp(`^${name}(?:/|$)`);
+}
+
 export default defineConfig({
   pack: {
     entry: {
@@ -24,7 +35,7 @@ export default defineConfig({
     deps: {
       neverBundle: ["vite-plus"],
       // Keep portable runtime modules usable as ESM without host-side CommonJS conversion.
-      alwaysBundle: ["devalue", "fflate", "github-slugger", "markdown-exit"],
+      alwaysBundle: ["devalue", "fflate", "github-slugger", "markdown-exit"].map(packageImports),
     },
     exports: {
       devExports: true,
