@@ -19,6 +19,19 @@ relationships: {
 }
 ```
 
+A relationship can't share a name with a data field. If content files already call the ID `author`, rename it in the schema so the relationship can take the authored name, and keep the files unchanged:
+
+```ts
+schema: schema
+  .object({ title: schema.string(), author: schema.string() })
+  .transform(({ author, ...data }) => ({ ...data, authorId: author })),
+relationships: {
+  author: { collection: "authors", type: "one", from: "authorId", to: "id", referenceSide: "from" },
+},
+```
+
+Queries then select the ID as `authorId` and the related entry with `with("author", ...)`. Filters stay unambiguous: `eq(fields.authorId, "ada")` compares the ID, and `has(fields.author, ...)` filters by the related entry.
+
 ## Supply related collections
 
 Each collection's entry loads only that collection, so queries never follow a relationship implicitly. Import the target collection and pass it to `using()` where a query follows the relationship:

@@ -43,6 +43,16 @@ Relational `columns` lists fields to include with `true`; there are no exclusion
 
 Fluent queries can also start with `byId`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, or `selectAdjacent`. Field names and result types are checked against the collection from the first call, so editors complete field names in `.select()`. Builders are immutable and reusable. Await a selected builder directly, or call `.all()` or `.execute()` for an array. Use `.first()` or relational `.findFirst()` for one entry; they return `undefined` when nothing matches.
 
+A builder runs when it is awaited, not when it is created. `.all()`, `.execute()`, `.first()`, `.paginate()`, and `.count()` start the query and return a promise, so call one of them to start a query before other work:
+
+```ts
+const post = posts.byId("hello").select("title").first(); // Starts now.
+const related = await readRelatedLinks();
+const title = (await post)?.title;
+```
+
+Holding a builder in a variable doesn't start it, so a builder hoisted above other reads still runs after them. `Promise.all()` starts each builder it receives.
+
 ## Filtering
 
 ```ts

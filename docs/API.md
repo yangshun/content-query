@@ -216,6 +216,16 @@ const { _body: body, _rendered: rendered } = post!._payloads;
 
 Start fluent queries from the collection, such as `posts.select(...fields)`; field names are checked and completed immediately. `byId`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, and `selectAdjacent` also start fluent queries. Builders are immutable and reusable. Later `select()` calls add fields to the scope's earlier ones, so a shared builder such as `const postLink = posts.select("id", "title")` can become `postLink.select("publishedAt")` where a page needs more; a field selected again appears once. Await a selected builder directly, or call `all()` / `execute()` for an array, `first()` for one entry or `undefined`, and [`paginate()`](#pagination) for one page with page-number or cursor details. `count()` counts filtered parents before pagination and needs no selection.
 
+A builder is lazy: it runs when it is awaited, not when it is created. `all()`, `execute()`, `first()`, `paginate()`, and `count()` start the query and return a promise. To start a query before other work, call one of them first; holding a builder in a variable does not start it:
+
+```ts
+const post = posts.byId(id).select("title").first(); // Starts now.
+const user = await readUser();
+const { title } = (await post)!;
+```
+
+`Promise.all([posts.byId(id).select("title"), readUser()])` also starts each builder it receives.
+
 Queries return only the data they select; nothing is implicit, not even `id`. Every row-returning scope, including relationship and adjacent sibling scopes, must select fields, include a relationship, request a payload, or select adjacency. A scope that selects nothing fails to type-check: awaiting an unselected builder reports "Type of 'await' operand must either be a valid promise…", and calling its `all()`, `first()`, `execute()`, or `paginate()` reports `Type 'Unavailable<"Select fields, relationships, payloads, or adjacent entries before running this query.">' has no call signatures.` At runtime it throws an `invalid-query` ContentError: "Select fields, relationships, payloads, or adjacent entries before running this query." Selected optional properties remain own properties with value `undefined`. Returned graphs and headings are detached from internal state. Queries load bodies or rendered HTML only when they request [payloads](#payloads).
 
 `posts.byId(id)` starts a query for one entry. Select its data as usual, then await it for the entry or `undefined`, without `first()`:
@@ -232,7 +242,7 @@ Detachment copies a result directly when it contains only primitives, plain obje
 
 Filtering uses structured expressions from `content-query/query`: scalar equality/comparison/choice operators, literal string matching, `like`/`ilike`/`notLike`/`notIlike` patterns, scalar-array membership including `arrayContained`, absence checks, boolean composition, and relationship filters. `has(fields.author, (author) => eq(author.name, "Ada"))` matches parents with a matching related entry; `has(fields.author)` tests existence, and `not(has(...))` tests absence. The fluent operators cover every relational filter. See the [operator matrix](./PLAN.md#filtering). Sorting uses deterministic Unicode code-point order and ID tie-breakers, with nullish/unordered special values last. Pagination accepts nonnegative safe integers.
 
-Relationships support forward/inverse fields, authored ID arrays, explicit reference ownership, and nested fluent queries. Queries follow a relationship only when its target collection is supplied through [`using()`](#relationships-with-using). Every relationship scope, fluent or relational, selects its own data. Many scopes support per-parent ordering/pagination; singular scopes support filtering and return `null` if their target is excluded. Preparation rejects dangling/ambiguous authored references and invalid singular cardinality. Array references preserve order and duplicates; inverse membership is distinct.
+Relationships support forward/inverse fields, authored ID arrays, explicit reference ownership, and nested fluent queries. A relationship cannot share a name with a data field, so `track` cannot name both an authored ID and the related entry. To give the relationship the authored name, rename the ID in the schema, as in `schema.object({ track: schema.string() }).transform(({ track, ...data }) => ({ ...data, trackId: track }))` with `from: "trackId"`: content files keep `track`, queries select the ID as `trackId`, and `with("track", ...)` returns the related entry. Queries follow a relationship only when its target collection is supplied through [`using()`](#relationships-with-using). Every relationship scope, fluent or relational, selects its own data. Many scopes support per-parent ordering/pagination; singular scopes support filtering and return `null` if their target is excluded. Preparation rejects dangling/ambiguous authored references and invalid singular cardinality. Array references preserve order and duplicates; inverse membership is distinct.
 
 ## Collection entries
 
