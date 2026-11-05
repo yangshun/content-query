@@ -4,6 +4,7 @@ import type {
   QueryData,
   Relationship,
   RelationshipsOf,
+  SelectedData,
   UnavailableRelationship,
   UnavailableRelationshipsOf,
   VariantOf,
@@ -137,15 +138,11 @@ export type Query<
   ): Query<
     Registry,
     Name,
-    {
-      [
-        Key in Exclude<keyof Result, keyof QueryData<Registry[Name]>> | Keys[number]
-      ]: Key extends Keys[number]
-        ? QueryData<Registry[Name]>[Key & keyof QueryData<Registry[Name]>]
-        : Key extends keyof Result
-          ? Result[Key]
-          : never;
-    },
+    Simplify<
+      {
+        [Key in Exclude<keyof Result, keyof QueryData<Registry[Name]>>]: Result[Key];
+      } & SelectedData<QueryData<Registry[Name]>, Keys[number]>
+    >,
     true,
     Many,
     Root,
@@ -278,10 +275,7 @@ export type Query<
           Registry,
           Name,
           Result & {
-            _adjacent: Adjacent<{
-              [Key in Keys[number]]: QueryData<Registry[Name]>[Key &
-                keyof QueryData<Registry[Name]>];
-            }>;
+            _adjacent: Adjacent<SelectedData<QueryData<Registry[Name]>, Keys[number]>>;
           },
           true,
           Many,
@@ -514,23 +508,39 @@ type ObjectRelationValue<
       >
     >
   : never;
+/** Data fields an object projection requests, excluding relationships and `_adjacent`. */
+type ProjectedFields<
+  Registry extends CollectionRegistry,
+  Name extends keyof Registry & string,
+  Projection,
+> = Exclude<
+  {
+    [Key in keyof Projection]-?: Projection[Key] extends false | undefined ? never : Key;
+  }[keyof Projection],
+  "_adjacent" | keyof RelationshipsOf<Registry[Name]>
+> &
+  keyof QueryData<Registry[Name]>;
 export type SelectionResult<
   Registry extends CollectionRegistry,
   Name extends keyof Registry & string,
   Projection,
-> = {
-  -readonly [
-    Key in keyof Projection as Projection[Key] extends false | undefined ? never : Key
-  ]-?: Key extends "_adjacent"
-    ? Projection[Key] extends { select: infer Neighbors }
-      ? Adjacent<SelectionResult<Registry, Name, Neighbors>>
-      : never
-    : Key extends keyof RelationshipsOf<Registry[Name]>
-      ? ObjectRelationValue<Registry, Name, Key, Projection[Key]>
-      : Key extends keyof QueryData<Registry[Name]>
-        ? QueryData<Registry[Name]>[Key]
+> = Simplify<
+  {
+    -readonly [
+      Key in keyof Projection as Projection[Key] extends false | undefined
+        ? never
+        : Key extends ProjectedFields<Registry, Name, Projection>
+          ? never
+          : Key
+    ]-?: Key extends "_adjacent"
+      ? Projection[Key] extends { select: infer Neighbors }
+        ? Adjacent<SelectionResult<Registry, Name, Neighbors>>
+        : never
+      : Key extends keyof RelationshipsOf<Registry[Name]>
+        ? ObjectRelationValue<Registry, Name, Key, Projection[Key]>
         : never;
-};
+  } & SelectedData<QueryData<Registry[Name]>, ProjectedFields<Registry, Name, Projection>>
+>;
 
 type CheckedField<Value, Filter> = Filter extends Scalar
   ? Filter

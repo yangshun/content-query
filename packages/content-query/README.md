@@ -100,6 +100,17 @@ import type { ContentPost } from "#content-query/posts";
 type PostLink = ContentPost<"id" | "title">; // What select("id", "title") returns.
 ```
 
+To describe a field, write a JSDoc comment above it in the schema or above a computed field's name. Editors show the comment when you hover that field on `ContentPost`, on `ContentPost<"id" | "title">`, and on query results:
+
+```ts
+schema: schema.object({
+  /** The headline, also used as the page title. */
+  title: schema.string(),
+}),
+```
+
+Zod's `.describe()` and `.meta()` store descriptions at runtime only, so they don't show up in types.
+
 Type names are `Content` plus the export name, capitalized and made singular by dropping one trailing `s` (`jobs` gives `ContentJob`, `coding` gives `ContentCoding`). Set `typeName: "Category"` in `defineCollection()` for irregular plurals. Declared payloads are typed as `ContentPostPayload<"detail">`. Collection names that are not identifiers are converted for the export and import path, such as `blog-posts` to `blogPosts`; two collections that would share an export or type name fail the build.
 
 Paginate root queries in one call. `paginate({ page: 2, size: 10 })` returns `items`, `total`, `page`, `pageCount`, `hasNextPage`, and `hasPreviousPage` for numbered archive pages. `paginate({ size: 10, after: previous.endCursor })` returns cursor pages with `startCursor` and `endCursor` for "load more" lists. Both work in fluent queries and in `posts.paginate()`; see [pagination](https://github.com/yangshun/content-query/blob/main/docs/API.md#pagination).

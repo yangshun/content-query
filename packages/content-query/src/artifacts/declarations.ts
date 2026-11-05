@@ -25,6 +25,7 @@ function configTypes(directory: string, config: string): string[] {
  * The entry type, such as `ContentJob`, is the full entry. `ContentJob<Field>` is the shape a
  * query returns when it selects `Field`: every selected key is present, and optional fields read
  * as `undefined` when missing, so query results and the type are assignable in both directions.
+ * Both forms keep JSDoc comments written on schema fields and computed field names.
  *
  * @param directory - Directory that will contain the declaration file.
  * @param config - Absolute path of content-query.config.
@@ -46,7 +47,7 @@ export function collectionDeclarations(
     `/** The ${exportName} collection. Start queries here, or pass it to another collection's \`using()\` to follow relationships into it. */`,
     `export declare const ${exportName}: import("content-query/runtime").Collection<Registry, ${key}, ConfiguredQueryStyle>;`,
     `/** A ${exportName} entry: its ID, validated metadata, and computed fields. Pass field names, such as \`${typeName}<"id">\`, for the shape a query returns when it selects them. */`,
-    `export type ${typeName}<Field extends keyof ${data} = keyof ${data}> = keyof ${data} extends Field ? ${data} : { [Key in Field]: ${data}[Key] };`,
+    `export type ${typeName}<Field extends keyof ${data} = keyof ${data}> = keyof ${data} extends Field ? ${data} : import("content-query").SelectedData<${data}, Field>;`,
     `/** The value of one payload that the ${exportName} collection declares. */`,
     `export type ${payloadTypeName}<Payload extends keyof import("content-query").PayloadsOf<${definition}>> = import("content-query").PayloadData<${definition}, Payload>;`,
     ``,

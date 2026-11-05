@@ -4,6 +4,7 @@ import type {
   QueryData,
   Relationship,
   RelationshipsOf,
+  SelectedData,
   UnavailableRelationship,
   VariantOf,
 } from "../collection/types.ts";
@@ -162,11 +163,11 @@ export type RelationalCountOptions<
 > = Pick<RelationalQueryOptions<Registry, Name>, "where" | "orderBy" | "offset" | "limit">;
 
 type ColumnResult<Data, Options> = Options extends { columns: infer Columns }
-  ? {
-      -readonly [
-        Key in keyof Columns as Columns[Key] extends true ? Key : never
-      ]-?: Key extends keyof Data ? Data[Key] : never;
-    }
+  ? SelectedData<
+      Data,
+      { [Key in keyof Columns]-?: Columns[Key] extends true ? Key : never }[keyof Columns] &
+        keyof Data
+    >
   : {};
 /** Keys whose option values request something, as opposed to `false` or `undefined`. */
 type Requested<Map> = keyof {
