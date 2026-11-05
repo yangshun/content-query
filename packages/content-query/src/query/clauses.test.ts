@@ -24,6 +24,28 @@ describe("checkedPayload", () => {
     expect(detail).toEqual({ variant: { language: "python", locale: "en-US" } });
     expect(Object.keys(detail.variant)).toEqual(["language", "locale"]);
   });
+  test("lists fallback combinations in order, earlier keys changing slowest", () => {
+    expect(
+      checkedPayload(registry, "exercises", "detail", {
+        locale: ["fr-FR", "en-US"],
+        language: ["python", "python", "java"],
+      }),
+    ).toEqual({
+      variant: { language: "python", locale: "fr-FR" },
+      fallbacks: [
+        { language: "java", locale: "fr-FR" },
+        { language: "python", locale: "en-US" },
+        { language: "java", locale: "en-US" },
+      ],
+    });
+    // A one-value list, or a list that repeats one value, has no fallbacks.
+    expect(
+      checkedPayload(registry, "exercises", "detail", {
+        locale: ["en-US", "en-US"],
+        language: ["python"],
+      }),
+    ).toEqual({ variant: { language: "python", locale: "en-US" } });
+  });
   test("rejects unknown names, missing variants, and malformed variant keys", () => {
     expect(() => checkedPayload(registry, "settings", "_body", true)).toThrow(
       /Unknown payload "_body"/,
@@ -35,15 +57,17 @@ describe("checkedPayload", () => {
       { locale: "en-US" },
       { locale: "en-US", language: 1 },
       { locale: "en-US", language: "python", extra: "x" },
+      { locale: [], language: "python" },
+      { locale: ["en-US", 1], language: "python" },
       ["en-US"],
       null,
     ]) {
       expect(() => checkedPayload(registry, "exercises", "detail", variant)).toThrow(
-        /exactly these string variant keys: locale, language/,
+        /exactly these variant keys, each a string or a nonempty array of strings: locale, language/,
       );
     }
     expect(() => checkedPayload(registry, "exercises", "_body", { locale: "en-US" })).toThrow(
-      /exactly these string variant keys: none/,
+      /exactly these variant keys, each a string or a nonempty array of strings: none/,
     );
   });
 });

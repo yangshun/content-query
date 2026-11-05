@@ -18,6 +18,7 @@ export type {
   VariantContext,
   VariantField,
   VariantOf,
+  VariantRequest,
   VariantValues,
 } from "./collection/types.ts";
 export type { ContentHeading, ContentRenderResult, RenderedContent } from "./runtime/types.ts";

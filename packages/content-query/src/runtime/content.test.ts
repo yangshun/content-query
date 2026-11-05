@@ -289,7 +289,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
         /Unknown payload "missing"/,
       );
       expect(() => content.posts.findMany({ payloads: { _body: "yes" } as never })).toThrow(
-        /requires exactly these string variant keys: none/,
+        /requires exactly these variant keys, each a string or a nonempty array of strings: none/,
       );
       await expect(
         content.posts.count({ payloads: { _body: true } } as never),

@@ -716,7 +716,7 @@ Loader-provided `rendered.html` is usable independently of a raw body. This supp
 | Entry without retained text                                                                  | `body: undefined`.                                                                 |
 | `_rendered` for an entry without usable output or a rendering path                           | The query rejects with `not-renderable`.                                           |
 | Unknown payload name, built-in requested from a record-only collection, or malformed request | `invalid-query`.                                                                   |
-| Variant combination that an entry does not have                                              | `variant-not-found`.                                                               |
+| Variant combination that an entry does not have, after any listed fallbacks                  | `variant-not-found`, naming the first combination and every one tried.             |
 | Prepared payload cannot be loaded or has an invalid shape                                    | `artifact-error`, preserving the cause; a failed load is retried by later queries. |
 | Markdown compilation fails                                                                   | `render-error`.                                                                    |
 

@@ -156,15 +156,38 @@ export function checkedPayload(
     typeof variant !== "object" ||
     Array.isArray(variant) ||
     Object.keys(variant).length !== variants.length ||
-    variants.some((key) => !Object.hasOwn(variant, key) || typeof variant[key] !== "string")
+    variants.some((key) => !Object.hasOwn(variant, key) || !isVariantValue(variant[key]))
   ) {
     invalidQuery(
-      `Payload "${name}" requires exactly these string variant keys: ${variants.join(", ") || "none"}.`,
+      `Payload "${name}" requires exactly these variant keys, each a string or a nonempty array of strings: ${variants.join(", ") || "none"}.`,
     );
   }
-  return {
-    variant: Object.fromEntries([...variants].sort().map((key) => [key, variant[key] as string])),
-  };
+  // Earlier keys in the request change slowest, so { locale: ["fr", "en"] } tries fr, then en.
+  let combinations: Record<string, string>[] = [{}];
+  for (const key of Object.keys(variant)) {
+    const values = [variant[key]].flat() as string[];
+    combinations = combinations.flatMap((partial) =>
+      values.map((value) => ({ ...partial, [key]: value })),
+    );
+  }
+  // Plans store keys sorted, matching prepared variant identities; repeated combinations go.
+  const sorted = [...variants].sort();
+  const unique = new Map(
+    combinations.map((combination) => {
+      const canonical = Object.fromEntries(sorted.map((key) => [key, combination[key]!]));
+      return [JSON.stringify(canonical), canonical];
+    }),
+  );
+  const [first, ...fallbacks] = unique.values();
+  return fallbacks.length ? { variant: first!, fallbacks } : { variant: first! };
+}
+
+/** Checks one variant key's request: a value, or a nonempty list of values to try in order. */
+function isVariantValue(value: unknown): boolean {
+  return (
+    typeof value === "string" ||
+    (Array.isArray(value) && value.length > 0 && value.every((item) => typeof item === "string"))
+  );
 }
 
 /** Compiles a payloads option into plan requests, omitting payloads set to false. */

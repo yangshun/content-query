@@ -221,6 +221,95 @@ for (const encoded of [false, true]) {
         await session.dispose();
       }
     });
+
+    describe("variant fallbacks", () => {
+      test("return the first listed variant each entry has, loading only that one", async () => {
+        const { content, session, imports } = await setup(encoded);
+        try {
+          const relational = await content.coding.findMany({
+            columns: { id: true },
+            orderBy: { id: "asc" },
+            payloads: { detail: { locale: ["fr-FR", "en-US"] } },
+          });
+          expect(relational.map(({ id, _payloads }) => [id, _payloads.detail.locale])).toEqual([
+            ["reverse-list", "en-US"],
+            ["two-sum", "fr-FR"],
+          ]);
+          if (encoded) {
+            expect(new Set(imports.mock.calls.flat())).toEqual(
+              new Set([
+                'detail:reverse-list:{"locale":"en-US"}',
+                'detail:two-sum:{"locale":"fr-FR"}',
+              ]),
+            );
+            expect(imports).toHaveBeenCalledTimes(2);
+          }
+          const fluent = await content.coding
+            .select("id")
+            .orderBy("id")
+            .withPayload("detail", { locale: ["fr-FR", "en-US"] });
+          expect(fluent).toEqual(relational);
+          expect(
+            (
+              await content.coding
+                .byId("reverse-list")
+                .select("id")
+                .withPayload("detail", { locale: ["en-US"] })
+            )?._payloads.detail.locale,
+          ).toBe("en-US");
+        } finally {
+          await session.dispose();
+        }
+      });
+
+      test("reject with every combination tried when an entry has none of them", async () => {
+        const { content, session } = await setup(encoded);
+        try {
+          const missing = await content.coding
+            .byId("reverse-list")
+            .select("id")
+            .withPayload("detail", { locale: ["de-DE", "fr-FR"] })
+            .then(
+              () => undefined,
+              (error: unknown) => error,
+            );
+          expect(missing).toMatchObject({
+            code: "variant-not-found",
+            id: "reverse-list",
+            payload: "detail",
+            variant: { locale: "de-DE" },
+            message:
+              'Entry "reverse-list" has none of the detail[locale=de-DE], detail[locale=fr-FR] payloads.',
+          });
+        } finally {
+          await session.dispose();
+        }
+      });
+
+      test("reject empty lists and lists with values that are not strings", async () => {
+        const { content, session } = await setup(encoded);
+        try {
+          const withDetail = (variant: unknown) =>
+            content.coding.select("id").withPayload("detail", variant as never);
+          for (const locale of [[], [1], ["en-US", null]]) {
+            expect(() => withDetail({ locale })).toThrow(/nonempty array of strings/);
+          }
+          expect(() =>
+            // @ts-expect-error A fallback list needs at least one value.
+            content.coding.select("id").withPayload("detail", { locale: [] }),
+          ).toThrow(/variant keys/);
+          expect(() =>
+            content.coding.findFirst({
+              where: { id: "two-sum" },
+              // @ts-expect-error Relational fallback lists hold strings.
+              payloads: { detail: { locale: ["en-US", 1] } },
+            }),
+          ).toThrow(/variant keys/);
+        } finally {
+          await session.dispose();
+        }
+      });
+    });
   });
 }
 

@@ -60,7 +60,7 @@ A [`queryStyle`](/docs/reference/configuration#query-style) export can disable o
 
 Request payloads with relational `payloads: { _rendered: true }` or fluent `.withPayload("_rendered")`. Results carry them under `_payloads`. Payloads load after filtering and pagination, from the same revision, and are unavailable in counts and adjacent entries. JSON, YAML, and TOML sources and `file()` collections offer no built-in payloads, and `BodyLoader` collections offer only `_body`.
 
-Collections can also declare [custom payloads](/docs/payloads). Request one without variants with `true`, or name every variant key: `payloads: { detail: { locale: "fr-FR" } }` or `.withPayload("detail", { locale: "fr-FR" })`. A combination the entry lacks rejects with `variant-not-found`.
+Collections can also declare [custom payloads](/docs/payloads). Request one without variants with `true`, or name every variant key: `payloads: { detail: { locale: "fr-FR" } }` or `.withPayload("detail", { locale: "fr-FR" })`. A combination the entry lacks rejects with `variant-not-found`. A key can list [fallback values](/docs/payloads#fallback-variants) to try in order, such as `{ locale: ["fr-FR", "en-US"] }`.
 
 ## Generated types
 
