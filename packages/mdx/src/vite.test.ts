@@ -118,8 +118,15 @@ describe("MDX Vite integration", () => {
         timeout: 8000,
       });
       await expect(core.api.prepare()).rejects.toThrow();
+      // The overlay follows module refresh and type writing, which can finish after the event.
+      await vi.waitFor(
+        () => {
+          const payloads: unknown[] = send.mock.calls.map((arguments_) => arguments_[0]);
+          expect(payloads).toContainEqual(expect.objectContaining({ type: "error" }));
+        },
+        { timeout: 8000 },
+      );
       const payloads: unknown[] = send.mock.calls.map((arguments_) => arguments_[0]);
-      expect(payloads).toContainEqual(expect.objectContaining({ type: "error" }));
       expect(payloads).not.toContainEqual(expect.objectContaining({ type: "full-reload" }));
     } finally {
       send.mockRestore();
