@@ -14,6 +14,7 @@ import {
 import { createSession, sessionInternals } from "./session.ts";
 import { executeQuery } from "../runtime/execute.ts";
 import { bodyOf, renderedOf } from "../../tests/helpers/payloads.ts";
+import { loadAll } from "../../tests/helpers/collections.ts";
 
 /** Controls native store writes deterministically while testing revision publication. */
 function source(initial: LoaderEntry[]) {
@@ -140,18 +141,20 @@ describe("watch lifecycle and revision publication", () => {
         await gate;
         return { html: body, headings: [] };
       };
-      const oldQuery = session.content.from("posts").select("title").first();
-      const oldRender = renderedOf(session.content, "posts", "one");
+      const oldQuery = loadAll(session.collections).posts.select("title").first();
+      const oldRender = renderedOf(loadAll(session.collections), "posts", "one");
       records.context.update({
         upsert: [{ id: "one", data: { title: "B" }, rendered: { html: "B" } }],
       });
       await sessionInternals(session).idle();
-      expect(await session.content.from("posts").select("title").first()).toEqual({ title: "B" });
-      expect((await renderedOf(session.content, "posts", "one")).html).toBe("B");
+      expect(await loadAll(session.collections).posts.select("title").first()).toEqual({
+        title: "B",
+      });
+      expect((await renderedOf(loadAll(session.collections), "posts", "one")).html).toBe("B");
       finish!();
       expect(await oldQuery).toEqual({ title: "A" });
       expect((await oldRender).html).toBe("A");
-      expect((await renderedOf(session.content, "posts", "one")).html).toBe("B");
+      expect((await renderedOf(loadAll(session.collections), "posts", "one")).html).toBe("B");
     } finally {
       finish!();
       await session.dispose();
@@ -203,22 +206,22 @@ describe("watch lifecycle and revision publication", () => {
       watch: true,
     });
     try {
-      await expect(session.content.from("posts").select("title").all()).rejects.toMatchObject({
+      await expect(loadAll(session.collections).posts.select("title").all()).rejects.toMatchObject({
         code: "validation-error",
       });
       records.context.update({ upsert: [{ id: "one", data: { title: "Corrected" } }] });
       await sessionInternals(session).idle();
-      expect(await session.content.from("posts").select("title").all()).toEqual([
+      expect(await loadAll(session.collections).posts.select("title").all()).toEqual([
         { title: "Corrected" },
       ]);
       records.context.error(new Error("subscription lost"));
       await sessionInternals(session).idle();
-      await expect(bodyOf(session.content, "posts", "one")).rejects.toMatchObject({
+      await expect(bodyOf(loadAll(session.collections), "posts", "one")).rejects.toMatchObject({
         code: "source-error",
       });
       records.replace([{ id: "one", data: { title: "Recovered again" } }]);
       await sessionInternals(session).idle();
-      expect(await session.content.from("posts").select("title").first()).toEqual({
+      expect(await loadAll(session.collections).posts.select("title").first()).toEqual({
         title: "Recovered again",
       });
     } finally {
@@ -261,12 +264,12 @@ describe("watch lifecycle and revision publication", () => {
     try {
       posts.context.update({ remove: ["one"], upsert: [{ id: "two", data: { title: "Edited" } }] });
       await sessionInternals(session).idle();
-      await expect(session.content.from("posts").count()).rejects.toMatchObject({
+      await expect(loadAll(session.collections).posts.count()).rejects.toMatchObject({
         code: "invalid-reference",
       });
       authors.context.update({ upsert: [{ id: "ada", data: { featured: [] } }] });
       await sessionInternals(session).idle();
-      expect(await session.content.from("posts").select("id", "title").all()).toEqual([
+      expect(await loadAll(session.collections).posts.select("id", "title").all()).toEqual([
         { id: "two", title: "Edited" },
       ]);
     } finally {
@@ -294,15 +297,15 @@ describe("watch lifecycle and revision publication", () => {
       });
       const revision = sessionInternals(session).state.revision!;
       revision.collections.posts!.builtins = new Map([["one", () => payload]]);
-      const active = bodyOf(session.content, "posts", "one");
+      const active = bodyOf(loadAll(session.collections), "posts", "one");
       await Promise.resolve();
       expect(revision.active).toBe(1);
       records.context.update({ upsert: [{ id: "one", data: { title: "B" }, body: "B body" }] });
       await sessionInternals(session).idle();
-      expect(await bodyOf(session.content, "posts", "one")).toBe("B body");
+      expect(await bodyOf(loadAll(session.collections), "posts", "one")).toBe("B body");
       records.context.update({ upsert: [{ id: "one", data: { title: false } }] });
       await sessionInternals(session).idle();
-      await expect(session.content.from("posts").count()).rejects.toMatchObject({
+      await expect(loadAll(session.collections).posts.count()).rejects.toMatchObject({
         code: "validation-error",
       });
       finish!({ body: "A body" });
@@ -354,12 +357,12 @@ describe("watch lifecycle and revision publication", () => {
       await processing;
       records.context.update({ upsert: [{ id: "one", data: { title: "latest" } }] });
       await sessionInternals(session).idle();
-      expect(await session.content.from("posts").select("processed").first()).toEqual({
+      expect(await loadAll(session.collections).posts.select("processed").first()).toEqual({
         processed: "latest",
       });
       finish!();
       await Promise.resolve();
-      expect(await session.content.from("posts").select("title").first()).toEqual({
+      expect(await loadAll(session.collections).posts.select("title").first()).toEqual({
         title: "latest",
       });
     } finally {

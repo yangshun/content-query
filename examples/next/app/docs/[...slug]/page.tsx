@@ -3,24 +3,24 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GuideContent } from "../content";
-import { content } from "#content-query";
+import { guides } from "#content-query/guides";
 
 type GuideProps = { params: Promise<{ slug: string[] }> };
 
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  const guides = await content.query.guides.findMany({
+  const entries = await guides.findMany({
     columns: { id: true },
     orderBy: { order: "asc" },
   });
 
-  return guides.map((guide) => ({ slug: guide.id.split("/") }));
+  return entries.map((guide) => ({ slug: guide.id.split("/") }));
 }
 
 export async function generateMetadata({ params }: GuideProps): Promise<Metadata> {
   const { slug } = await params;
-  const guide = await content.query.guides.findFirst({
+  const guide = await guides.findFirst({
     where: { id: slug.join("/") },
     columns: { title: true, description: true },
   });
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: GuideProps): Promise<Metadata
 export default async function GuidePage({ params }: GuideProps) {
   const { slug } = await params;
   const id = slug.join("/");
-  const guide = await content.query.guides.findFirst({
+  const guide = await guides.findFirst({
     where: { id },
     adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
     columns: { id: true, title: true, description: true },

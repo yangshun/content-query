@@ -10,6 +10,7 @@ import {
   PAGINATE_KEYS,
 } from "./clauses.ts";
 import {
+  assertAvailable,
   emptyPlan,
   hasSelection,
   NO_SELECTION_MESSAGE,
@@ -139,6 +140,7 @@ export function relationalWhere(
       };
       expressions.push(condition === false ? not(expression) : expression);
     } else {
+      assertAvailable(registry, collection, field);
       expressions.push(fieldCondition(field, condition));
     }
   }
@@ -195,6 +197,7 @@ export function relationalPlan(
         Object.hasOwn(registry[collection]!.relationships, name) &&
         registry[collection]!.relationships[name];
       if (!relation) {
+        assertAvailable(registry, collection, name);
         invalidQuery(`Unknown relationship "${name}".`);
       }
       if (selected === false || selected === undefined) {

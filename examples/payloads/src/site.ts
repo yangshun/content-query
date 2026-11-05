@@ -1,5 +1,7 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { content } from "../.content-query/server.js";
+import { announcements } from "../.content-query/collections/announcements/server.js";
+import { articles } from "../.content-query/collections/articles/server.js";
+import { authors } from "../.content-query/collections/authors/server.js";
 
 const output = new URL("../dist/", import.meta.url);
 
@@ -38,22 +40,22 @@ async function emit(pathname: string, text: string): Promise<void> {
 await rm(output, { recursive: true, force: true });
 
 // 1. The index needs metadata only. Without `payloads`, no article body or HTML is loaded.
-const articles = await content.query.articles.findMany({
+// Following the `author` relationship requires passing its target collection to `using()`.
+const index = await articles.using(authors).findMany({
   columns: { id: true, title: true, summary: true },
   orderBy: { publishedAt: "desc" },
   with: { author: { columns: { name: true } } },
 });
 
 // 2. Fluent queries add payloads with `.withPayload()`. This loads one article's HTML.
-const latest = await content
-  .from("articles")
+const latest = await articles
   .select("id", "title")
   .orderBy("publishedAt", "desc")
   .withPayload("_rendered")
   .first();
 
 // 3. Custom loaders can supply HTML directly. This entry has no body, so `_body` is undefined.
-const announcement = await content.query.announcements.findFirst({
+const announcement = await announcements.findFirst({
   where: { id: "launch" },
   columns: { title: true },
   payloads: { _rendered: true, _body: true },
@@ -70,7 +72,7 @@ await emit(
     }
 <h1>Articles</h1>
 <ol class="articles">
-${articles
+${index
   .map(
     (article) =>
       `<li><a href="/articles/${article.id}.html">${escape(article.title)}</a> by ${escape(article.author.name)}: ${escape(article.summary)}</li>`,
@@ -87,8 +89,8 @@ ${
 
 // 4. Each article page loads its metadata, author, and both built-in payloads in one query,
 // all from the same content revision.
-for (const { id } of articles) {
-  const article = await content.query.articles.findFirst({
+for (const { id } of index) {
+  const article = await articles.using(authors).findFirst({
     where: { id },
     columns: { title: true, publishedAt: true },
     with: { author: { columns: { id: true, name: true } } },
@@ -120,7 +122,7 @@ ${rendered.html}
 
 // 5. Custom payloads hold data that list queries never load. The feed requests each article's
 // long excerpt; the short variant is never loaded.
-const feed = await content.query.articles.findMany({
+const feed = await articles.findMany({
   columns: { id: true, title: true, publishedAt: true },
   orderBy: { publishedAt: "desc" },
   payloads: { excerpt: { length: "long" } },
@@ -147,7 +149,7 @@ await emit(
 // 6. Payloads also work inside relationship scopes. Authors come from `file()` and have no
 // payloads of their own, but their related articles do. Here only each author's newest
 // article loads its HTML.
-const authors = await content.query.authors.findMany({
+const profiles = await authors.using(articles).findMany({
   columns: { id: true, name: true, bio: true },
   with: {
     articles: {
@@ -159,7 +161,7 @@ const authors = await content.query.authors.findMany({
   },
 });
 
-for (const author of authors) {
+for (const author of profiles) {
   const [newest] = author.articles;
   await emit(
     `authors/${author.id}.html`,
@@ -176,4 +178,4 @@ ${
   );
 }
 
-console.log(`Wrote ${articles.length} articles and ${authors.length} authors to dist/.`);
+console.log(`Wrote ${index.length} articles and ${profiles.length} authors to dist/.`);

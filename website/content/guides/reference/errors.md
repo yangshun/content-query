@@ -14,7 +14,9 @@ Codes include `source-error`, `validation-error`, `duplicate-id`, `invalid-refer
 ## Common checks
 
 - **Missing collection types:** run preparation and include `.content-query/**/*.d.ts` in `tsconfig.json`.
+- **Collection module not found:** import each collection from its own [entry](/docs/reference/runtime#collection-entries), such as `content-query:collections/posts` or `#content-query/posts`, using the collection's export name, and run preparation first for physical entries.
 - **Invalid row query:** explicitly select fields at the root and in every requested relationship scope.
+- **Relationship not loaded:** pass the relationship's target collection, and the target of every nested hop, to [`using()`](/docs/relationships#supply-related-collections), such as `posts.using(authors)`.
 - **Invalid cursor:** pass back a `startCursor` or `endCursor` unchanged, to a query with the same collection and `orderBy` clauses; treat the error as a request for the first page.
 - **Invalid reference:** check that the authored value identifies a valid target with the declared cardinality.
 - **Client import rejected:** move the content query into a server loader, server function, or Server Component.

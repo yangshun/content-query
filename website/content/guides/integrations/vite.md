@@ -1,6 +1,6 @@
 ---
 title: Vite
-description: Prepare content, watch sources, and import the typed server facade.
+description: Prepare content, watch sources, and import typed collections in server code.
 section: integrations
 order: 40
 ---
@@ -20,7 +20,15 @@ export default defineConfig({
 
 The plugin defaults to the in-memory backend. It writes `.content-query/types.d.ts` for editor types and delivers runtime content through Vite's virtual modules and production bundle. To also publish standalone runtime files for consumers outside Vite, use `contentQuery({ backend: "generated" })`. The standalone CLI and build API still default to generated storage.
 
-Server modules import `content` from `content-query:server`. Include `.content-query/**/*.d.ts` in `tsconfig.json` for the generated collection types. The plugin rejects direct and transitive client imports of the server runtime.
+Server modules import each collection from its own virtual module, so a module loads only the collections it queries:
+
+```ts
+import { posts } from "content-query:collections/posts";
+
+const entries = await posts.select("id", "title").all();
+```
+
+The module path uses the collection's [export name](/docs/reference/runtime#collection-entries). Include `.content-query/**/*.d.ts` in `tsconfig.json` for the generated collection types. The plugin rejects direct and transitive client imports of the server runtime.
 
 ## Development updates
 

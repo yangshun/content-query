@@ -1,12 +1,22 @@
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
-import { cp, mkdir, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
+import {
+  cp,
+  mkdir,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  stat,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, test, vi } from "vite-plus/test";
 import { buildAtRoot } from "../../src/preparation/build.ts";
 import { projectFixture, packageRoot } from "../helpers/project.ts";
-import { createArtifactRuntime } from "../../src/internal.ts";
+import { createArtifactCollections } from "../../src/internal.ts";
 
 const execute = promisify(execFile);
 
@@ -40,10 +50,12 @@ describe("portable content builds and production consumption", () => {
         await writeFile(
           path.join(fixture.root, "consumer.ts"),
           `/// <reference path="./.content-query/types.d.ts" />
-import { content, type CollectionEntry, type CollectionKey, type Collections } from "./.content-query/server.js";
-import { content as virtualContent, type CollectionEntry as VirtualEntry } from "content-query:server";
+import { posts, type ContentPost } from "./.content-query/collections/posts/server.js";
+import { authors, type ContentAuthor } from "./.content-query/collections/authors/server.js";
+import { posts as virtualPosts, type ContentPost as VirtualPost } from "content-query:collections/posts";
+import { authors as virtualAuthors } from "content-query:collections/authors";
 import type { QueryData } from "content-query";
-import { eq, type CursorPage, type NumberedPage } from "content-query/query";
+import { eq, has, type CursorPage, type NumberedPage } from "content-query/query";
 import { buildContent, type BuildContentOptions, type ContentSession } from "content-query/build";
 import { withContentQuery, type NextContentOptions } from "content-query/next";
 import type { collections } from "./content-query.config.ts";
@@ -55,44 +67,55 @@ withContentQuery({}, { watch: true });
 void configured;
 const buildOptions: BuildContentOptions = { backend: "in-memory" };
 const session: Promise<ContentSession<typeof collections>> = buildContent<typeof collections>(buildOptions);
-void session;
-const title: CollectionEntry<"posts">["title"] = "Example";
-const key: CollectionKey = "posts";
-const virtualTitle: VirtualEntry<"posts">["title"] = title;
+const sessionTitles = session.then(({ collections }) => collections.posts.select("title").all());
+void sessionTitles;
+const title: ContentPost["title"] = "Example";
+const virtualTitle: VirtualPost["title"] = title;
+const name: ContentAuthor["name"] = "Ada";
 type Equal<Left, Right> = (<Value>() => Value extends Left ? 1 : 2) extends (<Value>() => Value extends Right ? 1 : 2) ? true : false;
-const fullEntry: Equal<CollectionEntry<"posts">, QueryData<typeof collections.posts>> = true;
-const mappedEntry: Equal<Collections["posts"], CollectionEntry<"posts">> = true;
-const fluentPicked = content.from("posts").select("id", "title", "subtitle").all();
-const fluentEntry: Equal<Awaited<typeof fluentPicked>[number], CollectionEntry<"posts", "id" | "title" | "subtitle">> = true;
-const relationalPicked = virtualContent.query.posts.findMany({ columns: { id: true, subtitle: true } });
-const relationalEntry: Equal<Awaited<typeof relationalPicked>[number], VirtualEntry<"posts", "id" | "subtitle">> = true;
-const pickedSubtitle: Equal<CollectionEntry<"posts", "subtitle">, { subtitle: string | null | undefined }> = true;
-void [fullEntry, mappedEntry, fluentEntry, relationalEntry, pickedSubtitle];
+const fullEntry: Equal<ContentPost, QueryData<typeof collections.posts>> = true;
+const fluentPicked = posts.select("id", "title", "subtitle").all();
+const fluentEntry: Equal<Awaited<typeof fluentPicked>[number], ContentPost<"id" | "title" | "subtitle">> = true;
+const relationalPicked = virtualPosts.findMany({ columns: { id: true, subtitle: true } });
+const relationalEntry: Equal<Awaited<typeof relationalPicked>[number], VirtualPost<"id" | "subtitle">> = true;
+const pickedSubtitle: Equal<ContentPost<"subtitle">, { subtitle: string | null | undefined }> = true;
+void [fullEntry, fluentEntry, relationalEntry, pickedSubtitle];
 // @ts-expect-error Picked fields must belong to the collection.
-type MissingField = CollectionEntry<"posts", "typo">;
-const numbered = content.from("posts").select("id", "title").orderBy("title").paginate({ page: 1, size: 2 });
-const numberedEntry: Equal<Awaited<typeof numbered>, NumberedPage<CollectionEntry<"posts", "id" | "title">>> = true;
-const cursorPage = virtualContent.query.posts.paginate({ columns: { id: true }, size: 2, after: null, total: true });
-const cursorEntry: Equal<Awaited<typeof cursorPage>, CursorPage<VirtualEntry<"posts", "id">, true>> = true;
+type MissingField = ContentPost<"typo">;
+const numbered = posts.select("id", "title").orderBy("title").paginate({ page: 1, size: 2 });
+const numberedEntry: Equal<Awaited<typeof numbered>, NumberedPage<ContentPost<"id" | "title">>> = true;
+const cursorPage = virtualPosts.paginate({ columns: { id: true }, size: 2, after: null, total: true });
+const cursorEntry: Equal<Awaited<typeof cursorPage>, CursorPage<VirtualPost<"id">, true>> = true;
 void [numberedEntry, cursorEntry];
 // @ts-expect-error paginate() owns limit and offset through generated declarations.
-content.from("posts").select("id").limit(1).paginate({ page: 1, size: 2 });
-const object: Promise<{title:string;_adjacent:{previous:{id:string}|null;next:{id:string}|null}}[]> = virtualContent.query.posts.findMany({ adjacent: { scope: "results", columns: { id: true } }, columns: { title:true } });
-// @ts-expect-error Generated aliases only accept registered collection names.
-type Missing = CollectionEntry<"missing">;
+posts.select("id").limit(1).paginate({ page: 1, size: 2 });
+const object: Promise<{title:string;_adjacent:{previous:{id:string}|null;next:{id:string}|null}}[]> = virtualPosts.findMany({ adjacent: { scope: "results", columns: { id: true } }, columns: { title:true } });
 // @ts-expect-error Extra object selection fields remain errors through generated declarations.
-content.query.posts.findMany({ columns: { id:true, typo:true } });
-void [title, key, virtualTitle, object];
-const query = content.from("posts").select("id", "title").with("author",author=>author.select("name"));
+posts.findMany({ columns: { id:true, typo:true } });
+void [title, virtualTitle, name, object];
+// @ts-expect-error A relationship into a collection that was not supplied is unavailable.
+posts.select("id").with("author", author => author.select("name"));
+// @ts-expect-error Relationship filters need the related collection too.
+posts.findMany({ columns: { id: true }, where: { author: { name: "Ada" } } });
+// @ts-expect-error Fluent relationship filters need the related collection too.
+posts.where(fields => has(fields.author)).count();
+const query = posts.using(authors).select("id", "title").with("author",author=>author.select("name"));
 const checked: Promise<{id:string;title:string;author:{name:string}}[]> = query.all();
+const filtered: Promise<{id:string}[]> = virtualPosts.using(virtualAuthors).findMany({ columns: { id: true }, where: { author: { name: "Ada" } } });
+const reverse = authors.using(posts).findMany({ columns: { name: true }, with: { posts: { columns: { id: true } } } });
+const reverseRows: Promise<{ name: string; posts: { id: string }[] }[]> = reverse;
+// @ts-expect-error A collection export only queries its own collection.
+void posts.from;
+// @ts-expect-error using() accepts collection exports only.
+posts.using({});
 // @ts-expect-error Invalid fields must remain errors through generated declarations.
-content.from("posts").select("typo");
+posts.select("typo");
 // @ts-expect-error Field argument types are inferred from schema outputs.
-content.from("posts").where(fields=>eq(fields.draft,"false"));
+posts.where(fields=>eq(fields.draft,"false"));
 // @ts-expect-error Unselected queries cannot run through generated declarations.
-void content.from("posts").all();
-const direct: PromiseLike<{id:string;title:string}[]> = content.from("posts").select("id", "title");
-void direct;
+void posts.where(fields=>eq(fields.draft,false)).all();
+const direct: PromiseLike<{id:string;title:string}[]> = posts.select("id", "title");
+void [direct, filtered, reverseRows];
 void checked;
 `,
         );
@@ -117,7 +140,7 @@ void checked;
           [
             "--input-type=module",
             "-e",
-            `const {content}=await import("./.content-query/server.js");console.log(JSON.stringify(await content.from("authors").select("name").with("featuredPosts",posts=>posts.select("id")).all()));`,
+            `const {authors}=await import("./.content-query/collections/authors/server.js");const {posts}=await import("./.content-query/collections/posts/server.js");console.log(JSON.stringify(await authors.using(posts).select("name").with("featuredPosts",posts=>posts.select("id")).all()));`,
           ],
           { cwd: fixture.root },
         );
@@ -150,7 +173,7 @@ void checked;
         [
           "--input-type=module",
           "-e",
-          `const{content}=await import("./.content-query/server.js");const row=await content.from("__proto__").select("value", "constructor").first();console.log(JSON.stringify([row.value,Object.hasOwn(row,"constructor"),row.constructor,(await content.query.__proto__.findFirst({where:{id:"__proto__"},payloads:{_body:true}}))._payloads._body]));`,
+          `const entry=await import("./.content-query/collections/__proto__/server.js");const collection=entry["__proto__"];const row=await collection.select("value", "constructor").first();console.log(JSON.stringify([row.value,Object.hasOwn(row,"constructor"),row.constructor,(await collection.findFirst({where:{id:"__proto__"},payloads:{_body:true}}))._payloads._body]));`,
         ],
         { cwd: fixture.root },
       );
@@ -182,14 +205,18 @@ void checked;
         const session = await buildAtRoot(fixture.root, {});
         await session.dispose();
         const generated = path.join(fixture.root, ".content-query");
-        const code = await readFile(path.join(generated, "server.js"), "utf8");
+        const code = await readFile(path.join(generated, "collections/posts/server.js"), "utf8");
         expect(code.includes("content-query/internal/markdown")).toBe(deferRender);
         expect(code).not.toContain("content-query.config");
         expect(code).not.toContain("zod");
+        // The authors entry never needs the renderer, which only posts can use.
+        expect(
+          await readFile(path.join(generated, "collections/authors/server.js"), "utf8"),
+        ).not.toContain("content-query/internal/markdown");
         expect(await readdir(path.join(generated, "collections/authors"))).not.toContain("entries");
-        expect(await readFile(path.join(generated, "server.d.ts"), "utf8")).toContain(
-          "typeof import",
-        );
+        expect(
+          await readFile(path.join(generated, "collections/posts/server.d.ts"), "utf8"),
+        ).toContain("typeof import");
         await rm(fixture.config);
         await rm(path.join(fixture.root, "content"), { recursive: true });
         const { stdout } = await execute(
@@ -198,9 +225,10 @@ void checked;
             "--input-type=module",
             "-e",
             `
-const {content} = await import(${JSON.stringify(pathToFileURL(path.join(generated, "server.js")).href)});
-const list = await content.from("posts").select("title", "date", "upper").with("author", author=>author.select("name")).all();
-const {_payloads: {_body: body, _rendered: rendered}} = await content.query.posts.findFirst({where:{id:"getting-started"},payloads:{_body:true,_rendered:true}});
+const {posts} = await import(${JSON.stringify(pathToFileURL(path.join(generated, "collections/posts/server.js")).href)});
+const {authors} = await import(${JSON.stringify(pathToFileURL(path.join(generated, "collections/authors/server.js")).href)});
+const list = await posts.using(authors).select("title", "date", "upper").with("author", author=>author.select("name")).all();
+const {_payloads: {_body: body, _rendered: rendered}} = await posts.findFirst({where:{id:"getting-started"},payloads:{_body:true,_rendered:true}});
 console.log(JSON.stringify({list,body,rendered}));
 `,
           ],
@@ -232,7 +260,11 @@ console.log(JSON.stringify({list,body,rendered}));
     const fixture = await projectFixture();
     try {
       const session = await buildAtRoot(fixture.root, { backend: "in-memory" });
-      expect(await session.content.from("posts" as never).count()).toBe(1);
+      expect(
+        await (
+          session.collections as unknown as Record<string, { count(): Promise<number> }>
+        ).posts!.count(),
+      ).toBe(1);
       expect(await readdir(fixture.root)).not.toContain(".content-query");
       await session.dispose();
     } finally {
@@ -252,9 +284,9 @@ console.log(JSON.stringify({list,body,rendered}));
           "--input-type=module",
           "-e",
           `
-const {content}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, ".content-query/server.js")).href)});
-console.log(await content.from("posts").count());
-try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads:{_body:true}}); } catch(error) { console.log(error.code); }
+const {posts}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, ".content-query/collections/posts/server.js")).href)});
+console.log(await posts.count());
+try { await posts.findFirst({where:{id:"getting-started"},payloads:{_body:true}}); } catch(error) { console.log(error.code); }
 `,
         ],
         { cwd: fixture.root },
@@ -268,11 +300,12 @@ try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads
     const fixture = await projectFixture();
     try {
       await (await buildAtRoot(fixture.root, {})).dispose();
-      const first = await readFile(path.join(fixture.root, ".content-query/server.js"), "utf8");
+      const entry = path.join(fixture.root, ".content-query/collections/posts/server.js");
+      const first = await readFile(entry, "utf8");
+      const before = await stat(entry);
       await (await buildAtRoot(fixture.root, {})).dispose();
-      expect(await readFile(path.join(fixture.root, ".content-query/server.js"), "utf8")).toBe(
-        first,
-      );
+      expect(await readFile(entry, "utf8")).toBe(first);
+      expect((await stat(entry)).mtimeMs).toBe(before.mtimeMs);
       const directory = path.join(fixture.root, ".content-query/collections/posts/entries");
       const payload = path.join(directory, (await readdir(directory))[0]!);
       await writeFile(payload, "export default 'corrupted';");
@@ -298,7 +331,8 @@ try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads
       const stale = path.join(generated, "collections/removed");
       const hash = "a".repeat(64);
       await mkdir(path.join(stale, "entries"), { recursive: true });
-      await writeFile(path.join(stale, "index.js"), "export {};");
+      await writeFile(path.join(stale, "server.js"), "export {};");
+      await writeFile(path.join(stale, "server.d.ts"), "export {};");
       await writeFile(path.join(stale, `index-${hash}.js`), "export {};");
       await writeFile(path.join(stale, `entries/${hash}.js`), "export {};");
       await writeFile(path.join(generated, "collections/.DS_Store"), "");
@@ -313,6 +347,11 @@ try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads
       expect(second.entries).not.toEqual(first.entries);
       expect(await readdir(path.join(generated, "collections"))).not.toContain("removed");
       expect(await readFile(path.join(posts, "notes.txt"), "utf8")).toBe("kept");
+      expect((await readdir(generated)).sort()).toEqual([
+        "collections",
+        "package.json",
+        "types.d.ts",
+      ]);
 
       const session = await buildAtRoot(fixture.root, { watch: true });
       try {
@@ -352,9 +391,9 @@ try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads
       await execute(process.execPath, [cli, "build", "--backend=generated", "-o", "./prepared"], {
         cwd: fixture.root,
       });
-      expect(await readFile(path.join(fixture.root, "prepared/server.js"), "utf8")).toContain(
-        "createArtifactRuntime",
-      );
+      expect(
+        await readFile(path.join(fixture.root, "prepared/collections/posts/server.js"), "utf8"),
+      ).toContain("createArtifactCollection");
       await writeFile(fixture.postPath, "---\ntitle: false\n---\n");
       await expect(
         execute(process.execPath, [cli, "build"], { cwd: fixture.root }),
@@ -425,7 +464,7 @@ try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads
         [
           "--input-type=module",
           "-e",
-          'const { content } = await import("./.content-query/server.js"); console.log(JSON.stringify(await content.from("posts").select("title").first()));',
+          'const { posts } = await import("./.content-query/collections/posts/server.js"); console.log(JSON.stringify(await posts.select("title").first()));',
         ],
         { cwd: fixture.root },
       );
@@ -463,21 +502,21 @@ try { await content.query.posts.findFirst({where:{id:"getting-started"},payloads
         await writeFile(
           path.join(fixture.root, "consumer.ts"),
           `/// <reference path="./.content-query/types.d.ts" />
-import { content } from "./.content-query/server.js";
-import { content as virtualContent } from "content-query:server";
+import { posts } from "./.content-query/collections/posts/server.js";
+import { posts as virtualPosts } from "content-query:collections/posts";
 import { buildContent } from "content-query/build";
 import type { collections, queryStyle } from "./content-query.config.ts";
-const titles: Promise<{ title: string }[]> = content.query.posts.findMany({ columns: { title: true } });
-const total: Promise<number> = content.count("posts");
-const virtualTitles: Promise<{ title: string }[]> = virtualContent.query.posts.findMany({ columns: { title: true } });
+const titles: Promise<{ title: string }[]> = posts.findMany({ columns: { title: true } });
+const total: Promise<number> = posts.count({ where: { title: "Getting started" } });
+const virtualTitles: Promise<{ title: string }[]> = virtualPosts.findMany({ columns: { title: true } });
 // @ts-expect-error The generated export follows queryStyle in content-query.config.
-content.from("posts").select("title");
+posts.select("title");
 // @ts-expect-error The Vite virtual module follows the same setting.
-virtualContent.from("posts");
+virtualPosts.select("title");
 const session = await buildContent<typeof collections, typeof queryStyle>({ backend: "in-memory" });
-void session.content.query.posts.findFirst({ columns: { title: true } });
+void session.collections.posts.findFirst({ columns: { title: true } });
 // @ts-expect-error Standalone sessions are narrowed by the style type argument.
-session.content.from("posts");
+session.collections.posts.select("title");
 void [titles, total, virtualTitles];
 export {};
 `,
@@ -503,10 +542,10 @@ export {};
           [
             "--input-type=module",
             "-e",
-            `const {content}=await import("./.content-query/server.js");
+            `const {posts}=await import("./.content-query/collections/posts/server.js");
 let rejected;
-try { content.from("posts"); } catch (error) { rejected = { code: error.code, message: error.message }; }
-const titles = await content.query.posts.findMany({ columns: { title: true } });
+try { posts.select("title"); } catch (error) { rejected = { code: error.code, message: error.message }; }
+const titles = await posts.findMany({ columns: { title: true } });
 console.log(JSON.stringify({ rejected, titles }));`,
           ],
           { cwd: fixture.root },
@@ -515,7 +554,7 @@ console.log(JSON.stringify({ rejected, titles }));`,
           rejected: {
             code: "invalid-query",
             message:
-              'content.from is unavailable because content-query.config sets queryStyle to "relational".',
+              'posts.select is unavailable because content-query.config sets queryStyle to "relational".',
           },
           titles: [{ title: "Getting started" }],
         });
@@ -527,10 +566,10 @@ console.log(JSON.stringify({ rejected, titles }));`,
 
   test("incompatible artifact and codec versions require regeneration", () => {
     expect(() =>
-      createArtifactRuntime({ version: 999, codec: "devalue-6", collections: {} }, {}),
+      createArtifactCollections({ version: 999, codec: "devalue-6", collections: {} }, {}),
     ).toThrow(expect.objectContaining({ code: "artifact-error" }));
     expect(() =>
-      createArtifactRuntime({ version: 1, codec: "other", collections: {} }, {}),
+      createArtifactCollections({ version: 1, codec: "other", collections: {} }, {}),
     ).toThrow(expect.objectContaining({ code: "artifact-error" }));
   });
 });

@@ -1,6 +1,6 @@
 # ContentQuery website
 
-Server metadata queries use `content.from(collection).select(...fields)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
+Each collection has its own generated entry. Site server code imports `guides` from `content-query:collections/guides` and `examples` from `content-query:collections/examples`, so each module loads only the collections it queries. Fluent metadata queries start from the collection, such as `guides.select(...fields)`, and the relational API is `guides.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
 
 Collection configs, executable examples, and published guides use `{ schema }` from `content-query/schema`. The quick start installs only ContentQuery. The collections guide documents the selected Zod-backed builders, chaining, inference helpers, and support for other Standard Schema V1 providers.
 
@@ -12,7 +12,7 @@ The guide also documents `readingTime()`, `wordCount()`, and `excerpt()` from `c
 
 Standalone examples and documentation use `content-query build` (or `content-query build --watch`) and `buildContent()` from `content-query/build`. The CLI reference documents CAC's help/version output, short option aliases, and equals-form values. Framework guides also cover the native Angular SSR example, its server API boundaries, and CLI development watching.
 
-The [Next.js guide](./content/guides/integrations/next.md) documents `withContentQuery()` from `content-query/next`, including configuration, the application-local `#content-query` import alias in `package.json`, inferred Server Component types, content options, development updates and error recovery with Turbopack or Webpack, and production/static exports. The introduction, quick start, framework guide, and configuration reference link to that setup. The homepage's Next.js workflow shows the configuration and alias mapping beside its server query.
+The [Next.js guide](./content/guides/integrations/next.md) documents `withContentQuery()` from `content-query/next`, including configuration, the application-local `#content-query/*` import alias in `package.json` that maps each collection to `.content-query/collections/*/server.js`, why routes that import only the collections they query trace only that data on serverless hosts, inferred Server Component types, content options, development updates and error recovery with Turbopack or Webpack, and production/static exports. The introduction, quick start, framework guide, and configuration reference link to that setup. The homepage's Next.js workflow shows the configuration and alias mapping beside its server query.
 
 The Next.js and standalone guides describe cleanup of previous-run generated artifacts after the first successful startup publication and retention of revisions for the rest of a watch session.
 
@@ -24,9 +24,11 @@ The header and footer link to the [ContentQuery repository](https://github.com/y
 
 The sidebar follows the reader's workflow: Getting started, Defining content, Querying, Rendering, Integrations, and Reference. These pages introduce ContentQuery's current APIs with concise examples. Query filtering, selection, pagination, related entries, and adjacency share one guide; Markdown rendering and body policies share another. Expand those into separate pages as the content grows. Development content updates remain enabled.
 
+The [relationships guide](./content/guides/relationships.md) explains `using()`: each call site supplies every collection its relationships reach, and a missing target is a type error and an `invalid-query` error. The [runtime reference](./content/guides/reference/runtime.md) covers per-collection entries in each host, export naming for collection names that are not identifiers, the generated `.content-query/` layout, `ContentPost`-style entry and payload types with the `typeName` override, and `session.collections`. The [configuration reference](./content/guides/reference/configuration.md) lists the collection members each `queryStyle` disables.
+
 The querying guide documents revision-scoped ID indexes for fluent and object detail-page queries, including additional filters and development freshness.
 
-The [custom payloads guide](./content/guides/payloads.md) covers declaring payloads in `defineCollection`, variants from data fields or fixed lists, `combinations()`, typed requests, `variant-not-found`, `CollectionPayload`, payload diagnostics, tracked `files` helpers with `sharedFiles`, and development updates that re-resolve only the payload variants whose files change.
+The [custom payloads guide](./content/guides/payloads.md) covers declaring payloads in `defineCollection`, variants from data fields or fixed lists, `combinations()`, typed requests, `variant-not-found`, generated payload types such as `ContentCodingPayload`, payload diagnostics, tracked `files` helpers with `sharedFiles`, and development updates that re-resolve only the payload variants whose files change.
 
 The querying guide's "Choosing a style" section explains when to mix fluent and relational queries: both share one executor and the same filters, fluent builders reuse a base query for pages and counts, and `arrayContains` differs between the two styles. The guide also documents fluent `has()` relationship filters and explicit neighbor selection with `.selectAdjacent(...fields)` and relational `scope: "results"`.
 
@@ -50,7 +52,7 @@ The opening example follows `content/posts/hello-world.md` through four columns:
 
 The query syntax comparison starts with sample posts on the left, followed by operation controls, both query styles, and shared JSON results.
 
-The relationship author selector uses first names (`Ada` and `Grace`) to keep both choices on one line. Source records and results retain full author names. The data column has two separate stacked sections headed `posts` and `authors`, with three sample posts, both authors, compact record rows, and ID fields. Queries use those same three posts. Matching IDs are highlighted when the query includes the author. The visible relationship definition explains the connection without an arrow.
+The relationship author selector uses first names (`Ada` and `Grace`) to keep both choices on one line. Source records and results retain full author names. The data column has two separate stacked sections headed `posts` and `authors`, with three sample posts, both authors, compact record rows, and ID fields. Queries use those same three posts. Matching IDs are highlighted when the query includes the author, and only that query supplies `authors` through `using()`. The visible relationship definition explains the connection without an arrow.
 
 The flexible sources example uses three columns: a vertical format selector with logos on the left, the authored file and source configuration stacked in the middle, and prepared JSON on the right. Format logos are bundled locally from [Simple Icons](https://github.com/simple-icons/simple-icons) in `src/examples/source-format-logo.tsx` and follow the selected button color. The result has no header row. On narrow screens, the columns stack.
 
@@ -118,6 +120,6 @@ order: 14
 
 Introduction renders at `/docs/introduction`. Nested files work too: `reference/cli.md` becomes `/docs/reference/cli`. Rebuild to include new static routes.
 
-`tests/guides.integration.test.ts` exercises the real ContentQuery integration, homepage examples and SSR output, section metadata, guide loaders, internal links, executable snippets, and prerender paths. It runs every published Next.js configuration against the quick-start collection, executes the homepage's aliased server query, and type-checks the guide's Server Component against the generated declarations with the workspace-pinned tsrs compiler. Run `vp run check` from the repository root for all static checks. The app enables `allowImportingTsExtensions` for the local ContentQuery Vite source types.
+`tests/guides.integration.test.ts` exercises the real ContentQuery integration, homepage examples and SSR output, section metadata, guide loaders, internal links, executable snippets, and prerender paths. It spies on the same collection instances that route modules import to check which queries the routes run. It runs every published Next.js configuration against the quick-start collection, executes the homepage's aliased server query, and type-checks the guide's Server Component against the generated declarations with the workspace-pinned tsrs compiler. Run `vp run check` from the repository root for all static checks. The app enables `allowImportingTsExtensions` for the local ContentQuery Vite source types.
 
 TypeScript tooling uses the workspace's shared compatibility catalog for framework APIs. Native TypeScript `7.1.0-beta` is available at the repository root; see the [compiler setup](../CONTRIBUTING.md#setup-and-checks).

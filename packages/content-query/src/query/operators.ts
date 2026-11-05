@@ -1,6 +1,11 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { detach, isScalar } from "../shared/values.ts";
-import type { Expression, PredicateOperator, QueryRegistry } from "./plan.ts";
+import {
+  assertAvailable,
+  type Expression,
+  type PredicateOperator,
+  type QueryRegistry,
+} from "./plan.ts";
 import type { Field, Ordered, RelationField, Scalar, ScalarField } from "./types.ts";
 
 /** Builds a checked, backend-independent predicate instead of a per-entry callback. */
@@ -196,6 +201,7 @@ export function resolveRelations(
         ? relationships[expression.field]
         : undefined;
       if (!relation) {
+        assertAvailable(registry, collection, expression.field);
         invalidQuery(`Unknown relationship "${expression.field}" in has().`);
       }
       return {

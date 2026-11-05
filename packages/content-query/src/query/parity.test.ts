@@ -4,9 +4,9 @@ import { defineCollection } from "../collection/define.ts";
 import { createSession, sessionInternals } from "../preparation/session.ts";
 import { fixtureLoader } from "../../tests/helpers/loader.ts";
 import * as operators from "../query.ts";
-import { createArtifactRuntime } from "../internal.ts";
 import { ARTIFACT_VERSION, CODEC_VERSION, type EncodedCollection } from "../artifacts/types.ts";
 import { encode } from "../shared/values.ts";
+import { loadAll, loadArtifact } from "../../tests/helpers/collections.ts";
 
 /** Builds the same public consumer for live and production-encoded data. */
 async function setup(encoded: boolean) {
@@ -68,14 +68,14 @@ async function setup(encoded: boolean) {
     watch: false,
     registry,
   });
-  let content = session.content;
+  let content = loadAll(session.collections);
   if (encoded) {
     const revision = sessionInternals(session).state.revision!;
     const collections: Record<string, EncodedCollection> = {};
     for (const [name, collection] of Object.entries(revision.collections)) {
       collections[name] = { records: collection.records.map(encode), builtins: {} };
     }
-    content = createArtifactRuntime<typeof registry>(
+    content = loadArtifact<typeof registry>(
       { version: ARTIFACT_VERSION, codec: CODEC_VERSION, collections: revision.registry },
       collections,
     );
@@ -88,7 +88,7 @@ for (const encoded of [false, true]) {
     test("shares nested projection, filtering, tie-breaking, and pagination", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const object = await content.query.posts.findMany({
+        const object = await content.posts.findMany({
           where: { draft: false, rank: { gte: 2 } },
           columns: { id: true, title: true },
           with: { author: { columns: { name: true } } },
@@ -96,8 +96,7 @@ for (const encoded of [false, true]) {
           offset: 1,
           limit: 1,
         });
-        const fluent = await content
-          .from("posts")
+        const fluent = await content.posts
           .select("id", "title")
           .where((fields) => operators.eq(fields.draft, false))
           .where((fields) => operators.gte(fields.rank, 2))
@@ -109,20 +108,19 @@ for (const encoded of [false, true]) {
         expect(object).toEqual([{ id: "c", title: "Gamma", author: { name: "Ada" } }]);
         expect(fluent).toEqual(object);
         expect(
-          await content
-            .from("posts")
+          await content.posts
             .select("id")
             .with("author", (author) => author.select("name"))
             .all(),
         ).toEqual(
-          await content.query.posts.findMany({
+          await content.posts.findMany({
             columns: { id: true },
             with: { author: { columns: { name: true } } },
           }),
         );
-        expect(await content.count("posts", { where: { draft: false }, limit: 0 })).toBe(3);
+        expect(await content.posts.count({ where: { draft: false }, limit: 0 })).toBe(3);
         expect(
-          await content.query.posts.findFirst({ where: { id: "missing" }, columns: { id: true } }),
+          await content.posts.findFirst({ where: { id: "missing" }, columns: { id: true } }),
         ).toBeUndefined();
       } finally {
         await session.dispose();
@@ -166,8 +164,8 @@ for (const encoded of [false, true]) {
           ],
         ] as const;
         for (const [where, predicate, expected] of cases) {
-          const object = await content.query.posts.findMany({ where, columns: { id: true } });
-          const fluent = await content.from("posts").select("id").where(predicate).all();
+          const object = await content.posts.findMany({ where, columns: { id: true } });
+          const fluent = await content.posts.select("id").where(predicate).all();
           expect(object.map((entry) => entry.id)).toEqual(expected);
           expect(fluent).toEqual(object);
         }
@@ -179,7 +177,7 @@ for (const encoded of [false, true]) {
     test("shares pattern, contained-array, and relationship filters", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const posts = content.from("posts").select("id");
+        const posts = content.posts.select("id");
         const cases: [object, Parameters<typeof posts.where>[0], string[]][] = [
           [
             { title: { like: "%a" } },
@@ -213,7 +211,7 @@ for (const encoded of [false, true]) {
           [{ author: false }, (fields) => operators.not(operators.has(fields.author)), []],
         ];
         for (const [where, filter, expected] of cases) {
-          const object = await content.query.posts.findMany({
+          const object = await content.posts.findMany({
             where: where as never,
             columns: { id: true },
           });
@@ -233,7 +231,7 @@ for (const encoded of [false, true]) {
     test("selects results-scope adjacency before pagination", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const object = await content.query.posts.findMany({
+        const object = await content.posts.findMany({
           where: { draft: false },
           adjacent: { scope: "results", columns: { id: true } },
           columns: { id: true },
@@ -241,8 +239,7 @@ for (const encoded of [false, true]) {
           offset: 1,
           limit: 1,
         });
-        const fluent = await content
-          .from("posts")
+        const fluent = await content.posts
           .select("id")
           .where((fields) => operators.eq(fields.draft, false))
           .orderBy("rank")
@@ -262,7 +259,7 @@ for (const encoded of [false, true]) {
     test("uses an independent sibling scope for a single-entry lookup", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const object = await content.query.posts.findFirst({
+        const object = await content.posts.findFirst({
           where: { id: "b" },
           adjacent: {
             where: { draft: false },
@@ -271,8 +268,7 @@ for (const encoded of [false, true]) {
           },
           columns: { title: true },
         });
-        const fluent = await content
-          .from("posts")
+        const fluent = await content.posts
           .select("title")
           .where((fields) => operators.eq(fields.id, "b"))
           .selectAdjacent((siblings) =>
@@ -288,7 +284,7 @@ for (const encoded of [false, true]) {
         });
         expect(fluent).toEqual(object);
         expect(
-          await content.query.posts.findFirst({
+          await content.posts.findFirst({
             where: { id: "a" },
             adjacent: { scope: "results", columns: { id: true } },
             columns: {},

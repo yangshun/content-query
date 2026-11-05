@@ -1,16 +1,12 @@
 import { defineHandler, defineHead, type InferProps } from "void";
-import { content } from "content-query:server";
+import { guides } from "content-query:collections/guides";
 
 export const prerender = true;
 
 export const loader = defineHandler(async () => {
-  const guides = await content
-    .from("guides")
-    .select("id", "title", "description")
-    .orderBy("order")
-    .all();
-
-  return { guides };
+  return {
+    guides: await guides.select("id", "title", "description").orderBy("order").all(),
+  };
 });
 
 export type Props = InferProps<typeof loader>;

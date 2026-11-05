@@ -1,7 +1,8 @@
 import { ContentError } from "../shared/errors.ts";
 import { decode } from "../shared/values.ts";
-import { createRuntime } from "../runtime/content.ts";
-import { prepareRelationships } from "../runtime/relationships.ts";
+import { createCollection, createCollections } from "../runtime/collection.ts";
+import type { Collection, CollectionHandles } from "../runtime/collection-types.ts";
+import type { QueryStyle } from "../runtime/query-style.ts";
 import type {
   BuiltinPayload,
   PreparedCollection,
@@ -67,7 +68,65 @@ function customPayloadTable(
   );
 }
 
-/** Initializes generated/embedded prepared content. This versioned wiring is internal. */
+/**
+ * Decoded collections by generated collection module. The main server entry and collection
+ * entries import the same module, so a process that loads several entries decodes it once.
+ * Prepared records are never mutated, since queries project copies.
+ */
+const decodedCollections = new WeakMap<
+  EncodedCollection,
+  Omit<PreparedCollection, "relationships">
+>();
+
+/** Decodes and checks one generated collection module, reusing an earlier decoding of it. */
+function decodeCollection(
+  name: string,
+  encoded: EncodedCollection,
+): Omit<PreparedCollection, "relationships"> {
+  const cached = decodedCollections.get(encoded);
+  if (cached) {
+    return cached;
+  }
+  const records = encoded.records.map((record) => decode<QueryRecord>(record));
+  if (
+    records.some(
+      (record) =>
+        !record ||
+        typeof record !== "object" ||
+        Array.isArray(record) ||
+        !Object.hasOwn(record, "id") ||
+        typeof record.id !== "string" ||
+        !record.id ||
+        Object.hasOwn(record, "_adjacent") ||
+        Object.hasOwn(record, "_payloads"),
+    ) ||
+    new Set(records.map((record) => record.id)).size !== records.length
+  ) {
+    throw new Error(`Invalid query records for collection "${name}".`);
+  }
+  const decoded = {
+    records,
+    builtins: new Map(
+      Object.entries(encoded.builtins ?? {}).map(([id, load]) => [
+        id,
+        async () => decode<BuiltinPayload>((await load()).default),
+      ]),
+    ),
+    ...(encoded.payloads ? { payloads: customPayloadTable(name, encoded.payloads) } : {}),
+  };
+  decodedCollections.set(encoded, decoded);
+  return decoded;
+}
+
+/**
+ * Initializes generated/embedded prepared content. This versioned wiring is internal.
+ * Relationships are related when a query scope combines the collections it loads.
+ *
+ * @param manifest - The entry's manifest; its registry lists exactly the collections it serves.
+ * @param collections - Generated collection modules by name.
+ * @param renderMarkdown - The packaged renderer, when a served collection captured Markdown.
+ * @returns The prepared revision.
+ */
 export function createArtifactRevision(
   manifest: ArtifactManifest,
   collections: Record<string, EncodedCollection>,
@@ -92,41 +151,13 @@ export function createArtifactRevision(
     };
     for (const [name, descriptor] of Object.entries(manifest.collections)) {
       const encoded = collections[name];
-      if (!encoded || !Array.isArray(encoded.records)) {
+      if (!encoded || typeof encoded !== "object" || !Array.isArray(encoded.records)) {
         throw new Error(`Missing collection artifact "${name}".`);
       }
-      const records = encoded.records.map((record) => decode<QueryRecord>(record));
-      if (
-        records.some(
-          (record) =>
-            !record ||
-            typeof record !== "object" ||
-            Array.isArray(record) ||
-            !Object.hasOwn(record, "id") ||
-            typeof record.id !== "string" ||
-            !record.id ||
-            Object.hasOwn(record, "_adjacent") ||
-            Object.hasOwn(record, "_payloads"),
-        ) ||
-        new Set(records.map((record) => record.id)).size !== records.length
-      ) {
-        throw new Error(`Invalid query records for collection "${name}".`);
-      }
       revision.collections[name] = {
-        records,
+        ...decodeCollection(name, encoded),
         relationships: descriptor.relationships,
-        builtins: new Map(
-          Object.entries(encoded.builtins ?? {}).map(([id, load]) => [
-            id,
-            async () => decode<BuiltinPayload>((await load()).default),
-          ]),
-        ),
-        ...(encoded.payloads ? { payloads: customPayloadTable(name, encoded.payloads) } : {}),
       };
-    }
-    const errors = prepareRelationships(revision);
-    if (errors.length) {
-      throw errors[0];
     }
     return revision;
   } catch (cause) {
@@ -138,13 +169,53 @@ export function createArtifactRevision(
   }
 }
 
-/** Initializes the public generated server export from a complete immutable artifact revision. */
-export function createArtifactRuntime<Registry extends CollectionRegistry>(
+/**
+ * Initializes one generated collection entry's export.
+ *
+ * @param manifest - The entry's manifest, which lists only this collection.
+ * @param name - The collection's name.
+ * @param collection - The generated collection module.
+ * @param renderMarkdown - The packaged renderer, when the collection captured Markdown.
+ * @returns The collection handle the entry exports.
+ */
+export function createArtifactCollection<
+  Registry extends CollectionRegistry,
+  Name extends keyof Registry & string,
+  Style extends QueryStyle = QueryStyle,
+>(
+  manifest: ArtifactManifest,
+  name: Name,
+  collection: EncodedCollection,
+  renderMarkdown?: (body: string) => Promise<ContentRenderResult>,
+): Collection<Registry, Name, Style> {
+  const revision = createArtifactRevision(manifest, { [name]: collection }, renderMarkdown);
+  if (!Object.hasOwn(revision.collections, name)) {
+    throw new ContentError({
+      code: "artifact-error",
+      message: `Missing collection artifact "${name}".`,
+    });
+  }
+  return createCollection({ name, state: { revision } }) as Collection<Registry, Name, Style>;
+}
+
+/**
+ * Initializes handles for every collection of one artifact revision, sharing its caches. Tests
+ * and integrations use it; applications import each collection's own entry instead.
+ *
+ * @param manifest - A manifest that lists every collection in `collections`.
+ * @param collections - Generated collection modules by name.
+ * @param renderMarkdown - The packaged renderer, when a collection captured Markdown.
+ * @returns Collection handles keyed by collection name.
+ */
+export function createArtifactCollections<
+  Registry extends CollectionRegistry,
+  Style extends QueryStyle = QueryStyle,
+>(
   manifest: ArtifactManifest,
   collections: Record<string, EncodedCollection>,
   renderMarkdown?: (body: string) => Promise<ContentRenderResult>,
-) {
-  return createRuntime<Registry>({
+): CollectionHandles<Registry, Style> {
+  return createCollections({
     revision: createArtifactRevision(manifest, collections, renderMarkdown),
-  });
+  }) as CollectionHandles<Registry, Style>;
 }

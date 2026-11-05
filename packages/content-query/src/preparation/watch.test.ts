@@ -11,6 +11,7 @@ import { createSession, sessionInternals } from "./session.ts";
 import { watchDependencies } from "./watch.ts";
 import { projectFixture } from "../../tests/helpers/project.ts";
 import { bodyOf } from "../../tests/helpers/payloads.ts";
+import { loadAll } from "../../tests/helpers/collections.ts";
 
 /** Gives the watcher time to report an event, if it were going to. */
 function settle(): Promise<void> {
@@ -63,7 +64,7 @@ describe("source watching", () => {
           watch: true,
         });
         expect(sourceSubscriptions).toBe(1);
-        const listing = session.content.from("posts").select("title");
+        const listing = loadAll(session.collections).posts.select("title");
         await writeFile(
           filename,
           kind === "glob"
@@ -103,7 +104,7 @@ describe("source watching", () => {
         watch: true,
       });
       try {
-        const listing = session.content.from("posts").select("title");
+        const listing = loadAll(session.collections).posts.select("title");
         // macOS starts native directory subscriptions asynchronously after the watcher is ready, so
         // a directory created immediately can go unreported. Let the base subscription start first.
         await settle();
@@ -176,7 +177,7 @@ describe("source watching", () => {
       await written;
       await vi.waitFor(
         async () =>
-          expect(await session.content.from("posts").select("title").all()).toEqual([
+          expect(await loadAll(session.collections).posts.select("title").all()).toEqual([
             { title: "First" },
           ]),
         { timeout: 3_000 },
@@ -299,7 +300,7 @@ describe("source watching", () => {
         },
         watch: true,
       });
-      const listing = session.content.from("posts").select("title");
+      const listing = loadAll(session.collections).posts.select("title");
       await mkdir(base, { recursive: true });
       await writeFile(filename, "---\ntitle: First\n---\n");
       await vi.waitFor(async () => expect(await listing.all()).toEqual([{ title: "First" }]), {
@@ -347,7 +348,7 @@ describe("source watching", () => {
       await settle();
       await sessionInternals(session).idle();
       expect(published).toHaveBeenCalledTimes(initial);
-      expect(await session.content.from("posts").select("title").all()).toEqual([
+      expect(await loadAll(session.collections).posts.select("title").all()).toEqual([
         { title: "First" },
       ]);
     } finally {
@@ -366,7 +367,7 @@ describe("source watching", () => {
         };
       }>({ root: fixture.root, config: fixture.config, outDir: ".content-query", watch: true });
       const internal = sessionInternals(session);
-      const listing = session.content.from("posts").select("title");
+      const listing = loadAll(session.collections).posts.select("title");
       try {
         const broken =
           failure === "syntax"
@@ -398,9 +399,9 @@ describe("source watching", () => {
         await internal.idle();
         expect(internal.state.error).toMatchObject(error);
         expect(internal.state.revision).toBe(previous);
-        await expect(bodyOf(session.content, "posts", "getting-started")).rejects.toMatchObject(
-          error,
-        );
+        await expect(
+          bodyOf(loadAll(session.collections), "posts", "getting-started"),
+        ).rejects.toMatchObject(error);
         await writeFile(fixture.config, original);
         await vi.waitFor(
           async () => expect(await listing.first()).toEqual({ title: "Edited during failure" }),
@@ -436,7 +437,7 @@ describe("source watching", () => {
           registry,
           watch: true,
         });
-        const listing = session.content.from("posts").select("title");
+        const listing = loadAll(session.collections).posts.select("title");
         try {
           await mkdir(base, { recursive: true });
           for (const title of ["First", "Edited"]) {
@@ -506,7 +507,7 @@ describe("source watching", () => {
         watch: true,
       });
       try {
-        const listing = session.content.from("posts").select("title");
+        const listing = loadAll(session.collections).posts.select("title");
         for (const title of ["First recovery", "Second recovery"]) {
           await writeFile(filename, JSON.stringify([{ id: "post", title: false }]));
           await vi.waitFor(
@@ -552,7 +553,7 @@ export const collections = {posts: {loader: {name: "fixture", async load({store}
         schema: z.ZodObject<{ title: z.ZodString }>;
       };
     }>({ root, config, outDir: ".content-query", watch: true, change: published });
-    const title = () => session.content.from("posts").select("title").first();
+    const title = () => loadAll(session.collections).posts.select("title").first();
     try {
       expect(await title()).toEqual({ title: "Local one" });
       const initial = published.mock.calls.length;
@@ -593,11 +594,12 @@ export const collections = {posts: {loader: {name: "fixture", async load({store}
         schema: z.ZodObject<{ title: z.ZodString }>;
       };
     }>({ root, config, outDir: ".content-query", watch: true });
-    const title = () => session.content.from("posts").select("title").first();
+    const title = () => loadAll(session.collections).posts.select("title").first();
     try {
       await writeFile(
         config,
         `import { title } from "./title.ts";
+import { loadAll } from "../../tests/helpers/collections.ts";
 export const collections = {posts: {loader: {name: "fixture", async load({store}) { store.set({id: "one", data: {title}}); }}}};`,
       );
       await vi.waitFor(() => expect(title()).rejects.toMatchObject({ code: "source-error" }), {
@@ -640,7 +642,7 @@ export const collections = {posts: {loader: {name: "fixture", async load({store}
         watch: true,
         change: published,
       });
-      const titles = () => session.content.from("posts").select("title").all();
+      const titles = () => loadAll(session.collections).posts.select("title").all();
       try {
         // Finish any delayed events for the source written before subscription setup.
         await settle();
@@ -680,33 +682,39 @@ describe("queryStyle reloading", () => {
     }>({ root: fixture.root, config: fixture.config, outDir: ".content-query", watch: true });
     const expected = { title: "Getting started" };
     try {
-      expect(await session.content.from("posts").select("title").first()).toEqual(expected);
+      expect(await session.collections.posts.select("title").first()).toEqual(expected);
 
       await writeFile(fixture.config, `${original}export const queryStyle = "relational";\n`);
       await vi.waitFor(
-        () => expect(() => session.content.from("posts")).toThrow(/queryStyle to "relational"/),
+        () =>
+          expect(() => session.collections.posts.select("title")).toThrow(
+            /posts\.select is unavailable because content-query\.config sets queryStyle to "relational"/,
+          ),
         { timeout: 3_000 },
       );
-      expect(await session.content.query.posts.findFirst({ columns: { title: true } })).toEqual(
-        expected,
-      );
+      expect(
+        await loadAll(session.collections).posts.findFirst({ columns: { title: true } }),
+      ).toEqual(expected);
 
       await writeFile(fixture.config, `${original}export const queryStyle = "fluent";\n`);
       await vi.waitFor(
-        () => expect(() => session.content.query).toThrow(/queryStyle to "fluent"/),
+        () =>
+          expect(() => session.collections.posts.findFirst({ columns: { title: true } })).toThrow(
+            /posts\.findFirst is unavailable because content-query\.config sets queryStyle to "fluent"/,
+          ),
         { timeout: 3_000 },
       );
-      expect(await session.content.from("posts").select("title").first()).toEqual(expected);
+      expect(await loadAll(session.collections).posts.select("title").first()).toEqual(expected);
 
       await writeFile(fixture.config, original);
       await vi.waitFor(
         async () =>
-          expect(await session.content.query.posts.findFirst({ columns: { title: true } })).toEqual(
-            expected,
-          ),
+          expect(
+            await loadAll(session.collections).posts.findFirst({ columns: { title: true } }),
+          ).toEqual(expected),
         { timeout: 3_000 },
       );
-      expect(await session.content.from("posts").select("title").first()).toEqual(expected);
+      expect(await loadAll(session.collections).posts.select("title").first()).toEqual(expected);
     } finally {
       await session.dispose();
       await fixture.dispose();

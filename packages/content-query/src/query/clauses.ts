@@ -1,6 +1,7 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { decodeCursor } from "./cursor.ts";
 import {
+  assertAvailable,
   effectiveOrder,
   PAGINATE_AFTER_LIMIT_MESSAGE,
   type PaginatePlan,
@@ -75,6 +76,11 @@ export function checkedFields(
   fields: string[],
 ): string[] {
   const scope = registry[collection];
+  for (const field of fields) {
+    if (typeof field === "string") {
+      assertAvailable(registry, collection, field);
+    }
+  }
   if (
     !scope ||
     fields.some(

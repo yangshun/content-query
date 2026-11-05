@@ -2,12 +2,7 @@ import { ContentError, contentError, invalidQuery, payloadIdentity } from "../sh
 import { mapConcurrent } from "../shared/concurrency.ts";
 import { assertServerOnly } from "../shared/server-only.ts";
 import { detach } from "../shared/values.ts";
-import type { CollectionRegistry } from "../collection/types.ts";
-import type { InvalidRelationships } from "../collection/registry-types.ts";
-import { createQueryNamespace, relationalPlan } from "../query/relational.ts";
-import type { RelationalQueries, RelationalCountOptions } from "../query/relational-types.ts";
-import { createFrom } from "../query/from.ts";
-import type { Query } from "../query/types.ts";
+import type { QueryRunner } from "../query/plan.ts";
 import { normalizePlan } from "../query/normalize.ts";
 import { executeQuery } from "./execute.ts";
 import {
@@ -17,56 +12,8 @@ import {
   type PayloadRequest,
   type PreparedRevision,
 } from "./revision.ts";
-import {
-  queryStyleDisabledMessage,
-  styleOfMember,
-  type MembersOf,
-  type QueryStyle,
-  type QueryStyleDisabled,
-  type QueryStyleMember,
-} from "./query-style.ts";
 
 assertServerOnly();
-type ContentMethods<Registry extends CollectionRegistry = {}> = {
-  /**
-   * Starts a fluent query over one collection. Nothing is selected until `select()`, `with()`,
-   * `withPayload()`, or `selectAdjacent()` requests data, not even `id`.
-   */
-  from<Name extends keyof Registry & string>(collection: Name): Query<Registry, Name>;
-  /** Collection-scoped relational queries with typed columns, relationships, payloads, and filters. */
-  readonly query: RelationalQueries<Registry>;
-  /** Counts matching entries before pagination, like the fluent count terminal. */
-  count<Name extends keyof Registry & string>(
-    collection: Name,
-    options?: RelationalCountOptions<Registry, Name>,
-  ): Promise<number>;
-};
-/**
- * Root members outside the allowed style. Property access reports the message type directly; a
- * call reports it as the required `this` type, whatever arguments it passes.
- */
-type DisabledMembers<Style extends QueryStyle> = {
-  readonly [Member in Exclude<QueryStyleMember, MembersOf<Style>>]: ContentMethods[Member] extends (
-    ...arguments_: never
-  ) => unknown
-    ? (this: QueryStyleDisabled<Member, Style>, ...arguments_: readonly unknown[]) => never
-    : QueryStyleDisabled<Member, Style>;
-};
-/**
- * The generated `content` export. `Style` narrows the root query APIs to the `queryStyle` exported
- * by content-query.config; the default allows both fluent and relational queries.
- *
- * The gate avoids a conditional on `Style`: a conditional on a generic `Style` would make
- * `ContentSession<Registry>` invariant in `Registry` and break assignment to wider sessions.
- */
-export type Content<
-  Registry extends CollectionRegistry = {},
-  Style extends QueryStyle = QueryStyle,
-> =
-  InvalidRelationships<Registry> extends never
-    ? Pick<ContentMethods<Registry>, MembersOf<Style>> & DisabledMembers<Style>
-    : { readonly invalidRelationships: InvalidRelationships<Registry> };
-
 /** Maximum payload loads in flight for one query. */
 const PAYLOAD_CONCURRENCY = 16;
 
@@ -301,18 +248,13 @@ async function attachPayloads(
 }
 
 /**
- * Creates the initialized runtime without importing source configuration or schemas.
+ * Creates the query runner that pins plan execution and payload loading to one revision.
  *
- * @param state - Mutable session or artifact state; each query reads its current revision.
- * @returns The `content` API. Root members outside the current revision's `queryStyle` throw an
- * `invalid-query` ContentError when accessed or called.
+ * @param state - Mutable session, artifact, or combined state; each query reads its revision.
+ * @returns A runner for fluent and relational plans.
  */
-export function createRuntime<
-  Registry extends CollectionRegistry,
-  Style extends QueryStyle = QueryStyle,
->(state: ContentState): Content<Registry, Style> {
-  /** Pins query execution and payload loading to exactly the same revision and executor. */
-  const run: import("../query/plan.ts").QueryRunner = (plan, terminal) =>
+export function createRunner(state: ContentState): QueryRunner {
+  return (plan, terminal) =>
     pinned(state, async (revision) => {
       const normalized = normalizePlan(plan);
       const requests: PayloadRequest[] = [];
@@ -322,42 +264,4 @@ export function createRuntime<
       await attachPayloads(revision, requests);
       return result;
     });
-  /** Reads the current registry without capturing a development revision in either API. */
-  const registry = () => state.registry ?? state.revision?.registry ?? {};
-  /** Rejects a root member that the current revision's configured query style disables. */
-  function allow(member: QueryStyleMember): void {
-    const style = state.revision?.queryStyle;
-    if (style && styleOfMember(member) !== style) {
-      invalidQuery(queryStyleDisabledMessage(member, style));
-    }
-  }
-  const queries = createQueryNamespace(registry, run) as RelationalQueries<Registry>;
-  const runtime: ContentMethods<Registry> = {
-    from(collection) {
-      allow("from");
-      return createFrom(registry, run, collection) as never;
-    },
-    get query() {
-      allow("query");
-      return queries;
-    },
-    count(collection, options = {}) {
-      allow("count");
-      return run(relationalPlan(registry(), collection, options), "count") as Promise<number>;
-    },
-  };
-  return runtime as unknown as Content<Registry, Style>;
-}
-
-/** Keeps dev builders live across host-delivered revisions while pinning active operations. */
-export function createLiveRuntime(initial: ContentState) {
-  const state = { ...initial };
-  return {
-    content: createRuntime(state),
-    update(next: ContentState) {
-      state.revision = next.revision;
-      state.registry = next.registry;
-      state.error = next.error;
-    },
-  };
 }

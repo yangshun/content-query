@@ -3,6 +3,7 @@ import { detach, isScalar } from "../shared/values.ts";
 import { and, fieldProxy, not, or, resolveRelations, validateExpression } from "./operators.ts";
 import { checkedFields, checkedOrder, checkedPagination } from "./clauses.ts";
 import {
+  assertAvailable,
   emptyPlan,
   hasSelection,
   type AdjacentPlan,
@@ -196,6 +197,7 @@ export function objectPlan(
         }
         related[name] = nested;
       } else {
+        assertAvailable(registry, collection, name);
         if (selection !== true) {
           invalidQuery("Prepared fields must be selected with true.");
         }

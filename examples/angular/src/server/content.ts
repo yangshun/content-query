@@ -1,8 +1,8 @@
-import { content } from "../../.content-query/server.js";
+import { guides } from "../../.content-query/collections/guides/server.js";
 
 /** Loads only metadata for the home index. */
 export function loadHome() {
-  return content.query.guides.findMany({
+  return guides.findMany({
     columns: { id: true, title: true, description: true },
     orderBy: { order: "asc" },
   });
@@ -10,7 +10,7 @@ export function loadHome() {
 
 /** Loads sidebar metadata independently of the current article. */
 export function loadNavigation() {
-  return content.query.guides.findMany({
+  return guides.findMany({
     columns: { id: true, title: true },
     orderBy: { order: "asc" },
   });
@@ -18,7 +18,7 @@ export function loadNavigation() {
 
 /** Renders one guide and selects its immediate neighbors. */
 export async function loadGuide(id: string) {
-  const guide = await content.query.guides.findFirst({
+  const guide = await guides.findFirst({
     where: { id },
     adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
     columns: { id: true, title: true, description: true },

@@ -5,8 +5,8 @@ import { createServerFn } from "@tanstack/react-start";
 const getGuide = createServerFn({ method: "GET" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
-    const { content } = await import("content-query:server");
-    const guide = await content.query.guides.findFirst({
+    const { guides } = await import("content-query:collections/guides");
+    const guide = await guides.findFirst({
       where: { id },
       adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
       columns: { id: true, title: true, description: true },

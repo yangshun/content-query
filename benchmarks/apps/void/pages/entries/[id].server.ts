@@ -1,5 +1,5 @@
 import { defineHandler } from "void";
-import { content } from "content-query:server";
+import { entries } from "content-query:collections/entries";
 import { eq } from "content-query/query";
 
 export const prerender = true;
@@ -9,8 +9,7 @@ export const loader = defineHandler(async (context) => {
   if (!id) {
     return context.notFound();
   }
-  const entry = await content
-    .from("entries")
+  const entry = await entries
     .select("id", "title", "description")
     .where((fields) => eq(fields.id, id))
     .withPayload("_rendered")
@@ -23,6 +22,6 @@ export const loader = defineHandler(async (context) => {
 });
 
 export async function getPrerenderPaths() {
-  const entries = await content.from("entries").select("id").orderBy("order").all();
-  return entries.map(({ id }) => ({ id }));
+  const rows = await entries.select("id").orderBy("order").all();
+  return rows.map(({ id }) => ({ id }));
 }

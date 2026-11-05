@@ -1,4 +1,8 @@
-export { createArtifactRevision, createArtifactRuntime } from "./artifacts/runtime.ts";
+export {
+  createArtifactCollection,
+  createArtifactCollections,
+  createArtifactRevision,
+} from "./artifacts/runtime.ts";
 export { createPayloadLoaders, decodeCompressed } from "./artifacts/payloads.ts";
-export { createLiveRuntime } from "./runtime/content.ts";
+export { createLiveCollection } from "./runtime/collection.ts";
 export { restoreContentError } from "./runtime/diagnostics.ts";

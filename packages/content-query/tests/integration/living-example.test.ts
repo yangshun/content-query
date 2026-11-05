@@ -4,12 +4,12 @@ import { pathToFileURL } from "node:url";
 import { describe, expect, test } from "vite-plus/test";
 import { and, eq, gte, isNull, isUndefined, or } from "../../src/query.ts";
 import { buildAtRoot } from "../../src/preparation/build.ts";
-import type { Content } from "../../src/runtime/content.ts";
+import type { CollectionHandles } from "../../src/runtime.ts";
 import type { collections } from "../fixtures/example/content-query.config.ts";
 import { packageRoot, projectFixture } from "../helpers/project.ts";
 import { renderedOf } from "../helpers/payloads.ts";
 
-type ExampleContent = Content<typeof collections>;
+type ExampleContent = CollectionHandles<typeof collections>;
 
 const example = path.join(packageRoot, "tests/fixtures/example");
 
@@ -23,11 +23,13 @@ async function exampleProject() {
 }
 
 /** Asserts every query, body, render, and error value documented by the PLAN.md example. */
-async function expectLivingExample(content: ExampleContent): Promise<void> {
+async function expectLivingExample(collections: ExampleContent): Promise<void> {
+  // Each collection supplies the other, so relationships work in both directions.
+  const posts = collections.posts.using(collections.authors);
+  const authors = collections.authors.using(collections.posts);
   // Query a listing through the prepared runtime.
   expect(
-    await content
-      .from("posts")
+    await posts
       .select("id", "title", "slug")
       .where((fields) => and(eq(fields.locale, "en"), eq(fields.draft, false)))
       .where((fields) => gte(fields.publishedAt, new Date("2026-10-01T00:00:00.000Z")))
@@ -37,7 +39,7 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   ).toStrictEqual([{ id: "getting-started", title: "Getting started", slug: "getting-started" }]);
 
   // Branch from a shared query.
-  const publishedPosts = content.from("posts").where((fields) => eq(fields.draft, false));
+  const publishedPosts = posts.where((fields) => eq(fields.draft, false));
   const englishPosts = publishedPosts.where((fields) => eq(fields.locale, "en"));
   const frenchPosts = publishedPosts.where((fields) => eq(fields.locale, "fr"));
   expect(await englishPosts.select("id", "title").all()).toStrictEqual([
@@ -47,8 +49,7 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   expect(await publishedPosts.count()).toBe(1);
 
   // Select optional fields.
-  const subtitles = await content
-    .from("posts")
+  const subtitles = await posts
     .select("id", "subtitle")
     .where((fields) => eq(fields.locale, "en"))
     .where((fields) => or(isUndefined(fields.subtitle), isNull(fields.subtitle)))
@@ -58,15 +59,10 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
     { id: "upcoming-features", subtitle: null },
   ]);
   expect(subtitles.map((post) => Object.hasOwn(post, "subtitle"))).toEqual([true, true]);
-  expect(
-    await content
-      .from("posts")
-      .select("subtitel" as never)
-      .first(),
-  ).toStrictEqual({ subtitel: undefined });
+  expect(await posts.select("subtitel" as never).first()).toStrictEqual({ subtitel: undefined });
 
   // Read retained raw text.
-  const raw = await content.query.posts.findFirst({
+  const raw = await posts.findFirst({
     where: { id: "getting-started" },
     columns: {},
     payloads: { _body: true },
@@ -77,19 +73,18 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   );
   expect(rawMarkdown?.startsWith("# Getting started")).toBe(true);
   expect(
-    await content.query.posts.findFirst({
+    await posts.findFirst({
       where: { id: "missing-post" },
       payloads: { _body: true },
     }),
   ).toBeUndefined();
   // file() collections carry no built-in body or rendered payloads.
-  expect(() => content.query.authors.findFirst({ payloads: { _body: true } } as never)).toThrow(
+  expect(() => authors.findFirst({ payloads: { _body: true } } as never)).toThrow(
     expect.objectContaining({ code: "invalid-query" }),
   );
 
   // Look up and render a page.
-  const post = await content
-    .from("posts")
+  const post = await posts
     .select("id", "title", "publishedAt")
     .where((fields) =>
       and(eq(fields.slug, "getting-started"), eq(fields.locale, "en"), eq(fields.draft, false)),
@@ -119,23 +114,21 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
 
   // Handle errors.
   expect(
-    await content
-      .from("posts")
+    await posts
       .select("id")
       .where((fields) => eq(fields.id, "missing-post"))
       .first(),
   ).toBeUndefined();
-  expect(() => content.query.authors.findFirst({ payloads: { _rendered: true } } as never)).toThrow(
+  expect(() => authors.findFirst({ payloads: { _rendered: true } } as never)).toThrow(
     expect.objectContaining({ code: "invalid-query" }),
   );
-  expect(() => content.from("posts").select("id").limit(-1)).toThrow(
+  expect(() => posts.select("id").limit(-1)).toThrow(
     expect.objectContaining({ code: "invalid-query" }),
   );
 
   // Load related entries in both directions.
   expect(
-    await content
-      .from("posts")
+    await posts
       .select("id", "title")
       .where((fields) => eq(fields.draft, false))
       .with("author", (author) => author.select("name"))
@@ -144,8 +137,7 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
     { id: "getting-started", title: "Getting started", author: { name: "Ada Lovelace" } },
   ]);
   expect(
-    await content
-      .from("posts")
+    await posts
       .select("id")
       .where((fields) => eq(fields.draft, false))
       .with("author", (author) =>
@@ -154,8 +146,7 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
       .all(),
   ).toStrictEqual([{ id: "getting-started", author: null }]);
   expect(
-    await content
-      .from("authors")
+    await authors
       .select("id", "name")
       .with("posts", (posts) =>
         posts
@@ -175,7 +166,7 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   ]);
 
   // Load an authored ID array.
-  const grace = content.from("authors").where((fields) => eq(fields.id, "grace"));
+  const grace = authors.where((fields) => eq(fields.id, "grace"));
   expect(
     await grace
       .select("id")
@@ -198,8 +189,7 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
       .first(),
   ).toStrictEqual({ id: "grace", featuredPosts: [{ id: "getting-started" }] });
   expect(
-    await content
-      .from("authors")
+    await authors
       .select("id")
       .where((fields) => eq(fields.id, "ada"))
       .with("featuredPosts", (posts) => posts.select("id"))
@@ -219,13 +209,12 @@ async function expectLivingExample(content: ExampleContent): Promise<void> {
   const curated = await grace.select("featuredPostIds").first();
   curated!.featuredPostIds.length = 0;
   expect(
-    await content
-      .from("posts")
+    await posts
       .select("publishedAt")
       .where((fields) => eq(fields.id, "getting-started"))
       .first(),
   ).toStrictEqual({ publishedAt: new Date("2026-10-17T00:00:00.000Z") });
-  expect((await renderedOf(content, "posts", "getting-started")).headings).toHaveLength(2);
+  expect((await renderedOf(collections, "posts", "getting-started")).headings).toHaveLength(2);
   expect(await grace.select("featuredPostIds").first()).toStrictEqual({
     featuredPostIds: ["upcoming-features", "getting-started", "upcoming-features"],
   });
@@ -239,7 +228,7 @@ describe("PLAN.md living example", () => {
         backend: "in-memory",
       });
       try {
-        await expectLivingExample(session.content);
+        await expectLivingExample(session.collections);
       } finally {
         await session.dispose();
       }
@@ -254,15 +243,22 @@ describe("PLAN.md living example", () => {
       const generated = path.join(fixture.root, ".content-query");
       expect(await readdir(path.join(generated, "collections/authors"))).not.toContain("entries");
       expect(await readdir(path.join(generated, "collections/posts/entries"))).toHaveLength(2);
-      expect(await readFile(path.join(generated, "server.js"), "utf8")).not.toContain(
-        "content-query/internal/markdown",
-      );
+      for (const name of ["authors", "posts"]) {
+        expect(
+          await readFile(path.join(generated, "collections", name, "server.js"), "utf8"),
+        ).not.toContain("content-query/internal/markdown");
+      }
       await rm(fixture.config);
       await rm(path.join(fixture.root, "content"), { recursive: true });
-      const { content } = (await import(pathToFileURL(path.join(generated, "server.js")).href)) as {
-        content: ExampleContent;
-      };
-      await expectLivingExample(content);
+      /** Imports one collection's generated entry, as an application would. */
+      const entry = async (name: string) =>
+        (await import(
+          pathToFileURL(path.join(generated, "collections", name, "server.js")).href
+        )) as Partial<ExampleContent>;
+      await expectLivingExample({
+        posts: (await entry("posts")).posts!,
+        authors: (await entry("authors")).authors!,
+      });
     } finally {
       await fixture.dispose();
     }

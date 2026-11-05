@@ -38,27 +38,27 @@ Add this mapping to your application's `package.json`:
 ```json
 {
   "imports": {
-    "#content-query": "./.content-query/server.js"
+    "#content-query/*": "./.content-query/collections/*/server.js"
   }
 }
 ```
 
-The application-local alias resolves to the generated runtime from any directory depth. Generated declarations beside `server.js` provide inferred collection types. If you customize `outDir`, update the mapping to point to that directory's `server.js`.
+ContentQuery generates one entry per collection, so `#content-query/posts` resolves to `.content-query/collections/posts/server.js` from any directory depth. The path segment is the collection's [export name](/docs/reference/runtime#collection-entries), such as `#content-query/blogPosts` for a `blog-posts` collection. Generated declarations beside each entry provide inferred collection types. If you customize `outDir`, update the mapping to point to that directory's `collections/*/server.js`.
 
 ## Query in Server Components
 
-Import `content` through the alias from server code. For example, `app/page.tsx` can list the posts from the quick start:
+Import each collection through the alias from server code. For example, `app/page.tsx` can list the posts from the quick start:
 
 ```tsx
 import "server-only";
-import { content } from "#content-query";
+import { posts } from "#content-query/posts";
 
 export default async function PostsPage() {
-  const posts = await content.from("posts").select("id", "title").all();
+  const entries = await posts.select("id", "title").all();
 
   return (
     <ul>
-      {posts.map((post) => (
+      {entries.map((post) => (
         <li key={post.id}>{post.title}</li>
       ))}
     </ul>
@@ -66,7 +66,9 @@ export default async function PostsPage() {
 }
 ```
 
-Use Next.js's [`server-only` marker](https://nextjs.org/docs/app/getting-started/server-and-client-components#preventing-environment-poisoning) in modules that consume content. Keep collection configuration and the generated runtime in server code, and pass selected data to Client Components when needed. The same query API works in `generateMetadata()` and other server functions; [querying content](/docs/querying-content) covers filtering, relationships, and pagination.
+Each route imports only the collections it queries, so its module graph references only their data. On serverless hosts such as Vercel, each function then traces only those collections instead of all of your content. Queries that follow a [relationship](/docs/relationships#supply-related-collections) import the related collection too and pass it to `using()`.
+
+Use Next.js's [`server-only` marker](https://nextjs.org/docs/app/getting-started/server-and-client-components#preventing-environment-poisoning) in modules that consume content. Keep collection configuration and the generated runtime in server code, and pass selected data to Client Components when needed. Client Components can type those props with `import type { ContentPost } from "#content-query/posts"`, which adds no content to the browser bundle. The same query API works in `generateMetadata()` and other server functions; [querying content](/docs/querying-content) covers filtering, relationships, and pagination.
 
 ## Development updates
 

@@ -20,7 +20,11 @@ describe("Next.js development content integration", () => {
       const outDir = path.join(fixture.root, ".content-query");
       const payloadDirectory = path.join(outDir, "collections/guides/entries");
       const stalePayload = path.join(payloadDirectory, `${"0".repeat(64)}.js`);
-      const staleRuntime = path.join(outDir, "next-dev-00000000-0000-0000-0000-000000000000.js");
+      const entryDirectory = path.join(outDir, "collections/guides");
+      const staleRuntime = path.join(
+        entryDirectory,
+        "next-dev-00000000-0000-0000-0000-000000000000.js",
+      );
       await mkdir(payloadDirectory, { recursive: true });
       await writeFile(stalePayload, "Previous run");
       await writeFile(staleRuntime, "Previous run");
@@ -78,7 +82,7 @@ describe("Next.js development content integration", () => {
         expect(redirect.headers.get("location")).toBe(route);
         await expect(readFile(stalePayload, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
         await expect(readFile(staleRuntime, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
-        const initialRuntime = (await readdir(outDir)).find((filename) =>
+        const initialRuntime = (await readdir(entryDirectory)).find((filename) =>
           /^next-dev-.*\.js$/.test(filename),
         )!;
         const post = path.join(fixture.root, "content/guides/getting-started.md");
@@ -88,8 +92,9 @@ describe("Next.js development content integration", () => {
         await vi.waitFor(async () => {
           expect((await request(route)).html).toContain("Updated in development");
         }, waits);
-        expect(await readFile(path.join(outDir, initialRuntime), "utf8")).toContain(
-          "createArtifactRuntime",
+        // Earlier revisions stay importable for the rest of the session.
+        expect(await readFile(path.join(entryDirectory, initialRuntime), "utf8")).toContain(
+          "createArtifactCollection",
         );
 
         await writeFile(
@@ -157,13 +162,14 @@ describe("Next.js development content integration", () => {
           expect(response.html).not.toContain("Configured Getting started");
         }, waits);
       } catch (cause) {
-        const entry = await readFile(path.join(fixture.root, ".content-query/server.js"), "utf8");
-        const collection = entry.match(
-          /from "(\.\/collections\/guides\/index-[a-f0-9]+\.js)"/,
-        )?.[1];
+        const directory = path.join(fixture.root, ".content-query/collections/guides");
+        const entry = await readFile(path.join(directory, "server.js"), "utf8");
+        const runtime = entry.match(/from "\.\/(next-dev-[a-f0-9-]+\.js)"/)?.[1];
+        const published = runtime ? await readFile(path.join(directory, runtime), "utf8") : entry;
+        const collection = published.match(/from "\.\/(index-[a-f0-9]+\.js)"/)?.[1];
         const index = collection
-          ? await readFile(path.join(fixture.root, ".content-query", collection), "utf8")
-          : entry;
+          ? await readFile(path.join(directory, collection), "utf8")
+          : published;
         console.error(
           `Next.js ${release.version} ${bundler} diagnostics:\n${output.slice(-4_000)}\nPublished collection:\n${index.slice(-3_000)}`,
         );

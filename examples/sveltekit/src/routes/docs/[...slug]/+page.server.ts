@@ -1,15 +1,15 @@
 import { error } from "@sveltejs/kit";
-import { content } from "content-query:server";
+import { guides } from "content-query:collections/guides";
 
 export async function entries() {
-  return (await content.query.guides.findMany({ columns: { id: true } })).map(({ id }) => ({
+  return (await guides.findMany({ columns: { id: true } })).map(({ id }) => ({
     slug: id,
   }));
 }
 
 export async function load({ params }: { params: { slug: string } }) {
   const id = params.slug.replace(/\/$/, "");
-  const guide = await content.query.guides.findFirst({
+  const guide = await guides.findFirst({
     where: { id },
     adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
     columns: { id: true, title: true, description: true },

@@ -2,7 +2,6 @@ import { describe, expectTypeOf, test } from "vite-plus/test";
 import { z } from "zod";
 import { defineCollection } from "./define.ts";
 import { buildContent } from "../build.ts";
-import type { Content } from "../runtime.ts";
 import { eq } from "../query.ts";
 import {
   file,
@@ -13,6 +12,7 @@ import {
   type LoaderSource,
 } from "../loaders.ts";
 import type { Loader as AstroLoader, LoaderContext as AstroContext } from "astro/loaders";
+import type { AllCollections } from "../../tests/helpers/collections.ts";
 
 const loader = { name: "fixture", async load() {} };
 const authors = defineCollection({ loader, schema: z.object({ name: z.string() }) });
@@ -46,8 +46,11 @@ const badTarget = defineCollection({
 const invalidRegistry = { authors, posts: badTarget };
 
 /** Verifies the public inference boundary without executing preparation or invalid calls. */
-function check(content: Content<typeof registry>, invalid: Content<typeof invalidRegistry>) {
-  const object = content.query.posts.findMany({
+function check(
+  content: AllCollections<typeof registry>,
+  invalid: AllCollections<typeof invalidRegistry>,
+) {
+  const object = content.posts.findMany({
     adjacent: { scope: "results", columns: { id: true } },
     columns: { subtitle: true },
     with: { author: { columns: { name: true } } },
@@ -59,8 +62,7 @@ function check(content: Content<typeof registry>, invalid: Content<typeof invali
       _adjacent: { previous: { id: string } | null; next: { id: string } | null };
     }[]
   >();
-  const adjacent = content
-    .from("posts")
+  const adjacent = content.posts
     .select("id")
     .selectAdjacent((siblings) => siblings.select("subtitle"));
   expectTypeOf<Awaited<ReturnType<typeof adjacent.first>>>().toEqualTypeOf<
@@ -74,43 +76,37 @@ function check(content: Content<typeof registry>, invalid: Content<typeof invali
     | undefined
   >();
   // @ts-expect-error Object selection must reject unknown fields even alongside valid fields.
-  void content.query.posts.findMany({ columns: { id: true, typo: true } });
+  void content.posts.findMany({ columns: { id: true, typo: true } });
   // @ts-expect-error Object predicates must reject unknown fields alongside valid predicates.
-  void content.query.posts.findMany({ where: { id: "a", typo: "b" }, columns: { id: true } });
+  void content.posts.findMany({ where: { id: "a", typo: "b" }, columns: { id: true } });
   // @ts-expect-error Object filters preserve scalar argument types.
-  void content.query.posts.findMany({ where: { authorId: 1 }, columns: { id: true } });
-  void content.query.posts.findMany({ where: { id: "a" }, columns: { id: true } });
-  void content.query.posts.findMany({
+  void content.posts.findMany({ where: { authorId: 1 }, columns: { id: true } });
+  void content.posts.findMany({ where: { id: "a" }, columns: { id: true } });
+  void content.posts.findMany({
     // @ts-expect-error Adjacency cannot recurse through sibling scopes.
     adjacent: { adjacent: true, columns: { id: true } },
     columns: {},
   });
-  content
-    .from("posts")
+  content.posts
     // @ts-expect-error Sibling queries have no pagination, including after chained clauses.
     .selectAdjacent((siblings) => siblings.orderBy("id").limit(1).select("id"));
-  content
-    .from("posts")
+  content.posts
     // @ts-expect-error Recursive adjacency is prohibited in the fluent API.
     .selectAdjacent((siblings) => siblings.selectAdjacent().select("id"));
   // @ts-expect-error Sources and loaders are mutually exclusive.
   defineCollection({ source: ".", loader });
-  const selected = content.from("posts").select("subtitle");
+  const selected = content.posts.select("subtitle");
   expectTypeOf<
     keyof Awaited<ReturnType<typeof selected.all>>[number]
   >().toEqualTypeOf<"subtitle">();
   expectTypeOf<Awaited<ReturnType<typeof selected.all>>[number]["subtitle"]>().toEqualTypeOf<
     string | undefined
   >();
-  const required = content
-    .from("posts")
-    .select("id")
-    .with("author", (author) => author.select("name"));
+  const required = content.posts.select("id").with("author", (author) => author.select("name"));
   expectTypeOf<Awaited<ReturnType<typeof required.all>>[number]["author"]>().toEqualTypeOf<{
     name: string;
   }>();
-  const filtered = content
-    .from("posts")
+  const filtered = content.posts
     .select("id")
     .with("author", (author) => author.select("name").where((fields) => eq(fields.name, "Ada")));
   expectTypeOf<Awaited<ReturnType<typeof filtered.all>>[number]["author"]>().toEqualTypeOf<{
@@ -238,6 +234,6 @@ describe("public type contracts", () => {
     expectTypeOf(inherited.schema).toEqualTypeOf<undefined>();
   });
   test("preserves inferred relationships and explicit optional-property selection", () => {
-    expectTypeOf<Content<typeof registry>>().not.toBeAny();
+    expectTypeOf<AllCollections<typeof registry>>().not.toBeAny();
   });
 });

@@ -118,7 +118,7 @@ describe("withContentQuery", () => {
   test("requests cleanup until the first valid publication and keeps later revisions across config evaluations", async () => {
     publish
       .mockReturnValueOnce(undefined)
-      .mockReturnValue("/work/next-app/.content-query/current.js");
+      .mockReturnValue(["/work/next-app/.content-query/collections/posts/current.js"]);
     await withContentQuery()(PHASE_DEVELOPMENT_SERVER, context);
     const changed = build.mock.calls[0]![2]!;
     changed({});

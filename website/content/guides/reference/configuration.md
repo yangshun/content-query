@@ -19,13 +19,17 @@ Export `queryStyle` to allow only one query API in the application:
 export const queryStyle = "relational"; // or "fluent"
 ```
 
-| Value          | Allowed                            | Disabled                           |
-| -------------- | ---------------------------------- | ---------------------------------- |
-| Omitted        | Both query APIs                    | Nothing                            |
-| `"fluent"`     | `content.from()`                   | `content.query`, `content.count()` |
-| `"relational"` | `content.query`, `content.count()` | `content.from()`                   |
+The style gates the collection members that start a query. The fluent starters are `select`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, and `selectAdjacent`.
 
-Generated types read the export, so editors and type checks report a disabled member as `content.from is unavailable because content-query.config sets queryStyle to "relational".` Keep the literal type by exporting a plain `const`; a `: QueryStyle` annotation widens it, and only the runtime check applies. At runtime, a disabled member throws an `invalid-query` error with the same message. Other values fail configuration loading.
+| Value          | Allowed                                               | Disabled                                              |
+| -------------- | ----------------------------------------------------- | ----------------------------------------------------- |
+| Omitted        | Both query APIs                                       | Nothing                                               |
+| `"fluent"`     | Fluent starters                                       | `findMany`, `findFirst`, `paginate`, `count(options)` |
+| `"relational"` | `findMany`, `findFirst`, `paginate`, `count(options)` | Fluent starters                                       |
+
+`count()` without options counts every entry in both styles. Fluent terminals, such as `.all()`, `.first()`, `.paginate()`, and `.count()`, follow a starter, so `"fluent"` keeps them.
+
+Generated types read the export, so editors and type checks report a disabled member as `posts.select is unavailable because content-query.config sets queryStyle to "relational".` Keep the literal type by exporting a plain `const`; a `: QueryStyle` annotation widens it, and only the runtime check applies. At runtime, a disabled member throws an `invalid-query` error with the same message. Other values fail configuration loading.
 
 Both styles support the same filters. See [choosing a style](/docs/querying-content#choosing-a-style).
 

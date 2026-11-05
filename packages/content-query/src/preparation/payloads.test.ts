@@ -9,13 +9,13 @@ import { schema } from "../schema.ts";
 import { fixtureLoader } from "../../tests/helpers/loader.ts";
 import { createSession, sessionInternals } from "./session.ts";
 import { prepareRevision, type CandidateSources, type PreparationCache } from "./prepare.ts";
-import { createArtifactRuntime } from "../internal.ts";
 import { ARTIFACT_VERSION, CODEC_VERSION, type EncodedCollection } from "../artifacts/types.ts";
 import { encode } from "../shared/values.ts";
 import { eq } from "../query.ts";
 import { ContentError } from "../shared/errors.ts";
-import type { Content } from "../runtime.ts";
 import type { PreparedRevision } from "../runtime/revision.ts";
+import { loadAll, loadArtifact } from "../../tests/helpers/collections.ts";
+import type { AllCollections } from "../../tests/helpers/collections.ts";
 
 const root = fileURLToPath(new URL("../../tests/fixtures/exercises", import.meta.url));
 const base = path.join(root, "coding");
@@ -102,9 +102,9 @@ async function setup(encoded: boolean) {
   });
   const revision = sessionInternals(session).state.revision!;
   const { table, imports } = encodedPayloads(revision, "coding");
-  let content: Content<typeof registry> = session.content;
+  let content: AllCollections<typeof registry> = loadAll(session.collections);
   if (encoded) {
-    content = createArtifactRuntime<typeof registry>(
+    content = loadArtifact<typeof registry>(
       { version: ARTIFACT_VERSION, codec: CODEC_VERSION, collections: revision.registry },
       {
         coding: {
@@ -123,11 +123,11 @@ for (const encoded of [false, true]) {
     test("loads only the requested payload variant, never for catalog queries", async () => {
       const { content, session, imports } = await setup(encoded);
       try {
-        expect(await content.from("coding").select("id", "title").orderBy("title")).toEqual([
+        expect(await content.coding.select("id", "title").orderBy("title")).toEqual([
           { id: "reverse-list", title: "Reverse a List" },
           { id: "two-sum", title: "Two Sum" },
         ]);
-        const detail = await content.query.coding.findFirst({
+        const detail = await content.coding.findFirst({
           where: { id: "two-sum" },
           payloads: { detail: { locale: "fr-FR" } },
         });
@@ -150,13 +150,12 @@ for (const encoded of [false, true]) {
     test("matches relational and fluent requests, with and without variants", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const relational = await content.query.coding.findMany({
+        const relational = await content.coding.findMany({
           columns: { id: true },
           where: { difficulty: "easy" },
           payloads: { detail: { locale: "en-US" }, walkthrough: true },
         });
-        const fluent = await content
-          .from("coding")
+        const fluent = await content.coding
           .select("id")
           .where((fields) => eq(fields.difficulty, "easy"))
           .withPayload("detail", { locale: "en-US" })
@@ -174,7 +173,7 @@ for (const encoded of [false, true]) {
           },
         ]);
         expect(fluent).toEqual(relational);
-        const [first, second] = await content.query.coding.findMany({
+        const [first, second] = await content.coding.findMany({
           columns: { id: true },
           where: { id: "two-sum" },
           payloads: { walkthrough: true },
@@ -183,7 +182,7 @@ for (const encoded of [false, true]) {
         first!._payloads.walkthrough.markdown = "changed";
         expect(
           (
-            await content.query.coding.findFirst({
+            await content.coding.findFirst({
               where: { id: "two-sum" },
               payloads: { walkthrough: true },
             })
@@ -197,7 +196,7 @@ for (const encoded of [false, true]) {
     test("rejects variants an entry lacks and requests that misname variant keys", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const missing = await content.query.coding
+        const missing = await content.coding
           .findFirst({ where: { id: "reverse-list" }, payloads: { detail: { locale: "fr-FR" } } })
           .catch((error: unknown) => error);
         expect(missing).toBeInstanceOf(ContentError);
@@ -209,7 +208,7 @@ for (const encoded of [false, true]) {
           variant: { locale: "fr-FR" },
           message: expect.stringContaining("detail[locale=fr-FR]"),
         });
-        const findFirst = (options: unknown) => content.query.coding.findFirst(options as never);
+        const findFirst = (options: unknown) => content.coding.findFirst(options as never);
         for (const detail of [true, {}, { locale: "en-US", level: "easy" }, { locale: 1 }]) {
           expect(() => findFirst({ where: { id: "two-sum" }, payloads: { detail } })).toThrow(
             /variant keys/,
@@ -246,10 +245,10 @@ describe("tracked payload files in watch mode", () => {
       watch: true,
       registry,
     });
-    const content = session.content;
+    const content = loadAll(session.collections);
     /** Reads one exercise's metadata and payloads from the current revision. */
     const exercise = (id: string, locale: string) =>
-      content.query.coding.findFirst({
+      content.coding.findFirst({
         where: { id },
         columns: { walkthroughWords: true },
         payloads: { detail: { locale }, solutions: true },
@@ -577,32 +576,31 @@ describe("preparePayloads", () => {
 });
 
 /** Checks payload declaration and query types without executing them. */
-async function checkTypes(content: Content<ReturnType<typeof exercises>>) {
-  const detail = await content.query.coding.findFirst({
+async function checkTypes(content: AllCollections<ReturnType<typeof exercises>>) {
+  const detail = await content.coding.findFirst({
     where: { id: "two-sum" },
     payloads: { detail: { locale: "en-US" }, walkthrough: true },
   });
   const hints: string | undefined = detail?._payloads.detail.hints;
   const markdown: string | undefined = detail?._payloads.walkthrough.markdown;
-  const fluent = await content
-    .from("coding")
+  const fluent = await content.coding
     .select("title")
     .withPayload("detail", { locale: "en-US" })
     .first();
   const fluentHints: string | undefined = fluent?._payloads.detail.hints;
   void [hints, markdown, fluentHints];
   // @ts-expect-error Variant payloads require their variant keys.
-  void content.query.coding.findFirst({ payloads: { detail: true } });
+  void content.coding.findFirst({ payloads: { detail: true } });
   // @ts-expect-error Variant keys are checked against the declaration.
-  void content.query.coding.findFirst({ payloads: { detail: { locale: "en-US", level: "easy" } } });
+  void content.coding.findFirst({ payloads: { detail: { locale: "en-US", level: "easy" } } });
   // @ts-expect-error Payloads without variants take true.
-  void content.query.coding.findFirst({ payloads: { walkthrough: { locale: "en-US" } } });
+  void content.coding.findFirst({ payloads: { walkthrough: { locale: "en-US" } } });
   // @ts-expect-error Fluent variant payloads require their variant keys.
-  void content.from("coding").select("id").withPayload("detail");
+  void content.coding.select("id").withPayload("detail");
   // @ts-expect-error Fluent payloads without variants take no variant.
-  void content.from("coding").select("id").withPayload("walkthrough", { locale: "en-US" });
+  void content.coding.select("id").withPayload("walkthrough", { locale: "en-US" });
   // @ts-expect-error Unknown payload names are rejected.
-  void content.query.coding.findFirst({ payloads: { missing: true } });
+  void content.coding.findFirst({ payloads: { missing: true } });
 }
 void checkTypes;
 

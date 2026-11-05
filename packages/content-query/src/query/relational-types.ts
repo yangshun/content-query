@@ -4,6 +4,7 @@ import type {
   QueryData,
   Relationship,
   RelationshipsOf,
+  UnavailableRelationship,
   VariantOf,
 } from "../collection/types.ts";
 import type { Expression, NO_SELECTION_MESSAGE } from "./plan.ts";
@@ -286,7 +287,7 @@ type CheckedWhere<
           : CheckedWhere<Registry, RelatedName<Registry, Name, Key>, Filter[Key]>
         : Key extends keyof QueryData<Registry[Name]>
           ? CheckedCondition<QueryData<Registry[Name]>[Key], Filter[Key]>
-          : never;
+          : UnavailableRelationship<Registry[Name], Key>;
 };
 
 /** Rejects unknown options recursively, including options supplied through inferred variables. */
@@ -319,7 +320,7 @@ export type CheckedRelationalOptions<
                     AllowAdjacent
                   > &
                     SelectionRequired<Options[Key][Related]>
-              : never;
+              : UnavailableRelationship<Registry[Name], Related>;
           }
         : Key extends "adjacent"
           ? AllowAdjacent extends true
@@ -374,38 +375,42 @@ export type CheckedRelationalOptions<
                 : never;
 };
 
+/** One collection's relational queries: `findMany`, `findFirst`, and `paginate`. */
+export type RelationalCollectionQueries<
+  Registry extends CollectionRegistry,
+  Name extends keyof Registry & string,
+> = {
+  /** Returns matching rows with exactly the selected data. Options must select something. */
+  findMany<const Options extends RelationalQueryOptions<Registry, Name>>(
+    options: Options &
+      CheckedRelationalOptions<Registry, Name, NoInfer<Options>> &
+      SelectionRequired<NoInfer<Options>>,
+  ): Promise<RelationalQueryResult<Registry, Name, Options>[]>;
+  /** Returns the first matching row, or undefined when none matches. */
+  findFirst<const Options extends RelationalQueryOptions<Registry, Name>>(
+    options: Options &
+      CheckedRelationalOptions<Registry, Name, NoInfer<Options>> &
+      SelectionRequired<NoInfer<Options>>,
+  ): Promise<RelationalQueryResult<Registry, Name, Options> | undefined>;
+  /**
+   * Returns one page from one revision: `page` and `size` for page numbers, or `size` with
+   * `after`, `before`, or `total` for cursors. `limit` and `offset` are unavailable.
+   */
+  paginate<const Options extends RelationalPaginateOptions<Registry, Name>>(
+    options: Options &
+      CheckedRelationalOptions<
+        Registry,
+        Name,
+        NoInfer<Omit<Options, PaginateKey>>,
+        true,
+        true,
+        false
+      > &
+      SelectionRequired<NoInfer<Options>>,
+  ): Promise<PaginateResult<RelationalQueryResult<Registry, Name, Options>, Options>>;
+};
+
 /** Typed per-collection query entry points that never expose source configuration at runtime. */
 export type RelationalQueries<Registry extends CollectionRegistry> = string extends keyof Registry
   ? {}
-  : {
-      readonly [Name in keyof Registry & string]: {
-        /** Returns matching rows with exactly the selected data. Options must select something. */
-        findMany<const Options extends RelationalQueryOptions<Registry, Name>>(
-          options: Options &
-            CheckedRelationalOptions<Registry, Name, NoInfer<Options>> &
-            SelectionRequired<NoInfer<Options>>,
-        ): Promise<RelationalQueryResult<Registry, Name, Options>[]>;
-        /** Returns the first matching row, or undefined when none matches. */
-        findFirst<const Options extends RelationalQueryOptions<Registry, Name>>(
-          options: Options &
-            CheckedRelationalOptions<Registry, Name, NoInfer<Options>> &
-            SelectionRequired<NoInfer<Options>>,
-        ): Promise<RelationalQueryResult<Registry, Name, Options> | undefined>;
-        /**
-         * Returns one page from one revision: `page` and `size` for page numbers, or `size` with
-         * `after`, `before`, or `total` for cursors. `limit` and `offset` are unavailable.
-         */
-        paginate<const Options extends RelationalPaginateOptions<Registry, Name>>(
-          options: Options &
-            CheckedRelationalOptions<
-              Registry,
-              Name,
-              NoInfer<Omit<Options, PaginateKey>>,
-              true,
-              true,
-              false
-            > &
-            SelectionRequired<NoInfer<Options>>,
-        ): Promise<PaginateResult<RelationalQueryResult<Registry, Name, Options>, Options>>;
-      };
-    };
+  : { readonly [Name in keyof Registry & string]: RelationalCollectionQueries<Registry, Name> };

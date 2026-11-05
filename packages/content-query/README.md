@@ -9,6 +9,7 @@ Use it with your existing framework. Your application owns its routes, layouts, 
 - **Typed schemas.** Validate metadata with bundled schema builders or any Standard Schema V1 provider, with inferred TypeScript types.
 - **Flexible sources.** Load local files, use Astro-compatible content loaders, or write your own loader.
 - **Queries and relationships.** Select fields, filter, sort, paginate, and load related entries with validated references.
+- **Per-collection entries.** Import each collection from its own generated module with named types such as `ContentPost`, so a route bundles and traces only the collections it uses.
 - **Markdown rendering.** Request HTML, headings, and syntax highlighting as query payloads, loaded only when a query asks for them.
 - **Custom payloads.** Declare schema-validated per-entry data, optionally by variant such as locale, resolved during the build from tracked related files, and loaded only when a query names it. Development edits re-resolve only the variants whose files changed.
 - **Optional MDX companion.** [`@content-query/mdx`](https://github.com/yangshun/content-query/tree/main/packages/mdx) supplies React islands and ordinary React document modules with Vite SSR. Core has no MDX or React dependency.
@@ -45,69 +46,65 @@ Add Markdown files with `title` frontmatter under `content/posts/`, then build:
 npx content-query build
 ```
 
-Query the generated module from server code:
+Each collection gets its own generated entry, which exports the collection under its name. Query it from server code:
 
 ```ts
-import { content } from "./.content-query/server.js";
+import { posts } from "./.content-query/collections/posts/server.js";
 import { eq } from "content-query/query";
 
-const posts = await content
-  .from("posts")
+const summaries = await posts
   .select("id", "title")
   .where((fields) => eq(fields.draft, false))
   .orderBy("title");
 
-const post = await content.query.posts.findFirst({
-  where: { id: posts[0]!.id },
+const post = await posts.findFirst({
+  where: { id: summaries[0]!.id },
   payloads: { _rendered: true },
 });
 const { html, headings } = post!._payloads._rendered;
 ```
 
-Queries return only the data they select, not even `id` implicitly. A query must select fields, include a relationship, request a payload, or select adjacent entries; otherwise it fails to type-check and throws an `invalid-query` error. Counts need no selection.
+Built-in payloads are `_body` and `_rendered`. JSON, YAML, and TOML sources and `file()` collections have none, and a custom `BodyLoader` offers only `_body`. A query for a missing entry returns `undefined`.
 
-Generated declarations export `CollectionEntry<"posts">` for a full entry. Pass the selected fields to type query results, such as props for a list component:
+An entry imports only its own collection's data, so a route that imports `posts` never bundles or traces another collection. With Vite, import from `content-query:collections/posts`. Elsewhere, such as in Next.js, map the entries in `package.json` to import `{ posts }` from `#content-query/posts` at any directory depth:
 
-```ts
-import type { CollectionEntry } from "content-query:server";
-
-type PostLink = CollectionEntry<"posts", "id" | "title">; // What select("id", "title") returns.
+```json
+{
+  "imports": {
+    "#content-query/*": "./.content-query/collections/*/server.js"
+  }
+}
 ```
 
-Paginate root queries in one call. `paginate({ page: 2, size: 10 })` returns `items`, `total`, `page`, `pageCount`, `hasNextPage`, and `hasPreviousPage` for numbered archive pages. `paginate({ size: 10, after: previous.endCursor })` returns cursor pages with `startCursor` and `endCursor` for "load more" lists. Both work in fluent queries and in `content.query.posts.paginate()`; see [pagination](https://github.com/yangshun/content-query/blob/main/docs/API.md#pagination).
+Queries return only the data they select, not even `id` implicitly. A query must select fields, include a relationship, request a payload, or select adjacent entries; otherwise it fails to type-check and throws an `invalid-query` error. Counts need no selection.
+
+To follow a relationship, pass its target collection to `using()`. Nothing related loads implicitly:
+
+```ts
+import { authors } from "#content-query/authors";
+import { posts } from "#content-query/posts";
+
+const withAuthors = await posts.using(authors).findMany({
+  columns: { title: true },
+  with: { author: { columns: { name: true } } },
+});
+```
+
+A relationship whose target was not supplied is a type error and throws `invalid-query`. Nested relationships need every collection they reach, such as `posts.using(authors, publishers)`. Self-relationships need nothing.
+
+Each entry also exports the collection's types. `ContentPost` is a full entry; pass the selected fields to type query results, such as props for a list component:
+
+```ts
+import type { ContentPost } from "#content-query/posts";
+
+type PostLink = ContentPost<"id" | "title">; // What select("id", "title") returns.
+```
+
+Type names are `Content` plus the export name, capitalized and made singular by dropping one trailing `s` (`jobs` gives `ContentJob`, `coding` gives `ContentCoding`). Set `typeName: "Category"` in `defineCollection()` for irregular plurals. Declared payloads are typed as `ContentPostPayload<"detail">`. Collection names that are not identifiers are converted for the export and import path, such as `blog-posts` to `blogPosts`; two collections that would share an export or type name fail the build.
+
+Paginate root queries in one call. `paginate({ page: 2, size: 10 })` returns `items`, `total`, `page`, `pageCount`, `hasNextPage`, and `hasPreviousPage` for numbered archive pages. `paginate({ size: 10, after: previous.endCursor })` returns cursor pages with `startCursor` and `endCursor` for "load more" lists. Both work in fluent queries and in `posts.paginate()`; see [pagination](https://github.com/yangshun/content-query/blob/main/docs/API.md#pagination).
 
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
-
-## Migrating to `CollectionEntry`
-
-The generated `CollectionData` type is now `CollectionEntry`. Rename imports from `content-query:server` or the generated server entry, and replace `Pick<CollectionData<"posts">, "id" | "title">` with `CollectionEntry<"posts", "id" | "title">`. Regenerate declarations by starting Vite or running `content-query build`.
-
-## Migrating to 0.4
-
-Version 0.4.0 starts fluent queries from the collection and selects no data implicitly:
-
-| 0.3                                           | 0.4                                                                                |
-| --------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `content.select("id", "title").from("posts")` | `content.from("posts").select("id", "title")`                                      |
-| `content.select().from("posts")`              | `content.from("posts").select(...)` listing the fields used                        |
-| `findMany()` or `findMany({ where })`         | Add `columns: { field: true }` for each field used                                 |
-| `columns: { draft: false }`                   | List the included fields with `true`                                               |
-| `with: { author: true }`                      | `with: { author: { columns: { name: true } } }`                                    |
-| `adjacent: true` or `.selectAdjacent()`       | `adjacent: { scope: "results", columns: { id: true } }` or `.selectAdjacent("id")` |
-
-Results include `id` only when it is selected. Queries that request only payloads, such as `findFirst({ where: { id }, payloads: { _rendered: true } })`, need no columns.
-
-## Migrating to 0.2
-
-Version 0.2.0 removes `content.readBody()` and `content.render()`. Request bodies and rendered output as payloads in the query that loads the entry:
-
-| 0.1                                   | 0.2                                                                                                            |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `await content.readBody("posts", id)` | `(await content.query.posts.findFirst({ where: { id }, payloads: { _body: true } }))?._payloads._body`         |
-| `await content.render("posts", id)`   | `(await content.query.posts.findFirst({ where: { id }, payloads: { _rendered: true } }))?._payloads._rendered` |
-| Fluent queries                        | Add `.withPayload("_rendered")` or `.withPayload("_body")` before the terminal.                                |
-
-Built-in payload names start with an underscore: `_body` and `_rendered`. A query for a missing entry returns `undefined` instead of rejecting with `entry-not-found`, which no longer exists. JSON, YAML, and TOML sources and `file()` collections offer no payloads, and custom loaders typed as `BodyLoader` offer only `_body`. Rebuild generated content after upgrading; 0.1 artifacts are rejected.
 
 ## Documentation
 
@@ -118,7 +115,7 @@ Built-in payload names start with an underscore: `_body` and `_rendered`. A quer
 
 The Vite integration supports Vite 8, and the Next.js integration supports Next.js 15 and 16. Both integrations are optional; standalone builds and queries require neither framework.
 
-To allow only one query API, export `queryStyle` from the config: `export const queryStyle = "relational";` keeps `content.query` and `content.count()`, and `"fluent"` keeps `content.from()`. Generated types report the disabled API in the editor, and the runtime throws an `invalid-query` error for it. See [query style](https://github.com/yangshun/content-query/blob/main/docs/API.md#query-style).
+To allow only one query API, export `queryStyle` from the config: `export const queryStyle = "relational";` keeps `posts.findMany()`, `findFirst()`, `paginate()`, and `count(options)`, and `"fluent"` keeps `posts.select()` and the other fluent starters. `count()` without options works in both. Generated types report the disabled API in the editor, and the runtime throws an `invalid-query` error for it. See [query style](https://github.com/yangshun/content-query/blob/main/docs/API.md#query-style).
 
 Pass `contentQuery()` directly to Vite or Vite+'s `plugins` array. No `Plugin` type cast is needed; workspace consumers share the pinned toolchain versions in the dependency catalog.
 

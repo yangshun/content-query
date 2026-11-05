@@ -4,6 +4,8 @@ import type {
   QueryData,
   Relationship,
   RelationshipsOf,
+  UnavailableRelationship,
+  UnavailableRelationshipsOf,
   VariantOf,
 } from "../collection/types.ts";
 import type { Expression, NO_SELECTION_MESSAGE, PAGINATE_AFTER_LIMIT_MESSAGE } from "./plan.ts";
@@ -33,6 +35,11 @@ export type QueryFields<
   readonly [Key in keyof RelationshipsOf<Registry[Name]> & string]-?: RelationField<
     QueryFields<Registry, RelatedName<Registry, RelationOf<Registry, Name, Key>>>
   >;
+} & {
+  /** A relationship into a collection the query has not loaded reads as the type error. */
+  readonly [
+    Key in keyof UnavailableRelationshipsOf<Registry[Name]> & string
+  ]-?: UnavailableRelationship<Registry[Name], Key>;
 };
 export type Scalar = string | number | bigint | boolean | Date | null | undefined;
 export type ScalarField<Value> = Field<Value> & ([Value] extends [Scalar] ? unknown : never);
@@ -181,6 +188,11 @@ export type Query<
     Pagination,
     Paged
   >;
+  /** A relationship into a collection the query has not loaded reports which one to supply. */
+  with<Key extends keyof UnavailableRelationshipsOf<Registry[Name]> & string>(
+    name: Key,
+    configure: UnavailableRelationship<Registry[Name], Key>,
+  ): never;
 } & (Many extends true
     ? {
         orderBy(

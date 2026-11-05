@@ -10,6 +10,7 @@ import {
 } from "./clauses.ts";
 import { objectPlan } from "./object.ts";
 import {
+  assertAvailable,
   emptyPlan,
   hasSelection,
   NO_SELECTION_MESSAGE,
@@ -83,6 +84,7 @@ export function createBuilder(
         ? scope.relationships[name]
         : undefined;
       if (!relation || Object.hasOwn(plan.with, name) || typeof configure !== "function") {
+        assertAvailable(registry, plan.collection, name);
         invalidQuery("Unknown, repeated, or invalid relationship request.");
       }
       const nestedScope = {};

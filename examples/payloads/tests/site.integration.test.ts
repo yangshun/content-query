@@ -111,15 +111,17 @@ describe("payloads example", () => {
       [
         "--input-type=module",
         "-e",
-        `const { content } = await import("./.content-query/server.js");
+        `const { announcements } = await import("./.content-query/collections/announcements/server.js");
+const { articles } = await import("./.content-query/collections/articles/server.js");
+const { authors } = await import("./.content-query/collections/authors/server.js");
 const codes = [];
 for (const request of [
-  () => content.query.authors.findMany({ payloads: { _body: true } }),
-  () => content.count("articles", { payloads: { _rendered: true } }),
+  () => authors.findMany({ payloads: { _body: true } }),
+  () => articles.count({ payloads: { _rendered: true } }),
 ]) {
   try { await request(); codes.push("resolved"); } catch (error) { codes.push(error.code); }
 }
-const announcement = await content.query.announcements.findFirst({ payloads: { _body: true } });
+const announcement = await announcements.findFirst({ payloads: { _body: true } });
 console.log(JSON.stringify({ codes, body: announcement._payloads._body ?? null }));`,
       ],
       { cwd: root },

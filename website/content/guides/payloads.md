@@ -90,18 +90,19 @@ Derive values that need logic in a computed field, then name that field.
 
 ## Request a payload
 
-Request payloads by name. A payload with variants needs every variant key; a payload without variants takes `true`:
+Request payloads by name from the collection's [generated entry](/docs/querying-content). A payload with variants needs every variant key; a payload without variants takes `true`:
 
 ```ts
-const exercise = await content.query.coding.findFirst({
+import { coding } from "content-query:collections/coding";
+
+const exercise = await coding.findFirst({
   where: { id: "two-sum" },
   columns: { title: true },
   payloads: { detail: { locale: "fr-FR" }, walkthrough: true },
 });
 const hints = exercise?._payloads.detail.hints;
 
-const sameExercise = await content
-  .from("coding")
+const sameExercise = await coding
   .select("title")
   .where((fields) => eq(fields.id, "two-sum"))
   .withPayload("detail", { locale: "fr-FR" })
@@ -113,12 +114,12 @@ Each request loads only the modules it names, and catalog queries load none. Req
 
 ## Types
 
-Payload values and variant keys are inferred from the declaration, so queries check payload names and variant keys. Generated declarations also export `CollectionPayload`:
+Payload values and variant keys are inferred from the declaration, so queries check payload names and variant keys. The collection's entry also exports a [payload type](/docs/reference/runtime#generated-types) named after the collection:
 
 ```ts
-import type { CollectionPayload } from "content-query:server";
+import type { ContentCodingPayload } from "content-query:collections/coding";
 
-type Detail = CollectionPayload<"coding", "detail">; // { hints: string }
+type Detail = ContentCodingPayload<"detail">; // { hints: string }
 ```
 
 `content-query` exports `PayloadData` and `VariantOf` for helpers that take a collection definition.

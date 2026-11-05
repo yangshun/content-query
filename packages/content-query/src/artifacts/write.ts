@@ -4,8 +4,9 @@ import { renameSync } from "node:fs";
 import path from "node:path";
 import type { PreparedRevision } from "../runtime/revision.ts";
 import { ContentError } from "../shared/errors.ts";
+import { collectionNames } from "../collection/names.ts";
 import { revisionModules } from "./modules.ts";
-import { contentDeclarations, virtualDeclarations } from "./declarations.ts";
+import { collectionDeclarations, virtualDeclarations } from "./declarations.ts";
 
 /** Writes changed bytes only, keeping unchanged importer targets stable. */
 export async function writeChanged(
@@ -78,6 +79,8 @@ async function writeImmutable(filename: string, source: string): Promise<void> {
 
 const immutableModule =
   /\/(?:entries\/[a-f0-9]{64}|payloads\/[^/]+\/[a-f0-9]{64}|index-[a-f0-9]{64})\.js$/;
+/** Matches each collection's entry, which imports the collection's other modules. */
+const collectionEntry = /^collections\/[^/]+\/server\.js$/;
 
 /** Lists one directory's entries, treating a missing directory or a file as empty. */
 async function entriesOf(directory: string): Promise<string[]> {
@@ -129,8 +132,12 @@ async function pruneArtifacts(outDir: string, modules: ReadonlyMap<string, strin
     }
     for (const filename of candidates) {
       const generated =
-        immutableModule.test(`/${filename}`) || filename.endsWith(`/${directory}/index.js`);
-      if (generated && !modules.has(filename)) {
+        immutableModule.test(`/${filename}`) || filename.endsWith(`/${directory}/server.js`);
+      // A collection entry's declarations go when its entry does.
+      const declarations =
+        filename.endsWith(`/${directory}/server.d.ts`) &&
+        !modules.has(filename.replace(/\.d\.ts$/, ".js"));
+      if ((generated && !modules.has(filename)) || declarations) {
         await rm(path.join(outDir, filename), { force: true });
       }
     }
@@ -149,7 +156,14 @@ export type WriteArtifactsOptions = {
   prune?: boolean;
 };
 
-/** Stages modules with bounded I/O before atomically switching the public server entry. */
+/**
+ * Stages modules with bounded I/O before switching each collection's public entry.
+ *
+ * @param revision - The prepared revision to publish.
+ * @param outDir - The generated output directory.
+ * @param config - Absolute path of content-query.config, which declarations import types from.
+ * @param options - `signal` cancels the write; `prune` removes superseded modules.
+ */
 export async function writeArtifacts(
   revision: PreparedRevision,
   outDir: string,
@@ -157,10 +171,18 @@ export async function writeArtifacts(
   { signal, prune = false }: WriteArtifactsOptions = {},
 ): Promise<void> {
   const modules = await revisionModules(revision);
+  const names = collectionNames(revision.registry);
   await writeChanged(path.join(outDir, "package.json"), '{"type":"module","private":true}\n');
-  await writeChanged(path.join(outDir, "server.d.ts"), contentDeclarations(outDir, config));
-  await writeChanged(path.join(outDir, "types.d.ts"), virtualDeclarations(outDir, config));
-  const staged = [...modules].filter(([filename]) => filename !== "server.js");
+  await writeChanged(path.join(outDir, "types.d.ts"), virtualDeclarations(outDir, config, names));
+  for (const [name, generated] of names) {
+    const directory = path.join(outDir, "collections", generated.exportName);
+    await writeChanged(
+      path.join(directory, "server.d.ts"),
+      collectionDeclarations(directory, config, name, generated),
+    );
+  }
+  // Entries import the other modules, so they switch only after every module they import exists.
+  const staged = [...modules].filter(([filename]) => !collectionEntry.test(filename));
   const directories = new Set(
     staged.map(([filename]) => path.dirname(path.join(outDir, filename))),
   );
@@ -184,7 +206,11 @@ export async function writeArtifacts(
   if (failure?.status === "rejected") {
     throw failure.reason;
   }
-  await writeChanged(path.join(outDir, "server.js"), modules.get("server.js")!, signal);
+  for (const [filename, code] of modules) {
+    if (collectionEntry.test(filename)) {
+      await writeChanged(path.join(outDir, filename), code, signal);
+    }
+  }
   // Watch sessions keep superseded modules for operations pinned to earlier revisions.
   if (prune) {
     await pruneArtifacts(outDir, modules);

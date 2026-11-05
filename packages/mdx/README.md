@@ -96,6 +96,8 @@ const islands = await renderMdx("guides", id);
 const reference = await loadMdxDocument("guides", id);
 ```
 
+These helpers take the collection name, such as `"guides"`, rather than the collection handle that core's `content-query:collections/guides` module exports. Its type is `CollectionKey` from the type-only `content-query:collections` module in core's generated declarations.
+
 Render the loader result inside the application:
 
 ```tsx

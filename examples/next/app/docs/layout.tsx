@@ -1,16 +1,16 @@
 import "server-only";
 import type { ReactNode } from "react";
-import { content } from "#content-query";
+import { guides } from "#content-query/guides";
 import { Sidebar } from "./sidebar";
 
 export default async function DocsLayout({ children }: { children: ReactNode }) {
-  const guides = await content.query.guides.findMany({
+  const entries = await guides.findMany({
     columns: { id: true, title: true },
     orderBy: { order: "asc" },
   });
   return (
     <div className="docs-layout">
-      <Sidebar guides={guides} />
+      <Sidebar guides={entries} />
       {children}
     </div>
   );

@@ -30,16 +30,18 @@ const coding = defineCollection({
 export const collections = { coding };
 `;
 
-const consumer = `import { content, type CollectionPayload } from "./.content-query/server.js";
-const hints: CollectionPayload<"coding", "detail">["hints"] = "Use a map";
-const walkthrough: CollectionPayload<"coding", "walkthrough"> = "Scan once";
+const consumer = `import { coding, type ContentCodingPayload } from "./.content-query/collections/coding/server.js";
+const hints: ContentCodingPayload<"detail">["hints"] = "Use a map";
+const walkthrough: ContentCodingPayload<"walkthrough"> = "Scan once";
 const detail: Promise<{ title: string; _payloads: { detail: { locale: string; hints: string } } } | undefined> =
-  content.query.coding.findFirst({ where: { id: "two-sum" }, columns: { title: true }, payloads: { detail: { locale: "en-US" } } });
-const fluent = content.from("coding").select("id").withPayload("detail", { locale: "fr-FR" }).withPayload("walkthrough").all();
+  coding.findFirst({ where: { id: "two-sum" }, columns: { title: true }, payloads: { detail: { locale: "en-US" } } });
+const fluent = coding.select("id").withPayload("detail", { locale: "fr-FR" }).withPayload("walkthrough").all();
 // @ts-expect-error Variant payloads require their keys through generated declarations.
-void content.query.coding.findFirst({ payloads: { detail: true } });
+void coding.findFirst({ payloads: { detail: true } });
 // @ts-expect-error Payload names come from the configured collection.
-void content.query.coding.findFirst({ payloads: { missing: true } });
+void coding.findFirst({ payloads: { missing: true } });
+// @ts-expect-error Payload type names come from the configured collection.
+type Missing = ContentCodingPayload<"missing">;
 void [hints, walkthrough, detail, fluent];
 `;
 
@@ -95,10 +97,10 @@ describe("custom payloads in generated builds", () => {
         [
           "--input-type=module",
           "-e",
-          `const { content } = await import("./.content-query/server.js");
-const english = await content.query.coding.findFirst({ where: { id: "two-sum" }, columns: { title: true }, payloads: { detail: { locale: "en-US" }, walkthrough: true } });
-const french = await content.from("coding").select("id").orderBy("id").withPayload("detail", { locale: "fr-FR" }).first().catch((error) => ({ code: error.code }));
-const missing = await content.query.coding.findFirst({ where: { id: "reverse-list" }, payloads: { detail: { locale: "fr-FR" } } }).catch((error) => ({ code: error.code, payload: error.payload, variant: error.variant }));
+          `const { coding } = await import("./.content-query/collections/coding/server.js");
+const english = await coding.findFirst({ where: { id: "two-sum" }, columns: { title: true }, payloads: { detail: { locale: "en-US" }, walkthrough: true } });
+const french = await coding.select("id").orderBy("id").withPayload("detail", { locale: "fr-FR" }).first().catch((error) => ({ code: error.code }));
+const missing = await coding.findFirst({ where: { id: "reverse-list" }, payloads: { detail: { locale: "fr-FR" } } }).catch((error) => ({ code: error.code, payload: error.payload, variant: error.variant }));
 console.log(JSON.stringify({ english, missing, frenchCode: french.code ?? null }));`,
         ],
         { cwd: fixture.root },

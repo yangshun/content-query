@@ -120,7 +120,7 @@ describe("Vite preparation and server/client boundaries", () => {
     const fixture = await projectFixture();
     await writeFile(
       path.join(fixture.root, "consumer.mjs"),
-      'export {content} from "content-query:server";',
+      'export {posts} from "content-query:collections/posts";',
     );
     const server = await createServer({
       configFile: false,
@@ -138,8 +138,8 @@ describe("Vite preparation and server/client boundaries", () => {
       if (!isRunnableDevEnvironment(environment)) {
         throw new Error("Expected a runnable SSR environment.");
       }
-      const { content } = await environment.runner.import("/consumer.mjs");
-      const listing = content.from("posts").select("title");
+      const { posts } = await environment.runner.import("/consumer.mjs");
+      const listing = posts.select("title");
       expect(await listing.first()).toEqual({ title: "Getting started" });
       await writeFile(
         fixture.postPath,
@@ -186,7 +186,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
       );
       await writeFile(
         path.join(fixture.root, "consumer.mjs"),
-        'export {content} from "content-query:server";',
+        'export {posts} from "content-query:collections/posts";',
       );
       let server: Awaited<ReturnType<typeof createServer>> | undefined;
       const bridge = Symbol.for("content-query.dev-sessions");
@@ -205,8 +205,8 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         if (!isRunnableDevEnvironment(environment)) {
           throw new Error("Expected a runnable SSR environment.");
         }
-        const { content } = await environment.runner.import("/consumer.mjs");
-        const listing = content.from("posts").select("value");
+        const { posts } = await environment.runner.import("/consumer.mjs");
+        const listing = posts.select("value");
         await expect(listing.first()).rejects.toMatchObject({
           code: "validation-error",
           collection: "posts",
@@ -246,7 +246,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
       await rename(fixture.config, configPath);
       await writeFile(
         path.join(fixture.root, "consumer.mjs"),
-        `export {content} from ${JSON.stringify(backend === "generated" ? "./.content-query/server.js" : "content-query:server")};`,
+        `export {posts} from ${JSON.stringify(backend === "generated" ? "./.content-query/collections/posts/server.js" : "content-query:collections/posts")};`,
       );
       const server = await createServer({
         configFile: false,
@@ -257,8 +257,8 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         optimizeDeps: { noDiscovery: true },
       });
       try {
-        const { content } = await server.ssrLoadModule("/consumer.mjs");
-        expect(await content.from("posts").select("title").first()).toEqual({
+        const { posts } = await server.ssrLoadModule("/consumer.mjs");
+        expect(await posts.select("title").first()).toEqual({
           title: "Getting started",
         });
         await writeFile(
@@ -267,7 +267,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         );
         await vi.waitFor(
           async () =>
-            expect(await content.from("posts").select("title").first()).toEqual({
+            expect(await posts.select("title").first()).toEqual({
               title: "Updated",
             }),
           watcherWait,
@@ -275,7 +275,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         await writeFile(fixture.postPath, "---\ntitle: false\n---\n");
         await vi.waitFor(
           async () =>
-            expect(content.from("posts").count()).rejects.toMatchObject({
+            expect(posts.count()).rejects.toMatchObject({
               code: "validation-error",
             }),
           watcherWait,
@@ -286,12 +286,12 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         );
         await vi.waitFor(
           async () =>
-            expect(await content.from("posts").select("title").first()).toEqual({
+            expect(await posts.select("title").first()).toEqual({
               title: "Fixed",
             }),
           watcherWait,
         );
-        const page = await content.query.posts.findFirst({
+        const page = await posts.findFirst({
           where: { id: "getting-started" },
           payloads: { _rendered: true },
         });
@@ -305,7 +305,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         );
         await vi.waitFor(
           async () =>
-            expect(await content.from("posts").select("upper").first()).toEqual({
+            expect(await posts.select("upper").first()).toEqual({
               upper: "Updated configuration",
             }),
           watcherWait,
@@ -314,18 +314,14 @@ export const collections = { posts: defineCollection({loader:file("./content/val
         if (backend !== "generated") {
           expect(outputFiles).toEqual(["types.d.ts"]);
         } else {
-          expect(outputFiles.sort()).toEqual([
-            "collections",
-            "manifest.js",
-            "package.json",
-            "server.d.ts",
-            "server.js",
-            "types.d.ts",
-          ]);
+          expect(outputFiles.sort()).toEqual(["collections", "package.json", "types.d.ts"]);
         }
         expect(
           await readFile(path.join(fixture.root, ".content-query/types.d.ts"), "utf8"),
         ).toContain(`typeof import("../${configName}").collections`);
+        expect(
+          await readFile(path.join(fixture.root, ".content-query/types.d.ts"), "utf8"),
+        ).toContain('declare module "content-query:collections/posts" {');
       } finally {
         await server.close();
         await fixture.dispose();
@@ -334,7 +330,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
     test(`${backend ?? "default"} bundles source-independent SSR output`, async () => {
       const fixture = await projectFixture();
       const entry = path.join(fixture.root, "consumer.mjs");
-      await writeFile(entry, 'export {content} from "content-query:server";');
+      await writeFile(entry, 'export {posts} from "content-query:collections/posts";');
       try {
         await build({
           configFile: false,
@@ -359,7 +355,7 @@ export const collections = { posts: defineCollection({loader:file("./content/val
           [
             "--input-type=module",
             "-e",
-            `const {content}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, "dist/server.mjs")).href)}); console.log(await content.from("posts").count());console.log((await content.query.posts.findFirst({where:{id:"getting-started"},payloads:{_rendered:true}}))._payloads._rendered.headings.length);`,
+            `const {posts}=await import(${JSON.stringify(pathToFileURL(path.join(fixture.root, "dist/server.mjs")).href)}); console.log(await posts.count());console.log((await posts.findFirst({where:{id:"getting-started"},payloads:{_rendered:true}}))._payloads._rendered.headings.length);`,
           ],
           { cwd: fixture.root },
         );
@@ -372,8 +368,8 @@ export const collections = { posts: defineCollection({loader:file("./content/val
     });
   }
   for (const source of [
-    "content-query:server",
-    "./.content-query/server.js",
+    "content-query:collections/posts",
+    "./.content-query/collections/posts/server.js",
     "content-query/query",
     "content-query/computed",
     "./content-query.config.ts",

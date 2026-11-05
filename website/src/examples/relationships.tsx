@@ -17,7 +17,9 @@ export function RelationshipsExample() {
   const fullQuery = relationshipQueryCode.replace('"ada"', JSON.stringify(author.id));
   const query = includeAuthor
     ? fullQuery
-    : fullQuery.replace('  .with("author", (author) => author.select("name"))\n', "");
+    : fullQuery
+        .replace("  .using(authors)\n", "")
+        .replace('  .with("author", (author) => author.select("name"))\n', "");
   return (
     <div className="feature-example" aria-label="Relationships example">
       <div className="relationship-columns">
@@ -70,7 +72,7 @@ export function RelationshipsExample() {
           <CodeExample
             label="Query"
             code={query}
-            highlight={includeAuthor ? [".with(", ".where("] : [".where("]}
+            highlight={includeAuthor ? [".using(", ".with(", ".where("] : [".where("]}
           />
         </div>
         <div>

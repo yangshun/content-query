@@ -24,10 +24,10 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
   let fixtureRoot: string;
   let workspace: string;
   let server: ViteDevServer;
-  let content: typeof import("content-query:server").content;
   let homeRoute: typeof import("../pages/index.server");
   let guideRoute: typeof import("../pages/docs/[...slug].server");
   let navigationMiddleware: typeof import("../middleware/01.docs").default;
+  let guides: typeof import("content-query:collections/guides").guides;
   let startupQueries: number;
 
   beforeAll(async () => {
@@ -57,14 +57,17 @@ describe("ContentQuery basic guide routes with the generated backend", () => {
       server: { middlewareMode: true, ws: false },
       optimizeDeps: { noDiscovery: true },
     });
-    ({ content } = await server.ssrLoadModule("content-query:server"));
-    const querySpy = vi.spyOn(content, "from");
+    ({ guides } = await server.ssrLoadModule("content-query:collections/guides"));
+    // Every query starts at a collection method, so spying on them observes any startup query.
+    const spies = Object.keys(guides).map((member) =>
+      vi.spyOn(guides as unknown as Record<string, () => unknown>, member),
+    );
     homeRoute = (await server.ssrLoadModule("/pages/index.server.ts")) as typeof homeRoute;
     guideRoute = (await server.ssrLoadModule(
       "/pages/docs/[...slug].server.ts",
     )) as typeof guideRoute;
     ({ default: navigationMiddleware } = await server.ssrLoadModule("/middleware/01.docs.ts"));
-    startupQueries = querySpy.mock.calls.length;
+    startupQueries = spies.reduce((total, spy) => total + spy.mock.calls.length, 0);
     vi.restoreAllMocks();
   }, 20_000);
 

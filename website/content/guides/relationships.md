@@ -19,13 +19,30 @@ relationships: {
 }
 ```
 
+## Supply related collections
+
+Each collection's entry loads only that collection, so queries never follow a relationship implicitly. Import the target collection and pass it to `using()` where a query follows the relationship:
+
+```ts
+import { posts } from "content-query:collections/posts";
+import { authors } from "content-query:collections/authors";
+
+const postsWithAuthors = posts.using(authors);
+```
+
+`using()` returns a handle over `posts` that can also follow relationships into `authors`. Because each call site names its targets, a module's imports show every collection its queries load, and a route that never follows the relationship never imports `authors`. `using()` only supplies relationship targets; query authors themselves through `authors`.
+
+Every hop is explicit. For `with: { author: { with: { publisher: ... } } }`, pass both targets: `posts.using(authors, publishers)`. Relationships from a collection to itself need nothing. Handles are reusable, so a module can create `posts.using(authors)` once and share it; ContentQuery caches each combination.
+
+A relationship whose target was not supplied is a type error at the relationship, in `with`, relational `where`, and fluent `has()`. Running the query anyway throws an `invalid-query` error: `Relationship "author" targets the authors collection, which this query has not loaded. Pass it to using(), such as posts.using(authors).`
+
 ## Load related entries
 
 Every level selects its own data; nothing is included implicitly, not even `id`. The fluent API selects fields independently at each level:
 
 ```ts
-const posts = await content
-  .from("posts")
+const entries = await posts
+  .using(authors)
   .select("id", "title")
   .with("author", (author) => author.select("name"))
   .all();
@@ -34,7 +51,7 @@ const posts = await content
 The relational API uses `with` and nested `columns`:
 
 ```ts
-const posts = await content.query.posts.findMany({
+const sameEntries = await posts.using(authors).findMany({
   columns: { id: true, title: true },
   with: { author: { columns: { name: true } } },
 });

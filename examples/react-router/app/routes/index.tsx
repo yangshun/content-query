@@ -1,9 +1,9 @@
 import { Link, useLoaderData } from "react-router";
-import { content } from "content-query:server";
+import { guides } from "content-query:collections/guides";
 
 export async function loader() {
   return {
-    guides: await content.query.guides.findMany({
+    guides: await guides.findMany({
       columns: { id: true, title: true, description: true },
       orderBy: { order: "asc" },
     }),

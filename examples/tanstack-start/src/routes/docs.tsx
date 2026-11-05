@@ -2,8 +2,8 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 
 const getNavigation = createServerFn({ method: "GET" }).handler(async () => {
-  const { content } = await import("content-query:server");
-  return content.query.guides.findMany({
+  const { guides } = await import("content-query:collections/guides");
+  return guides.findMany({
     columns: { id: true, title: true },
     orderBy: { order: "asc" },
   });

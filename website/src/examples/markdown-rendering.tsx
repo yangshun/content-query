@@ -42,7 +42,7 @@ export function MarkdownRenderingExample({ rendered }: { rendered: ContentRender
         <CodeExample
           label="payloads: { _rendered: true }"
           code={
-            'const article = await content.query.examples.findFirst({\n  where: { id: "hello-world" },\n  payloads: { _rendered: true },\n});\nconst { html, headings } = article._payloads._rendered;'
+            'const article = await examples.findFirst({\n  where: { id: "hello-world" },\n  payloads: { _rendered: true },\n});\nconst { html, headings } = article._payloads._rendered;'
           }
         />
       </details>

@@ -24,8 +24,7 @@ export const sourceToDataExample = {
     }),
   }),
 };`,
-  query: `const posts = await content.from("posts").select("title", "draft")
-  .all();`,
+  query: `const entries = await posts.select("title", "draft").all();`,
   data: [{ title: "Hello, world", draft: false }],
 } as const;
 
@@ -74,7 +73,7 @@ export function queryExampleCode(
 ) {
   if (syntax === "relational") {
     return [
-      "const posts = await content.query.posts.findMany({",
+      "const entries = await posts.findMany({",
       ...(options.excludeDrafts ? ["  where: { draft: false },"] : []),
       options.fields === "title-and-draft"
         ? "  columns: { title: true, draft: true },"
@@ -87,8 +86,7 @@ export function queryExampleCode(
     ].join("\n");
   }
   const lines = [
-    "const posts = await content",
-    '  .from("posts")',
+    "const entries = await posts",
     options.fields === "title-and-draft" ? '  .select("title", "draft")' : '  .select("title")',
     ...(options.excludeDrafts ? ["  .where((fields) => eq(fields.draft, false))"] : []),
     ...(options.sort === "id-asc"
@@ -165,7 +163,9 @@ export const relationshipExampleCode = `relationships: {
   },
 }`;
 
-export const relationshipQueryCode = `const posts = await content.from("posts").select("title")
+export const relationshipQueryCode = `const entries = await posts
+  .using(authors)
+  .select("title")
   .where((fields) => eq(fields.authorId, "ada"))
   .with("author", (author) => author.select("name"))
   .all();`;

@@ -5,7 +5,7 @@ section: integrations
 order: 43
 ---
 
-Use the CLI during your application's build, then import the generated `.content-query/server.js` entry from server code. The [quick start](/docs/quick-start) demonstrates this path.
+Use the CLI during your application's build, then import each collection's generated entry, such as `.content-query/collections/posts/server.js`, from server code. The [quick start](/docs/quick-start) demonstrates this path.
 
 ## Build API
 
@@ -20,13 +20,13 @@ const session = await buildContent<typeof collections>({
 });
 
 try {
-  const posts = await session.content.from("posts").select("id", "title").all();
+  const entries = await session.collections.posts.select("id", "title").all();
 } finally {
   await session.dispose();
 }
 ```
 
-The in-memory backend writes no runtime content artifacts. Use the generated backend when the deployment should consume prepared ESM files.
+`session.collections` holds one handle per collection, keyed by collection name, with the same query API as the generated entries. Follow relationships with [`using()`](/docs/relationships#supply-related-collections), such as `session.collections.posts.using(session.collections.authors)`. The in-memory backend writes no runtime content artifacts. Use the generated backend when the deployment should consume prepared ESM files.
 
 ## Watching and deployment
 

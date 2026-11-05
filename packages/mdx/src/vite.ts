@@ -249,11 +249,11 @@ export function contentQueryMdx(options: ContentQueryMdxOptions = {}): Plugin {
   /** Island rendering options. Vite resolves assets automatically unless explicitly overridden. */
   export type RenderMdxOptions = Omit<import("@content-query/mdx/react/server").RenderMdxOptions, "assets"> & { assets?: import("@content-query/mdx").MdxAssets };
   /** Loads a selected ordinary MDX module for server rendering in the application's React tree. */
-  export function loadMdx(collection: import("content-query:server").CollectionKey, id: string): Promise<import("@content-query/mdx").MdxModule>;
+  export function loadMdx(collection: import("content-query:collections").CollectionKey, id: string): Promise<import("@content-query/mdx").MdxModule>;
   /** Prepares the selected SSR module and returns its serializable browser reference. */
-  export function loadMdxDocument(collection: import("content-query:server").CollectionKey, id: string): Promise<import("@content-query/mdx").MdxClientReference>;
+  export function loadMdxDocument(collection: import("content-query:collections").CollectionKey, id: string): Promise<import("@content-query/mdx").MdxClientReference>;
   /** Renders a selected document as static prose and independently hydrated React islands. */
-  export function renderMdx(collection: import("content-query:server").CollectionKey, id: string, options?: RenderMdxOptions): Promise<{html: string; headings: import("content-query").ContentHeading[]; styles: string[]}>;
+  export function renderMdx(collection: import("content-query:collections").CollectionKey, id: string, options?: RenderMdxOptions): Promise<{html: string; headings: import("content-query").ContentHeading[]; styles: string[]}>;
   /** Resolves the complete server-only asset manifest for advanced host integrations. */
   export function getMdxAssets(): Promise<import("@content-query/mdx").MdxAssets>;
 }

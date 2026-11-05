@@ -6,7 +6,7 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction,
 } from "react-router";
-import { content } from "content-query:server";
+import { guides } from "content-query:collections/guides";
 import { eq } from "content-query/query";
 import { loadMdxDocument, renderMdx, getMdxAssets } from "content-query:mdx:server";
 import { MdxDocument, MdxIslands } from "@content-query/mdx/react";
@@ -19,13 +19,8 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw new Response("Unknown rendering mode", { status: 404 });
   }
 
-  const guides = await content
-    .from("guides")
-    .select("id", "title", "description")
-    .orderBy("order")
-    .all();
-  const guide = await content
-    .from("guides")
+  const navigation = await guides.select("id", "title", "description").orderBy("order").all();
+  const guide = await guides
     .select("id", "title", "description")
     .where((fields) => eq(fields.id, slug))
     .first();
@@ -46,7 +41,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
   const articleHtmlBytes =
     document.mode === "islands" ? new TextEncoder().encode(document.html).byteLength : undefined;
   return {
-    guides,
+    guides: navigation,
     guide,
     document,
     articleHtmlBytes,

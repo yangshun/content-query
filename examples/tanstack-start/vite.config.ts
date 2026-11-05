@@ -5,7 +5,7 @@ import { contentQuery } from "content-query/vite";
 
 export default defineConfig({
   // Server function handlers are stripped after dependency discovery.
-  optimizeDeps: { exclude: ["content-query:server"] },
+  optimizeDeps: { exclude: ["content-query:collections"] },
   plugins: [
     contentQuery(),
     tanstackStart({

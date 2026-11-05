@@ -152,10 +152,10 @@ export default defineConfig({ plugins: [contentQuery()] });`,
           [
             "--input-type=module",
             "-e",
-            `import { content } from "./.content-query/server.js";
-const posts = await content.from("posts").select("id", "title", "upper").all();
-const { html } = (await content.query.posts.findFirst({ where: { id: posts[0].id }, payloads: { _rendered: true } }))._payloads._rendered;
-console.log(JSON.stringify({ posts, html }));`,
+            `import { posts } from "./.content-query/collections/posts/server.js";
+const rows = await posts.select("id", "title", "upper").all();
+const { html } = (await posts.findFirst({ where: { id: rows[0].id }, payloads: { _rendered: true } }))._payloads._rendered;
+console.log(JSON.stringify({ posts: rows, html }));`,
           ],
           { cwd: fixture.root },
         );

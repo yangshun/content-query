@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ContentGuide } from "#content-query/guides";
 
-type Guide = { id: string; title: string };
+type Guide = ContentGuide<"id" | "title">;
 
 export function Sidebar({ guides }: { guides: readonly Guide[] }) {
   const pathname = usePathname();

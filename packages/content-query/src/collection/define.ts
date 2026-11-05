@@ -112,6 +112,11 @@ type CollectionFields<
   };
   /** Directories, relative to the project root, that resolvers' `files` helpers may also read. */
   sharedFiles?: readonly string[];
+  /**
+   * The singular name in generated types, such as `"Category"` for `ContentCategory`. Defaults to
+   * the export name without one trailing `s`, so `jobs` generates `ContentJob`.
+   */
+  typeName?: string;
   /** Named per-entry data resolved during preparation and loaded only when a query requests it. */
   payloads?: PayloadDeclarations<
     SourceSchema,

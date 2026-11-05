@@ -1,13 +1,9 @@
 import "server-only";
 import Link from "next/link";
-import { content } from "#content-query";
+import { guides } from "#content-query/guides";
 
 export default async function HomePage() {
-  const guides = await content
-    .from("guides")
-    .select("id", "title", "description")
-    .orderBy("order")
-    .all();
+  const entries = await guides.select("id", "title", "description").orderBy("order").all();
 
   return (
     <main className="home" id="main-content" tabIndex={-1}>
@@ -21,7 +17,7 @@ export default async function HomePage() {
       <section className="guide-index" aria-labelledby="guides-heading">
         <h2 id="guides-heading">Guides</h2>
         <ol className="guide-list">
-          {guides.map((guide, index) => (
+          {entries.map((guide, index) => (
             <li key={guide.id}>
               <Link className="guide-row" href={`/docs/${guide.id}`}>
                 <span className="guide-number" aria-hidden="true">

@@ -9,6 +9,7 @@ Use it with your existing framework. Your application owns its routes, layouts, 
 - **Typed schemas.** Validate metadata with bundled schema builders or any Standard Schema V1 provider, with inferred TypeScript types.
 - **Flexible sources.** Load local files, use Astro-compatible content loaders, or write your own loader.
 - **Queries and relationships.** Select fields, filter, sort, paginate, and load related entries with validated references.
+- **Per-collection entries.** Import each collection from its own generated module with named types such as `ContentPost`, so a route bundles and traces only the collections it uses.
 - **Markdown rendering.** Request HTML, headings, and syntax highlighting as query payloads, loaded only when a query asks for them.
 - **Custom payloads.** Declare schema-validated per-entry data, optionally by variant such as locale, resolved during the build from tracked related files, and loaded only when a query names it. Development edits re-resolve only the variants whose files changed.
 - **Optional MDX.** Add [`@content-query/mdx`](./packages/mdx/README.md) for React islands or a normal React document tree with Vite SSR. MDX and React stay outside core.
@@ -45,26 +46,25 @@ Add Markdown files with `title` frontmatter under `content/posts/`, then build:
 npx content-query build
 ```
 
-Query the generated module from server code:
+Each collection gets its own generated entry, which exports the collection under its name. Query it from server code:
 
 ```ts
-import { content } from "./.content-query/server.js";
+import { posts } from "./.content-query/collections/posts/server.js";
 import { eq } from "content-query/query";
 
-const posts = await content
-  .from("posts")
+const summaries = await posts
   .select("id", "title")
   .where((fields) => eq(fields.draft, false))
   .orderBy("title");
 
-const post = await content.query.posts.findFirst({
-  where: { id: posts[0]!.id },
+const post = await posts.findFirst({
+  where: { id: summaries[0]!.id },
   payloads: { _rendered: true },
 });
 const { html, headings } = post!._payloads._rendered;
 ```
 
-Queries return only the data they select, not even `id` implicitly; a query that selects nothing fails to type-check and throws at runtime.
+Queries return only the data they select, not even `id` implicitly; a query that selects nothing fails to type-check and throws at runtime. An entry loads only its own collection: pass related collections to `using()`, such as `posts.using(authors)`, to follow relationships. Vite apps import `content-query:collections/posts`, and a `package.json` mapping from `#content-query/*` to `./.content-query/collections/*/server.js` gives other hosts `#content-query/posts`. Upgrading from 0.4? See [migrating to 0.5](./packages/content-query/README.md#migrating-to-05).
 
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
 

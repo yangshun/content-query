@@ -1,6 +1,6 @@
 # Void + ContentQuery benchmark app
 
-Server metadata queries use `content.from(collection).select(...fields)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
+Each collection is imported from its own module, such as `import { entries } from "content-query:collections/entries"`. Server metadata queries use `entries.select(...fields)`. The relational API is available as `entries.findMany({ columns, with, where })`; bodies and rendered HTML are loaded separately.
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 

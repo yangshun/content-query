@@ -19,14 +19,18 @@ describe("collection source shorthand", () => {
       const session = await buildAtRoot(fixture.root, { backend: "in-memory" });
       try {
         expect(
-          await session.content
-            .from("posts" as never)
-            .select("title" as never)
+          await (
+            session.collections as unknown as Record<
+              string,
+              { select(field: string): { all(): Promise<unknown> } }
+            >
+          )
+            .posts!.select("title")
             .all(),
         ).toEqual([{ title: "Getting started" }]);
-        expect(
-          (await renderedOf(session.content, "posts" as never, "getting-started")).html,
-        ).toContain("Hello");
+        expect((await renderedOf(session.collections, "posts", "getting-started")).html).toContain(
+          "Hello",
+        );
       } finally {
         await session.dispose();
       }

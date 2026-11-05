@@ -162,8 +162,8 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
         optimizeDeps: { noDiscovery: true },
       });
       expect(events).toEqual(["configured", "prepared"]);
-      const runtime = await server.ssrLoadModule("content-query:server");
-      expect(await runtime.content.count("posts")).toBe(1);
+      const runtime = await server.ssrLoadModule("content-query:collections/posts");
+      expect(await runtime.posts.count()).toBe(1);
     } finally {
       clearTimeout(timeout);
       release.resolve();
@@ -325,8 +325,8 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
         await writeFile(
           input,
           backend === "generated"
-            ? 'export {content} from "./.content-query/server.js";'
-            : 'export {content} from "content-query:server";',
+            ? 'export {posts} from "./.content-query/collections/posts/server.js";'
+            : 'export {posts} from "content-query:collections/posts";',
         );
         const outDir = path.join(fixture.root, "bundle");
         const result = await build({
@@ -383,10 +383,10 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
             "--input-type=module",
             "-e",
             `
-const {content} = await import(${JSON.stringify(pathToFileURL(path.join(outDir, entry.fileName)).href)});
+const {posts} = await import(${JSON.stringify(pathToFileURL(path.join(outDir, entry.fileName)).href)});
 const ids = ["0", "63", "__proto__"];
-const bodies = await Promise.all(ids.map(async id => { const body = (await content.query.posts.findFirst({ where: { id }, columns: {}, payloads: { _body: true } }))._payloads._body; return {prefix: body.slice(0, 16), length: body.length}; }));
-console.log(JSON.stringify({count: await content.from("posts").count(), bodies}));
+const bodies = await Promise.all(ids.map(async id => { const body = (await posts.findFirst({ where: { id }, columns: {}, payloads: { _body: true } }))._payloads._body; return {prefix: body.slice(0, 16), length: body.length}; }));
+console.log(JSON.stringify({count: await posts.count(), bodies}));
 `,
           ],
           { cwd: fixture.root },

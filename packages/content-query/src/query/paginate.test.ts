@@ -4,10 +4,10 @@ import { defineCollection } from "../collection/define.ts";
 import { createSession, sessionInternals } from "../preparation/session.ts";
 import { fixtureLoader } from "../../tests/helpers/loader.ts";
 import { eq, type CursorPage, type NumberedPage } from "../query.ts";
-import { createArtifactRuntime } from "../internal.ts";
 import { ARTIFACT_VERSION, CODEC_VERSION, type EncodedCollection } from "../artifacts/types.ts";
 import { encode } from "../shared/values.ts";
 import type { ContentError } from "../shared/errors.ts";
+import { loadAll, loadArtifact } from "../../tests/helpers/collections.ts";
 
 /** Builds the same consumer over live and production-encoded data with null and date sort keys. */
 async function setup(encoded: boolean) {
@@ -51,14 +51,14 @@ async function setup(encoded: boolean) {
     watch: false,
     registry,
   });
-  let content = session.content;
+  let content = loadAll(session.collections);
   if (encoded) {
     const revision = sessionInternals(session).state.revision!;
     const collections: Record<string, EncodedCollection> = {};
     for (const [name, collection] of Object.entries(revision.collections)) {
       collections[name] = { records: collection.records.map(encode), builtins: {} };
     }
-    content = createArtifactRuntime<typeof registry>(
+    content = loadArtifact<typeof registry>(
       { version: ARTIFACT_VERSION, codec: CODEC_VERSION, collections: revision.registry },
       collections,
     );
@@ -88,8 +88,7 @@ for (const encoded of [false, true]) {
         const { content, session } = await setup(encoded);
         try {
           // Score descending puts null and missing scores last, then breaks ties by ID.
-          const query = content
-            .from("posts")
+          const query = content.posts
             .select("id")
             .where((fields) => eq(fields.draft, false))
             .orderBy("score", "desc");
@@ -112,7 +111,7 @@ for (const encoded of [false, true]) {
             hasNextPage: false,
             hasPreviousPage: true,
           });
-          const relational = await content.query.posts.paginate({
+          const relational = await content.posts.paginate({
             columns: { id: true },
             where: { draft: false },
             orderBy: { score: "desc" },
@@ -129,7 +128,7 @@ for (const encoded of [false, true]) {
       test("returns empty pages past the end and a first page when nothing matches", async () => {
         const { content, session } = await setup(encoded);
         try {
-          expect(await content.from("posts").select("id").paginate({ page: 3, size: 4 })).toEqual({
+          expect(await content.posts.select("id").paginate({ page: 3, size: 4 })).toEqual({
             items: [],
             total: 7,
             page: 3,
@@ -138,7 +137,7 @@ for (const encoded of [false, true]) {
             hasPreviousPage: true,
           });
           expect(
-            await content.query.posts.paginate({
+            await content.posts.paginate({
               columns: { id: true },
               where: { id: "missing" },
               page: 1,
@@ -160,8 +159,7 @@ for (const encoded of [false, true]) {
       test("includes relationships and results-scope neighbors before pagination", async () => {
         const { content, session } = await setup(encoded);
         try {
-          const page = await content
-            .from("posts")
+          const page = await content.posts
             .select("id")
             .with("author", (author) => author.select("name"))
             .selectAdjacent("id")
@@ -189,8 +187,7 @@ for (const encoded of [false, true]) {
       test("walks forward and backward across null sort values", async () => {
         const { content, session } = await setup(encoded);
         try {
-          const query = content
-            .from("posts")
+          const query = content.posts
             .select("id")
             .where((fields) => eq(fields.draft, false))
             .orderBy("score", "desc");
@@ -226,12 +223,12 @@ for (const encoded of [false, true]) {
       test("starts from the end, adds totals on request, and shares cursors across styles", async () => {
         const { content, session } = await setup(encoded);
         try {
-          const query = content.from("posts").select("id").orderBy("publishedAt", "desc");
+          const query = content.posts.select("id").orderBy("publishedAt", "desc");
           const last = await query.paginate({ size: 3, before: null, total: true });
           expectTypeOf(last.total).toEqualTypeOf<number>();
           expect(ids(last)).toEqual(["c", "b", "a"]);
           expect(last).toMatchObject({ total: 7, hasNextPage: false, hasPreviousPage: true });
-          const relational = await content.query.posts.paginate({
+          const relational = await content.posts.paginate({
             columns: { id: true },
             orderBy: { publishedAt: "desc" },
             size: 3,
@@ -247,15 +244,10 @@ for (const encoded of [false, true]) {
       test("positions by sort values when the boundary entry no longer matches", async () => {
         const { content, session } = await setup(encoded);
         try {
-          const all = await content
-            .from("posts")
-            .select("id")
-            .orderBy("publishedAt")
-            .paginate({ size: 4 });
+          const all = await content.posts.select("id").orderBy("publishedAt").paginate({ size: 4 });
           expect(ids(all)).toEqual(["a", "b", "c", "d"]);
           // The cursor points at the draft "d", which the filtered query excludes.
-          const published = content
-            .from("posts")
+          const published = content.posts
             .select("id")
             .where((fields) => eq(fields.draft, false))
             .orderBy("publishedAt");
@@ -276,14 +268,14 @@ for (const encoded of [false, true]) {
       test("rejects cursors from another order or collection, and malformed cursors", async () => {
         const { content, session } = await setup(encoded);
         try {
-          const page = await content.from("posts").select("id").paginate({ size: 2 });
-          const reordered = content.from("posts").select("id").orderBy("publishedAt");
+          const page = await content.posts.select("id").paginate({ size: 2 });
+          const reordered = content.posts.select("id").orderBy("publishedAt");
           expect(thrownCode(() => reordered.paginate({ size: 2, after: page.endCursor }))).toBe(
             "invalid-cursor",
           );
           expect(
             thrownCode(() =>
-              content.query.authors.paginate({
+              content.authors.paginate({
                 columns: { id: true },
                 size: 2,
                 before: page.endCursor,
@@ -292,9 +284,7 @@ for (const encoded of [false, true]) {
           ).toBe("invalid-cursor");
           for (const cursor of ["not a cursor", "AAAA", page.endCursor!.slice(1)]) {
             expect(
-              thrownCode(() =>
-                content.from("posts").select("id").paginate({ size: 2, after: cursor }),
-              ),
+              thrownCode(() => content.posts.select("id").paginate({ size: 2, after: cursor })),
             ).toBe("invalid-cursor");
           }
         } finally {
@@ -307,7 +297,7 @@ for (const encoded of [false, true]) {
       test("rejects conflicting options and manual pagination in both styles", async () => {
         const { content, session } = await setup(encoded);
         try {
-          const query = content.from("posts").select("id");
+          const query = content.posts.select("id");
           const invalid = [
             // @ts-expect-error Page numbers cannot be combined with cursors.
             () => query.paginate({ page: 1, size: 2, after: "cursor" }),
@@ -327,9 +317,9 @@ for (const encoded of [false, true]) {
             // @ts-expect-error The restriction survives later clauses.
             () => query.offset(2).orderBy("score").paginate({ page: 1, size: 2 }),
             // @ts-expect-error Unselected queries cannot run.
-            () => content.from("posts").paginate({ page: 1, size: 2 }),
+            () => content.posts.paginate({ page: 1, size: 2 }),
             () =>
-              content.query.posts.paginate({
+              content.posts.paginate({
                 columns: { id: true },
                 page: 1,
                 size: 2,
@@ -338,8 +328,8 @@ for (const encoded of [false, true]) {
               }),
             () =>
               // @ts-expect-error Relational paginate() still requires a selection.
-              content.query.posts.paginate({ page: 1, size: 2 }),
-            () => content.query.posts.paginate(undefined as never),
+              content.posts.paginate({ page: 1, size: 2 }),
+            () => content.posts.paginate(undefined as never),
           ];
           for (const run of invalid) {
             expect(thrownCode(run)).toBe("invalid-query");
@@ -353,8 +343,7 @@ for (const encoded of [false, true]) {
         const { content, session } = await setup(encoded);
         try {
           let nested: string | undefined;
-          await content
-            .from("posts")
+          await content.posts
             .select("id")
             .with("author", (author) => {
               const selected = author.select("name");

@@ -1,10 +1,10 @@
 import { Link, useLoaderData, useNavigate, type MetaFunction } from "react-router";
-import { content } from "content-query:server";
+import { guides } from "content-query:collections/guides";
 import { navigateContentLink } from "../navigation";
 
 export async function loader({ params }: { params: Record<string, string | undefined> }) {
   const id = (params["*"] ?? "").replace(/\/$/, "");
-  const guide = await content.query.guides.findFirst({
+  const guide = await guides.findFirst({
     where: { id },
     adjacent: { orderBy: { order: "asc" }, columns: { id: true, title: true } },
     columns: { id: true, title: true, description: true },

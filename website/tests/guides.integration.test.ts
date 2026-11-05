@@ -78,7 +78,8 @@ describe("ContentQuery website guide routes with the generated backend", () => {
   let fixtureRoot: string;
   let workspace: string;
   let server: ViteDevServer;
-  let content: typeof import("content-query:server").content;
+  let guides: typeof import("content-query:collections/guides").guides;
+  let examples: typeof import("content-query:collections/examples").examples;
   /** Reads one guide's built-in payload through the same query API as the pages. */
   let guidePayload: <Name extends "body" | "rendered">(
     id: string,
@@ -120,9 +121,10 @@ describe("ContentQuery website guide routes with the generated backend", () => {
       server: { middlewareMode: true, ws: false },
       optimizeDeps: { noDiscovery: true },
     });
-    ({ content } = await server.ssrLoadModule("content-query:server"));
+    ({ guides } = await server.ssrLoadModule("content-query:collections/guides"));
+    ({ examples } = await server.ssrLoadModule("content-query:collections/examples"));
     guidePayload = async (id, name) => {
-      const guide = await content.query.guides.findFirst({
+      const guide = await guides.findFirst({
         where: { id },
         columns: {},
         payloads: { _body: name === "body", _rendered: name === "rendered" },
@@ -132,13 +134,18 @@ describe("ContentQuery website guide routes with the generated backend", () => {
       }
       return (guide._payloads as Record<string, unknown>)[`_${name}`] as never;
     };
-    const querySpy = vi.spyOn(content, "from");
+    // Route modules import these same collection instances, so spies observe their queries.
+    const querySpies = [guides, examples].flatMap((collection) =>
+      Object.keys(collection).map((member) =>
+        vi.spyOn(collection as unknown as Record<string, () => unknown>, member),
+      ),
+    );
     homeRoute = (await server.ssrLoadModule("/pages/index.server.ts")) as typeof homeRoute;
     guideRoute = (await server.ssrLoadModule(
       "/pages/docs/[...slug].server.ts",
     )) as typeof guideRoute;
     ({ default: navigationMiddleware } = await server.ssrLoadModule("/middleware/01.docs.ts"));
-    startupQueries = querySpy.mock.calls.length;
+    startupQueries = querySpies.reduce((total, spy) => total + spy.mock.calls.length, 0);
     vi.restoreAllMocks();
   }, 20_000);
 
@@ -158,7 +165,7 @@ describe("ContentQuery website guide routes with the generated backend", () => {
   });
 
   test("renders a dedicated homepage with all nine examples and real Markdown output", async () => {
-    const exampleSpy = vi.spyOn(content.query.examples, "findFirst");
+    const exampleSpy = vi.spyOn(examples, "findFirst");
     const props = (await homeRoute.loader(requestContext())) as HomeProps;
 
     expect(props).not.toHaveProperty("guide");
@@ -332,8 +339,8 @@ import { PHASE_PRODUCTION_BUILD } from "next/constants.js";
 import configure from "./next.config.mjs";
 const config = await configure(PHASE_PRODUCTION_BUILD, { defaultConfig: {} });
 assert.equal(config.trailingSlash, true);
-const { content } = await import("#content-query");
-assert.deepEqual(await content.from("posts").select("id", "title").all(), [
+const { posts } = await import("#content-query/posts");
+assert.deepEqual(await posts.select("id", "title").all(), [
   { id: "hello", title: "Hello ContentQuery" },
 ]);
 `,
@@ -348,15 +355,15 @@ assert.deepEqual(await content.from("posts").select("id", "title").all(), [
     }
     await writeFile(
       path.join(exampleRoot, "homepage.mjs"),
-      `import assert from "node:assert/strict";\n${nextWorkflowExample.query}\nassert.deepEqual(posts, [{ id: "hello", title: "Hello ContentQuery" }]);\n`,
+      `import assert from "node:assert/strict";\n${nextWorkflowExample.query}\nassert.deepEqual(entries, [{ id: "hello", title: "Hello ContentQuery" }]);\n`,
     );
     await execFileAsync(process.execPath, ["--conditions=react-server", "homepage.mjs"], {
       cwd: exampleRoot,
     });
     const workflow = renderToStaticMarkup(createElement(NextWorkflow));
     expect(workflow).toContain("package.json");
-    expect(workflow).toContain("#content-query");
-    expect(workflow).not.toContain("../.content-query/server.js");
+    expect(workflow).toContain("#content-query/posts");
+    expect(workflow).not.toContain("../.content-query/");
     await writeFile(
       path.join(exampleRoot, "app/page.tsx"),
       guide.match(/^```tsx\n([\s\S]*?)^```/m)![1]!,
@@ -406,9 +413,9 @@ ${sourceToDataExample.schema}
     await writeFile(
       path.join(exampleRoot, "verify.mjs"),
       `import assert from "node:assert/strict";
-import { content } from "./.content-query/server.js";
+import { posts } from "./.content-query/collections/posts/server.js";
 ${sourceToDataExample.query}
-assert.deepEqual(posts, ${JSON.stringify(sourceToDataExample.data)});
+assert.deepEqual(entries, ${JSON.stringify(sourceToDataExample.data)});
 `,
     );
     await execFileAsync(process.execPath, ["verify.mjs"], { cwd: exampleRoot });
@@ -484,7 +491,7 @@ export const collections = { posts, authors, ${formatCollections.join(",\n")} };
         return `
 const ${resultName} = await (async () => {
 ${queryExampleCode(options, syntax)}
-return posts;
+return entries;
 })();
 assert.deepEqual(${resultName}, ${JSON.stringify(queryExamplePosts(options))});
 `;
@@ -492,23 +499,23 @@ assert.deepEqual(${resultName}, ${JSON.stringify(queryExamplePosts(options))});
     );
     const sourceChecks = sourceExamples.map(
       (source) =>
-        `assert.deepEqual(await content.from("${source.format}").select("id", "title", "draft", "authorId").first(), ${JSON.stringify(examplePosts[0])});`,
+        `assert.deepEqual(await ${source.format}.select("id", "title", "draft", "authorId").first(), ${JSON.stringify(examplePosts[0])});`,
     );
     await writeFile(
       path.join(exampleRoot, "verify.mjs"),
       `
 import assert from "node:assert/strict";
-import { content } from "./.content-query/server.js";
 import { eq } from "content-query/query";
+${["posts", "authors", ...sourceExamples.map((source) => source.format)].map((name) => `import { ${name} } from "./.content-query/collections/${name}/server.js";`).join("\n")}
 ${queryChecks.join("\n")}
 ${sourceChecks.join("\n")}
-assert.deepEqual(await content.from("posts").select("readingMinutes").where((fields) => eq(fields.id, "hello-world")).first(), { readingMinutes: 3 });
-const derived = await content.from("posts").select("wordCount", "excerpt").first();
+assert.deepEqual(await posts.select("readingMinutes").where((fields) => eq(fields.id, "hello-world")).first(), { readingMinutes: 3 });
+const derived = await posts.select("wordCount", "excerpt").first();
 assert.equal(derived.wordCount, 600);
 assert.equal(derived.excerpt.length, 160);
 assert.ok(derived.excerpt.endsWith("…"));
 ${relationshipQueryCode}
-assert.deepEqual(posts, ${JSON.stringify(examplePosts.filter((post) => post.authorId === "ada").map((post) => ({ title: post.title, author: { name: "Ada Lovelace" } })))});
+assert.deepEqual(entries, ${JSON.stringify(examplePosts.filter((post) => post.authorId === "ada").map((post) => ({ title: post.title, author: { name: "Ada Lovelace" } })))});
 `,
     );
     await execFileAsync(process.execPath, ["verify.mjs"], { cwd: exampleRoot });
@@ -524,11 +531,11 @@ assert.deepEqual(posts, ${JSON.stringify(examplePosts.filter((post) => post.auth
         return `
 async function check${index}${syntax === "fluent" ? "Fluent" : "Object"}() {
 ${queryExampleCode(options, syntax)}
-const expected: ${queryExampleType(options)} = posts;
-const actual: typeof posts = expected;
+const expected: ${queryExampleType(options)} = entries;
+const actual: typeof entries = expected;
 // @ts-expect-error Nonexistent fields are absent from the result type.
-posts[0]?.drafft;
-${fields === "title" ? "// @ts-expect-error Unselected fields are absent from the result type.\nposts[0]?.draft;" : "const draft: boolean | undefined = posts[0]?.draft;\nvoid draft;"}
+entries[0]?.drafft;
+${fields === "title" ? "// @ts-expect-error Unselected fields are absent from the result type.\nentries[0]?.draft;" : "const draft: boolean | undefined = entries[0]?.draft;\nvoid draft;"}
 return actual;
 }
 `;
@@ -537,12 +544,16 @@ return actual;
     await writeFile(
       path.join(exampleRoot, "verify-types.ts"),
       `
-import { content } from "./.content-query/server.js";
+import { authors } from "./.content-query/collections/authors/server.js";
+import { posts } from "./.content-query/collections/posts/server.js";
 ${typeChecks.join("\n")}
 // @ts-expect-error The typed-query example deliberately misspells this field.
-content.from("posts").select("title", "drafft");
+posts.select("title", "drafft");
 // @ts-expect-error Object selection rejects the same misspelled field.
-content.query.posts.findMany({ columns: { title: true, drafft: true } });
+posts.findMany({ columns: { title: true, drafft: true } });
+// @ts-expect-error Relationships need their target collection.
+posts.select("title").with("author", (author) => author.select("name"));
+posts.using(authors).select("title").with("author", (author) => author.select("name"));
 `,
     );
     await execFileAsync(

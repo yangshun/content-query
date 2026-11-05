@@ -54,7 +54,7 @@ Content starts here.
 npx content-query build
 ```
 
-This writes the runtime and inferred types to `.content-query/`. Add that directory to `.gitignore`.
+This writes one runtime entry per collection, with inferred types, to `.content-query/`. The `posts` collection's entry is `.content-query/collections/posts/server.js`. Add that directory to `.gitignore`.
 
 ## Query and render
 
@@ -62,9 +62,9 @@ Create `render.mjs` in the project root:
 
 ```js
 import { writeFile } from "node:fs/promises";
-import { content } from "./.content-query/server.js";
+import { posts } from "./.content-query/collections/posts/server.js";
 
-const post = await content.from("posts").select("id", "title").withPayload("_rendered").first();
+const post = await posts.select("id", "title").withPayload("_rendered").first();
 if (!post) {
   throw new Error("Add a post before rendering.");
 }
