@@ -1,11 +1,41 @@
 ---
 title: Standalone usage
-description: Build portable content without a Vite integration.
+description: Build content with the CLI or build API and query it without a framework integration.
 section: integrations
 order: 43
 ---
 
-Use the CLI during your application's build, then import each collection's generated entry, such as `.content-query/collections/posts/server.js`, from server code. The [quick start](/docs/quick-start) demonstrates this path.
+Without the Vite or Next.js integration, run the CLI during your application's build, then import each collection's generated entry from server code. This walkthrough renders the post from the [quick start](/docs/quick-start) with Node.js alone. Follow its [install](/docs/quick-start#install), [collection](/docs/quick-start#define-a-collection), and [post](/docs/quick-start#add-a-post) steps first, and skip the framework integration.
+
+## Build the content
+
+```sh
+npx content-query build
+```
+
+This writes one runtime entry per collection, with inferred types, to `.content-query/`. The `posts` collection's entry is `.content-query/collections/posts/server.js`. Add that directory to `.gitignore`.
+
+## Query and render
+
+Create `render.mjs` in the project root:
+
+```js
+import { writeFile } from "node:fs/promises";
+import { posts } from "./.content-query/collections/posts/server.js";
+
+const post = await posts.select("id", "title").withPayload("_rendered").first();
+if (!post) {
+  throw new Error("Add a post before rendering.");
+}
+
+const { html } = post._payloads._rendered;
+await writeFile(
+  "post.html",
+  `<!doctype html><html lang="en"><meta charset="utf-8"><title>ContentQuery</title><main>${html}</main></html>`,
+);
+```
+
+Run `node render.mjs` and open `post.html`. In a server application, the same query belongs in your request handler.
 
 ## Build API
 
@@ -30,7 +60,7 @@ try {
 
 ## Watching and deployment
 
-Content builds are one-shot by default. Set `watch: true` for a managed watch session, and dispose it when the host shuts down. Other bundlers must enforce their own server-only import boundary.
+Content builds are one-shot by default. Use `content-query build --watch`, or set `watch: true` for a managed build session, and dispose it when the host shuts down. Other bundlers must enforce their own server-only import boundary.
 
 A generated watch session removes obsolete collection modules from previous runs after its first successful content build. Invalid startup content delays cleanup until corrected. Later updates retain revisions for that session; starting a new session after previous consumers stop reclaims older files. One-shot builds also remove obsolete collection modules. Application-owned files in the output directory are preserved.
 
