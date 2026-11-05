@@ -7,13 +7,13 @@ order: 53
 
 ## Content operations
 
-| Property or method            | Purpose                                                                                     |
-| ----------------------------- | ------------------------------------------------------------------------------------------- |
-| `from(collection)`            | Starts a fluent query that selects nothing until `.select(...fields)` or another request.   |
-| `query`                       | Collection namespace: `query.posts.findMany(options)` and `query.posts.findFirst(options)`. |
-| `count(collection, options?)` | Filtered parent count before pagination.                                                    |
+| Property or method            | Purpose                                                                                               |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `from(collection)`            | Starts a fluent query that selects nothing until `.select(...fields)` or another request.             |
+| `query`                       | Collection namespace: `query.posts.findMany(options)`, `findFirst(options)`, and `paginate(options)`. |
+| `count(collection, options?)` | Filtered parent count before pagination.                                                              |
 
-Await a selected fluent builder directly or call `.all()` / `.execute()` to return an array. `.first()` returns one entry or `undefined`; `.count()` returns the matching parent count and needs no selection.
+Await a selected fluent builder directly or call `.all()` / `.execute()` to return an array. `.first()` returns one entry or `undefined`; `.count()` returns the matching parent count and needs no selection. `.paginate({ page, size })` and `.paginate({ size, after })` return one [page](/docs/querying-content#pagination) with page-number or cursor details.
 
 The relational namespace uses `columns`, `with`, `where`, `orderBy`, `limit`, `offset`, `adjacent`, and `payloads` options. Queries return only what they select, not even `id` implicitly: omitting `columns` selects no fields, and a query must select fields, relationships, payloads, or adjacency.
 

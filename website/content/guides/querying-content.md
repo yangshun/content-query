@@ -50,11 +50,38 @@ Combine fluent predicates with `and`, `or`, and `not`, or relational filters wit
 
 For detail pages, `.where((fields) => eq(fields.id, id))` and relational `where: { id }` use a lazy ID index for the current collection revision. Other filters and query options still apply, and development updates use the new revision's records.
 
-## Sorting, pagination, and counts
+## Sorting, limits, and counts
 
 Use `.orderBy("title").offset(0).limit(10)` or relational options `orderBy: { title: "asc" }, offset: 0, limit: 10`. IDs break ordering ties deterministically.
 
 Both fluent `.count()` and `content.count("posts", { where: { draft: false } })` count matching parents before pagination. They do not load relationships or bodies.
+
+## Pagination
+
+`paginate()` returns one page with the details that page links need, from a single query. Use page numbers for archive routes and cursors for "load more" lists:
+
+```ts
+const posts = content
+  .from("posts")
+  .select("id", "title")
+  .where((fields) => eq(fields.draft, false))
+  .orderBy("publishedAt", "desc");
+
+const archive = await posts.paginate({ page: 2, size: 10 });
+// { items, total, page, pageCount, hasNextPage, hasPreviousPage }
+
+const first = await posts.paginate({ size: 10 });
+const next = await posts.paginate({ size: 10, after: first.endCursor });
+// { items, startCursor, endCursor, hasNextPage, hasPreviousPage }
+```
+
+The relational API takes the same options next to its query options: `content.query.posts.paginate({ columns: { id: true }, orderBy: { publishedAt: "desc" }, page: 2, size: 10 })`. Items match what `all()` or `findMany()` would return for that page, so `.all()` and `findMany()` still return plain arrays.
+
+- **Page numbers** start at 1. `pageCount` is at least 1, so the first page renders even when nothing matches, and a page past the end returns no items. Read `pageCount` from page 1 to generate static archive routes.
+- **Cursors** are opaque strings. Pass `endCursor` as `after` for the next page and `startCursor` as `before` for the previous one; `before: null` starts from the last page. Add `total: true` to also get the matching total. Cursors keep working when filters change or the boundary entry is removed, but a cursor from a different collection or sort order rejects with `invalid-cursor`.
+- `paginate()` sets the limit and offset itself, so it is unavailable after `.limit()` or `.offset()`, and relational `paginate()` rejects `limit` and `offset`.
+
+Type page props with `NumberedPage` or `CursorPage` from `content-query/query`, for example `NumberedPage<CollectionEntry<"posts", "id" | "title">>`.
 
 ## Related content
 

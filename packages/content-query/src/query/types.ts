@@ -6,7 +6,7 @@ import type {
   RelationshipsOf,
   VariantOf,
 } from "../collection/types.ts";
-import type { Expression, NO_SELECTION_MESSAGE } from "./plan.ts";
+import type { Expression, NO_SELECTION_MESSAGE, PAGINATE_AFTER_LIMIT_MESSAGE } from "./plan.ts";
 
 declare const queryType: unique symbol;
 /** Running an unselected query reports the explicit-selection rule as its required `this` type. */
@@ -118,6 +118,7 @@ export type Query<
   Filtered extends boolean = false,
   AllowAdjacent extends boolean = true,
   Pagination extends boolean = true,
+  Paged extends boolean = false,
 > = QueryInfo<Result, Selected, Filtered> & {
   select<
     const Keys extends readonly [
@@ -143,11 +144,12 @@ export type Query<
     Root,
     Filtered,
     AllowAdjacent,
-    Pagination
+    Pagination,
+    Paged
   >;
   where(
     configure: (fields: QueryFields<Registry, Name>) => Expression,
-  ): Query<Registry, Name, Result, Selected, Many, Root, true, AllowAdjacent, Pagination>;
+  ): Query<Registry, Name, Result, Selected, Many, Root, true, AllowAdjacent, Pagination, Paged>;
   with<
     Key extends keyof RelationshipsOf<Registry[Name]> & string,
     Configured extends QueryInfo<unknown, true>,
@@ -176,14 +178,26 @@ export type Query<
     Root,
     Filtered,
     AllowAdjacent,
-    Pagination
+    Pagination,
+    Paged
   >;
 } & (Many extends true
     ? {
         orderBy(
           field: SortKey<QueryData<Registry[Name]>>,
           direction?: "asc" | "desc",
-        ): Query<Registry, Name, Result, Selected, Many, Root, Filtered, AllowAdjacent, Pagination>;
+        ): Query<
+          Registry,
+          Name,
+          Result,
+          Selected,
+          Many,
+          Root,
+          Filtered,
+          AllowAdjacent,
+          Pagination,
+          Paged
+        >;
       }
     : {}) &
   (Many extends true
@@ -200,7 +214,8 @@ export type Query<
             Root,
             Filtered,
             AllowAdjacent,
-            Pagination
+            Pagination,
+            true
           >;
           offset(
             value: number,
@@ -213,7 +228,8 @@ export type Query<
             Root,
             Filtered,
             AllowAdjacent,
-            Pagination
+            Pagination,
+            true
           >;
         }
       : {}
@@ -235,7 +251,8 @@ export type Query<
           Root,
           Filtered,
           AllowAdjacent,
-          Pagination
+          Pagination,
+          Paged
         >;
         /** Selects neighbor fields within this scope's filtered and ordered results. */
         selectAdjacent<
@@ -259,7 +276,8 @@ export type Query<
           Root,
           Filtered,
           AllowAdjacent,
-          Pagination
+          Pagination,
+          Paged
         >;
         selectAdjacent<Configured extends QueryInfo<unknown, true>>(
           configure: (
@@ -274,7 +292,8 @@ export type Query<
           Root,
           Filtered,
           AllowAdjacent,
-          Pagination
+          Pagination,
+          Paged
         >;
         selectAdjacent<const Options extends AdjacentOptions<Registry, Name>>(
           options: Options & CheckedOptions<Registry, Name, NoInfer<Options>, true, false, false>,
@@ -287,7 +306,8 @@ export type Query<
           Root,
           Filtered,
           AllowAdjacent,
-          Pagination
+          Pagination,
+          Paged
         >;
       }
     : {}) &
@@ -305,8 +325,75 @@ export type Query<
           : [Result] extends [{ _payloads: unknown }]
             ? never
             : () => Promise<number>;
+        /**
+         * Returns one page from one revision: `{ page, size }` for page numbers, or
+         * `{ size, after?, before?, total? }` for cursors. Unavailable after `limit()` or `offset()`.
+         */
+        paginate: Selected extends true
+          ? [Paged] extends [true]
+            ? PaginateAfterLimit
+            : Paginate<Simplify<Result>>
+          : UnselectedTerminal;
       }
     : {});
+
+/** `paginate()` after `limit()` or `offset()` reports why as its required `this` type. */
+type PaginateAfterLimit = (
+  this: typeof PAGINATE_AFTER_LIMIT_MESSAGE,
+  ...arguments_: readonly unknown[]
+) => never;
+/** The `paginate()` overloads for one item type. */
+export type Paginate<Item> = {
+  (options: PageOptions): Promise<NumberedPage<Item>>;
+  (options: CursorOptions & { total: true }): Promise<CursorPage<Item, true>>;
+  (options: CursorOptions): Promise<CursorPage<Item>>;
+};
+/** Page-number pagination: `page` starts at 1 and `size` is the number of entries per page. */
+export type PageOptions = {
+  page: number;
+  size: number;
+  after?: never;
+  before?: never;
+  total?: never;
+};
+/**
+ * Cursor pagination. `after` continues from an earlier page's `endCursor`; `before` returns the
+ * entries just before a `startCursor`. A `null` cursor starts at the first entry (`after`) or the
+ * last entry (`before`). `total: true` adds the matching total.
+ */
+export type CursorOptions = { size: number; page?: never; total?: boolean } & (
+  | { after?: string | null; before?: never }
+  | { before?: string | null; after?: never }
+);
+/** Options accepted by `paginate()`. */
+export type PaginateOptions = PageOptions | CursorOptions;
+/** Option names that `paginate()` reads alongside relational query options. */
+export type PaginateKey = keyof PageOptions;
+/** One numbered page and where it sits among every matching entry. */
+export type NumberedPage<Item> = {
+  items: Item[];
+  /** Matching entries across every page. */
+  total: number;
+  page: number;
+  /** At least 1: the first page exists even when nothing matches. */
+  pageCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+};
+/** One cursor page. Both cursors are `null` when the page is empty. */
+export type CursorPage<Item, Total extends boolean = false> = {
+  items: Item[];
+  /** Pass as `before` for the previous page. */
+  startCursor: string | null;
+  /** Pass as `after` for the next page. */
+  endCursor: string | null;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+} & (Total extends true ? { total: number } : {});
+/** The page type `paginate()` returns for the given options. */
+export type PaginateResult<Item, Options> = Options extends { page: number }
+  ? NumberedPage<Item>
+  : CursorPage<Item, Options extends { total: true } ? true : false>;
 
 export type Adjacent<Entry> = { previous: Entry | null; next: Entry | null };
 type PresenceFilter = { isNull?: boolean; isUndefined?: boolean; isMissing?: boolean };

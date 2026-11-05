@@ -7,9 +7,9 @@ order: 52
 
 ## Query methods
 
-The fluent API starts at `content.from(collection)`. Builders support `select`, `where`, `with`, `withPayload`, `orderBy`, `offset`, `limit`, and `selectAdjacent`. Await a selected builder directly or execute it with `all()`, `execute()`, or `first()`; `count()` needs no selection.
+The fluent API starts at `content.from(collection)`. Builders support `select`, `where`, `with`, `withPayload`, `orderBy`, `offset`, `limit`, and `selectAdjacent`. Await a selected builder directly or execute it with `all()`, `execute()`, `first()`, or `paginate()`; `count()` needs no selection.
 
-The relational API exposes `content.query.posts.findMany(options)` and `findFirst(options)` for each registered collection. Options use `columns`, `with`, `where`, `orderBy`, `offset`, `limit`, `adjacent`, and `payloads`. Use `content.count(collection, options?)` for a filtered parent count before pagination.
+The relational API exposes `content.query.posts.findMany(options)`, `findFirst(options)`, and `paginate(options)` for each registered collection. Options use `columns`, `with`, `where`, `orderBy`, `offset`, `limit`, `adjacent`, and `payloads`. Use `content.count(collection, options?)` for a filtered parent count before pagination.
 
 ## Selection
 

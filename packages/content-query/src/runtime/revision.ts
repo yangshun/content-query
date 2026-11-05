@@ -1,5 +1,5 @@
 import type { ContentError } from "../shared/errors.ts";
-import type { QueryPlan, QueryRegistry } from "../query/plan.ts";
+import type { QueryPlan, QueryRegistry, QueryTerminal } from "../query/plan.ts";
 import type { Relationship } from "../collection/types.ts";
 import type { ContentRenderResult } from "./types.ts";
 import type { QueryStyle } from "./query-style.ts";
@@ -57,7 +57,7 @@ export type PreparedRevision = {
   queryStyle?: QueryStyle;
   execute?: (
     plan: QueryPlan,
-    terminal: "all" | "first" | "count",
+    terminal: QueryTerminal,
     requests: PayloadRequest[],
   ) => Promise<unknown>;
 };

@@ -40,7 +40,27 @@ export type QueryPlan = {
   adjacent?: AdjacentPlan;
   /** Payloads to attach under `_payloads` after filtering, ordering, and pagination. */
   payloads?: Readonly<Record<string, PlanPayload>>;
+  /** A root `paginate()` request; plans that carry it never set `limit` or `offset`. */
+  paginate?: PaginatePlan;
 };
+/** One sort clause in a plan's effective order. */
+export type SortClause = { field: string; direction: "asc" | "desc" };
+/**
+ * A page-number or cursor page request. Cursor keys are already decoded into the sort values of the
+ * boundary entry, in effective-order position, so backends never parse cursor strings.
+ */
+export type PaginatePlan =
+  | { mode: "page"; page: number; size: number }
+  | {
+      mode: "cursor";
+      size: number;
+      /** `after` pages forward from `key`; `before` pages backward to it. */
+      direction: "after" | "before";
+      /** Sort values of the boundary entry; omitted to start at the first or last entry. */
+      key?: readonly unknown[];
+      /** Whether the result includes the filtered total. */
+      total: boolean;
+    };
 /**
  * Selects previous and next entries. `results` finds neighbors within the scope's own filtered and
  * ordered entries, or a parent's related entries, and `plan` holds only their selection;
@@ -50,10 +70,9 @@ export type AdjacentPlan = { scope: "results" | "collection"; plan: QueryPlan };
 /** One requested payload; variant keys are empty for payloads without variants. */
 export type PlanPayload = { variant: Readonly<Record<string, string>> };
 
-export type QueryRunner = (
-  plan: QueryPlan,
-  terminal: "all" | "first" | "count",
-) => Promise<unknown>;
+/** How a plan returns its results; `paginate` requires the plan's `paginate` request. */
+export type QueryTerminal = "all" | "first" | "count" | "paginate";
+export type QueryRunner = (plan: QueryPlan, terminal: QueryTerminal) => Promise<unknown>;
 /** Describes a payload that queries may request, without its resolver or schema. */
 export type PayloadDescriptor = { variants: readonly string[] };
 export type QueryRegistry = Record<
@@ -73,6 +92,30 @@ export function emptyPlan(collection: string): QueryPlan {
 /** Explains the explicit-selection rule wherever a scope returns rows without selecting data. */
 export const NO_SELECTION_MESSAGE =
   "Select fields, relationships, payloads, or adjacent entries before running this query." as const;
+
+/** Explains why `paginate()` is unavailable once a query sets its own limit or offset. */
+export const PAGINATE_AFTER_LIMIT_MESSAGE =
+  "paginate() sets the limit and offset itself; remove limit and offset from this query." as const;
+
+/**
+ * Returns the order a scope's entries follow: explicit clauses, then ascending ID as the final
+ * tie-breaker unless ID is already sorted. Scopes without clauses sort by ascending ID, except
+ * relationship scopes that preserve an authored ID array's order.
+ *
+ * @param plan - The scope whose order to resolve.
+ * @param preserveOrder - Keeps authored order when the scope has no explicit clauses.
+ * @returns The sort clauses to apply, in priority order.
+ */
+export function effectiveOrder(plan: QueryPlan, preserveOrder = false): SortClause[] {
+  if (!plan.order.length) {
+    return preserveOrder ? [] : [{ field: "id", direction: "asc" }];
+  }
+  const order = [...plan.order];
+  if (!order.some((sort) => sort.field === "id")) {
+    order.push({ field: "id", direction: "asc" });
+  }
+  return order;
+}
 
 /**
  * Checks whether a row-returning scope explicitly requests data. Nothing is implicit, not even

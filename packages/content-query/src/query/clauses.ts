@@ -1,5 +1,72 @@
 import { invalidQuery } from "../shared/errors.ts";
-import type { PlanPayload, QueryPlan, QueryRegistry } from "./plan.ts";
+import { decodeCursor } from "./cursor.ts";
+import {
+  effectiveOrder,
+  PAGINATE_AFTER_LIMIT_MESSAGE,
+  type PaginatePlan,
+  type PlanPayload,
+  type QueryPlan,
+  type QueryRegistry,
+} from "./plan.ts";
+
+/** Option names that `paginate()` reads; relational options pass the rest to the query plan. */
+export const PAGINATE_KEYS = ["page", "size", "after", "before", "total"] as const;
+
+/**
+ * Checks `paginate()` options against a selected root plan and compiles them into a page request.
+ * Cursors are decoded here, so execution and future backends receive sort values only.
+ *
+ * @param plan - The root plan to paginate; it must not set its own limit or offset.
+ * @param options - `{ page, size }` for page numbers, or `{ size, after?, before?, total? }` for
+ * cursors. A `null` cursor starts at the first entry (`after`) or the last entry (`before`).
+ * @returns The compiled page request.
+ * @throws ContentError with code `invalid-query` for invalid options, or `invalid-cursor` for a
+ * cursor from a different collection or order.
+ */
+export function checkedPaginate(plan: QueryPlan, options: unknown): PaginatePlan {
+  if (plan.limit !== undefined || plan.offset !== undefined) {
+    invalidQuery(PAGINATE_AFTER_LIMIT_MESSAGE);
+  }
+  if (!options || typeof options !== "object" || Array.isArray(options)) {
+    invalidQuery("paginate() requires options, such as { page: 1, size: 10 } or { size: 10 }.");
+  }
+  const { page, size, after, before, total, ...rest } = options as Record<string, unknown>;
+  const [extra] = Object.keys(rest);
+  if (extra !== undefined) {
+    invalidQuery(`Unknown paginate() option "${extra}".`);
+  }
+  if (!Number.isSafeInteger(size) || (size as number) < 1) {
+    invalidQuery("paginate() requires a positive safe integer size.");
+  }
+  if (page !== undefined) {
+    if (after !== undefined || before !== undefined || total !== undefined) {
+      invalidQuery(
+        "Page-number pagination cannot use after, before, or total; its results always include total.",
+      );
+    }
+    if (!Number.isSafeInteger(page) || (page as number) < 1) {
+      invalidQuery("paginate() requires a positive safe integer page, starting at 1.");
+    }
+    return { mode: "page", page: page as number, size: size as number };
+  }
+  if (after !== undefined && before !== undefined) {
+    invalidQuery("paginate() accepts an after or a before cursor, not both.");
+  }
+  if (total !== undefined && typeof total !== "boolean") {
+    invalidQuery("paginate() requires total to be a boolean.");
+  }
+  const direction = before !== undefined ? "before" : "after";
+  const cursor = direction === "before" ? before : after;
+  return {
+    mode: "cursor",
+    size: size as number,
+    direction,
+    total: total === true,
+    ...(cursor === null || cursor === undefined
+      ? {}
+      : { key: decodeCursor(cursor, plan.collection, effectiveOrder(plan)) }),
+  };
+}
 
 /** Checks scalar field selection for both public query frontends without a schema field catalog. */
 export function checkedFields(
