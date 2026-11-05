@@ -425,3 +425,55 @@ describe("collection sources", () => {
     }
   });
 });
+
+describe("relationships named after authored fields", () => {
+  test("take the authored name when the schema renames the ID field", async () => {
+    const registry = {
+      tracks: defineCollection({
+        loader: fixtureLoader(() => [{ id: "css", data: { title: "CSS" } }]),
+        schema: schema.object({ title: schema.string() }),
+      }),
+      challenges: defineCollection({
+        // Content files keep `track: "css"`; the schema stores the ID as `trackId`.
+        loader: fixtureLoader(() => [{ id: "blog-card", data: { track: "css" } }]),
+        schema: schema
+          .object({ track: schema.string() })
+          .transform(({ track, ...data }) => ({ ...data, trackId: track })),
+        relationships: {
+          track: {
+            collection: "tracks",
+            type: "one",
+            from: "trackId",
+            to: "id",
+            referenceSide: "from",
+          },
+        },
+      }),
+    };
+    const session = await createSession<typeof registry>({
+      root: ".",
+      config: "unused",
+      outDir: "unused",
+      watch: false,
+      registry,
+    });
+    try {
+      const { challenges, tracks } = session.collections;
+      expect(
+        await challenges
+          .using(tracks)
+          .byId("blog-card")
+          .select("trackId")
+          .with("track", (track) => track.select("id", "title")),
+      ).toStrictEqual({ trackId: "css", track: { id: "css", title: "CSS" } });
+      expect(
+        await challenges.using(tracks).findMany({
+          columns: { id: true },
+          where: { track: { title: "CSS" } },
+        }),
+      ).toStrictEqual([{ id: "blog-card" }]);
+    } finally {
+      await session.dispose();
+    }
+  });
+});

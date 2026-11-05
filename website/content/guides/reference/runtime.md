@@ -45,7 +45,7 @@ Each `collections/<export name>/` directory also holds that collection's data mo
 | `count(options?)`                                                                        | Filtered parent count before pagination; `count()` counts every entry.                                               |
 | `using(...collections)`                                                                  | A handle that also loads the given collections, for [relationships](/docs/relationships#supply-related-collections). |
 
-Await a selected fluent builder directly or call `.all()` / `.execute()` to return an array. `.first()` returns one entry or `undefined`; `.count()` returns the matching parent count and needs no selection. `.paginate({ page, size })` and `.paginate({ size, after })` return one [page](/docs/querying-content#pagination) with page-number or cursor details.
+Await a selected fluent builder directly or call `.all()` / `.execute()` to return an array. A builder runs only when awaited; the terminals below start it immediately. `.first()` returns one entry or `undefined`; `.count()` returns the matching parent count and needs no selection. `.paginate({ page, size })` and `.paginate({ size, after })` return one [page](/docs/querying-content#pagination) with page-number or cursor details.
 
 The relational methods use `columns`, `with`, `where`, `orderBy`, `limit`, `offset`, `adjacent`, and `payloads` options. Queries return only what they select, not even `id` implicitly: omitting `columns` selects no fields, and a query must select fields, relationships, payloads, or adjacency.
 
