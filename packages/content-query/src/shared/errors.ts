@@ -6,6 +6,7 @@ export type ContentErrorCode =
   | "duplicate-id"
   | "invalid-reference"
   | "invalid-query"
+  | "invalid-cursor"
   | "artifact-error"
   | "render-error";
 export type ContentDiagnostic = {

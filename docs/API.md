@@ -188,7 +188,7 @@ const post = await content.query.posts.findFirst({
 const { _body: body, _rendered: rendered } = post!._payloads;
 ```
 
-Start fluent queries with `content.from(collection)` and select fields with `.select(...fields)`; field names are checked and completed as soon as `from()` names the collection. Builders are immutable and reusable. Await a selected builder directly, or call `all()` / `execute()` for an array and `first()` for one entry or `undefined`. `count()` counts filtered parents before pagination and needs no selection.
+Start fluent queries with `content.from(collection)` and select fields with `.select(...fields)`; field names are checked and completed as soon as `from()` names the collection. Builders are immutable and reusable. Await a selected builder directly, or call `all()` / `execute()` for an array, `first()` for one entry or `undefined`, and [`paginate()`](#pagination) for one page with page-number or cursor details. `count()` counts filtered parents before pagination and needs no selection.
 
 Queries return only the data they select; nothing is implicit, not even `id`. Every row-returning scope, including relationship and adjacent sibling scopes, must select fields, include a relationship, request a payload, or select adjacency. A scope that selects nothing fails to type-check: awaiting an unselected builder reports "Type of 'await' operand must either be a valid promise…", and its `all()` / `first()` / `execute()` report the rule as their required `this` type. At runtime it throws an `invalid-query` ContentError: "Select fields, relationships, payloads, or adjacent entries before running this query." Selected optional properties remain own properties with value `undefined`. Returned graphs and headings are detached from internal state. Queries load bodies or rendered HTML only when they request [payloads](#payloads).
 
@@ -274,6 +274,41 @@ Explicit selection replaces select-first fluent queries and implicit metadata:
 | `findFirst({ where: { id }, payloads })`      | Unchanged if it reads only `_payloads`; add `columns` for any other fields         |
 
 Results include `id` only when it is selected.
+
+## Pagination
+
+```ts
+const query = content
+  .from("posts")
+  .select("id", "title")
+  .where((fields) => eq(fields.draft, false))
+  .orderBy("publishedAt", "desc");
+
+// Page numbers, for archive routes such as /blog/page/2.
+const archive = await query.paginate({ page: 2, size: 10 });
+// { items, total, page, pageCount, hasNextPage, hasPreviousPage }
+
+// Cursors, for "load more" lists.
+const first = await query.paginate({ size: 10 });
+const next = await query.paginate({ size: 10, after: first.endCursor });
+// { items, startCursor, endCursor, hasNextPage, hasPreviousPage }
+
+// The relational API accepts the same pagination options beside its query options.
+const page = await content.query.posts.paginate({
+  columns: { id: true, title: true },
+  orderBy: { publishedAt: "desc" },
+  page: 2,
+  size: 10,
+});
+```
+
+`paginate()` runs one query against one revision, so `total` always agrees with `items`. Items have the same type and contents that `all()` or `findMany()` would return for that page, including relationships, payloads, and `_adjacent`; results-scope neighbors are still found before pagination. `all()`, `findMany()`, and awaiting a builder keep returning plain arrays.
+
+- **Page numbers.** `page` starts at 1 and `size` is the number of entries per page. Results always include `total`. `pageCount` is at least 1, so the first page exists even when nothing matches. A page past the end returns no items with the real `pageCount`, so a route can respond with not found.
+- **Cursors.** `after` returns the entries after an earlier page's `endCursor`; `before` returns the entries just before a `startCursor`. A `null` cursor starts at the first entry with `after`, or at the last entry with `before`. `total: true` adds the matching total, which is omitted otherwise. Both cursors are `null` on an empty page, and `hasNextPage` and `hasPreviousPage` are exact.
+- **Cursor contents.** Cursors are opaque, URL-safe strings that record the collection, the effective sort order including the ID tie-breaker, and the boundary entry's sort values, with dates and `BigInt`s preserved. They position by those values, so they keep working when filters change or the boundary entry is removed. A malformed cursor, or one from a different collection or sort order, throws an `invalid-cursor` ContentError. Cursors from fluent and relational queries with the same order are interchangeable.
+- **Restrictions.** `paginate()` sets the limit and offset itself: after `limit()` or `offset()` it fails to type-check and throws `invalid-query`, and relational `paginate()` rejects `limit` and `offset`. Page options cannot include `after`, `before`, or `total`, a cursor page accepts `after` or `before` but not both, and `page` and `size` must be positive safe integers. Only root queries paginate; relationship scopes keep `limit` and `offset`.
+- **Types.** `content-query/query` exports `PageOptions`, `CursorOptions`, `PaginateOptions`, `NumberedPage<Item>`, `CursorPage<Item, Total>`, `PaginateResult<Item, Options>`, and `RelationalPaginateOptions`. With generated declarations, `NumberedPage<CollectionEntry<"posts", "id" | "title">>` types the page above.
 
 ## Query style
 
@@ -458,7 +493,7 @@ const exercise = await content.query.coding.findFirst({
 
 ## Errors and extension points
 
-Import `ContentError` from `content-query/runtime`. Its stable `code`, context, `issues`, `cause`, and grouped `diagnostics` distinguish validation, source, reference, query, artifact, rendering, and payload-variant failures. Source read/parse failures name their collection and file (`source`), include the parser's message, and report every failing file together. Preparation also reports every dangling or ambiguous reference with its value, skipping relationship checks only for collections that already failed. Unsupported stored values report a structured field `path`. See the [error contract](./PLAN.md#errors-and-diagnostics).
+Import `ContentError` from `content-query/runtime`. Its stable `code`, context, `issues`, `cause`, and grouped `diagnostics` distinguish validation, source, reference, query, cursor, artifact, rendering, and payload-variant failures. Source read/parse failures name their collection and file (`source`), include the parser's message, and report every failing file together. Preparation also reports every dangling or ambiguous reference with its value, skipping relationship checks only for collections that already failed. Unsupported stored values report a structured field `path`. See the [error contract](./PLAN.md#errors-and-diagnostics).
 
 Vite transports development diagnostics with the same value codec as prepared data, preserving BigInt validation constraints, supported native values, and graph references. Error causes retain their names, messages, stacks, and nested causes in isolated runtimes. Invalid initial content remains recoverable, and asynchronous delivery failures are reported through Vite's logger and error display.
 

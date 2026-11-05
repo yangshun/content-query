@@ -33,6 +33,7 @@ export type {
   RelationalQueryOptions as QueryOptions,
   RelationalCountOptions as CountOptions,
   RelationalQueryResult,
+  RelationalPaginateOptions,
   RelationalWhere,
 } from "./query/relational-types.ts";
 export type {
@@ -44,4 +45,10 @@ export type {
   Selection,
   SelectionResult,
   Adjacent,
+  PageOptions,
+  CursorOptions,
+  PaginateOptions,
+  NumberedPage,
+  CursorPage,
+  PaginateResult,
 } from "./query/types.ts";

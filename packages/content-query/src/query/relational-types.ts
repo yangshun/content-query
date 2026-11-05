@@ -7,7 +7,17 @@ import type {
   VariantOf,
 } from "../collection/types.ts";
 import type { Expression, NO_SELECTION_MESSAGE } from "./plan.ts";
-import type { Adjacent, Fields, OrderBy, Ordered, Scalar, RelationshipResult } from "./types.ts";
+import type {
+  Adjacent,
+  Fields,
+  OrderBy,
+  Ordered,
+  PaginateKey,
+  PaginateOptions,
+  PaginateResult,
+  Scalar,
+  RelationshipResult,
+} from "./types.ts";
 
 type RelatedName<
   Registry extends CollectionRegistry,
@@ -137,6 +147,12 @@ export type RelationalQueryOptions<
         payloads?: PayloadOptions<Registry, Name>;
       }
     : {});
+
+/** Options accepted by relational `paginate()`: query options without limit or offset, plus a page request. */
+export type RelationalPaginateOptions<
+  Registry extends CollectionRegistry,
+  Name extends keyof Registry & string,
+> = RelationalQueryOptions<Registry, Name, true, true, false> & PaginateOptions;
 
 /** Options accepted by the root count helper, whose result ignores sorting and pagination. */
 export type RelationalCountOptions<
@@ -375,5 +391,21 @@ export type RelationalQueries<Registry extends CollectionRegistry> = string exte
             CheckedRelationalOptions<Registry, Name, NoInfer<Options>> &
             SelectionRequired<NoInfer<Options>>,
         ): Promise<RelationalQueryResult<Registry, Name, Options> | undefined>;
+        /**
+         * Returns one page from one revision: `page` and `size` for page numbers, or `size` with
+         * `after`, `before`, or `total` for cursors. `limit` and `offset` are unavailable.
+         */
+        paginate<const Options extends RelationalPaginateOptions<Registry, Name>>(
+          options: Options &
+            CheckedRelationalOptions<
+              Registry,
+              Name,
+              NoInfer<Omit<Options, PaginateKey>>,
+              true,
+              true,
+              false
+            > &
+            SelectionRequired<NoInfer<Options>>,
+        ): Promise<PaginateResult<RelationalQueryResult<Registry, Name, Options>, Options>>;
       };
     };

@@ -173,3 +173,34 @@ describe("ID query execution", () => {
     expect(records.map((entry) => entry.id)).toEqual(["constructor", "__proto__"]);
   });
 });
+
+describe("paginate execution", () => {
+  test("requires a page request and rejects plans that also set limit or offset", async () => {
+    const prepared = revision([{ id: "entry", title: "Article" }]);
+    const plan: QueryPlan = { ...emptyPlan("entries"), select: ["id"] };
+    await expect(executeQuery(prepared, plan, "paginate")).rejects.toMatchObject({
+      code: "invalid-query",
+    });
+    await expect(
+      executeQuery(
+        prepared,
+        { ...plan, limit: 1, paginate: { mode: "page", page: 1, size: 1 } },
+        "paginate",
+      ),
+    ).rejects.toMatchObject({ code: "invalid-query", message: expect.stringMatching(/paginate/) });
+    expect(
+      await executeQuery(
+        prepared,
+        { ...plan, paginate: { mode: "page", page: 1, size: 1 } },
+        "paginate",
+      ),
+    ).toEqual({
+      items: [{ id: "entry" }],
+      total: 1,
+      page: 1,
+      pageCount: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    });
+  });
+});

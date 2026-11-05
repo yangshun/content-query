@@ -74,6 +74,8 @@ import type { CollectionEntry } from "content-query:server";
 type PostLink = CollectionEntry<"posts", "id" | "title">; // What select("id", "title") returns.
 ```
 
+Paginate root queries in one call. `paginate({ page: 2, size: 10 })` returns `items`, `total`, `page`, `pageCount`, `hasNextPage`, and `hasPreviousPage` for numbered archive pages. `paginate({ size: 10, after: previous.endCursor })` returns cursor pages with `startCursor` and `endCursor` for "load more" lists. Both work in fluent queries and in `content.query.posts.paginate()`; see [pagination](https://github.com/yangshun/content-query/blob/main/docs/API.md#pagination).
+
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
 
 ## Migrating to `CollectionEntry`

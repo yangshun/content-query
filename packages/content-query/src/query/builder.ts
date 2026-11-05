@@ -1,7 +1,13 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { detach } from "../shared/values.ts";
 import { fieldProxy, resolveRelations, validateExpression } from "./operators.ts";
-import { checkedFields, checkedOrder, checkedPagination, checkedPayload } from "./clauses.ts";
+import {
+  checkedFields,
+  checkedOrder,
+  checkedPaginate,
+  checkedPagination,
+  checkedPayload,
+} from "./clauses.ts";
 import { objectPlan } from "./object.ts";
 import {
   emptyPlan,
@@ -188,6 +194,19 @@ export function createBuilder(
         invalidQuery("Nested builders have no terminal methods.");
       }
       return run(plan, "count");
+    },
+    /**
+     * Returns one page with page-number details for `{ page, size }`, or cursor details for
+     * `{ size, after?, before?, total? }`, from one revision.
+     */
+    paginate(options: unknown) {
+      if (!root) {
+        invalidQuery("Nested builders have no terminal methods.");
+      }
+      if (!hasSelection(plan)) {
+        invalidQuery(NO_SELECTION_MESSAGE);
+      }
+      return run({ ...plan, paginate: checkedPaginate(plan, options) }, "paginate");
     },
   };
   if (root) {

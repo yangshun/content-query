@@ -43,7 +43,7 @@ describe("portable content builds and production consumption", () => {
 import { content, type CollectionEntry, type CollectionKey, type Collections } from "./.content-query/server.js";
 import { content as virtualContent, type CollectionEntry as VirtualEntry } from "content-query:server";
 import type { QueryData } from "content-query";
-import { eq } from "content-query/query";
+import { eq, type CursorPage, type NumberedPage } from "content-query/query";
 import { buildContent, type BuildContentOptions, type ContentSession } from "content-query/build";
 import { withContentQuery, type NextContentOptions } from "content-query/next";
 import type { collections } from "./content-query.config.ts";
@@ -70,6 +70,13 @@ const pickedSubtitle: Equal<CollectionEntry<"posts", "subtitle">, { subtitle: st
 void [fullEntry, mappedEntry, fluentEntry, relationalEntry, pickedSubtitle];
 // @ts-expect-error Picked fields must belong to the collection.
 type MissingField = CollectionEntry<"posts", "typo">;
+const numbered = content.from("posts").select("id", "title").orderBy("title").paginate({ page: 1, size: 2 });
+const numberedEntry: Equal<Awaited<typeof numbered>, NumberedPage<CollectionEntry<"posts", "id" | "title">>> = true;
+const cursorPage = virtualContent.query.posts.paginate({ columns: { id: true }, size: 2, after: null, total: true });
+const cursorEntry: Equal<Awaited<typeof cursorPage>, CursorPage<VirtualEntry<"posts", "id">, true>> = true;
+void [numberedEntry, cursorEntry];
+// @ts-expect-error paginate() owns limit and offset through generated declarations.
+content.from("posts").select("id").limit(1).paginate({ page: 1, size: 2 });
 const object: Promise<{title:string;_adjacent:{previous:{id:string}|null;next:{id:string}|null}}[]> = virtualContent.query.posts.findMany({ adjacent: { scope: "results", columns: { id: true } }, columns: { title:true } });
 // @ts-expect-error Generated aliases only accept registered collection names.
 type Missing = CollectionEntry<"missing">;

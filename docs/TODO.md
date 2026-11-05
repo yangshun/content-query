@@ -8,7 +8,6 @@ Outstanding tasks and future design notes. Implemented capabilities are document
   - [Indexing for joins](#indexing-for-joins)
   - [SQLite storage and SQL queries](#sqlite-storage-and-sql-queries)
   - [Built-in search](#built-in-search)
-  - [Cursor pagination](#cursor-pagination)
   - [General-purpose joins](#general-purpose-joins)
   - [Browser querying](#browser-querying)
   - [Richer filtering](#richer-filtering)
@@ -54,10 +53,6 @@ Outstanding tasks and future design notes. Implemented capabilities are document
 ### Built-in search
 
 - Built-in search.
-
-### Cursor pagination
-
-- Cursor pagination; the current query API uses limit and offset.
 
 ### General-purpose joins
 

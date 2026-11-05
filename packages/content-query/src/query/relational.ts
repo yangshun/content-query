@@ -1,11 +1,19 @@
 import { invalidQuery } from "../shared/errors.ts";
 import { detach, isScalar } from "../shared/values.ts";
 import { and, fieldProxy, not, or, resolveRelations, validateExpression } from "./operators.ts";
-import { checkedFields, checkedOrder, checkedPagination, checkedPayloads } from "./clauses.ts";
+import {
+  checkedFields,
+  checkedOrder,
+  checkedPaginate,
+  checkedPagination,
+  checkedPayloads,
+  PAGINATE_KEYS,
+} from "./clauses.ts";
 import {
   emptyPlan,
   hasSelection,
   NO_SELECTION_MESSAGE,
+  PAGINATE_AFTER_LIMIT_MESSAGE,
   type AdjacentPlan,
   type Expression,
   type PredicateOperator,
@@ -287,6 +295,25 @@ export function selectedPlan(plan: QueryPlan): QueryPlan {
   return plan;
 }
 
+/**
+ * Separates `paginate()` options from the query options they accompany.
+ *
+ * @param options - Relational query options plus `page`, `size`, `after`, `before`, or `total`.
+ * @returns The query options, then the pagination options.
+ */
+function splitPaginate(options: unknown): [Record<string, unknown>, Record<string, unknown>] {
+  record(options, "Query");
+  if (Object.hasOwn(options, "limit") || Object.hasOwn(options, "offset")) {
+    invalidQuery(PAGINATE_AFTER_LIMIT_MESSAGE);
+  }
+  const query: Record<string, unknown> = {};
+  const request: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(options)) {
+    ((PAGINATE_KEYS as readonly string[]).includes(key) ? request : query)[key] = value;
+  }
+  return [query, request];
+}
+
 /** Creates stable, live collection queries in a dedicated, prototype-free namespace. */
 export function createQueryNamespace(registry: () => QueryRegistry, run: QueryRunner): object {
   const queries = new Map<string, object>();
@@ -299,6 +326,11 @@ export function createQueryNamespace(registry: () => QueryRegistry, run: QueryRu
           run(selectedPlan(relationalPlan(registry(), name, options)), "all"),
         findFirst: (options?: unknown) =>
           run(selectedPlan(relationalPlan(registry(), name, options)), "first"),
+        paginate: (options?: unknown) => {
+          const [query, request] = splitPaginate(options);
+          const plan = selectedPlan(relationalPlan(registry(), name, query, true, true, false));
+          return run({ ...plan, paginate: checkedPaginate(plan, request) }, "paginate");
+        },
       };
       queries.set(name, cached);
     }
