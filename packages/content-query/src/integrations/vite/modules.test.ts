@@ -139,7 +139,7 @@ describe("development error modules", () => {
     });
     try {
       const modules = await preparedModules({ error, registry: { posts: { relationships: {} } } });
-      await writeFile(path.join(fixture.root, "error.mjs"), modules.get("server.js")!);
+      await writeFile(path.join(fixture.root, "error.mjs"), modules.get("prepared-server.js")!);
       const { stdout } = await execute(
         process.execPath,
         [

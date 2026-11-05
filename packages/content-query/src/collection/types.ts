@@ -5,6 +5,7 @@ import type { ContentRenderResult, RenderedContent } from "../runtime/types.ts";
 
 declare const builtinPayloadsType: unique symbol;
 declare const customPayloadsType: unique symbol;
+declare const loadedCollectionsType: unique symbol;
 
 export type Schema = StandardSchemaV1;
 export type SchemaOutput<Value> = Value extends StandardSchemaV1
@@ -143,6 +144,11 @@ export type CollectionDefinition<
   payloads?: Record<string, PayloadDeclaration>;
   /** Directories, relative to the project root, that every entry's `files` helpers may read. */
   sharedFiles?: readonly string[];
+  /**
+   * The singular name in generated types, such as `"Category"` for `ContentCategory`. Defaults to
+   * the export name without one trailing `s`.
+   */
+  typeName?: string;
 };
 export type CollectionRegistry = Record<string, CollectionDefinition>;
 export type EntryData<Definition> = Definition extends {
@@ -159,8 +165,54 @@ export type ComputedData<Definition> = Definition extends { computed: infer Comp
   : {};
 export type QueryData<Definition> = { id: string } & EntryData<Definition> &
   ComputedData<Definition>;
+/**
+ * Type-only marker recording which collections a query scope loaded. A marked definition offers
+ * only the relationships whose target is loaded; an unmarked one offers every relationship.
+ */
+export type LoadedMarker<Loaded> = { readonly [loadedCollectionsType]?: Loaded };
+/** The collections a marked definition's query scope loaded, or `unknown` when unmarked. */
+type LoadedOf<Definition> = Definition extends { readonly [loadedCollectionsType]?: infer Loaded }
+  ? Loaded
+  : unknown;
+/** The declared relationships, keeping only those into `Loaded` when it is not `unknown`. */
+type RelationshipsInto<Relationships, Loaded, Keep extends boolean> = unknown extends Loaded
+  ? Keep extends true
+    ? Relationships
+    : {}
+  : {
+      [
+        Name in keyof Relationships as (
+          Relationships[Name] extends { collection: Loaded }
+            ? Keep
+            : Keep extends true
+              ? false
+              : true
+        ) extends true
+          ? Name
+          : never
+      ]: Relationships[Name];
+    };
+/** Relationships a query can follow: every declared one, or only those into loaded collections. */
 export type RelationshipsOf<Definition> = Definition extends { relationships: infer Relationships }
-  ? Relationships
+  ? RelationshipsInto<Relationships, LoadedOf<Definition>, true>
+  : {};
+/**
+ * The type error for a declared relationship whose target collection the query has not loaded,
+ * or `never` for a name that is not such a relationship.
+ */
+export type UnavailableRelationship<Definition, Name> =
+  Name extends keyof UnavailableRelationshipsOf<Definition>
+    ? UnavailableRelationshipsOf<Definition>[Name] extends {
+        collection: infer Target extends string;
+      }
+      ? `Relationship "${Name & string}" targets the ${Target} collection, which this query has not loaded. Pass it to using().`
+      : never
+    : never;
+/** Declared relationships into collections the query scope has not loaded. */
+export type UnavailableRelationshipsOf<Definition> = Definition extends {
+  relationships: infer Relationships;
+}
+  ? RelationshipsInto<Relationships, LoadedOf<Definition>, false>
   : {};
 /**
  * Payloads that Markdown sources, `glob()`, and custom loaders provide for every entry.

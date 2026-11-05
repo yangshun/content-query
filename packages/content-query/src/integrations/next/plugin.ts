@@ -104,7 +104,8 @@ async function startDevelopment(root: string, options: NextContentOptions): Prom
 
 /**
  * Builds content before Next compiles, retaining one managed watcher during `next dev`.
- * Import the generated server entry from Server Components; Next's HMR observes its updates.
+ * Import each collection's generated entry, such as `#content-query/posts`, from Server
+ * Components; Next's HMR observes their updates, and each route traces only what it imports.
  * Next's detached telemetry helper evaluates configuration without starting content sessions.
  * @param nextConfig Existing object, promise, or phase-aware Next.js configuration.
  * @param options Optional content configuration file and generated output directory.

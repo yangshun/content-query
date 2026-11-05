@@ -5,7 +5,7 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   // Dependency discovery runs before Start strips the server function handlers.
-  optimizeDeps: { exclude: ["content-query:server"] },
+  optimizeDeps: { exclude: ["content-query:collections"] },
   plugins: [
     contentQuery({ backend: "in-memory" }),
     tanstackStart({ prerender: { enabled: true, crawlLinks: true, failOnError: true } }),

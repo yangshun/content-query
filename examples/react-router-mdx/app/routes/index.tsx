@@ -1,13 +1,9 @@
 import { Link, useLoaderData, type MetaFunction } from "react-router";
-import { content } from "content-query:server";
+import { guides } from "content-query:collections/guides";
 
 export async function loader() {
   return {
-    guides: await content
-      .from("guides")
-      .select("id", "title", "description")
-      .orderBy("order")
-      .all(),
+    guides: await guides.select("id", "title", "description").orderBy("order").all(),
   };
 }
 

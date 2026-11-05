@@ -14,7 +14,7 @@ An index page shows a title and a summary for each article. Loading every articl
 When a reader opens one article, request its rendered output in the same query that loads its title:
 
 ```ts
-const article = await content.query.articles.findFirst({
+const article = await articles.findFirst({
   where: { id },
   payloads: { _rendered: true },
 });

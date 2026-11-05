@@ -1,6 +1,6 @@
 # ContentQuery + Angular
 
-Server metadata queries use `content.from(collection).select(...fields)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
+Each collection is imported from its own generated entry, such as `import { guides } from "../../.content-query/collections/guides/server.js"`. Server metadata queries use `guides.select(...fields)`. The relational API is available as `guides.findMany({ columns, with, where })`; bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
@@ -16,9 +16,9 @@ vp run --filter content-query build
 vp run --filter @content-query/example-angular dev
 ```
 
-The development command builds content once, then runs `content-query build --watch` alongside `ng serve`. Content publications update the generated server entry, which Angular CLI watches as a server dependency. Angular rebuilds and reloads the page after metadata, body, added/deleted guide, and configuration changes. Validation failures appear in the terminal; the last valid generated content remains available until corrected. Stopping development stops both processes.
+The development command builds content once, then runs `content-query build --watch` alongside `ng serve`. Content publications update the generated collection entry, which Angular CLI watches as a server dependency. Angular rebuilds and reloads the page after metadata, body, added/deleted guide, and configuration changes. Validation failures appear in the terminal; the last valid generated content remains available until corrected. Stopping development stops both processes.
 
-Angular CLI manages its own build and development server. This example uses the standalone ContentQuery CLI and physical `.content-query/server.js` entry. It does not require a framework adapter or a Vite plugin.
+Angular CLI manages its own build and development server. This example uses the standalone ContentQuery CLI and the physical `.content-query/collections/guides/server.js` entry. It does not require a framework adapter or a Vite plugin.
 
 ## Build and serve
 

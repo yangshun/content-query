@@ -4,7 +4,8 @@ import type { FSWatcher } from "chokidar";
 import { ContentError, contentError, groupDiagnostics, withContext } from "../shared/errors.ts";
 import { prepareRevision, type CandidateSources, type PreparationCache } from "./prepare.ts";
 import { normalizeSnapshot } from "./validation.ts";
-import { createRuntime, type Content } from "../runtime/content.ts";
+import { createCollections } from "../runtime/collection.ts";
+import type { CollectionHandles } from "../runtime/collection-types.ts";
 import type { QueryStyle } from "../runtime/query-style.ts";
 import type { ContentState, PreparedRevision } from "../runtime/revision.ts";
 import type { CollectionRegistry } from "../collection/types.ts";
@@ -38,8 +39,12 @@ export type ContentSession<
   Registry extends CollectionRegistry = {},
   Style extends QueryStyle = QueryStyle,
 > = {
-  /** Root query APIs are typed by `Style`; the configured `queryStyle` is enforced at runtime. */
-  content: Content<Registry, Style>;
+  /**
+   * One query handle per collection, keyed by collection name, like the generated entries export.
+   * Each loads only its own collection; pass others to `using()` to follow relationships. Members
+   * are typed by `Style`; the configured `queryStyle` is enforced at runtime.
+   */
+  collections: CollectionHandles<Registry, Style>;
   /** Reads the latest successful source snapshot; current preparation errors are rethrown. */
   sources(): ContentSourceSnapshot;
   /** Observes subsequent publications and failures; returns an idempotent unsubscribe function. */
@@ -87,8 +92,8 @@ export function sessionInternals(session: ContentSession): SessionInternals {
  * Creates a preparation session with ordered source commands and atomic revision publication.
  *
  * @param options - Root, configuration, watch, and publication settings.
- * @returns A session whose `content` is typed by `Style`; each published revision carries the
- * configured `queryStyle`, which the runtime enforces.
+ * @returns A session whose `collections` are typed by `Style`; each published revision carries
+ * the configured `queryStyle`, which the runtime enforces.
  */
 export async function createSession<
   Registry extends CollectionRegistry = {},
@@ -546,7 +551,7 @@ export async function createSession<
     }
   }
   const session: ContentSession<Registry, Style> = {
-    content: createRuntime<Registry, Style>(state),
+    collections: createCollections(state) as CollectionHandles<Registry, Style>,
     sources,
     subscribe(listener) {
       if (disposed) {

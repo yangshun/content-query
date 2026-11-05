@@ -55,6 +55,7 @@ export function queryRegistry(registry: CollectionRegistry): QueryRegistry {
           ...(hasBuiltinPayloads(definition) ? builtinPayloads : {}),
           ...customPayloads(definition),
         },
+        ...(definition.typeName === undefined ? {} : { typeName: definition.typeName }),
       },
     ]),
   );

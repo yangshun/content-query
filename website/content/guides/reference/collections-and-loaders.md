@@ -15,6 +15,7 @@ Import `defineCollection` from `content-query`. A definition contains:
 - Optional `relationships` connecting collection fields.
 - Optional [custom `payloads`](/docs/payloads): schema-validated per-entry data, with optional variants, loaded only when a query requests it.
 - Optional `sharedFiles`: directories, relative to the project root, that resolvers' [`files` helpers](/docs/payloads#read-related-files) may read besides each entry's folder.
+- An optional `typeName`: the singular word for [generated types](/docs/reference/runtime#generated-types), such as `"Category"` for `ContentCategory`, when dropping a trailing `s` from the collection name does not produce one.
 
 ## Built-in loaders
 

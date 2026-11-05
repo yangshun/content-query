@@ -1,14 +1,12 @@
-type PayloadQueries = {
-  query: Record<
-    string,
-    { findFirst(options: object): Promise<{ _payloads: Record<string, unknown> } | undefined> }
-  >;
-};
+type PayloadQueries = Record<
+  string,
+  { findFirst(options: object): Promise<{ _payloads: Record<string, unknown> } | undefined> }
+>;
 
 /**
  * Reads one entry's built-in payload through a query, as applications do.
  *
- * @param content - A prepared content runtime.
+ * @param content - Collection handles keyed by collection name.
  * @param collection - The collection key.
  * @param id - The entry ID; a missing entry throws.
  * @param name - The built-in payload to load.
@@ -20,7 +18,7 @@ async function payloadOf(
   id: string,
   name: "_body" | "_rendered",
 ): Promise<unknown> {
-  const entry = await (content as PayloadQueries).query[collection]!.findFirst({
+  const entry = await (content as PayloadQueries)[collection]!.findFirst({
     where: { id },
     columns: {},
     payloads: { [name]: true },

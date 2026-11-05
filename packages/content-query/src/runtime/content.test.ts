@@ -21,12 +21,13 @@ import {
   notInArray,
   or,
 } from "../query.ts";
-import { createArtifactRuntime } from "../internal.ts";
 import { encode } from "../shared/values.ts";
 import { ContentError } from "../shared/errors.ts";
 import { ARTIFACT_VERSION, CODEC_VERSION, type EncodedCollection } from "../artifacts/types.ts";
-import type { Content, QueryStyle } from "../runtime.ts";
+import type { QueryStyle } from "../runtime.ts";
 import type { ContentSession } from "../preparation/session.ts";
+import { loadAll, loadArtifact } from "../../tests/helpers/collections.ts";
+import type { AllCollections } from "../../tests/helpers/collections.ts";
 
 /** Builds typed fixtures covering scalars, absence, rendering, and relationship directions. */
 function fixture() {
@@ -113,7 +114,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
         registry,
         watch: false,
       });
-      let content = session.content;
+      let content = loadAll(session.collections);
       if (backend === "encoded") {
         const revision = sessionInternals(session as never).state.revision!;
         const collections: Record<string, EncodedCollection> = {};
@@ -128,7 +129,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
             ),
           };
         }
-        content = createArtifactRuntime<Registry>(
+        content = loadArtifact<Registry>(
           { version: ARTIFACT_VERSION, codec: CODEC_VERSION, collections: revision.registry },
           collections,
         );
@@ -141,7 +142,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
     }
     test("projects only selected fields, preserving own undefined and query immutability", async () => {
       const { content, session } = await setup();
-      const base = content.from("posts");
+      const base = content.posts;
       const first = base
         .where((fields) => eq(fields.id, "first"))
         .select("id", "optional", "upper");
@@ -154,70 +155,30 @@ for (const backend of ["in-memory", "encoded"] as const) {
     });
     test("uses strict predicates and distinguishes missing, undefined, and null", async () => {
       const { content } = await setup();
+      expect(await content.posts.where((fields) => isMissing(fields.optional)).count()).toBe(1);
+      expect(await content.posts.where((fields) => isUndefined(fields.optional)).count()).toBe(2);
+      expect(await content.posts.where((fields) => isNull(fields.optional)).count()).toBe(1);
+      expect(await content.posts.where((fields) => contains(fields.title, "%_")).count()).toBe(1);
       expect(
-        await content
-          .from("posts")
-          .where((fields) => isMissing(fields.optional))
-          .count(),
-      ).toBe(1);
-      expect(
-        await content
-          .from("posts")
-          .where((fields) => isUndefined(fields.optional))
-          .count(),
-      ).toBe(2);
-      expect(
-        await content
-          .from("posts")
-          .where((fields) => isNull(fields.optional))
-          .count(),
-      ).toBe(1);
-      expect(
-        await content
-          .from("posts")
-          .where((fields) => contains(fields.title, "%_"))
-          .count(),
-      ).toBe(1);
-      expect(
-        await content
-          .from("posts")
+        await content.posts
           .where((fields) => and(gt(fields.score, 1), not(eq(fields.score, NaN))))
           .count(),
       ).toBe(1);
+      expect(await content.posts.where((fields) => inArray(fields.id, [])).count()).toBe(0);
+      expect(await content.posts.where((fields) => notInArray(fields.id, [])).count()).toBe(3);
       expect(
-        await content
-          .from("posts")
-          .where((fields) => inArray(fields.id, []))
-          .count(),
-      ).toBe(0);
-      expect(
-        await content
-          .from("posts")
-          .where((fields) => notInArray(fields.id, []))
-          .count(),
-      ).toBe(3);
-      expect(
-        await content
-          .from("posts")
+        await content.posts
           .where((fields) => or(arrayContains(fields.tags, "a"), arrayContainsAny(fields.tags, [])))
           .count(),
       ).toBe(1);
-      expect(
-        await content
-          .from("posts")
-          .where((fields) => arrayContainsAll(fields.tags, []))
-          .count(),
-      ).toBe(3);
-      expect(
-        await content
-          .from("posts")
-          .where((fields) => eq(fields.date, new Date(NaN)))
-          .count(),
-      ).toBe(1);
+      expect(await content.posts.where((fields) => arrayContainsAll(fields.tags, [])).count()).toBe(
+        3,
+      );
+      expect(await content.posts.where((fields) => eq(fields.date, new Date(NaN))).count()).toBe(1);
     });
     test("sorts deterministically, pages after filtering, and counts before pagination", async () => {
       const { content } = await setup();
-      const base = content.from("posts").select("id").orderBy("score", "desc");
+      const base = content.posts.select("id").orderBy("score", "desc");
       expect(await base.all()).toEqual([{ id: "second" }, { id: "first" }, { id: "third" }]);
       expect(await base.offset(1).limit(1).all()).toEqual([{ id: "first" }]);
       expect(await base.offset(100).limit(0).count()).toBe(3);
@@ -229,8 +190,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
     test("loads forward/inverse relations with local filtering and per-parent pagination", async () => {
       const { content } = await setup();
       expect(
-        await content
-          .from("posts")
+        await content.posts
           .select("id")
           .with("author", (author) => author.select("name"))
           .all(),
@@ -240,8 +200,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
         { id: "third", author: null },
       ]);
       expect(
-        await content
-          .from("authors")
+        await content.authors
           .select("name")
           .with("posts", (posts) => posts.select("title").orderBy("score", "desc").limit(1))
           .all(),
@@ -250,8 +209,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
         { name: "Grace", posts: [] },
       ]);
       expect(
-        await content
-          .from("posts")
+        await content.posts
           .select("id")
           .with("author", (author) =>
             author.select("name").where((fields) => eq(fields.name, "nobody")),
@@ -261,14 +219,12 @@ for (const backend of ["in-memory", "encoded"] as const) {
     });
     test("preserves forward-array order and duplicates, but inverse membership is distinct", async () => {
       const { content } = await setup();
-      const result = await content
-        .from("authors")
+      const result = await content.authors
         .select("name")
         .with("featuredPosts", (posts) => posts.select("id"))
         .first();
       expect(result?.featuredPosts).toEqual([{ id: "second" }, { id: "first" }, { id: "second" }]);
-      const sorted = await content
-        .from("authors")
+      const sorted = await content.authors
         .select("name")
         .with("featuredPosts", (posts) => posts.select("id").orderBy("id"))
         .first();
@@ -276,7 +232,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
     });
     test("payloads load after paging, detached, with distinct absence and errors", async () => {
       const { content } = await setup();
-      const post = await content.query.posts.findFirst({
+      const post = await content.posts.findFirst({
         where: { id: "first" },
         columns: { title: true },
         payloads: { _body: true, _rendered: true },
@@ -292,8 +248,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
         },
       });
       post!._payloads._rendered.headings[0]!.text = "Changed";
-      const fluent = await content
-        .from("posts")
+      const fluent = await content.posts
         .select("id")
         .where((fields) => eq(fields.id, "first"))
         .withPayload("_rendered")
@@ -310,14 +265,14 @@ for (const backend of ["in-memory", "encoded"] as const) {
         },
       });
       expect(
-        await content.query.authors.findFirst({
+        await content.authors.findFirst({
           where: { id: "ada" },
           columns: {},
           payloads: { _body: true },
         }),
       ).toEqual({ _payloads: { _body: undefined } });
       expect(
-        await content.query.posts.findMany({
+        await content.posts.findMany({
           columns: { id: true },
           orderBy: { id: "asc" },
           offset: 1,
@@ -326,25 +281,25 @@ for (const backend of ["in-memory", "encoded"] as const) {
         }),
       ).toEqual([{ id: "second", _payloads: { _body: undefined } }]);
       expect(
-        await content.query.posts.findMany({ columns: { id: true }, payloads: { _body: false } }),
+        await content.posts.findMany({ columns: { id: true }, payloads: { _body: false } }),
       ).toEqual([{ id: "first" }, { id: "second" }, { id: "third" }]);
       await expect(
-        content.query.authors.findMany({ payloads: { _rendered: true } }),
+        content.authors.findMany({ payloads: { _rendered: true } }),
       ).rejects.toMatchObject({ code: "not-renderable" });
-      expect(() => content.query.posts.findMany({ payloads: { missing: true } as never })).toThrow(
+      expect(() => content.posts.findMany({ payloads: { missing: true } as never })).toThrow(
         /Unknown payload "missing"/,
       );
-      expect(() => content.query.posts.findMany({ payloads: { _body: "yes" } as never })).toThrow(
+      expect(() => content.posts.findMany({ payloads: { _body: "yes" } as never })).toThrow(
         /requires exactly these string variant keys: none/,
       );
       await expect(
-        content.count("posts", { payloads: { _body: true } } as never),
+        content.posts.count({ payloads: { _body: true } } as never),
       ).rejects.toMatchObject({ code: "invalid-query" });
-      const counted = content.from("posts").select("id").withPayload("_body") as unknown as {
+      const counted = content.posts.select("id").withPayload("_body") as unknown as {
         count(): Promise<number>;
       };
       await expect(counted.count()).rejects.toMatchObject({ code: "invalid-query" });
-      const repeated = content.from("posts").select("id").withPayload("_body") as unknown as {
+      const repeated = content.posts.select("id").withPayload("_body") as unknown as {
         withPayload(name: string): unknown;
       };
       expect(() => repeated.withPayload("_body")).toThrow(/cannot be repeated/);
@@ -352,7 +307,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
     test("payloads never reach adjacent rows, and shared related rows get their own copies", async () => {
       const { content } = await setup();
       expect(
-        await content.query.posts.findMany({
+        await content.posts.findMany({
           columns: { id: true },
           adjacent: { scope: "results", columns: { id: true } },
           payloads: { _body: true },
@@ -366,7 +321,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
         },
       ]);
       expect(
-        await content.query.posts.findFirst({
+        await content.posts.findFirst({
           where: { id: "second" },
           columns: { id: true },
           adjacent: { orderBy: { id: "asc" }, columns: { id: true } },
@@ -377,7 +332,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
         _adjacent: { previous: { id: "first" }, next: { id: "third" } },
         _payloads: { _body: undefined },
       });
-      const author = await content.query.authors.findFirst({
+      const author = await content.authors.findFirst({
         where: { id: "ada" },
         columns: {},
         with: { featuredPosts: { columns: { id: true }, payloads: { _body: true } } },
@@ -420,7 +375,7 @@ for (const backend of ["in-memory", "encoded"] as const) {
         }),
       };
       const shared = await prepared(pages);
-      const notes = await shared.content.query.notes.findMany({
+      const notes = await shared.content.notes.findMany({
         columns: { id: true },
         with: { page: { columns: {}, payloads: { _rendered: true } } },
       });
@@ -446,9 +401,8 @@ describe("prepared values and errors", () => {
       watch: false,
       registry,
     });
-    const selected = await session.content
-      .from("values")
-      .select("__proto__" as "id")
+    const selected = await loadAll(session.collections)
+      .values.select("__proto__" as "id")
       .first();
     expect(Object.hasOwn(selected!, "__proto__")).toBe(true);
     expect(Reflect.get(selected!, "__proto__")).toBeUndefined();
@@ -532,7 +486,7 @@ describe("prepared values and errors", () => {
     const revision = sessionInternals(session).state.revision!;
     revision.collections.values!.builtins = new Map([["one", async () => ({ body: 2 }) as never]]);
     await expect(
-      session.content.query.values.findMany({ payloads: { _body: true } }),
+      loadAll(session.collections).values.findMany({ payloads: { _body: true } }),
     ).rejects.toMatchObject({
       code: "artifact-error",
       cause: expect.any(Error),
@@ -542,7 +496,7 @@ describe("prepared values and errors", () => {
       throw new Error("compiler failed");
     };
     await expect(
-      session.content.query.values.findMany({ payloads: { _rendered: true } }),
+      loadAll(session.collections).values.findMany({ payloads: { _rendered: true } }),
     ).rejects.toMatchObject({
       code: "render-error",
       cause: expect.any(Error),
@@ -574,7 +528,7 @@ describe("prepared values and errors", () => {
       watch: false,
       registry,
     });
-    const result = (await session.content.from("values").select("left", "right").first())! as {
+    const result = (await loadAll(session.collections).values.select("left", "right").first())! as {
       left: typeof shared;
       right: typeof shared;
     };
@@ -583,7 +537,7 @@ describe("prepared values and errors", () => {
     expect(0 in (result.left.hole as unknown[])).toBe(false);
     (result.left.date as Date).setTime(900);
     (result.left.bytes as Uint8Array)[0] = 9;
-    const again = (await session.content.from("values").select("left").first())!
+    const again = (await loadAll(session.collections).values.select("left").first())!
       .left as typeof shared;
     expect((again.date as Date).getTime()).toBe(0);
     expect((again.bytes as Uint8Array)[0]).toBe(1);
@@ -896,8 +850,8 @@ function thrownBy(action: () => unknown): unknown {
 }
 
 /** Widens a style-restricted runtime so tests can reach its disabled members. */
-function unrestricted(content: unknown): Content<ReturnType<typeof fixture>> {
-  return content as Content<ReturnType<typeof fixture>>;
+function unrestricted(content: unknown): AllCollections<ReturnType<typeof fixture>> {
+  return content as AllCollections<ReturnType<typeof fixture>>;
 }
 
 describe("query style gating", () => {
@@ -917,39 +871,46 @@ describe("query style gating", () => {
   test("relational style rejects fluent queries but keeps relational queries and counts", async () => {
     const session = await styledSession("relational");
     try {
-      const content = unrestricted(session.content);
-      expect(thrownBy(() => content.from("posts"))).toMatchObject({
-        code: "invalid-query",
-        message:
-          'content.from is unavailable because content-query.config sets queryStyle to "relational".',
-      });
-      expect(
-        await session.content.query.posts.findMany({ columns: { id: true }, limit: 1 }),
-      ).toEqual([{ id: "first" }]);
-      expect(await session.content.count("posts")).toBe(3);
+      const content = unrestricted(loadAll(session.collections));
+      for (const member of ["select", "where", "orderBy", "with", "withPayload"] as const) {
+        expect(thrownBy(() => (content.posts[member] as () => unknown)())).toMatchObject({
+          code: "invalid-query",
+          message: `posts.${member} is unavailable because content-query.config sets queryStyle to "relational".`,
+        });
+      }
+      expect(await content.posts.findMany({ columns: { id: true }, limit: 1 })).toEqual([
+        { id: "first" },
+      ]);
+      expect(await content.posts.count()).toBe(3);
+      expect(await content.posts.count({ where: { id: "first" } })).toBe(1);
     } finally {
       await session.dispose();
     }
   });
 
-  test("fluent style rejects relational access and counts but keeps fluent queries", async () => {
+  test("fluent style rejects relational queries and count options but keeps fluent queries", async () => {
     const session = await styledSession("fluent");
     try {
-      const content = unrestricted(session.content);
-      expect(thrownBy(() => content.query)).toMatchObject({
+      const content = unrestricted(loadAll(session.collections));
+      for (const member of ["findMany", "findFirst", "paginate"] as const) {
+        expect(
+          thrownBy(() =>
+            (content.posts[member] as (options: unknown) => unknown)({ columns: { id: true } }),
+          ),
+        ).toMatchObject({
+          code: "invalid-query",
+          message: `posts.${member} is unavailable because content-query.config sets queryStyle to "fluent".`,
+        });
+      }
+      expect(thrownBy(() => content.posts.count({ where: { id: "first" } }))).toMatchObject({
         code: "invalid-query",
         message:
-          'content.query is unavailable because content-query.config sets queryStyle to "fluent".',
+          'posts.count(options) is unavailable because content-query.config sets queryStyle to "fluent".',
       });
-      expect(thrownBy(() => content.count("posts"))).toMatchObject({
-        code: "invalid-query",
-        message:
-          'content.count is unavailable because content-query.config sets queryStyle to "fluent".',
-      });
-      expect(await session.content.from("posts").select("id").count()).toBe(3);
+      expect(await content.posts.count()).toBe(3);
+      expect(await content.posts.select("id").count()).toBe(3);
       expect(
-        await session.content
-          .from("posts")
+        await content.posts
           .select("id")
           .with("author", (author) => author.select("name"))
           .first(),
@@ -969,11 +930,13 @@ describe("query style gating", () => {
       watch: false,
     });
     try {
-      expect(await session.content.from("posts").select("id").count()).toBe(3);
-      expect(await session.content.count("posts")).toBe(3);
-      expect(await session.content.query.posts.findFirst({ columns: { id: true } })).toEqual({
-        id: "first",
-      });
+      expect(await loadAll(session.collections).posts.select("id").count()).toBe(3);
+      expect(await loadAll(session.collections).posts.count()).toBe(3);
+      expect(await loadAll(session.collections).posts.findFirst({ columns: { id: true } })).toEqual(
+        {
+          id: "first",
+        },
+      );
     } finally {
       await session.dispose();
     }
@@ -1007,14 +970,14 @@ describe("query style gating", () => {
     const encoded = await encodedRevision("relational");
     expect(encoded.queryStyle).toBe("relational");
     const content = unrestricted(
-      createArtifactRuntime<ReturnType<typeof fixture>>(
+      loadArtifact<ReturnType<typeof fixture>>(
         { ...encoded.manifest, queryStyle: "relational" },
         encoded.collections,
       ),
     );
-    expect(thrownBy(() => content.from("posts"))).toMatchObject({ code: "invalid-query" });
-    expect(await content.count("posts")).toBe(3);
-    expect(await content.query.posts.findFirst({ columns: { id: true } })).toEqual({
+    expect(thrownBy(() => content.posts.select("id"))).toMatchObject({ code: "invalid-query" });
+    expect(await content.posts.count()).toBe(3);
+    expect(await content.posts.findFirst({ columns: { id: true } })).toEqual({
       id: "first",
     });
   });
@@ -1023,10 +986,7 @@ describe("query style gating", () => {
     const encoded = await encodedRevision("fluent");
     expect(
       thrownBy(() =>
-        createArtifactRuntime(
-          { ...encoded.manifest, queryStyle: "sql" as QueryStyle },
-          encoded.collections,
-        ),
+        loadArtifact({ ...encoded.manifest, queryStyle: "sql" as QueryStyle }, encoded.collections),
       ),
     ).toMatchObject({
       code: "artifact-error",
@@ -1036,21 +996,19 @@ describe("query style gating", () => {
 });
 
 /** Type-only consumer checks: invalid calls must fail without weakening result inference. */
-function checkTypes(content: Content<ReturnType<typeof fixture>>) {
+function checkTypes(content: AllCollections<ReturnType<typeof fixture>>) {
   // @ts-expect-error Registered collection names are required.
-  content.from("missing");
-  void content.from("posts").select("id").all();
+  void content.missing;
+  void content.posts.select("id").all();
   // @ts-expect-error Field names come from schema outputs and computed fields.
-  content.from("posts").select("typo");
-  content
-    .from("posts")
+  content.posts.select("typo");
+  content.posts
     // @ts-expect-error String predicates are unavailable for numeric fields.
     .where((fields) => contains(fields.score, "2"));
-  content
-    .from("posts")
+  content.posts
     // @ts-expect-error Operator arguments retain their field type.
     .where((fields) => eq(fields.score, "2"));
-  const selected = content.from("posts").select("id");
+  const selected = content.posts.select("id");
   // @ts-expect-error Nested relationships need their own selection.
   selected.with("author", (author) => author);
   // @ts-expect-error Singular builders have no pagination.
@@ -1058,24 +1016,25 @@ function checkTypes(content: Content<ReturnType<typeof fixture>>) {
 }
 void checkTypes;
 
-/** Type-only checks: `Style` removes the other style's root members without widening results. */
+/** Type-only checks: `Style` removes the other style's members without widening results. */
 function checkQueryStyleTypes(
-  relational: Content<ReturnType<typeof fixture>, "relational">,
-  fluent: Content<ReturnType<typeof fixture>, "fluent">,
+  relational: AllCollections<ReturnType<typeof fixture>, "relational">,
+  fluent: AllCollections<ReturnType<typeof fixture>, "fluent">,
   session: ContentSession<ReturnType<typeof fixture>, "relational">,
 ) {
-  void relational.query.posts.findMany({ columns: { title: true } });
-  void relational.count("posts");
-  // @ts-expect-error A relational-only content export has no fluent root.
-  relational.select("id");
+  void relational.posts.findMany({ columns: { title: true } });
+  void relational.posts.count({ where: { id: "first" } });
+  // @ts-expect-error A relational-only collection has no fluent members.
+  relational.posts.select("id");
   // @ts-expect-error The message type also rejects calls without arguments.
-  relational.select();
-  void fluent.from("posts").select("title").count();
-  // @ts-expect-error A fluent-only content export has no relational namespace.
-  void fluent.query.posts;
-  // @ts-expect-error Counting by collection name is relational.
-  void fluent.count("posts");
-  const titles: Promise<{ title: string }[]> = fluent.from("posts").select("title").all();
+  relational.posts.select();
+  void fluent.posts.select("title").count();
+  void fluent.posts.count();
+  // @ts-expect-error A fluent-only collection has no relational members.
+  void fluent.posts.findMany({ columns: { title: true } });
+  // @ts-expect-error Count options are relational.
+  void fluent.posts.count({ where: { id: "first" } });
+  const titles: Promise<{ title: string }[]> = fluent.posts.select("title").all();
   void titles;
   // Restricted sessions stay assignable to sessions with a wider registry.
   const wide: ContentSession<{}, "relational"> = session;

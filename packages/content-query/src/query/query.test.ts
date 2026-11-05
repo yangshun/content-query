@@ -8,6 +8,7 @@ import { matches } from "../runtime/filter.ts";
 import { createSession } from "../preparation/session.ts";
 import { defineCollection } from "../collection/define.ts";
 import { compareStrings } from "../shared/values.ts";
+import { loadAll } from "../../tests/helpers/collections.ts";
 
 const number = { name: "value" } as query.Field<number>;
 const text = { name: "value" } as query.Field<string>;
@@ -149,20 +150,19 @@ describe("builder structure and scalar sorting", () => {
       registry,
     });
     expect(
-      (await session.content.from("values").select("id").orderBy("value").all()).map(
+      (await loadAll(session.collections).values.select("id").orderBy("value").all()).map(
         (entry) => entry.id,
       ),
     ).toEqual(["e", "d", "c", "a", "b"]);
     expect(
-      (await session.content.from("values").select("id").orderBy("value", "desc").all()).map(
+      (await loadAll(session.collections).values.select("id").orderBy("value", "desc").all()).map(
         (entry) => entry.id,
       ),
     ).toEqual(["d", "e", "c", "a", "b"]);
     expect(
       (
-        await session.content
-          .from("values")
-          .select("id")
+        await loadAll(session.collections)
+          .values.select("id")
           .orderBy("bool")
           .orderBy("id", "desc")
           .all()
@@ -191,24 +191,21 @@ describe("builder structure and scalar sorting", () => {
       registry,
     });
     await expect(
-      session.content
-        .from("values")
-        .select("id")
+      loadAll(session.collections)
+        .values.select("id")
         .orderBy("mixed" as never)
         .all(),
     ).rejects.toMatchObject({ code: "invalid-query" });
     await expect(
-      session.content
-        .from("values")
-        .select("id")
+      loadAll(session.collections)
+        .values.select("id")
         .orderBy("rich" as never)
         .all(),
     ).rejects.toMatchObject({ code: "invalid-query" });
     // Counting ignores sorting and relationship loading, as specified.
     expect(
-      await session.content
-        .from("values")
-        .orderBy("rich" as never)
+      await loadAll(session.collections)
+        .values.orderBy("rich" as never)
         .count(),
     ).toBe(2);
     await session.dispose();

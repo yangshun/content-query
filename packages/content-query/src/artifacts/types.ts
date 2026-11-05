@@ -1,7 +1,7 @@
 import type { QueryRegistry } from "../query/plan.ts";
 import type { QueryStyle } from "../runtime/query-style.ts";
 
-export const ARTIFACT_VERSION = 2;
+export const ARTIFACT_VERSION = 3;
 export const CODEC_VERSION = "devalue-6.0.2";
 
 export type ArtifactManifest = {

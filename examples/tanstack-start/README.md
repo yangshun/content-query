@@ -1,6 +1,6 @@
 # ContentQuery + TanStack Start
 
-Server metadata queries use `content.from(collection).select(...fields)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
+Each collection is imported from its own module, such as `await import("content-query:collections/guides")`. Server metadata queries use `guides.select(...fields)`. The relational API is available as `guides.findMany({ columns, with, where })`; bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
@@ -26,9 +26,9 @@ vp run --filter @content-query/example-tanstack-start build
 
 The example prerenders the homepage and guide pages. ContentQuery's Vite integration prepares content before compilation, generates `.content-query/types.d.ts`, and keeps its server runtime out of client modules. Content files live under `content/guides`; the application owns URLs, metadata, and HTML presentation. Nested guide IDs map to catch-all routes. Missing guides return a 404.
 
-Server functions are inline in their route modules. `src/routes/docs.tsx` fetches navigation for the persistent parent route with an `Outlet`; `docs.$.tsx` loads only the article and its neighbors. ContentQuery imports stay inside server function handlers, so the client receives callable proxies. The Vite config excludes `content-query:server` from dependency discovery, which runs before those handlers are stripped. There are no separate `.server.ts` or `.functions.ts` content helpers. Generated data and declarations are ignored by Git.
+Server functions are inline in their route modules. `src/routes/docs.tsx` fetches navigation for the persistent parent route with an `Outlet`; `docs.$.tsx` loads only the article and its neighbors. ContentQuery imports stay inside server function handlers, so the client receives callable proxies. The Vite config excludes `content-query:collections` and its per-collection modules from dependency discovery, which runs before those handlers are stripped. There are no separate `.server.ts` or `.functions.ts` content helpers. Generated data and declarations are ignored by Git.
 
-Development subscribes to `content-query:client` and calls `router.invalidate()` after publication. The generated `content-query:server` types include `CollectionKey`, `CollectionEntry`, and `Collections`; there is no handwritten declaration file. `source: "./content/guides"` defaults to Markdown. The production output is `dist/client/`.
+Development subscribes to `content-query:client` and calls `router.invalidate()` after publication. The generated `content-query:collections/guides` module exports `guides` and its `ContentGuide` entry type; there is no handwritten declaration file. `source: "./content/guides"` defaults to Markdown. The production output is `dist/client/`.
 
 Run `vp test run examples/tanstack-start/tests` from the repository root to build an isolated copy, add a nested guide, and verify ordered metadata, Markdown, and previous/next links after deleting the source files.
 

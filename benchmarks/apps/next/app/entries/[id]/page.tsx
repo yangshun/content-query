@@ -1,20 +1,19 @@
 import "server-only";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { content } from "#content-query";
+import { entries } from "#content-query/entries";
 import { eq } from "content-query/query";
 
 export const dynamicParams = false;
 
 /** Enumerates the entire collection for Next.js's native static export. */
 export async function generateStaticParams() {
-  return content.from("entries").select("id").orderBy("order").all();
+  return entries.select("id").orderBy("order").all();
 }
 
 export default async function EntryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const entry = await content
-    .from("entries")
+  const entry = await entries
     .select("id", "title", "description")
     .where((fields) => eq(fields.id, id))
     .withPayload("_rendered")

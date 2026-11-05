@@ -53,25 +53,28 @@ export const collections = { posts: defineCollection({
       await writeFile(
         path.join(fixture.root, "consumer.ts"),
         `import { schema } from "content-query/schema";
-import { content } from "./.content-query/server.js";
+import { posts as entries } from "./.content-query/collections/posts/server.js";
 import { postSchema } from "./content-query.config.ts";
 const input: schema.input<typeof postSchema> = { title: "Post", date: "2026-01-01" };
 const output: schema.output<typeof postSchema> = { title: "POST", date: new Date(), draft: false };
 const inferred: schema.infer<typeof postSchema> = output;
 const posts: Promise<{title:string;date:Date;draft:boolean;subtitle:string|undefined;titleLength:number}[]> =
-  content.from("posts").select("title", "date", "draft", "subtitle", "titleLength").all();
+  entries.select("title", "date", "draft", "subtitle", "titleLength").all();
 // @ts-expect-error Outputs include the defaulted boolean.
 const incomplete: schema.output<typeof postSchema> = { title: "Post", date: new Date() };
 // @ts-expect-error Builder exports exclude provider-level parsing utilities.
 void schema.parse;
 // @ts-expect-error Generated queries retain their inferred field types.
-content.from("posts").select("missing");
+entries.select("missing");
 void [input, inferred, posts, incomplete];`,
       );
       await typecheckConsumer(fixture.root);
 
       expect(
-        await readFile(path.join(fixture.root, ".content-query/server.js"), "utf8"),
+        await readFile(
+          path.join(fixture.root, ".content-query/collections/posts/server.js"),
+          "utf8",
+        ),
       ).not.toMatch(/content-query\/schema|content-query\.config|zod/);
       await rm(fixture.config);
       await rm(path.join(fixture.root, "content"), { recursive: true });
@@ -87,8 +90,8 @@ registerHooks({ resolve(specifier, context, next) {
   }
   return next(specifier, context);
 } });
-const { content } = await import("./.content-query/server.js");
-console.log(JSON.stringify(await content.from("posts").select("title", "date", "draft", "titleLength").all()));`,
+const { posts } = await import("./.content-query/collections/posts/server.js");
+console.log(JSON.stringify(await posts.select("title", "date", "draft", "titleLength").all()));`,
         ],
         { cwd: fixture.root },
       );
@@ -174,9 +177,13 @@ export const collections = { posts: defineCollection({
           const session = await buildAtRoot(fixture.root, { backend });
           try {
             expect(
-              await session.content
-                .from("posts" as never)
-                .select("title", "titleLength")
+              await (
+                session.collections as unknown as Record<
+                  string,
+                  { select(...fields: string[]): { all(): Promise<unknown> } }
+                >
+              )
+                .posts!.select("title", "titleLength")
                 .all(),
             ).toEqual(expected);
           } finally {
@@ -187,11 +194,11 @@ export const collections = { posts: defineCollection({
           path.join(fixture.root, "consumer.ts"),
           `import type { schema } from "content-query/schema";
 import type { metadataSchema, lengthSchema } from "./content-query.config.ts";
-import { content } from "./.content-query/server.js";
+import { posts as entries } from "./.content-query/collections/posts/server.js";
 const metadata: schema.infer<typeof metadataSchema> = {title:"Post"};
 const input: schema.input<typeof lengthSchema> = "Post";
 const output: schema.output<typeof lengthSchema> = 4;
-const posts: Promise<{title:string;titleLength:number}[]> = content.from("posts").select("title", "titleLength").all();
+const posts: Promise<{title:string;titleLength:number}[]> = entries.select("title", "titleLength").all();
 // @ts-expect-error Provider-independent inference retains the transformed output type.
 const invalid: schema.infer<typeof lengthSchema> = "4";
 void [metadata, input, output, posts, invalid];`,

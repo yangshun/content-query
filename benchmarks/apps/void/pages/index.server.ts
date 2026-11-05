@@ -1,16 +1,16 @@
 import { defineHandler } from "void";
-import { content } from "content-query:server";
+import { entries } from "content-query:collections/entries";
 
 export const prerender = true;
 
 export const loader = defineHandler(async () => {
-  const [count, entries] = await Promise.all([
-    content.from("entries").count(),
-    content.from("entries").select("id", "title", "description").orderBy("order").all(),
+  const [count, rows] = await Promise.all([
+    entries.count(),
+    entries.select("id", "title", "description").orderBy("order").all(),
   ]);
-  const first = entries[0];
+  const first = rows[0];
   if (!first) {
     throw new Error("Generate the benchmark corpus before starting the app.");
   }
-  return { count, entries, last: entries.at(-1) };
+  return { count, entries: rows, last: rows.at(-1) };
 });

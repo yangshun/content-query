@@ -1,4 +1,6 @@
+import { exportNameOf } from "../collection/names.ts";
 import type { Relationship } from "../collection/types.ts";
+import { invalidQuery } from "../shared/errors.ts";
 
 export type PredicateOperator =
   | "eq"
@@ -81,8 +83,34 @@ export type QueryRegistry = Record<
     relationships: Record<string, Relationship>;
     /** Payload names available to queries; omitted when the collection has none. */
     payloads?: Record<string, PayloadDescriptor>;
+    /**
+     * Declared relationships whose target collection this query scope has not loaded, by name, with
+     * the target collection. Queries that use one report which collection to pass to `using()`.
+     */
+    unavailable?: Record<string, string>;
+    /** The declared `typeName`, which only generated declarations read. */
+    typeName?: string;
   }
 >;
+
+/**
+ * Rejects a declared relationship whose target collection this query scope has not loaded,
+ * naming the collection to pass to `using()`.
+ *
+ * @param registry - The query scope's registry.
+ * @param collection - The collection that declares the relationship.
+ * @param name - The relationship, field, or filter name a query used.
+ */
+export function assertAvailable(registry: QueryRegistry, collection: string, name: string): void {
+  const unavailable = registry[collection]?.unavailable;
+  if (!unavailable || !Object.hasOwn(unavailable, name)) {
+    return;
+  }
+  const target = exportNameOf(unavailable[name]!);
+  invalidQuery(
+    `Relationship "${name}" targets the ${target} collection, which this query has not loaded. Pass it to using(), such as ${exportNameOf(collection)}.using(${target}).`,
+  );
+}
 
 /** Starts a fresh query without binding a content revision until execution. */
 export function emptyPlan(collection: string): QueryPlan {

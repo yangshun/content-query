@@ -32,10 +32,9 @@ export const collections = { posts };
 Each helper supplies a result schema and resolver. You choose the field names, and the inferred results are selectable, filterable, and sortable like other metadata:
 
 ```ts
-const posts = await content
-  .from("posts")
-  .select("title", "readingMinutes", "wordCount", "excerpt")
-  .all();
+import { posts } from "content-query:collections/posts";
+
+const entries = await posts.select("title", "readingMinutes", "wordCount", "excerpt").all();
 ```
 
 | Helper          | Result                                                                  | Defaults                                                    |

@@ -1,6 +1,6 @@
 # ContentQuery x Next.js
 
-Server metadata queries use `content.from(collection).select(...fields)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
+Each collection has its own generated entry: `import { guides } from "#content-query/guides"`. Fluent metadata queries start from the collection, such as `guides.select(...fields)`, and the relational API is `guides.findMany({ columns, where })`. Bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
@@ -40,8 +40,9 @@ Guide URLs use Next.js's default convention without trailing slashes, such as `/
 ## Content and routing
 
 - `content-query.config.ts` defines a Markdown collection with the string `source` shorthand with bundled metadata schema builders.
-- `.content-query/` holds the generated ESM runtime and its inferred TypeScript declarations, including `CollectionKey`, `CollectionEntry`, and `Collections`. It is ignored by Git and regenerated automatically before compilation.
-- `package.json` maps `#content-query` to `./.content-query/server.js` through its `imports` field. Server Components use `import { content } from "#content-query"` at any directory depth, with inferred types from the adjacent generated declarations.
+- `.content-query/` holds one generated ESM entry per collection, `collections/<name>/server.js`, with inferred TypeScript declarations beside it, including the `ContentGuide` entry type. It is ignored by Git and regenerated automatically before compilation.
+- `package.json` maps `#content-query/*` to `./.content-query/collections/*/server.js` through its `imports` field. Server Components use `import { guides } from "#content-query/guides"` at any directory depth. Each route's module graph references only the collections it imports, so a serverless deployment traces only those collections' data.
+- The client `sidebar.tsx` types its props with `import type { ContentGuide } from "#content-query/guides"`. The type-only import adds no collection data to the client bundle.
 - Queries are inline in `app/page.tsx`, `app/docs/layout.tsx`, and `app/docs/[...slug]/page.tsx`. Next.js's `server-only` marker prevents client components from importing these server modules.
 - The homepage queries selected metadata without rendering any guide bodies. `generateMetadata()` also selects metadata only.
 - `app/contents/page.tsx` lists every guide with links to its sections. Its `findMany()` requests the `_rendered` payload for every guide and reads only the headings; this is the one listing that opts into payloads.

@@ -7,9 +7,11 @@ order: 52
 
 ## Query methods
 
-The fluent API starts at `content.from(collection)`. Builders support `select`, `where`, `with`, `withPayload`, `orderBy`, `offset`, `limit`, and `selectAdjacent`. Await a selected builder directly or execute it with `all()`, `execute()`, `first()`, or `paginate()`; `count()` needs no selection.
+Each collection's entry exports its collection, such as `posts`, and queries start there. A fluent query starts with `select`, `where`, `with`, `withPayload`, `orderBy`, `offset`, `limit`, or `selectAdjacent`, and builders chain the same methods. Await a selected builder directly or execute it with `all()`, `execute()`, `first()`, or `paginate()`; `count()` needs no selection.
 
-The relational API exposes `content.query.posts.findMany(options)`, `findFirst(options)`, and `paginate(options)` for each registered collection. Options use `columns`, `with`, `where`, `orderBy`, `offset`, `limit`, `adjacent`, and `payloads`. Use `content.count(collection, options?)` for a filtered parent count before pagination.
+The relational API is `posts.findMany(options)`, `findFirst(options)`, and `paginate(options)`. Options use `columns`, `with`, `where`, `orderBy`, `offset`, `limit`, `adjacent`, and `payloads`. Use `posts.count(options?)` for a filtered parent count before pagination.
+
+`posts.using(authors)` returns a handle whose queries can also follow relationships into `authors`. Supply every collection a query's relationships reach; see [supply related collections](/docs/relationships#supply-related-collections).
 
 ## Selection
 

@@ -49,7 +49,7 @@ export const collections={docs:defineCollection({loader:mdx({base:"content"}),sc
   );
   await writeFile(
     path.join(root, "consumer.js"),
-    `export {content} from "content-query:server";
+    `export {docs} from "content-query:collections/docs";
 export {loadMdx, loadMdxDocument, renderMdx, getMdxAssets} from "content-query:mdx:server";`,
   );
   await writeFile(
@@ -383,7 +383,7 @@ describe("MDX Vite integration", () => {
     const changed = path.join(host.root, "content/first.mdx");
     try {
       let module = await consumer(server);
-      expect(await module.content.from("docs").select("title")).toEqual([{ title: "First" }]);
+      expect(await module.docs.select("title")).toEqual([{ title: "First" }]);
       expect(analyzed).not.toHaveBeenCalled();
       const initial = await core.api.prepare();
       expect(initial.entries).toEqual([{ collection: "docs", id: "first", filePath: changed }]);
@@ -410,7 +410,7 @@ describe("MDX Vite integration", () => {
         await vi.waitFor(
           async () => {
             module = await consumer(server);
-            expect(await module.content.from("docs").select("title")).toEqual([{ title }]);
+            expect(await module.docs.select("title")).toEqual([{ title }]);
             expect((await module.loadMdx("docs", "first")).headings[0].text).toBe(title);
           },
           { timeout: 8000 },
@@ -444,7 +444,7 @@ describe("MDX Vite integration", () => {
       expect(declarations).toContain("RenderMdxOptions");
       expect(declarations.match(/declare module /g)).toHaveLength(1);
       expect(await readFile(path.join(host.root, ".content-query/types.d.ts"), "utf8")).toContain(
-        'declare module "content-query:server"',
+        'declare module "content-query:collections/docs"',
       );
     } finally {
       unsubscribe();

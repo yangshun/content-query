@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { ARTIFACT_VERSION, CODEC_VERSION, type ArtifactManifest } from "./types.ts";
 import type { PreparedRevision } from "../runtime/revision.ts";
+import { collectionNames } from "../collection/names.ts";
 import { encode } from "../shared/values.ts";
 
 /** Creates an opaque content-addressed key with an unambiguous serialization boundary. */
@@ -9,8 +10,14 @@ function digest(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 
-/** Maps collection names to distinct safe directory names without changing public identities. */
-function directoryName(name: string): string {
+/**
+ * Maps collection and payload names to distinct safe directory names without changing public
+ * identities. Names that are not portable directory names are base64url-encoded behind `~`.
+ *
+ * @param name - The collection or payload name.
+ * @returns The directory name under `collections/` or a collection's `payloads/`.
+ */
+export function directoryName(name: string): string {
   return /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(name) &&
     !/^(?:con|prn|aux|nul|com[0-9]|lpt[0-9])$/i.test(name)
     ? name
@@ -27,23 +34,59 @@ function compactJson(source: string): string | undefined {
   return compressed.length < bytes * 0.9 ? compressed : undefined;
 }
 
-/** Creates portable ESM; build integrations can batch payload sources before a strict bundler runs. */
+/** Picks a module-local binding that cannot shadow the entry's export name. */
+function binding(base: string, exportName: string): string {
+  return base === exportName ? `${base}_` : base;
+}
+
+/**
+ * Creates one collection's entry, which exports the collection's query handle under its export
+ * name and imports only that collection's modules.
+ */
+function collectionEntry(
+  manifest: ArtifactManifest,
+  name: string,
+  exportName: string,
+  index: string,
+  renderer: boolean,
+): string {
+  const runtime = binding("runtime", exportName);
+  const data = binding("data", exportName);
+  const render = renderer
+    ? `, body => import("content-query/internal/markdown").then(module => module.renderMarkdown(body))`
+    : "";
+  return `import * as ${runtime} from "content-query/internal";\nimport ${data} from ${JSON.stringify(`./${index}`)};\nexport const ${exportName} = ${runtime}.createArtifactCollection(JSON.parse(${JSON.stringify(JSON.stringify(manifest))}), ${JSON.stringify(name)}, ${data}${render});\n`;
+}
+
+/**
+ * Creates portable ESM; build integrations can batch payload sources before a strict bundler runs.
+ *
+ * Each collection gets `collections/<export name>/server.js`, which exports its query handle and
+ * imports only that collection's modules, so a bundle that imports it never references the
+ * modules of another collection.
+ *
+ * @param revision - The prepared revision to publish.
+ * @param options - `payloadChunkBytes` batches payload modules for bundlers. `preparedEntry`
+ * also emits `prepared-server.js`, which exports the whole revision for development facades.
+ * @returns Module sources keyed by path relative to the output directory.
+ */
 export async function revisionModules(
   revision: PreparedRevision,
-  { payloadChunkBytes = 0 }: { payloadChunkBytes?: number } = {},
+  {
+    payloadChunkBytes = 0,
+    preparedEntry = false,
+  }: { payloadChunkBytes?: number; preparedEntry?: boolean } = {},
 ): Promise<Map<string, string>> {
   const modules = new Map<string, string>();
-  const manifest: ArtifactManifest = {
-    version: ARTIFACT_VERSION,
-    codec: CODEC_VERSION,
-    collections: revision.registry,
-    ...(revision.queryStyle ? { queryStyle: revision.queryStyle } : {}),
-  };
-  const imports: string[] = [];
-  const names: string[] = [];
-  let needsRenderer = false;
+  const names = collectionNames(revision.registry);
+  /** Each collection's index module, for the optional prepared entry. */
+  const indexes: [name: string, specifier: string][] = [];
+  let anyMarkdown = false;
   for (const [name, collection] of Object.entries(revision.collections)) {
-    const directory = `collections/${directoryName(name)}`;
+    const { exportName } = names.get(name)!;
+    const directory = `collections/${exportName}`;
+    /** Whether the collection captured Markdown, which the packaged renderer renders on demand. */
+    let markdown = false;
     const payloads: string[] = [];
     const chunks: string[] = [];
     let batch: [string, string][] = [];
@@ -74,7 +117,7 @@ export async function revisionModules(
     for (const [id, load] of collection.builtins) {
       const payload = await load();
       const encoded = encode(payload);
-      needsRenderer ||= payload.markdown !== undefined;
+      markdown ||= payload.markdown !== undefined;
       if (payloadChunkBytes) {
         const bytes = Buffer.byteLength(`[${JSON.stringify(id)}]: ${JSON.stringify(encoded)},\n`);
         if (batchBytes && batchBytes + bytes > payloadChunkBytes) {
@@ -133,24 +176,44 @@ export async function revisionModules(
     const code = `${loaders}export default { records: ${records}, builtins: ${loading}${table} };\n`;
     const index = `index-${digest(code)}.js`;
     modules.set(`${directory}/${index}`, code);
+    const descriptor = revision.registry[name]!;
+    const manifest: ArtifactManifest = {
+      version: ARTIFACT_VERSION,
+      codec: CODEC_VERSION,
+      collections: {
+        [name]: {
+          relationships: descriptor.relationships,
+          ...(descriptor.payloads ? { payloads: descriptor.payloads } : {}),
+        },
+      },
+      ...(revision.queryStyle ? { queryStyle: revision.queryStyle } : {}),
+    };
     modules.set(
-      `${directory}/index.js`,
-      `export { default } from ${JSON.stringify(`./${index}`)};\n`,
+      `${directory}/server.js`,
+      collectionEntry(manifest, name, exportName, index, markdown),
     );
-    const binding = `collection${imports.length}`;
-    imports.push(`import ${binding} from ${JSON.stringify(`./${directory}/${index}`)};`);
-    names.push(`[${JSON.stringify(name)}]: ${binding}`);
+    indexes.push([name, `./${directory}/${index}`]);
+    anyMarkdown ||= markdown;
   }
-  modules.set(
-    "manifest.js",
-    `export default JSON.parse(${JSON.stringify(JSON.stringify(manifest))});\n`,
-  );
-  const renderer = needsRenderer
-    ? `, body => import("content-query/internal/markdown").then(module => module.renderMarkdown(body))`
-    : "";
-  modules.set(
-    "server.js",
-    `import { createArtifactRuntime } from "content-query/internal";\n${imports.join("\n")}\nexport const content = createArtifactRuntime(JSON.parse(${JSON.stringify(JSON.stringify(manifest))}), { ${names.join(", ")} }${renderer});\n`,
-  );
+  if (preparedEntry) {
+    const manifest: ArtifactManifest = {
+      version: ARTIFACT_VERSION,
+      codec: CODEC_VERSION,
+      collections: Object.fromEntries(
+        Object.entries(revision.registry).map(([name, { relationships, payloads }]) => [
+          name,
+          { relationships, ...(payloads ? { payloads } : {}) },
+        ]),
+      ),
+      ...(revision.queryStyle ? { queryStyle: revision.queryStyle } : {}),
+    };
+    const render = anyMarkdown
+      ? `, body => import("content-query/internal/markdown").then(module => module.renderMarkdown(body))`
+      : "";
+    modules.set(
+      "prepared-server.js",
+      `import { createArtifactRevision } from "content-query/internal";\n${indexes.map(([, specifier], index) => `import collection${index} from ${JSON.stringify(specifier)};`).join("\n")}\nexport const revision = createArtifactRevision(JSON.parse(${JSON.stringify(JSON.stringify(manifest))}), { ${indexes.map(([name], index) => `[${JSON.stringify(name)}]: collection${index}`).join(", ")} }${render});\nexport const registry = revision.registry;\nexport const error = undefined;\n`,
+    );
+  }
   return modules;
 }

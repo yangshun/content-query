@@ -2,7 +2,7 @@
 
 A framework-independent content collection library with typed queries, field projection, relationships, captured bodies, and Markdown rendering. Content builds run during development or your application's build. Production consumes prepared content without loading source files or importing collection configuration.
 
-Application imports such as `content-query/schema`, `content-query/query`, `content-query/computed`, `content-query/build`, and `content-query/vite` remain the supported API. The `content-query/internal` entries exist for generated modules and integration wiring.
+Application imports such as `content-query/schema`, `content-query/query`, `content-query/computed`, `content-query/build`, and `content-query/vite`, plus the generated [collection entries](#collection-entries), remain the supported API. The `content-query/internal` entries exist for generated modules and integration wiring.
 
 ## Define collections
 
@@ -165,30 +165,31 @@ vp exec content-query --version
 
 The CLI uses CAC for commands, options, and generated help/version output. `-c`, `-o`, and `-w` are aliases for `--config`, `--out-dir`, and `--watch`; value options accept both `--option value` and `--option=value`. Help and version requests work without loading collection configuration or building content.
 
-Defaults are automatic config discovery, `--backend generated`, and `--out-dir ./.content-query`. Unknown options, repeated build options, missing values, invalid backends, and extra positional arguments fail. The command is `build`; the former `prepare` command is no longer accepted. Git-ignore `.content-query/`; generated runtime artifacts and Vite declarations share this directory directly, without a nested `generated/` directory.
+Defaults are automatic config discovery, `--backend generated`, and `--out-dir ./.content-query`. Unknown options, repeated build options, missing values, invalid backends, and extra positional arguments fail. The command is `build`. Git-ignore `.content-query/`; generated runtime artifacts and Vite declarations share this directory directly, without a nested `generated/` directory.
 
 The CLI, standalone API, and Vite integration discover exactly one `content-query.config.{ts,mts,cts,js,mjs,cjs}` file at the application root. Examples use `.ts`; both ES module and CommonJS configurations are supported. Missing or multiple matching files produce a configuration error. Use `--config` on the CLI or the `config` option in `buildContent()`/Vite to select an exact filename or location, bypassing discovery. An explicit path never falls back to another config. Configurations export the named `collections` registry; JSON, YAML, and JSX/TSX are not discovered.
 
 ```ts
-import { content } from "./.content-query/server.js";
+import { authors } from "./.content-query/collections/authors/server.js";
+import { posts } from "./.content-query/collections/posts/server.js";
 import { eq } from "content-query/query";
 
-const posts = await content
-  .from("posts")
+const summaries = await posts
+  .using(authors)
   .select("id", "title")
   .where((fields) => eq(fields.draft, false))
   .with("author", (author) => author.select("name"))
   .orderBy("title")
   .limit(20);
 
-const post = await content.query.posts.findFirst({
-  where: { id: posts[0]!.id },
+const post = await posts.findFirst({
+  where: { id: summaries[0]!.id },
   payloads: { _body: true, _rendered: true },
 });
 const { _body: body, _rendered: rendered } = post!._payloads;
 ```
 
-Start fluent queries with `content.from(collection)` and select fields with `.select(...fields)`; field names are checked and completed as soon as `from()` names the collection. Builders are immutable and reusable. Await a selected builder directly, or call `all()` / `execute()` for an array, `first()` for one entry or `undefined`, and [`paginate()`](#pagination) for one page with page-number or cursor details. `count()` counts filtered parents before pagination and needs no selection.
+Start fluent queries from the collection, such as `posts.select(...fields)`; field names are checked and completed immediately. `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, and `selectAdjacent` also start fluent queries. Builders are immutable and reusable. Await a selected builder directly, or call `all()` / `execute()` for an array, `first()` for one entry or `undefined`, and [`paginate()`](#pagination) for one page with page-number or cursor details. `count()` counts filtered parents before pagination and needs no selection.
 
 Queries return only the data they select; nothing is implicit, not even `id`. Every row-returning scope, including relationship and adjacent sibling scopes, must select fields, include a relationship, request a payload, or select adjacency. A scope that selects nothing fails to type-check: awaiting an unselected builder reports "Type of 'await' operand must either be a valid promise…", and its `all()` / `first()` / `execute()` report the rule as their required `this` type. At runtime it throws an `invalid-query` ContentError: "Select fields, relationships, payloads, or adjacent entries before running this query." Selected optional properties remain own properties with value `undefined`. Returned graphs and headings are detached from internal state. Queries load bodies or rendered HTML only when they request [payloads](#payloads).
 
@@ -198,25 +199,80 @@ Detachment copies a result directly when it contains only primitives, plain obje
 
 Filtering uses structured expressions from `content-query/query`: scalar equality/comparison/choice operators, literal string matching, `like`/`ilike`/`notLike`/`notIlike` patterns, scalar-array membership including `arrayContained`, absence checks, boolean composition, and relationship filters. `has(fields.author, (author) => eq(author.name, "Ada"))` matches parents with a matching related entry; `has(fields.author)` tests existence, and `not(has(...))` tests absence. The fluent operators cover every relational filter. See the [operator matrix](./PLAN.md#filtering). Sorting uses deterministic Unicode code-point order and ID tie-breakers, with nullish/unordered special values last. Pagination accepts nonnegative safe integers.
 
-Relationships support forward/inverse fields, authored ID arrays, explicit reference ownership, and nested fluent queries. Every relationship scope, fluent or relational, selects its own data. Many scopes support per-parent ordering/pagination; singular scopes support filtering and return `null` if their target is excluded. Preparation rejects dangling/ambiguous authored references and invalid singular cardinality. Array references preserve order and duplicates; inverse membership is distinct.
+Relationships support forward/inverse fields, authored ID arrays, explicit reference ownership, and nested fluent queries. Queries follow a relationship only when its target collection is supplied through [`using()`](#relationships-with-using). Every relationship scope, fluent or relational, selects its own data. Many scopes support per-parent ordering/pagination; singular scopes support filtering and return `null` if their target is excluded. Preparation rejects dangling/ambiguous authored references and invalid singular cardinality. Array references preserve order and duplicates; inverse membership is distinct.
+
+## Collection entries
+
+Each collection has its own generated entry, `collections/<export name>/server.js`, with declarations in `server.d.ts` beside it. The entry exports exactly one value, named after the collection, plus that collection's types, and imports only that collection's index and payload modules. A route's module graph therefore references only the collections it imports, so bundles and serverless file tracing exclude the others.
+
+| Host                    | Import                                                                                                                              |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Vite, either backend    | `import { posts } from "content-query:collections/posts"`                                                                           |
+| Node, Next.js, others   | `import { posts } from "#content-query/posts"` with `"imports": { "#content-query/*": "./.content-query/collections/*/server.js" }` |
+| Without an import alias | `import { posts } from "./.content-query/collections/posts/server.js"`                                                              |
+
+The export name and import path segment are the collection name when it is a valid identifier. Otherwise the name is converted: `blog-posts` becomes `blogPosts` (`#content-query/blogPosts`), a leading digit gets an `_` prefix, and reserved words, `default`, and Windows device names such as `con` get a `Collection` suffix. Export names that collide, ignoring letter case, fail the build.
+
+### Relationships with `using()`
+
+An entry loads only its own collection; nothing related is pulled in automatically. Supply relationship targets at the call site:
+
+```ts
+import { authors } from "#content-query/authors";
+import { posts } from "#content-query/posts";
+
+const rows = await posts.using(authors).findMany({
+  columns: { title: true },
+  where: { author: { name: "Ada" } },
+  with: { author: { columns: { name: true } } },
+});
+const fluent = await posts
+  .using(authors)
+  .select("id")
+  .with("author", (author) => author.select("name"))
+  .all();
+```
+
+- Relationship syntax (`with`, relational `where`, and fluent `has()`) is unchanged.
+- Every hop is explicit: `posts.using(authors, publishers)` for `with: { author: { with: { publisher: ... } } }`.
+- `using()` only supplies relationship targets; it does not let `posts` run root queries on `authors`. Query `authors` through its own entry.
+- A relationship whose target was not supplied is a TypeScript error at the relationship and an `invalid-query` error at runtime: `Relationship "author" targets the authors collection, which this query has not loaded. Pass it to using(), such as posts.using(authors).`
+- Self-relationships need nothing. A handle such as `const careers = jobs.using(companies)` can live at module level; combinations are cached.
+
+### Entry types
+
+Each entry exports a full-entry type and a payload type. The type name is `Content` plus the export name, capitalized and made singular by dropping one trailing `s` when it does not follow another `s`: `posts` gives `ContentPost`, `jobs` gives `ContentJob`, `projectsTracks` gives `ContentProjectsTrack`, and `coding` gives `ContentCoding`. Set `typeName` on the collection for irregular plurals; `defineCollection({ ..., typeName: "Category" })` gives `ContentCategory`. Two collections that generate the same type name fail the build.
+
+```ts
+import type { ContentCodingPayload } from "#content-query/coding";
+import type { ContentPost } from "#content-query/posts";
+
+type Post = ContentPost; // ID, validated metadata, and computed fields.
+type PostLink = ContentPost<"id" | "title">; // What select("id", "title") returns.
+type Detail = ContentCodingPayload<"detail">; // One declared payload's value.
+```
+
+`ContentPost<"id" | "title">` is the shape a query returns when it selects those fields: every selected key is present, optional fields read as `undefined` when missing, and unknown field names are type errors. Spell type imports with `import type`, which works under every TypeScript configuration; a plain import also works unless `verbatimModuleSyntax` is enabled. Vite apps import the same types from `content-query:collections/posts`.
+
+`content-query/runtime` exports `Collection<Registry, Name, Style?>` (one collection's query API), `CollectionHandles<Registry, Style?>` (one handle per collection, keyed by name), `AnyCollection` (what `using()` accepts), and `LoadedRegistry` for typed helpers.
 
 ## Relational queries and adjacent entries
 
 The collection-scoped relational and collection-first fluent APIs compile to the same normalized query plan and use the same executor, value semantics, validation, and revision pinning:
 
 ```ts
-const posts = await content.query.posts.findMany({
+const guides = await posts.using(authors).findMany({
   where: { draft: false, title: { contains: "guide" } },
   columns: { id: true, title: true },
   with: { author: { columns: { name: true } } },
   orderBy: { title: "asc" },
   limit: 20,
 });
-const first = await content.query.posts.findFirst({ columns: { id: true } });
-const count = await content.count("posts", { where: { draft: false } });
+const first = await posts.findFirst({ columns: { id: true } });
+const count = await posts.count({ where: { draft: false } });
 ```
 
-`findFirst()` returns `undefined` when no entry matches. `findMany()` and `findFirst()` require options that select data. List fields with `columns: { title: true }`; columns accept only `true`, so there are no exclusions. Omitted columns and `columns: {}` select no fields, for queries that only need relationships, payloads, or adjacency. Explicit inclusions create every selected property. Request related entries through `with` with nested options that select data; `with: { author: true }` is rejected, and `false` omits the relationship. Singular relationships cannot order or paginate. Count ignores pagination, matching fluent `.count()`.
+`findFirst()` returns `undefined` when no entry matches. `findMany()` and `findFirst()` require options that select data. List fields with `columns: { title: true }`; columns accept only `true`, so there are no exclusions. Omitted columns and `columns: {}` select no fields, for queries that only need relationships, payloads, or adjacency. Explicit inclusions create every selected property. Request related entries through `with` with nested options that select data; `with: { author: true }` is rejected, and `false` omits the relationship. Singular relationships cannot order or paginate. `count(options)` ignores pagination, matching fluent `.count()`, and `count()` without options counts every entry.
 
 Relational filters support scalar shorthand and `eq`, `ne`, `in`, `notIn`, `gt`, `gte`, `lt`, `lte`, `like`, `ilike`, `notLike`, `notIlike`, `contains`, `startsWith`, `endsWith`, `arrayContains`, `arrayOverlaps`, `arrayContained`, `isNull`, `isNotNull`, `isUndefined`, and `isMissing`, subject to field types. Compose them with query-level or field-level `AND`, `OR`, and `NOT`. Presence predicates accept booleans. `like` uses `%` and `_` wildcards; `ilike` also ignores case. The literal string helpers remain case-sensitive. `where: { author: { name: "Ada" } }` filters parents by related entries; `author: true` and `false` test relationship existence. `where: { RAW: (fields) => eq(fields.AND, value) }` accepts structured expressions for reserved field names, rather than SQL text.
 
@@ -224,16 +280,16 @@ Select previous/next entries without loading bodies:
 
 ```ts
 // Results scope: neighbors within the filtered/ordered result before pagination.
-await content.query.posts.findMany({
+await posts.findMany({
   where: { draft: false },
   orderBy: { title: "asc" },
   adjacent: { scope: "results", columns: { id: true } },
   columns: { title: true },
 });
-await content.from("posts").select("title").orderBy("title").selectAdjacent("id").all();
+await posts.select("title").orderBy("title").selectAdjacent("id").all();
 
 // A detail lookup needs an independent sibling scope, separate from its ID filter.
-const post = await content.query.posts.findFirst({
+const post = await posts.findFirst({
   where: { id: currentId },
   adjacent: {
     where: { draft: false },
@@ -242,8 +298,7 @@ const post = await content.query.posts.findFirst({
   },
   columns: { title: true },
 });
-const same = await content
-  .from("posts")
+const same = await posts
   .select("title")
   .where((fields) => eq(fields.id, currentId))
   .selectAdjacent((siblings) =>
@@ -259,27 +314,21 @@ Both return `_adjacent: { previous, next }`, with `null` at boundaries or when t
 
 `content-query/query` exports `QueryOptions<Registry, Name>` (also named `RelationalQueryOptions`), `CountOptions<Registry, Name>`, `RelationalWhere`, and `RelationalQueryResult` for typed helpers. Use `satisfies QueryOptions<...>` to validate reusable options while retaining literal column selections.
 
-The top-level content operations are `from`, `query`, and `count`. Bodies and rendered output are payloads that queries request. This replaces callable `content.query("posts")` and root `content.findMany("posts", options)` / `findFirst`. Migrate fluent calls to `content.from("posts").select(...)`, and object calls to `content.query.posts.findMany({ columns, with, ... })` / `findFirst`. Version 0.2.0 removes `content.readBody()` and `content.render()`; see [Payloads](#payloads) for their replacements.
+Each collection handle offers the fluent starters plus `findMany`, `findFirst`, `paginate`, `count`, and `using`. Bodies and rendered output are payloads that queries request; see [Payloads](#payloads).
 
-Explicit selection replaces select-first fluent queries and implicit metadata:
+Selection is explicit:
 
-| Before                                        | After                                                                              |
-| --------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `content.select("id", "title").from("posts")` | `content.from("posts").select("id", "title")`                                      |
-| `content.select().from("posts")`              | `content.from("posts").select(...fields)` listing the fields you need              |
-| `findMany()` or `findMany({ where })`         | `findMany({ where, columns: { ... } })`                                            |
-| `columns: { draft: false }`                   | `columns` listing each field to include with `true`                                |
-| `with: { author: true }`                      | `with: { author: { columns: { ... } } }`                                           |
-| `adjacent: true` or `.selectAdjacent()`       | `adjacent: { scope: "results", columns: { id: true } }` or `.selectAdjacent("id")` |
-| `findFirst({ where: { id }, payloads })`      | Unchanged if it reads only `_payloads`; add `columns` for any other fields         |
+- Fluent queries list fields with `posts.select(...fields)`. Relational queries list them in `columns`, each set to `true`; `findMany({ where })` alone selects nothing.
+- Relationships select their own data, such as `with: { author: { columns: { name: true } } }`.
+- Adjacency selects neighbor fields: `adjacent: { scope: "results", columns: { id: true } }` or `.selectAdjacent("id")`.
+- A query that reads only payloads, such as `findFirst({ where: { id }, payloads })`, needs no `columns`.
 
 Results include `id` only when it is selected.
 
 ## Pagination
 
 ```ts
-const query = content
-  .from("posts")
+const query = posts
   .select("id", "title")
   .where((fields) => eq(fields.draft, false))
   .orderBy("publishedAt", "desc");
@@ -294,7 +343,7 @@ const next = await query.paginate({ size: 10, after: first.endCursor });
 // { items, startCursor, endCursor, hasNextPage, hasPreviousPage }
 
 // The relational API accepts the same pagination options beside its query options.
-const page = await content.query.posts.paginate({
+const page = await posts.paginate({
   columns: { id: true, title: true },
   orderBy: { publishedAt: "desc" },
   page: 2,
@@ -308,7 +357,7 @@ const page = await content.query.posts.paginate({
 - **Cursors.** `after` returns the entries after an earlier page's `endCursor`; `before` returns the entries just before a `startCursor`. A `null` cursor starts at the first entry with `after`, or at the last entry with `before`. `total: true` adds the matching total, which is omitted otherwise. Both cursors are `null` on an empty page, and `hasNextPage` and `hasPreviousPage` are exact.
 - **Cursor contents.** Cursors are opaque, URL-safe strings that record the collection, the effective sort order including the ID tie-breaker, and the boundary entry's sort values, with dates and `BigInt`s preserved. They position by those values, so they keep working when filters change or the boundary entry is removed. A malformed cursor, or one from a different collection or sort order, throws an `invalid-cursor` ContentError. Cursors from fluent and relational queries with the same order are interchangeable.
 - **Restrictions.** `paginate()` sets the limit and offset itself: after `limit()` or `offset()` it fails to type-check and throws `invalid-query`, and relational `paginate()` rejects `limit` and `offset`. Page options cannot include `after`, `before`, or `total`, a cursor page accepts `after` or `before` but not both, and `page` and `size` must be positive safe integers. Only root queries paginate; relationship scopes keep `limit` and `offset`.
-- **Types.** `content-query/query` exports `PageOptions`, `CursorOptions`, `PaginateOptions`, `NumberedPage<Item>`, `CursorPage<Item, Total>`, `PaginateResult<Item, Options>`, and `RelationalPaginateOptions`. With generated declarations, `NumberedPage<CollectionEntry<"posts", "id" | "title">>` types the page above.
+- **Types.** `content-query/query` exports `PageOptions`, `CursorOptions`, `PaginateOptions`, `NumberedPage<Item>`, `CursorPage<Item, Total>`, `PaginateResult<Item, Options>`, and `RelationalPaginateOptions`. With generated declarations, `NumberedPage<ContentPost<"id" | "title">>` types the page above.
 
 ## Query style
 
@@ -318,13 +367,13 @@ Export an optional `queryStyle` from the config to allow only one query API:
 export const queryStyle = "relational"; // or "fluent"
 ```
 
-Omit it to allow both. `"fluent"` keeps `content.from()`; `"relational"` keeps `content.query` and `content.count()`. Every other query API starts from one of those members, so the setting also covers relationships, payloads, adjacency, and counts.
+Omit it to allow both. `"fluent"` keeps the fluent starters on each collection: `select`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, and `selectAdjacent`. `"relational"` keeps `findMany`, `findFirst`, `paginate`, and `count(options)`. `count()` without options works in both. Every other query API starts from one of those members, so the setting also covers relationships, payloads, adjacency, and counts.
 
-Generated declarations read the export's type, so the editor and `tsc` report a disabled member without a rebuild: `content.from is unavailable because content-query.config sets queryStyle to "relational".` Keep the literal type: use a plain `const` or `satisfies QueryStyle`, not a `: QueryStyle` annotation, which widens the type and allows both styles in types while the runtime still enforces the value.
+Generated declarations read the export's type, so the editor and `tsc` report a disabled member without a rebuild: `posts.select is unavailable because content-query.config sets queryStyle to "relational".` Keep the literal type: use a plain `const` or `satisfies QueryStyle`, not a `: QueryStyle` annotation, which widens the type and allows both styles in types while the runtime still enforces the value.
 
-Builds record the style in each revision and in the generated manifest. Accessing or calling a disabled member throws an `invalid-query` ContentError with the same message, which covers JavaScript consumers and casts. Development config edits apply to the next revision. Values other than `"fluent"` and `"relational"` fail configuration loading.
+Builds record the style in each revision and in each generated collection entry. Accessing or calling a disabled member throws an `invalid-query` ContentError with the same message, which covers JavaScript consumers and casts. Development config edits apply to the next revision. Values other than `"fluent"` and `"relational"` fail configuration loading.
 
-`QueryStyle` is exported from `content-query` and `content-query/runtime`, and `Content<Registry, Style>` takes the style as an optional second type argument. Standalone `buildContent<Registry, Style>()` sessions are typed by their type arguments, for example `buildContent<typeof collections, typeof queryStyle>()`; without `Style`, they type both APIs and rely on the runtime check.
+`QueryStyle` is exported from `content-query` and `content-query/runtime`. `Collection<Registry, Name, Style>` and `CollectionHandles<Registry, Style>` take the style as an optional type argument, and `QueryStyleDisabled<Collection, Member, Style>` is the message type of a disabled member. Standalone `buildContent<Registry, Style>()` sessions are typed by their type arguments, for example `buildContent<typeof collections, typeof queryStyle>()`; without `Style`, they type both APIs and rely on the runtime check.
 
 Both styles support the same filters, so either value can express every query.
 
@@ -332,11 +381,11 @@ Both styles support the same filters, so either value can express every query.
 
 The Vite plugin defaults to `backend: "in-memory"`: `contentQuery()` serves virtual modules in development, bundles prepared content for production, and writes only `.content-query/types.d.ts`. Use `contentQuery({ backend: "generated" })` to also publish standalone runtime artifacts. The standalone CLI, `buildContent()`, and Next.js adapter continue to default to generated storage.
 
-Artifact publication reuses unchanged immutable files and stages new modules with bounded parallel I/O before switching the public entry. Conflicting bytes still fail publication, and older revisions retain their immutable payloads.
+Artifact publication reuses unchanged immutable files and stages new modules with bounded parallel I/O before switching each collection's public entry. Conflicting bytes still fail publication, and older revisions retain their immutable payloads.
 
-The generated backend writes collection indexes and separate lazy item payloads, with versioned devalue encoding. Immutable content-addressed modules keep old operations consistent; stable entry/index aliases expose the latest complete publication. A new watch session removes obsolete collection modules from previous runs after its first successful publication. Invalid startup content delays cleanup until the first valid publication. Later updates retain superseded modules for the rest of that session, so restarting reclaims files from earlier runs. One-shot builds (the CLI without `--watch`, `buildContent`, and Vite builds) also remove generated collection modules their revision no longer references, leaving other files in place. Each output directory belongs to one host; start a new session or one-shot build after previous consumers stop. Only `server.js` and its declarations are application imports.
+The generated backend writes collection indexes and separate lazy item payloads, with versioned devalue encoding. Immutable content-addressed modules keep old operations consistent; each collection's stable `server.js` entry exposes its latest complete publication. A new watch session removes obsolete collection modules from previous runs after its first successful publication. Invalid startup content delays cleanup until the first valid publication. Later updates retain superseded modules for the rest of that session, so restarting reclaims files from earlier runs. One-shot builds (the CLI without `--watch`, `buildContent`, and Vite builds) also remove generated collection modules their revision no longer references, leaving other files in place. Each output directory belongs to one host; start a new session or one-shot build after previous consumers stop. Only the collection entries, `collections/<export name>/server.js`, and their declarations are application imports.
 
-The in-memory backend writes no backend content artifacts. `buildContent()` accepts `BuildContentOptions` (`config`, `backend`, `outDir`, and `watch`) from `content-query/build` and returns a `ContentSession` with `content` and asynchronous `dispose()`. Build diagnostics report `operation: "build"`. Direct use binds the registry through an erased type import:
+The in-memory backend writes no backend content artifacts. `buildContent()` accepts `BuildContentOptions` (`config`, `backend`, `outDir`, and `watch`) from `content-query/build` and returns a `ContentSession` with `collections` and asynchronous `dispose()`. `session.collections` holds one handle per collection, keyed by collection name, with the same API and `using()` as the generated entries. Build diagnostics report `operation: "build"`. Direct use binds the registry through an erased type import:
 
 ```ts
 import { buildContent } from "content-query/build";
@@ -344,7 +393,13 @@ import type { collections } from "./content-query.config";
 
 const session = await buildContent<typeof collections>({ backend: "in-memory" });
 try {
-  const titles = await session.content.from("posts").select("title").all();
+  const { authors, posts } = session.collections;
+  const titles = await posts.select("title").all();
+  const bylines = await posts
+    .using(authors)
+    .select("title")
+    .with("author", (author) => author.select("name"))
+    .all();
 } finally {
   await session.dispose();
 }
@@ -364,9 +419,9 @@ export default defineConfig({ plugins: [contentQuery()] });
 
 The Vite integration supports Vite 8 and uses its public types. Vite and Next.js are optional peers; standalone builds and queries require neither framework.
 
-Server modules import `content` from `content-query:server` with either backend. Vite owns watching, preparation, invalidation, error display, and cleanup. Its `.content-query/types.d.ts` binds the facade to the configured registry; include that file in the application's TypeScript project. Remove handwritten ambient bindings when using the generated declarations. Both `content-query:server` and the physical server entry export the type-only aliases `CollectionKey`, `CollectionEntry<"posts">` (metadata plus computed fields and ID), `Collections` (a map from collection keys to entry types), and `CollectionPayload<"posts", "detail">`. `CollectionEntry<"posts", "id" | "title">` is the shape a query returns when it selects those fields: every selected key is present, optional fields read as `undefined` when missing, and unknown field names are type errors. Include `.content-query/**/*.d.ts` in `tsconfig.json`; run `vp exec content-query build` before an initial type check without starting Vite. With generated storage, the default directory also contains `server.js`, `server.d.ts`, `manifest.js`, `package.json`, and `collections/`. A fresh in-memory Vite setup emits only `types.d.ts`; standalone in-memory preparation writes no files. Standalone generated preparation also writes `types.d.ts` beside the server entry. Custom `outDir` values relocate backend artifacts while the Vite declaration stays in `.content-query/`. `content-query:server` is a virtual module supplied by Vite; other bundlers import the physical generated entry.
+Server modules import each collection from `content-query:collections/<export name>`, such as `import { posts } from "content-query:collections/posts"`, with either backend. A module name that matches no collection fails with an error. Vite owns watching, preparation, invalidation, error display, and cleanup. Its `.content-query/types.d.ts` declares each collection module with its handle and [entry types](#entry-types), plus the type-only `content-query:collections` module, whose `CollectionKey` names every collection for integrations that accept a collection name, such as `@content-query/mdx`. Include `.content-query/**/*.d.ts` in `tsconfig.json`, remove handwritten ambient bindings, and run `vp exec content-query build` before an initial type check without starting Vite. With generated storage, the default directory contains `package.json`, `types.d.ts`, and `collections/<export name>/` with each collection's `server.js`, `server.d.ts`, index, and payload modules. A fresh in-memory Vite setup emits only `types.d.ts`; standalone in-memory preparation writes no files. Custom `outDir` values relocate backend artifacts while the Vite declaration stays in `.content-query/`. The `content-query:collections/*` modules are supplied by Vite; other bundlers import the physical generated entries.
 
-Generated output is ordinary ESM for Node or another bundler; it does not require Vite. The Vite integration rejects direct/transitive client imports, including the physical generated server entry. It recognizes package files by the installed package's location and `node_modules/content-query` paths, so an application directory named `content-query` is unaffected. Other hosts must enforce equivalent server-only boundaries. Runtime guards provide a fallback. The [Next.js example](../examples/next/README.md) uses the optional Next.js adapter, server-only queries, and App Router static generation.
+Generated output is ordinary ESM for Node or another bundler; it does not require Vite. The Vite integration rejects direct/transitive client imports, including the physical generated collection entries. It recognizes package files by the installed package's location and `node_modules/content-query` paths, so an application directory named `content-query` is unaffected. Other hosts must enforce equivalent server-only boundaries. Runtime guards provide a fallback. The [Next.js example](../examples/next/README.md) uses the optional Next.js adapter, server-only queries, and App Router static generation.
 
 Vite excludes generated artifacts from its file watcher while preserving application watcher settings. Production content preparation runs for server environments, so client compilation does not repeat source loading and Markdown rendering. Before bundling, Vite packs payload sources into lazy modules targeting 128 KiB each, including when the host requires strict entry signatures. Queries without payloads still load no payload modules; requesting `_body` or `_rendered` for an entry can load neighboring entries' payloads in the same module. Host output and chunking settings continue to control the final bundle. Standalone generated artifacts retain individual immutable item modules.
 
@@ -387,26 +442,26 @@ Next's detached telemetry helper also evaluates development configuration. The a
 
 The wrapper preserves the application's Next.js settings. For static exports, the example selects `output: "export"` outside development so Next's static-parameter checks do not interfere with added or removed development routes.
 
-Add an application-local alias in `package.json`:
+Add an application-local alias for the collection entries in `package.json`:
 
 ```json
 {
   "imports": {
-    "#content-query": "./.content-query/server.js"
+    "#content-query/*": "./.content-query/collections/*/server.js"
   }
 }
 ```
 
-Server Components use the same import at every directory depth:
+Server Components import each collection they query, at every directory depth:
 
 ```ts
 import "server-only";
-import { content } from "#content-query";
+import { posts } from "#content-query/posts";
 ```
 
-The alias resolves to the generated server entry and its inferred declarations. If you customize `outDir`, update the alias target to match.
+The alias resolves to each generated collection entry and its inferred declarations. A route's serverless function traces only the collections its module graph imports. If you customize `outDir`, update the alias target to match.
 
-Next's module graph observes published changes, including body-only edits, and refreshes route data through its normal HMR behavior. Validation and configuration failures publish a contextual error entry so server consumers fail visibly; correcting the input republishes the runtime. The application owns routing and should use Next's `server-only` marker around content consumers. Next.js is an optional peer dependency used only by this adapter. Each development publication uses a fresh immutable `next-dev-*.js` runtime entry, including when content returns to an earlier revision, so Next invalidates cached modules reliably. The first successful publication removes entries from previous runs while preserving the new runtime. Later publications retain entries for the rest of the session; repeated configuration evaluation reuses that session without cleaning again. A successful one-shot Next.js build removes all development entries after publishing the ordinary server entry.
+Next's module graph observes published changes, including body-only edits, and refreshes route data through its normal HMR behavior. Validation and configuration failures replace every collection entry with a contextual error entry so server consumers fail visibly; correcting the input republishes the runtime. The application owns routing and should use Next's `server-only` marker around content consumers. Next.js is an optional peer dependency used only by this adapter. Each development publication points every collection entry at a fresh immutable `next-dev-*.js` runtime copy in its directory, including when content returns to an earlier revision, so Next invalidates cached modules reliably. The first successful publication removes entries from previous runs while preserving the new runtime. Later publications retain entries for the rest of the session; repeated configuration evaluation reuses that session without cleaning again. A successful one-shot Next.js build removes all development entries after publishing the ordinary collection entries.
 
 ## Development updates
 
@@ -420,7 +475,7 @@ Declared files or glob base directories that are missing when watching starts re
 
 `content-query:client` exports `onContentUpdate(callback)`, a browser-safe Vite subscription. Register the host router's asynchronous data revalidation and return the unsubscribe function from the framework's lifecycle hook. Revalidation is serialized and rapid edits are coalesced. The production module is a no-op and includes no content runtime.
 
-The Void example and docs app clear the router cache and call `router.refresh({ replace: true, preserveState: true, preserveScroll: true })` from a root component effect. React Router calls `revalidator.revalidate()`, TanStack Start calls `router.invalidate()`, and SvelteKit calls `refreshAll()`. Successful edits update prepared server modules before notifying browsers. Clients without a subscription retain full-document reload as a fallback. Preparation errors still reach Vite's error overlay. Server startup and dependency optimization can still cause framework-owned reloads. Next.js uses `withContentQuery()` and generated-module HMR. The native Angular example runs `content-query build --watch` alongside Angular CLI; generated server imports trigger Angular rebuilds and page reloads.
+The Void example and docs app clear the router cache and call `router.refresh({ replace: true, preserveState: true, preserveScroll: true })` from a root component effect. React Router calls `revalidator.revalidate()`, TanStack Start calls `router.invalidate()`, and SvelteKit calls `refreshAll()`. Successful edits update prepared server modules before notifying browsers. Clients without a subscription retain full-document reload as a fallback. Preparation errors still reach Vite's error overlay. Server startup and dependency optimization can still cause framework-owned reloads. Next.js uses `withContentQuery()` and generated-module HMR. The native Angular example runs `content-query build --watch` alongside Angular CLI; generated collection imports trigger Angular rebuilds and page reloads.
 
 The examples use native framework loaders/server functions and keep routing and HTML presentation in the application: [Void](../examples/void/README.md), [React Router](../examples/react-router/README.md), [TanStack Start](../examples/tanstack-start/README.md), [Next.js](../examples/next/README.md), [SvelteKit](../examples/sveltekit/README.md), and [Angular](../examples/angular/README.md).
 
@@ -429,15 +484,14 @@ The examples use native framework loaders/server functions and keep routing and 
 Bodies and rendered output are payloads: per-entry data stored and loaded separately from query records. Request them in the query that selects the entry:
 
 ```ts
-const post = await content.query.posts.findFirst({
+const post = await posts.findFirst({
   where: { id },
   columns: { title: true },
   payloads: { _rendered: true },
 });
 const { html, headings } = post!._payloads._rendered;
 
-const same = await content
-  .from("posts")
+const same = await posts
   .select("title")
   .where((fields) => eq(fields.id, id))
   .withPayload("_rendered")
@@ -448,7 +502,7 @@ const same = await content
 - **Requests.** Relational `payloads` maps payload names to `true`, or to a record naming every variant key for a payload with variants; `false` omits a payload. It is accepted at the root and inside `with` scopes. Fluent `.withPayload(name)` does the same on root and relationship builders; requesting the same payload twice throws. Omitting `columns` still returns all metadata alongside the payloads.
 - **Results.** Requested values appear under the reserved `_payloads` key, which metadata, computed fields, and relationships cannot use. A query that requests no payloads has no `_payloads` key.
 - **Loading.** Payloads load after filtering, ordering, and pagination, from the same pinned revision as the records, with at most 16 loads in flight per query. Each distinct payload loads once per query, and every row receives its own detached copy, including rows that share a related entry. Adjacent sibling scopes never request payloads.
-- **Limits.** Payloads are never selectable, filterable, sortable, or countable. `content.count()` and fluent `.count()` reject payload requests, and the fluent `count()` terminal is unavailable in the types once `.withPayload()` is called.
+- **Limits.** Payloads are never selectable, filterable, sortable, or countable. Relational `count(options)` and fluent `.count()` reject payload requests, and the fluent `count()` terminal is unavailable in the types once `.withPayload()` is called.
 - **Built-ins.** Built-in payload names start with an underscore, so they never collide with payloads a collection declares. `_body` is the retained raw text, or `undefined` when an entry has none or `retainBody` is `false`. `_rendered` is `{ html, headings }`; entries without supplied output or a Markdown rendering path reject the query with `not-renderable`. Markdown `source` collections, `glob()`, and custom loaders offer both. JSON, YAML, and TOML `source` collections and `file()` do not: requesting either there is a type error and an `invalid-query` at runtime.
 - **Missing entries.** A query for a missing entry returns `undefined` or an empty array, so there is no separate lookup error.
 
@@ -463,6 +517,7 @@ Markdown defaults to `retainBody: true` and `deferRender: false`. Production pre
 Collections declare their own payloads for large per-entry data that queries load only on request:
 
 ```ts
+// content-query.config.ts
 const coding = defineCollection({
   loader: glob({ base: "./content/coding", pattern: "*/exercise.json", generateId }),
   schema: schema.object({ title: schema.string(), locales: schema.array(schema.string()) }),
@@ -476,8 +531,13 @@ const coding = defineCollection({
     },
   },
 });
+```
 
-const exercise = await content.query.coding.findFirst({
+```ts
+// Server code
+import { coding } from "#content-query/coding";
+
+const exercise = await coding.findFirst({
   where: { id: "two-sum" },
   payloads: { detail: { locale: "fr-FR" } },
 });
@@ -485,10 +545,10 @@ const exercise = await content.query.coding.findFirst({
 
 - **Declarations.** Each payload has a `schema` and `resolve(context)`, where `context` holds `collection`, `id`, `data` (validated metadata plus computed fields), `source`, `variant`, `readBody()`, tracked `files` helpers, and `signal`. Names cannot start with `_` or repeat a computed field or relationship.
 - **Variants.** `variants` maps each key to the name of a string-array data field, read per entry (a missing value means none), or to a fixed list. Preparation resolves the cross product of the keys' values, or the combinations `combinations({ ...context, variants })` returns; each must give every key one listed value. Variant values are not callbacks, so TypeScript can infer variant keys inline; derive values that need logic in a computed field.
-- **Preparation.** Payloads resolve after relationships validate, are schema-validated and encoded, and are cached per variant, so unchanged entries reuse their values and publishing reuses their encodings. Generated output stores one module per entry and variant at `collections/<collection>/payloads/<payload>/<hash>.js`.
+- **Preparation.** Payloads resolve after relationships validate, are schema-validated and encoded, and are cached per variant, so unchanged entries reuse their values and publishing reuses their encodings. Generated output stores one module per entry and variant at `collections/<export name>/payloads/<payload>/<hash>.js`.
 - **Related files.** Computed and payload resolvers receive tracked `files` helpers: `text(path)`, `bytes(path)`, `glob({ pattern, base?, generateId?, retainBody?, schema? })` and `file(path, { parser?, schema? })`, which parse like the `glob()` and `file()` loaders and return `{ id, data, body?, filePath }` entries, and `renderMarkdown(body)`. Paths are relative to the entry's folder (its file's folder, or a custom loader's `source.directory`) and must stay inside it or a directory in the collection's `sharedFiles`. Schema failures name the file as `source` and the field as `path`. During development, an edit to a read file re-resolves only the payload variants that read it, a glob that gains or loses a match re-resolves its readers, and a file a computed field read re-prepares that entry. `cache: false` resolves a payload again in every revision, for inputs `files` cannot track.
 - **Requests.** Variant requests name every key: relational `payloads: { detail: { locale: "fr-FR" } }` or fluent `.withPayload("detail", { locale: "fr-FR" })`. A combination the entry lacks rejects with `variant-not-found`, whose `payload` and `variant` properties name it.
-- **Types.** Payload values and variant keys are inferred from the declaration. `content-query` exports `PayloadData<Definition, Name>` and `VariantOf<Definition, Name>`, and generated declarations export `CollectionPayload<Collection, Payload>`.
+- **Types.** Payload values and variant keys are inferred from the declaration. `content-query` exports `PayloadData<Definition, Name>` and `VariantOf<Definition, Name>`, and each generated entry exports a payload type such as `ContentCodingPayload<"detail">`.
 - **Diagnostics.** Payload failures carry `payload` and `variant` with the collection, entry, source, and field `path`, through the Vite development transport, and the CLI prints them as `detail[locale=fr-FR]`.
 
 ## Errors and extension points

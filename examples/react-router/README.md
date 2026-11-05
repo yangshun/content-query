@@ -1,6 +1,6 @@
 # ContentQuery + React Router
 
-Server metadata queries use `content.from(collection).select(...fields)`. The relational API is available as `content.query.<collection>.findMany({ columns, with, where })`; bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
+Each collection is imported from its own module, such as `import { guides } from "content-query:collections/guides"`. Server metadata queries use `guides.select(...fields)`. The relational API is available as `guides.findMany({ columns, with, where })`; bodies and rendered HTML are requested as payloads, with `payloads: { _rendered: true }` or `.withPayload("_rendered")`.
 
 Collection schemas use `schema` from `content-query/schema`, which supplies Zod-backed builders without a separate Zod dependency.
 
@@ -24,11 +24,11 @@ vp run --filter @content-query/example-react-router dev
 vp run --filter @content-query/example-react-router build
 ```
 
-The example prerenders the homepage and guide pages. ContentQuery's Vite integration builds content before compilation, generates `.content-query/types.d.ts`, and keeps its server runtime out of client modules. `react-router.config.ts` calls `buildContent()` from `content-query/build` with the in-memory backend to enumerate prerender paths. Content files live under `content/guides`; the application owns URLs, metadata, and HTML presentation. Nested guide IDs map to catch-all routes. Missing guides return a 404.
+The example prerenders the homepage and guide pages. ContentQuery's Vite integration builds content before compilation, generates `.content-query/types.d.ts`, and keeps its server runtime out of client modules. `react-router.config.ts` calls `buildContent()` from `content-query/build` with the in-memory backend and queries `session.collections.guides` to enumerate prerender paths. Content files live under `content/guides`; the application owns URLs, metadata, and HTML presentation. Nested guide IDs map to catch-all routes. Missing guides return a 404.
 
 Queries are inline in native route loaders. `app/routes/docs.tsx` fetches IDs/titles for a persistent docs layout with an `Outlet`; `app/routes/guide.tsx` loads only the current article and its neighbors. `NavLink` keeps the active sidebar item in sync. There is no separate content-loading helper. Generated data and declarations are ignored by Git.
 
-Development subscribes to `content-query:client` and calls `useRevalidator().revalidate()` after publication. The generated `content-query:server` types include `CollectionKey`, `CollectionEntry`, and `Collections`; there is no handwritten declaration file. `source: "./content/guides"` defaults to Markdown. The production output is `build/client/`.
+Development subscribes to `content-query:client` and calls `useRevalidator().revalidate()` after publication. The generated `content-query:collections/guides` module exports `guides` and its `ContentGuide` entry type; there is no handwritten declaration file. `source: "./content/guides"` defaults to Markdown. The production output is `build/client/`.
 
 Run `vp test run examples/react-router/tests` from the repository root to build an isolated copy, add a nested guide, and verify ordered metadata, Markdown, and previous/next links after deleting the source files.
 

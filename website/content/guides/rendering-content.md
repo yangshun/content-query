@@ -8,7 +8,9 @@ order: 30
 Metadata queries do not render content. Request the `_rendered` payload in the query that loads the article you want to display:
 
 ```ts
-const post = await content.query.posts.findFirst({
+import { posts } from "content-query:collections/posts";
+
+const post = await posts.findFirst({
   where: { id: "hello" },
   columns: { title: true },
   payloads: { _rendered: true, _body: true },
@@ -35,7 +37,7 @@ The `_body` payload is the retained text, or `undefined` when an entry has none;
 
 Markdown sources, `glob()`, and custom loaders offer `_body` and `_rendered`. JSON, YAML, and TOML sources and `file()` hold data records only, so requesting either payload there is a type error. Custom loaders typed as `BodyLoader`, such as the MDX loader, offer `_body` only.
 
-Version 0.2.0 replaced `content.render(collection, id)` and `content.readBody(collection, id)` with these payload requests. A query for a missing entry returns `undefined`, so handle page-not-found behavior where you check the result.
+A query for a missing entry returns `undefined`, so handle page-not-found behavior where you check the result.
 
 The repository's `content-query/examples/payloads/` example builds a static site that uses each kind of payload request, including payloads inside relationship scopes and HTML supplied by a custom loader.
 

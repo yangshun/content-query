@@ -4,7 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import type { LoaderContext, FileSource, DataEntry } from "content-query/loaders";
 import { defineCollection } from "content-query";
-import type { Content } from "content-query/runtime";
+import type { Collection } from "content-query/runtime";
 import { schema } from "content-query/schema";
 import { describe, expect, test, vi } from "vite-plus/test";
 import { mdx, readMdx } from "./loader.ts";
@@ -121,15 +121,15 @@ function mdxDefinitions() {
 }
 
 /** Type-only consumer checks: MDX bodies are queryable, but rendering belongs to the integration. */
-async function checkPayloadTypes(content: Content<ReturnType<typeof mdxDefinitions>>) {
-  const guide = await content.query.guides.findFirst({ payloads: { _body: true } });
+async function checkPayloadTypes(guides: Collection<ReturnType<typeof mdxDefinitions>, "guides">) {
+  const guide = await guides.findFirst({ payloads: { _body: true } });
   const body: string | undefined = guide?._payloads._body;
-  const fluent = await content.from("guides").select("id").withPayload("_body").first();
+  const fluent = await guides.select("id").withPayload("_body").first();
   const fluentBody: string | undefined = fluent?._payloads._body;
   // @ts-expect-error Core cannot render MDX; use renderMdx() or loadMdxDocument().
-  void content.query.guides.findMany({ payloads: { _rendered: true } });
+  void guides.findMany({ payloads: { _rendered: true } });
   // @ts-expect-error Fluent queries reject rendered MDX output too.
-  content.from("guides").select("id").withPayload("_rendered");
+  guides.select("id").withPayload("_rendered");
   void [body, fluentBody];
 }
 void checkPayloadTypes;

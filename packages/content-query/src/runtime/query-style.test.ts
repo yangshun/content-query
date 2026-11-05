@@ -27,7 +27,7 @@ describe("isQueryStyle", () => {
 });
 
 describe("styleOfMember", () => {
-  test("maps every gated root member to the style that owns it", () => {
+  test("maps every gated collection member to the style that owns it", () => {
     for (const [style, members] of Object.entries(queryStyleMembers)) {
       for (const member of members) {
         expect(styleOfMember(member)).toBe(style);
@@ -35,23 +35,24 @@ describe("styleOfMember", () => {
     }
   });
 
-  test("gives each style a distinct set of root members", () => {
+  test("gives each style a distinct set of collection members", () => {
     const members = Object.values(queryStyleMembers).flat();
     expect(new Set(members).size).toBe(members.length);
   });
 });
 
 describe("queryStyleDisabledMessage", () => {
-  test("names the disabled member and the configured style", () => {
-    const message: QueryStyleDisabled<"from", "relational"> = queryStyleDisabledMessage(
-      "from",
+  test("names the collection, the disabled member, and the configured style", () => {
+    const message: QueryStyleDisabled<"posts", "select", "relational"> = queryStyleDisabledMessage(
+      "posts",
+      "select",
       "relational",
     );
     expect(message).toBe(
-      'content.from is unavailable because content-query.config sets queryStyle to "relational".',
+      'posts.select is unavailable because content-query.config sets queryStyle to "relational".',
     );
-    expect(queryStyleDisabledMessage("count", "fluent")).toBe(
-      'content.count is unavailable because content-query.config sets queryStyle to "fluent".',
+    expect(queryStyleDisabledMessage("posts", "count(options)", "fluent")).toBe(
+      'posts.count(options) is unavailable because content-query.config sets queryStyle to "fluent".',
     );
   });
 });

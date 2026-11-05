@@ -37,16 +37,19 @@ export const collections = {
 `,
         );
         await (await buildAtRoot(fixture.root, {})).dispose();
-        const server = await readFile(path.join(fixture.root, ".content-query/server.js"), "utf8");
+        const server = await readFile(
+          path.join(fixture.root, ".content-query/collections/authors/server.js"),
+          "utf8",
+        );
         expect(server).not.toMatch(/astro|csv-loader|content-query\.config|zod/);
         await writeFile(
           path.join(fixture.root, "consumer.ts"),
           `
-import { content } from "./.content-query/server.js";
-const authors: Promise<{id:string;name:string}[]> = content.from("authors").select("id", "name").all();
+import { authors } from "./.content-query/collections/authors/server.js";
+const rows: Promise<{id:string;name:string}[]> = authors.select("id", "name").all();
 // @ts-expect-error Source schema inference survives the loader and generated declarations.
-content.from("authors").select("missing");
-void authors;
+authors.select("missing");
+void rows;
 `,
         );
         await execute(
@@ -80,8 +83,8 @@ registerHooks({resolve(specifier,context,next){
   }
   return next(specifier,context);
 }});
-const {content}=await import("./.content-query/server.js");
-console.log(JSON.stringify(await content.from("authors").select("id", "name").all()));
+const {authors}=await import("./.content-query/collections/authors/server.js");
+console.log(JSON.stringify(await authors.select("id", "name").all()));
 `,
           ],
           { cwd: fixture.root },

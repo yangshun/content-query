@@ -1,13 +1,12 @@
 import { eq } from "content-query/query";
 import { defineHandler, defineHead, type InferProps } from "void";
-import { content } from "content-query:server";
+import { guides } from "content-query:collections/guides";
 
 export const prerender = true;
 
 export const loader = defineHandler(async (context) => {
   const id = context.req.param("slug");
-  const query = content
-    .from("guides")
+  const query = guides
     .select("id", "title", "description")
     .orderBy("order")
     .selectAdjacent((siblings) => siblings.orderBy("order").select("id", "title"))
@@ -37,6 +36,6 @@ export const head = defineHead((_context, props: Props) => ({
 
 /** Queries the current collection instead of capturing entries during module initialization. */
 export async function getPrerenderPaths() {
-  const guides = await content.from("guides").select("id").orderBy("order").all();
-  return guides.map((guide) => ({ slug: guide.id }));
+  const entries = await guides.select("id").orderBy("order").all();
+  return entries.map((guide) => ({ slug: guide.id }));
 }

@@ -14,6 +14,7 @@ import { collectLoader } from "../../../tests/helpers/loader.ts";
 import { defineCollection } from "../../collection/define.ts";
 import { createSession } from "../../preparation/session.ts";
 import { bodyOf, renderedOf } from "../../../tests/helpers/payloads.ts";
+import { loadAll } from "../../../tests/helpers/collections.ts";
 
 /** Checks that the native loader context remains a structural subset of Astro's public context. */
 function acceptsAstroContext(context: AstroContext): LoaderContext {
@@ -54,7 +55,7 @@ describe("Astro content loader compatibility", () => {
       registry,
       watch: true,
     });
-    const title = () => session.content.from("posts").select("title").first();
+    const title = () => loadAll(session.collections).posts.select("title").first();
     try {
       await expect(title()).rejects.toMatchObject({ code: "source-error" });
       await writeFile(filename, "Recovered");
@@ -125,7 +126,7 @@ describe("Astro content loader compatibility", () => {
       watch: false,
     });
     try {
-      expect(await session.content.from("posts").select("title").all()).toEqual([
+      expect(await loadAll(session.collections).posts.select("title").all()).toEqual([
         { title: "ONE" },
         { title: "TWO" },
       ]);
@@ -179,7 +180,7 @@ describe("Astro content loader compatibility", () => {
       registry,
       watch: true,
     });
-    const title = () => session.content.from("posts").select("title").first();
+    const title = () => loadAll(session.collections).posts.select("title").first();
     try {
       await writeFile(filename, "changed");
       await started;
@@ -218,13 +219,13 @@ describe("Astro content loader compatibility", () => {
       watch: true,
     });
     try {
-      expect(await session.content.from("authors").select("id", "name").all()).toEqual([
+      expect(await loadAll(session.collections).authors.select("id", "name").all()).toEqual([
         { id: "ada", name: "Ada!" },
       ]);
       expect(transform).toHaveBeenCalledTimes(1);
       await writeFile(filename, "id,name\ngrace,Grace\n");
       await vi.waitFor(async () => {
-        expect(await session.content.from("authors").select("id", "name").all()).toEqual([
+        expect(await loadAll(session.collections).authors.select("id", "name").all()).toEqual([
           { id: "grace", name: "Grace!" },
         ]);
       });
@@ -270,11 +271,11 @@ describe("Astro content loader compatibility", () => {
       watch: false,
     });
     try {
-      expect(await session.content.from("posts").select("id", "title").all()).toEqual([
+      expect(await loadAll(session.collections).posts.select("id", "title").all()).toEqual([
         { id: "hello", title: "HELLO" },
       ]);
-      expect(await bodyOf(session.content, "posts", "hello")).toBe("# Hello\n");
-      expect(await renderedOf(session.content, "posts", "hello")).toEqual({
+      expect(await bodyOf(loadAll(session.collections), "posts", "hello")).toBe("# Hello\n");
+      expect(await renderedOf(loadAll(session.collections), "posts", "hello")).toEqual({
         html: '<h1 id="hello">Hello</h1>\n',
         headings: [{ depth: 1, slug: "hello", text: "Hello" }],
       });

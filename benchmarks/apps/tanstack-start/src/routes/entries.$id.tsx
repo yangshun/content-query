@@ -4,8 +4,8 @@ import { createServerFn } from "@tanstack/react-start";
 const getEntry = createServerFn({ method: "GET" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
-    const { content } = await import("content-query:server");
-    const entry = await content.query.entries.findFirst({
+    const { entries } = await import("content-query:collections/entries");
+    const entry = await entries.findFirst({
       where: { id },
       columns: { id: true, title: true, description: true },
       payloads: { _rendered: true },

@@ -8,6 +8,7 @@ import { buildContent, type BuildContentOptions } from "../build.ts";
 import { buildAtRoot } from "./build.ts";
 import { sessionInternals, type ContentSession } from "./session.ts";
 import { projectFixture } from "../../tests/helpers/project.ts";
+import { loadAll } from "../../tests/helpers/collections.ts";
 
 describe("content build entry points", () => {
   for (const options of [
@@ -41,9 +42,8 @@ export const collections = {posts: defineCollection({loader: {name: "fixture", a
       );
       const session = await buildContent<Registry>({ config: filename, backend: "in-memory" });
       try {
-        const selected: { title: string } | undefined = await session.content
-          .from("posts")
-          .select("title")
+        const selected: { title: string } | undefined = await loadAll(session.collections)
+          .posts.select("title")
           .first();
         expect(selected).toEqual({
           title: "Standalone",
@@ -78,14 +78,14 @@ describe("generated watch startup cleanup", () => {
             original.replace("title: Getting started", "title: false"),
           );
         } else if (initialFailure === "failed-publication") {
-          await mkdir(path.join(outDir, "server.js"));
+          await mkdir(path.join(outDir, "collections/posts/server.js"), { recursive: true });
         }
         session = await buildAtRoot(fixture.root, { watch: true });
         if (initialFailure !== "none") {
           expect(sessionInternals(session).state.error).toBeDefined();
           expect(await readFile(stale, "utf8")).toBe("Previous run");
           if (initialFailure === "failed-publication") {
-            await rm(path.join(outDir, "server.js"), { recursive: true });
+            await rm(path.join(outDir, "collections/posts/server.js"), { recursive: true });
             sessionInternals(session).invalidate();
           } else {
             await writeFile(fixture.postPath, original);
@@ -155,12 +155,12 @@ ${declaration}`,
           posts: CollectionDefinition<undefined, {}, {}>;
         }>(root, {});
         try {
-          expect(await session.content.from("posts").select("title").first()).toEqual({
+          expect(await loadAll(session.collections).posts.select("title").first()).toEqual({
             title: "Discovered",
           });
-          expect(await readFile(path.join(root, ".content-query/server.d.ts"), "utf8")).toContain(
-            `typeof import("../${filename}").collections`,
-          );
+          expect(
+            await readFile(path.join(root, ".content-query/collections/posts/server.d.ts"), "utf8"),
+          ).toContain(`typeof import("../../../${filename}").collections`);
         } finally {
           await session.dispose();
         }
@@ -275,12 +275,14 @@ ${extra}`,
     try {
       const session = await buildAtRoot<Registry, "relational">(root, { backend: "in-memory" });
       try {
-        expect(await session.content.query.posts.findFirst({ columns: { id: true } })).toEqual({
+        expect(
+          await loadAll(session.collections).posts.findFirst({ columns: { id: true } }),
+        ).toEqual({
           id: "one",
         });
         expect(() =>
-          (session.content as unknown as ContentSession<Registry>["content"]).from("posts"),
-        ).toThrow(/content\.from is unavailable because content-query\.config sets queryStyle/);
+          (session.collections.posts as unknown as { select(field: string): unknown }).select("id"),
+        ).toThrow(/posts\.select is unavailable because content-query\.config sets queryStyle/);
       } finally {
         await session.dispose();
       }
@@ -310,12 +312,15 @@ ${extra}`,
     try {
       const session = await buildAtRoot(root, {});
       await session.dispose();
-      const declarations = await readFile(path.join(root, ".content-query/server.d.ts"), "utf8");
+      const entry = path.join(root, ".content-query/collections/posts");
+      const declarations = await readFile(path.join(entry, "server.d.ts"), "utf8");
       expect(declarations).toContain(
-        'type ConfiguredQueryStyle = typeof import("../content-query.config.ts") extends { queryStyle: infer Style',
+        'type ConfiguredQueryStyle = typeof import("../../../content-query.config.ts") extends { queryStyle: infer Style',
       );
-      expect(declarations).toContain("Content<Registry, ConfiguredQueryStyle>");
-      expect(await readFile(path.join(root, ".content-query/manifest.js"), "utf8")).toContain(
+      expect(declarations).toContain(
+        'export declare const posts: import("content-query/runtime").Collection<Registry, "posts", ConfiguredQueryStyle>;',
+      );
+      expect(await readFile(path.join(entry, "server.js"), "utf8")).toContain(
         '\\"queryStyle\\":\\"fluent\\"',
       );
     } finally {

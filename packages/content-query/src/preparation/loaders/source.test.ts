@@ -7,6 +7,7 @@ import { defineCollection } from "../../collection/define.ts";
 import type { ComputedContext } from "../../collection/types.ts";
 import type { Loader, LoaderContext } from "../../loaders/types.ts";
 import { createSession, sessionInternals } from "../session.ts";
+import { loadAll } from "../../../tests/helpers/collections.ts";
 
 describe("loader-provided computed source metadata", () => {
   test("recomputes metadata-only updates while preserving Astro digest semantics", async () => {
@@ -41,7 +42,9 @@ describe("loader-provided computed source metadata", () => {
       watch: true,
     });
     try {
-      expect(await session.content.from("posts").select("url").first()).toEqual({ url: "/first" });
+      expect(await loadAll(session.collections).posts.select("url").first()).toEqual({
+        url: "/first",
+      });
       expect(
         context!.store.set({
           id: "one",
@@ -58,7 +61,7 @@ describe("loader-provided computed source metadata", () => {
         digest: "second",
       });
       await sessionInternals(session).idle();
-      expect(await session.content.from("posts").select("url").first()).toEqual({
+      expect(await loadAll(session.collections).posts.select("url").first()).toEqual({
         url: "/second",
       });
       expect(resolve).toHaveBeenCalledTimes(2);
@@ -72,7 +75,7 @@ describe("loader-provided computed source metadata", () => {
       expect(resolve).toHaveBeenCalledTimes(2);
       context!.store.set({ id: "one", data: { title: "Fixed" } });
       await sessionInternals(session).idle();
-      expect(await session.content.from("posts").select("title", "url").first()).toEqual({
+      expect(await loadAll(session.collections).posts.select("title", "url").first()).toEqual({
         title: "Fixed",
         url: undefined,
       });
@@ -116,7 +119,9 @@ describe("loader-provided computed source metadata", () => {
       watch: false,
     });
     try {
-      expect(await session.content.from("posts").select("changed", "original").first()).toEqual({
+      expect(
+        await loadAll(session.collections).posts.select("changed", "original").first(),
+      ).toEqual({
         changed: "Changed",
         original: "Original",
       });

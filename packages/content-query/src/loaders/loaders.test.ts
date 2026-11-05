@@ -12,6 +12,7 @@ import { createSession, sessionInternals } from "../preparation/session.ts";
 import { defineCollection } from "../collection/define.ts";
 import type { ComputedContext } from "../collection/types.ts";
 import { bodyOf, renderedOf } from "../../tests/helpers/payloads.ts";
+import { loadAll } from "../../tests/helpers/collections.ts";
 
 describe("built-in loaders", () => {
   test("passes collection names and loader-defined source metadata to computed fields", async () => {
@@ -68,18 +69,20 @@ describe("built-in loaders", () => {
         watch: false,
       });
       try {
-        expect(await session.content.from("posts").select("id", "location").first()).toEqual({
+        expect(await loadAll(session.collections).posts.select("id", "location").first()).toEqual({
           id: "custom-id",
           location: { collection: "posts", source: { filePath: "content/posts/Intro.md" } },
         });
-        expect(await session.content.from("authors").select("id", "location").first()).toEqual({
-          id: "ada",
-          location: {
-            collection: "authors",
-            source: { filePath: "content/authors#team.json", key: "ada" },
+        expect(await loadAll(session.collections).authors.select("id", "location").first()).toEqual(
+          {
+            id: "ada",
+            location: {
+              collection: "authors",
+              source: { filePath: "content/authors#team.json", key: "ada" },
+            },
           },
-        });
-        expect(await session.content.from("remote").select("id", "location").all()).toEqual([
+        );
+        expect(await loadAll(session.collections).remote.select("id", "location").all()).toEqual([
           {
             id: "custom-source",
             location: { collection: "remote", source: { url: "https://example.com/document" } },
@@ -111,12 +114,12 @@ describe("built-in loaders", () => {
       watch: true,
     });
     try {
-      expect(await session.content.from("posts").select("title").first()).toEqual({
+      expect(await loadAll(session.collections).posts.select("title").first()).toEqual({
         title: "External",
       });
       await writeFile(path.join(external, "post.md"), "---\ntitle: Changed outside root\n---\n");
       await vi.waitFor(async () =>
-        expect(await session.content.from("posts").select("title").first()).toEqual({
+        expect(await loadAll(session.collections).posts.select("title").first()).toEqual({
           title: "Changed outside root",
         }),
       );
@@ -298,11 +301,11 @@ describe("built-in loaders", () => {
           registry,
           watch: false,
         });
-        expect(await bodyOf(session.content, "posts", "post")).toBeUndefined();
-        expect((await session.content.from("posts").select("raw").first())?.raw).toContain(
+        expect(await bodyOf(loadAll(session.collections), "posts", "post")).toBeUndefined();
+        expect((await loadAll(session.collections).posts.select("raw").first())?.raw).toContain(
           "## Hello",
         );
-        expect((await renderedOf(session.content, "posts", "post")).headings).toEqual([
+        expect((await renderedOf(loadAll(session.collections), "posts", "post")).headings).toEqual([
           { depth: 2, slug: "hello", text: "Hello" },
         ]);
         await session.dispose();
@@ -328,13 +331,17 @@ describe("built-in loaders", () => {
       watch: true,
     });
     try {
-      expect(await session.content.from("posts").count()).toBe(0);
+      expect(await loadAll(session.collections).posts.count()).toBe(0);
       expect(warn).toHaveBeenCalled();
       await mkdir(path.join(root, "later"));
       await writeFile(path.join(root, "later/new.md"), "---\ntitle: New\n---\n");
-      await vi.waitFor(async () => expect(await session.content.from("posts").count()).toBe(1));
+      await vi.waitFor(async () =>
+        expect(await loadAll(session.collections).posts.count()).toBe(1),
+      );
       await rm(path.join(root, "later/new.md"));
-      await vi.waitFor(async () => expect(await session.content.from("posts").count()).toBe(0));
+      await vi.waitFor(async () =>
+        expect(await loadAll(session.collections).posts.count()).toBe(0),
+      );
       await sessionInternals(session).idle();
     } finally {
       await session.dispose();

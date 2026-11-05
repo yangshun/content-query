@@ -17,8 +17,10 @@ import type { ContentError } from "../../shared/errors.ts";
 
 import { clientEnvironment, physicalPath, forbidden } from "./client-boundary.ts";
 import { withinDirectory } from "../../shared/paths.ts";
+import { collectionNames } from "../../collection/names.ts";
+import type { QueryRegistry } from "../../query/plan.ts";
 import {
-  facade,
+  collectionPrefix,
   preparedFacade,
   virtualPrefix,
   preparedModules,
@@ -29,6 +31,8 @@ import {
 } from "./modules.ts";
 
 const bridgeSymbol = Symbol.for("content-query.dev-sessions");
+/** Matches a collection facade's virtual ID and captures its export name. */
+const facadeModule = /^\0content-query:collections\/([^/]+)\/server\.js$/;
 type BridgeGlobal = typeof globalThis & { [bridgeSymbol]?: Map<string, ContentSession> };
 
 /** Public, format-neutral hooks for integrations sharing this plugin's preparation session. */
@@ -64,13 +68,28 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
   const refreshClients = new WeakSet<object>();
   const sourceListeners = new Set<(event: ContentSourceEvent) => void>();
 
-  /** Publishes type-only facade binding without importing configuration in executable code. */
-  async function writeTypes(configPath: string): Promise<void> {
+  let configFile: string | undefined;
+  /** Publishes type-only facade bindings without importing configuration in executable code. */
+  async function writeTypes(registry: QueryRegistry | undefined): Promise<void> {
+    if (!configFile || !registry) {
+      return;
+    }
     const directory = path.join(config.root, ".content-query");
     await writeChanged(
       path.join(directory, "types.d.ts"),
-      virtualDeclarations(directory, configPath),
+      virtualDeclarations(directory, configFile, collectionNames(registry)),
     );
+  }
+  /** Maps a collection facade's export name back to its collection, or undefined when unknown. */
+  function collectionOf(exportName: string): string | undefined {
+    const state = session && sessionInternals(session).state;
+    const registry = state?.revision?.registry ?? state?.registry ?? {};
+    for (const [name, generated] of collectionNames(registry)) {
+      if (generated.exportName === exportName) {
+        return name;
+      }
+    }
+    return undefined;
   }
   /** Notifies the host after atomic publication or a recoverable preparation failure. */
   async function refreshModules(state: ContentState): Promise<void> {
@@ -104,31 +123,31 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
   /** Notifies every host environment after portable state modules are ready. */
   async function changed(state: ContentState): Promise<void> {
     await refreshModules(state);
+    await writeTypes(state.revision?.registry ?? state.registry).catch(deliveryFailed);
     if (!server) {
       return;
     }
     for (const environment of Object.values(server.environments)) {
-      const boundary = environment.moduleGraph.getModuleById(`${virtualPrefix}server.js`);
       const prepared = environment.moduleGraph.getModuleById(`${virtualPrefix}prepared-server.js`);
-      for (const module of environment.moduleGraph.idToModuleMap.values()) {
-        if (module.id === `${virtualPrefix}prepared-server.js`) {
-          environment.moduleGraph.invalidateModule(module);
-        }
+      const boundaries = [...environment.moduleGraph.idToModuleMap.values()].filter((module) =>
+        facadeModule.test(module.id ?? ""),
+      );
+      if (prepared) {
+        environment.moduleGraph.invalidateModule(prepared);
       }
-      if (boundary && prepared) {
-        environment.hot.send({
-          type: "update",
-          updates: [
-            {
-              type: "js-update",
-              timestamp: Date.now(),
-              path: boundary.url,
-              acceptedPath: prepared.url,
-              explicitImportRequired: false,
-              isWithinCircularImport: false,
-            },
-          ],
-        });
+      const timestamp = Date.now();
+      const updates = prepared
+        ? boundaries.map((boundary) => ({
+            type: "js-update" as const,
+            timestamp,
+            path: boundary.url,
+            acceptedPath: prepared.url,
+            explicitImportRequired: false,
+            isWithinCircularImport: false,
+          }))
+        : [];
+      if (updates.length) {
+        environment.hot.send({ type: "update", updates });
       }
     }
     if (state.error) {
@@ -208,7 +227,9 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
           global[bridgeSymbol].set(bridgeKey, prepared);
           await refreshModules(sessionInternals(prepared).state);
         }
-        await writeTypes(configPath);
+        configFile = configPath;
+        const state = sessionInternals(prepared).state;
+        await writeTypes(state.revision?.registry ?? state.registry);
       } catch (cause) {
         await prepared.dispose();
         (globalThis as BridgeGlobal)[bridgeSymbol]?.delete(bridgeKey);
@@ -278,8 +299,8 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
           `[content-query] Server-only import "${source}" is reachable from a client module${importer ? `: ${importer}` : "."}`,
         );
       }
-      if (source === facade) {
-        return `${virtualPrefix}server.js`;
+      if (source.startsWith(collectionPrefix)) {
+        return `${virtualPrefix}collections/${source.slice(collectionPrefix.length)}/server.js`;
       }
       if (source === clientFacade) {
         return clientModule;
@@ -293,11 +314,15 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
       if (source.startsWith(".") && importer?.startsWith(virtualPrefix)) {
         return `${virtualPrefix}${path.posix.normalize(path.posix.join(path.posix.dirname(importer.slice(virtualPrefix.length)), source))}`;
       }
-      if (
-        physicalPath(source, config, importer) ===
-        path.resolve(config.root, options.outDir ?? "./.content-query", "server.js")
-      ) {
-        return `${virtualPrefix}server.js`;
+      const physical = physicalPath(source, config, importer);
+      const entries = path.resolve(
+        config.root,
+        options.outDir ?? "./.content-query",
+        "collections",
+      );
+      const relative = physical ? path.relative(entries, physical).replace(/\\/g, "/") : "";
+      if (/^[^/.][^/]*\/server\.js$/.test(relative)) {
+        return `${virtualPrefix}collections/${relative}`;
       }
       return undefined;
     },
@@ -312,17 +337,22 @@ export function contentQuery(options: Omit<BuildContentOptions, "watch"> = {}): 
         this.error("[content-query] Content runtime cannot be loaded by the client.");
       }
       await ensureSession();
+      const facade = facadeModule.exec(id)?.[1];
+      /** Reports an import of a collection that the configuration does not define. */
+      const unknown = (exportName: string) =>
+        this.error(
+          `[content-query] "${collectionPrefix}${exportName}" does not match a collection in content-query.config.`,
+        );
       if (config.command === "serve") {
         await refreshModules(sessionInternals(session!).state);
-        if (id === `${virtualPrefix}server.js`) {
-          return devFacade(bridgeKey);
-        }
-        if (id === `${virtualPrefix}prepared-server.js`) {
-          return modules.get("server.js");
+        if (facade !== undefined) {
+          const name = collectionOf(facade);
+          return name === undefined ? unknown(facade) : devFacade(bridgeKey, name, facade);
         }
         return modules.get(id.slice(virtualPrefix.length));
       }
-      return modules.get(id.slice(virtualPrefix.length));
+      const code = modules.get(id.slice(virtualPrefix.length));
+      return facade !== undefined && code === undefined ? unknown(facade) : code;
     },
     transform(_code, id, transformOptions) {
       if (

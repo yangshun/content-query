@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#content-query": "./.content-query/server.js"
+    "#content-query/*": "./.content-query/collections/*/server.js"
   },
   "scripts": {
     "dev": "next dev",

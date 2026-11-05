@@ -2,7 +2,8 @@ import { revisionModules } from "../../artifacts/modules.ts";
 import type { ContentState } from "../../runtime/revision.ts";
 import { serializeContentError } from "../../runtime/diagnostics.ts";
 
-export const facade = "content-query:server";
+/** Collection facades are `content-query:collections/<export name>`. */
+export const collectionPrefix = "content-query:collections/";
 export const preparedFacade = "content-query:prepared-server";
 export const clientFacade = "content-query:client";
 export const clientModule = "\0content-query:client.js";
@@ -55,37 +56,42 @@ export function onContentUpdate(callback) {
 export async function preparedModules(state: ContentState): Promise<Map<string, string>> {
   const revision = state.revision;
   const error = state.error;
-  let next: Map<string, string>;
   if (error) {
     const serialized = serializeContentError(error);
-    next = new Map([
+    return new Map([
       [
-        "server.js",
+        "prepared-server.js",
         `import { restoreContentError } from "content-query/internal"; export const revision = undefined; export const registry = JSON.parse(${JSON.stringify(JSON.stringify(state.registry ?? {}))}); export const error = restoreContentError(${JSON.stringify(serialized)});`,
       ],
     ]);
-  } else {
-    next = await revisionModules(revision!, { payloadChunkBytes: 128 * 1024 });
-    next.set(
-      "server.js",
-      next
-        .get("server.js")!
-        .replaceAll("createArtifactRuntime", "createArtifactRevision")
-        .replace("export const content =", "export const revision =") +
-        "\nexport const registry = revision.registry; export const error = undefined;\n",
-    );
   }
-  return next;
+  return revisionModules(revision!, { payloadChunkBytes: 128 * 1024, preparedEntry: true });
 }
 
-/** Creates the stable facade that accepts revision updates in host and isolated dev runtimes. */
-export function devFacade(bridgeKey: string): string {
-  return `import { createLiveRuntime } from "content-query/internal";
-import * as prepared from ${JSON.stringify(preparedFacade)};
-const live = createLiveRuntime(prepared);
-export const content = globalThis[Symbol.for("content-query.dev-sessions")]?.get(${JSON.stringify(bridgeKey)})?.content ?? live.content;
+/** Picks a module-local binding that cannot shadow the facade's export name. */
+function binding(base: string, exportName: string): string {
+  return base === exportName ? `${base}_` : base;
+}
+
+/**
+ * Creates one collection's stable facade, which accepts revision updates in host and isolated
+ * development runtimes.
+ *
+ * @param bridgeKey - Identifies the plugin's host session for runtimes in the same process.
+ * @param name - The collection's name.
+ * @param exportName - The facade's export name.
+ * @returns The facade module source.
+ */
+export function devFacade(bridgeKey: string, name: string, exportName: string): string {
+  const runtime = binding("runtime", exportName);
+  const prepared = binding("prepared", exportName);
+  const live = binding("live", exportName);
+  return `import * as ${runtime} from "content-query/internal";
+import * as ${prepared} from ${JSON.stringify(preparedFacade)};
+const ${live} = ${runtime}.createLiveCollection(${prepared}, ${JSON.stringify(name)});
+export const ${exportName} = globalThis[Symbol.for("content-query.dev-sessions")]?.get(${JSON.stringify(bridgeKey)})?.collections[${JSON.stringify(name)}] ?? ${live}.collection;
 if (import.meta.hot) {
- const apply = next => { if (next) live.update(next); };
+ const apply = next => { if (next) ${live}.update(next); };
  import.meta.hot.accept(${JSON.stringify(preparedFacade)}, apply);
  // Module runners unwrap virtual IDs in update messages. Register that form too.
  const hot = import.meta.hot;

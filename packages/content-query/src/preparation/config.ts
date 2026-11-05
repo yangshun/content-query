@@ -4,6 +4,7 @@ import { createJiti } from "jiti";
 import type { CollectionRegistry } from "../collection/types.ts";
 import type { LoaderConfig } from "../loaders/types.ts";
 import { isQueryStyle, type QueryStyle } from "../runtime/query-style.ts";
+import { collectionNames } from "../collection/names.ts";
 
 export type LoadedConfiguration = {
   registry: CollectionRegistry;
@@ -68,6 +69,8 @@ export async function loadRegistry(config: string): Promise<LoadedConfiguration>
       throw new Error(`Collection "${name}" requires a named loader object with load(context).`);
     }
   }
+  // Each collection's entry exports and generated types must have distinct names.
+  collectionNames(registry as Record<string, { typeName?: unknown }>);
   return {
     registry: registry as CollectionRegistry,
     dependencies,

@@ -2,28 +2,39 @@
 export type QueryStyle = "fluent" | "relational";
 
 /**
- * Root `content` members that start each query style. Every other query API hangs off these
- * members, so gating them gates payloads, relationships, and adjacency as well.
+ * Collection members that start each query style. Every other query API hangs off these members,
+ * so gating them gates payloads, relationships, and adjacency as well. `count()` without options
+ * belongs to both styles; `count(options)` takes relational options.
  */
 export const queryStyleMembers = {
-  fluent: ["from"],
-  relational: ["query", "count"],
+  fluent: [
+    "select",
+    "where",
+    "orderBy",
+    "limit",
+    "offset",
+    "with",
+    "withPayload",
+    "selectAdjacent",
+  ],
+  relational: ["findMany", "findFirst", "paginate", "count(options)"],
 } as const satisfies Record<QueryStyle, readonly string[]>;
 
-/** A root `content` member that belongs to exactly one query style. */
+/** A collection member that belongs to exactly one query style. */
 export type QueryStyleMember = (typeof queryStyleMembers)[QueryStyle][number];
 
-/** Root members that start a query in the given style. */
+/** Collection members that start a query in the given style. */
 export type MembersOf<Style extends QueryStyle> = (typeof queryStyleMembers)[Style][number];
 
 /**
- * Describes a disabled root member in the type error itself, for example:
- * `content.from is unavailable because content-query.config sets queryStyle to "relational".`
+ * Describes a disabled collection member in the type error itself, for example:
+ * `posts.select is unavailable because content-query.config sets queryStyle to "relational".`
  */
 export type QueryStyleDisabled<
+  Collection extends string,
   Member extends QueryStyleMember,
   Style extends QueryStyle,
-> = `content.${Member} is unavailable because content-query.config sets queryStyle to "${Style}".`;
+> = `${Collection}.${Member} is unavailable because content-query.config sets queryStyle to "${Style}".`;
 
 /**
  * Checks whether a configured or manifest value names a supported query style.
@@ -36,9 +47,9 @@ export function isQueryStyle(value: unknown): value is QueryStyle {
 }
 
 /**
- * Finds the style that owns a root member.
+ * Finds the style that owns a collection member.
  *
- * @param member - A gated root `content` member.
+ * @param member - A gated collection member.
  * @returns The style whose queries start at that member.
  */
 export function styleOfMember(member: QueryStyleMember): QueryStyle {
@@ -48,13 +59,19 @@ export function styleOfMember(member: QueryStyleMember): QueryStyle {
 /**
  * Formats the runtime message that matches {@link QueryStyleDisabled}.
  *
- * @param member - The disabled root member.
+ * @param collection - The queried collection.
+ * @param member - The disabled member.
  * @param style - The only style the configuration allows.
  * @returns The error message.
  */
 export function queryStyleDisabledMessage<
+  Collection extends string,
   Member extends QueryStyleMember,
   Style extends QueryStyle,
->(member: Member, style: Style): QueryStyleDisabled<Member, Style> {
-  return `content.${member} is unavailable because content-query.config sets queryStyle to "${style}".`;
+>(
+  collection: Collection,
+  member: Member,
+  style: Style,
+): QueryStyleDisabled<Collection, Member, Style> {
+  return `${collection}.${member} is unavailable because content-query.config sets queryStyle to "${style}".`;
 }

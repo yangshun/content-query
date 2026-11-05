@@ -1,18 +1,14 @@
 import { defineMiddleware } from "void";
-import { content, type CollectionEntry } from "content-query:server";
+import { guides, type ContentGuide } from "content-query:collections/guides";
 
 export type NavigationShared = {
-  guideNavigation: CollectionEntry<"guides", "id" | "title" | "section">[];
+  guideNavigation: ContentGuide<"id" | "title" | "section">[];
   isDocsPage: boolean;
 };
 
 /** Supplies the persistent docs layout independently of the current article loader. */
 export default defineMiddleware(async (context, next) => {
-  const guideNavigation = await content
-    .from("guides")
-    .select("id", "title", "section")
-    .orderBy("order")
-    .all();
+  const guideNavigation = await guides.select("id", "title", "section").orderBy("order").all();
   const shared = context.get("shared");
   context.set("shared", {
     ...(shared !== null && typeof shared === "object" ? shared : {}),

@@ -69,10 +69,10 @@ const {buildContent}=await import("content-query/build");
 const session=await buildContent({backend:${JSON.stringify(backend)}});
 try {
   console.log(JSON.stringify({
-    posts:await session.content.from("posts").select("readingMinutes", "words", "summary").all(),
-    articles:await session.content.from("articles").select("readingMinutes", "words", "summary").all(),
-    cms:await session.content.from("cms").select("words").all(),
-    retainedBody:(await session.content.query.posts.findFirst({where:{id:"getting-started"},payloads:{_body:true}}))._payloads._body,
+    posts:await session.collections.posts.select("readingMinutes", "words", "summary").all(),
+    articles:await session.collections.articles.select("readingMinutes", "words", "summary").all(),
+    cms:await session.collections.cms.select("words").all(),
+    retainedBody:(await session.collections.posts.findFirst({where:{id:"getting-started"},payloads:{_body:true}}))._payloads._body,
   }));
 } finally {await session.dispose();}
 `,
@@ -90,11 +90,12 @@ try {
           await writeFile(
             path.join(fixture.root, "consumer.ts"),
             `
-import {content, type CollectionEntry} from "./.content-query/server.js";
-const selected:Promise<{words:number;readingMinutes:number;summary:string}[]> = content.from("posts").select("words", "readingMinutes", "summary").all();
-const words:CollectionEntry<"articles">["words"] = 3;
+import {posts, type ContentPost} from "./.content-query/collections/posts/server.js";
+import type {ContentArticle} from "./.content-query/collections/articles/server.js";
+const selected:Promise<{words:number;readingMinutes:number;summary:string}[]> = posts.select("words", "readingMinutes", "summary").all();
+const words:ContentArticle["words"] = 3;
 // @ts-expect-error Computed number fields do not become strings through generated declarations.
-const wrong:CollectionEntry<"posts">["readingMinutes"] = "one";
+const wrong:ContentPost["readingMinutes"] = "one";
 void [selected,words,wrong];
 `,
           );
@@ -129,11 +130,14 @@ registerHooks({resolve(specifier,context,next){
   }
   return next(specifier,context);
 }});
-const {content}=await import("./.content-query/server.js");
+const entry = name => import("./.content-query/collections/" + name + "/server.js");
+const {posts}=await entry("posts");
+const {articles}=await entry("articles");
+const {cms}=await entry("cms");
 console.log(JSON.stringify({
-  posts:await content.from("posts").select("readingMinutes", "words", "summary").all(),
-  articles:await content.from("articles").select("readingMinutes", "words", "summary").all(),
-  cms:await content.from("cms").select("words").all(),
+  posts:await posts.select("readingMinutes", "words", "summary").all(),
+  articles:await articles.select("readingMinutes", "words", "summary").all(),
+  cms:await cms.select("words").all(),
 }));
 `,
             ],

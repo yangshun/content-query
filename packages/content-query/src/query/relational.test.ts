@@ -3,12 +3,12 @@ import { defineCollection } from "../collection/define.ts";
 import { schema } from "../schema.ts";
 import { fixtureLoader } from "../../tests/helpers/loader.ts";
 import { createSession, sessionInternals } from "../preparation/session.ts";
-import { createArtifactRuntime } from "../internal.ts";
 import { ARTIFACT_VERSION, CODEC_VERSION, type EncodedCollection } from "../artifacts/types.ts";
 import { encode } from "../shared/values.ts";
 import { eq, has, like, type QueryOptions, type CountOptions } from "../query.ts";
 import { file, type BodyLoader } from "../loaders.ts";
-import type { Content } from "../runtime.ts";
+import { loadAll, loadArtifact } from "../../tests/helpers/collections.ts";
+import type { AllCollections } from "../../tests/helpers/collections.ts";
 
 /** Defines public consumer fixtures with nullable relationships and shared rich values. */
 function definitions() {
@@ -61,14 +61,14 @@ async function setup(encoded: boolean) {
     watch: false,
     registry,
   });
-  let content = session.content;
+  let content = loadAll(session.collections);
   if (encoded) {
     const revision = sessionInternals(session).state.revision!;
     const collections: Record<string, EncodedCollection> = {};
     for (const [name, collection] of Object.entries(revision.collections)) {
       collections[name] = { records: collection.records.map(encode), builtins: {} };
     }
-    content = createArtifactRuntime<typeof registry>(
+    content = loadArtifact<typeof registry>(
       { version: ARTIFACT_VERSION, codec: CODEC_VERSION, collections: revision.registry },
       collections,
     );
@@ -81,16 +81,19 @@ for (const encoded of [false, true]) {
     test("executes collection-first selections with inferred fields and immutable reuse", async () => {
       const { content, session } = await setup(encoded);
       try {
-        expect(await content.from("authors").select("id")).toEqual([{ id: "ada" }]);
-        const published = content.from("posts").where((fields) => eq(fields.draft, false));
+        expect(await content.authors.select("id")).toEqual([{ id: "ada" }]);
+        const published = content.posts.where((fields) => eq(fields.draft, false));
         const ids = published.select("id");
         expect(await ids.limit(1)).toEqual([{ id: "a" }]);
         expect(await ids.offset(1).execute()).toEqual([{ id: "b" }]);
         expect(await ids).toEqual([{ id: "a" }, { id: "b" }]);
         expect(await published.select("title").first()).toEqual({ title: "Alpha" });
         expect(await published.count()).toBe(2);
-        expect(() => content.from("posts").select("id", "id")).toThrow(/distinct/);
-        expect(() => content.from("missing" as "posts")).toThrow(/collection/);
+        expect(() => content.posts.select("id", "id")).toThrow(/distinct/);
+        expect(
+          (content as Record<string, unknown>).missing,
+          "an unknown collection has no handle",
+        ).toBeUndefined();
       } finally {
         await session.dispose();
       }
@@ -98,7 +101,7 @@ for (const encoded of [false, true]) {
     test("selects nothing implicitly in fluent queries, not even id", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const unselected = content.from("posts").where((fields) => eq(fields.draft, false));
+        const unselected = content.posts.where((fields) => eq(fields.draft, false));
         const runUnselected = unselected as unknown as {
           all(): Promise<unknown>;
           first(): Promise<unknown>;
@@ -113,16 +116,16 @@ for (const encoded of [false, true]) {
         });
         expect(await unselected.count()).toBe(2);
         expect(
-          await content
-            .from("posts")
+          await content.posts
             .where((fields) => eq(fields.id, "a"))
             .with("author", (author) => author.select("name"))
             .first(),
         ).toEqual({ author: { name: "Ada" } });
         expect(() =>
-          content
-            .from("posts")
-            .with("author", (author) => author.where((fields) => eq(fields.name, "Ada")) as never),
+          content.posts.with(
+            "author",
+            (author) => author.where((fields) => eq(fields.name, "Ada")) as never,
+          ),
         ).toThrow(/explicitly selected/);
       } finally {
         await session.dispose();
@@ -131,7 +134,7 @@ for (const encoded of [false, true]) {
     test("selects columns and relationships with filtering, ordering, and pagination", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const result = await content.query.posts.findMany({
+        const result = await content.posts.findMany({
           columns: { id: true, title: true },
           where: { draft: false, rank: { gte: 1 } },
           with: { author: { columns: { name: true } } },
@@ -144,10 +147,10 @@ for (const encoded of [false, true]) {
           { id: "a", title: "Alpha", author: { name: "Ada" } },
         ]);
         expect(
-          await content.query.posts.findFirst({ columns: { id: true }, where: { id: "missing" } }),
+          await content.posts.findFirst({ columns: { id: true }, where: { id: "missing" } }),
         ).toBeUndefined();
         expect(
-          await content.query.posts.findFirst({ columns: { title: true }, where: { id: "a" } }),
+          await content.posts.findFirst({ columns: { title: true }, where: { id: "a" } }),
         ).toEqual({ title: "Alpha" });
       } finally {
         await session.dispose();
@@ -156,7 +159,7 @@ for (const encoded of [false, true]) {
     test("selects nothing implicitly in relational queries, not even id", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const findFirst = (options?: unknown) => content.query.posts.findFirst(options as never);
+        const findFirst = (options?: unknown) => content.posts.findFirst(options as never);
         for (const options of [
           undefined,
           {},
@@ -171,7 +174,7 @@ for (const encoded of [false, true]) {
         expect(() => findFirst({ columns: { id: true }, with: { author: true } })).toThrow(
           /requires nested options/,
         );
-        expect(await content.count("posts", { where: { draft: false } })).toBe(2);
+        expect(await content.posts.count({ where: { draft: false } })).toBe(2);
       } finally {
         await session.dispose();
       }
@@ -180,26 +183,26 @@ for (const encoded of [false, true]) {
       const { content, session } = await setup(encoded);
       try {
         expect(
-          await content.query.posts.findFirst({
+          await content.posts.findFirst({
             where: { id: "a" },
             with: { author: { columns: { name: true } } },
           }),
         ).toEqual({ author: { name: "Ada" } });
         expect(
-          await content.query.posts.findFirst({
+          await content.posts.findFirst({
             where: { id: "a" },
             columns: { title: true },
             with: { author: false },
           }),
         ).toEqual({ title: "Alpha" });
-        const includedAuthor = await content.query.posts.findFirst({
+        const includedAuthor = await content.posts.findFirst({
           where: { id: "b" },
           columns: { authorId: true },
         });
         expect(includedAuthor).toEqual({ authorId: undefined });
         expect(Object.hasOwn(includedAuthor!, "authorId")).toBe(true);
         expect(
-          await content.query.posts.findMany({
+          await content.posts.findMany({
             where: { draft: false },
             orderBy: { rank: "asc" },
             columns: {},
@@ -224,7 +227,7 @@ for (const encoded of [false, true]) {
           ],
         };
         expect(
-          await content.query.authors.findFirst({
+          await content.authors.findFirst({
             columns: { name: true },
             with: {
               posts: {
@@ -236,13 +239,12 @@ for (const encoded of [false, true]) {
           }),
         ).toEqual(expected);
         expect(
-          await content
-            .from("authors")
+          await content.authors
             .select("name")
             .with("posts", (posts) => posts.select("id").orderBy("rank").selectAdjacent("title"))
             .first(),
         ).toEqual(expected);
-        const findMany = (options: unknown) => content.query.posts.findMany(options as never);
+        const findMany = (options: unknown) => content.posts.findMany(options as never);
         expect(() => findMany({ columns: { id: true }, adjacent: true })).toThrow(
           /select their own data/,
         );
@@ -252,7 +254,7 @@ for (const encoded of [false, true]) {
             adjacent: { scope: "results", columns: { id: true }, where: { draft: false } },
           }),
         ).toThrow(/share the query's filters and order/);
-        const unselectedNeighbors = content.from("posts").select("id") as unknown as {
+        const unselectedNeighbors = content.posts.select("id") as unknown as {
           selectAdjacent(...fields: unknown[]): unknown;
         };
         expect(() => unselectedNeighbors.selectAdjacent()).toThrow(/neighbor fields/);
@@ -265,19 +267,19 @@ for (const encoded of [false, true]) {
       const { content, session } = await setup(encoded);
       try {
         expect(
-          await content.query.posts.findFirst({
+          await content.posts.findFirst({
             columns: { id: true },
             where: { id: "a", author: { name: { eq: "Ada" } } },
           }),
         ).toEqual({ id: "a" });
         expect(
-          await content.query.posts.findFirst({
+          await content.posts.findFirst({
             columns: { id: true },
             where: { id: "a", author: { name: { eq: "Grace" } } },
           }),
         ).toBeUndefined();
         expect(
-          await content.query.posts.findMany({
+          await content.posts.findMany({
             columns: { id: true },
             where: { id: "missing", author: { name: { eq: "Ada" } } },
           }),
@@ -290,19 +292,19 @@ for (const encoded of [false, true]) {
       const { content, session } = await setup(encoded);
       try {
         expect(
-          await content.query.posts.findMany({
+          await content.posts.findMany({
             columns: { id: true },
             where: { author: { name: { eq: "Ada" } } },
           }),
         ).toEqual([{ id: "a" }, { id: "c" }]);
         expect(
-          await content.query.posts.findMany({
+          await content.posts.findMany({
             columns: { id: true },
             where: { NOT: { author: true } },
           }),
         ).toEqual([{ id: "b" }]);
         expect(
-          await content.query.posts.findMany({
+          await content.posts.findMany({
             columns: { id: true },
             where: { author: true },
             with: { author: { columns: { name: true }, where: { name: { ne: "Ada" } } } },
@@ -312,7 +314,7 @@ for (const encoded of [false, true]) {
           { id: "c", author: null },
         ]);
         expect(
-          await content.query.posts.findMany({
+          await content.posts.findMany({
             columns: { id: true },
             where: {
               AND: [
@@ -324,7 +326,7 @@ for (const encoded of [false, true]) {
           }),
         ).toEqual([{ id: "a" }, { id: "b" }]);
         expect(
-          await content.query.posts.findMany({
+          await content.posts.findMany({
             columns: { id: true },
             where: { rank: { OR: [{ lt: 2 }, { eq: 3 }] } },
           }),
@@ -336,7 +338,7 @@ for (const encoded of [false, true]) {
     test("pages each included collection independently from parent relationship filters", async () => {
       const { content, session } = await setup(encoded);
       try {
-        const authors = await content.query.authors.findMany({
+        const authors = await content.authors.findMany({
           columns: { name: true },
           where: { posts: { draft: true } },
           with: {
@@ -358,7 +360,7 @@ for (const encoded of [false, true]) {
       const { content, session } = await setup(encoded);
       try {
         expect(
-          await content.query.posts.findFirst({
+          await content.posts.findFirst({
             where: { id: "b" },
             columns: { title: true },
             adjacent: {
@@ -372,21 +374,20 @@ for (const encoded of [false, true]) {
           _adjacent: { previous: { id: "a", title: "Alpha" }, next: null },
         });
         expect(
-          await content.query.posts.findFirst({
+          await content.posts.findFirst({
             where: { id: "a" },
             adjacent: { scope: "results", columns: { id: true } },
           }),
         ).toMatchObject({ _adjacent: { previous: null, next: null } });
         expect(
-          await content
-            .from("posts")
+          await content.posts
             .select("id")
             .where((fields) => eq(fields.id, "a"))
             .first(),
         ).toEqual({ id: "a" });
-        expect(
-          await content.query.posts.findMany({ columns: { id: true }, where: { id: "a" } }),
-        ).toEqual([{ id: "a" }]);
+        expect(await content.posts.findMany({ columns: { id: true }, where: { id: "a" } })).toEqual(
+          [{ id: "a" }],
+        );
       } finally {
         await session.dispose();
       }
@@ -407,9 +408,9 @@ for (const encoded of [false, true]) {
           { adjacent: { adjacent: true } },
           { typo: true },
         ]) {
-          expect(() => content.query.posts.findMany(options as never)).toThrow();
+          expect(() => content.posts.findMany(options as never)).toThrow();
         }
-        expect(Object.keys(content.query)).toContain("posts");
+        expect(Object.keys(content)).toContain("posts");
       } finally {
         await session.dispose();
       }
@@ -418,24 +419,24 @@ for (const encoded of [false, true]) {
 }
 
 /** Checks the public relational API's selected result types and recursive option validation. */
-async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
+async function checkTypes(content: AllCollections<ReturnType<typeof definitions>>) {
   const options = {
     columns: { title: true },
     where: { draft: false },
   } as const satisfies QueryOptions<ReturnType<typeof definitions>, "posts">;
-  const typedRows: { title: string }[] = await content.query.posts.findMany(options);
+  const typedRows: { title: string }[] = await content.posts.findMany(options);
   const countOptions: CountOptions<ReturnType<typeof definitions>, "posts"> = {
     where: { draft: false },
   };
-  const typedCount: number = await content.count("posts", countOptions);
+  const typedCount: number = await content.posts.count(countOptions);
   void [typedRows, typedCount];
-  const posts = content.from("posts");
+  const posts = content.posts;
   const rows: { id: string; title: string }[] = await posts.select("id", "title").limit(1);
   void rows;
   // @ts-expect-error Field names are checked as soon as the collection is known.
-  content.from("posts").select("typo");
+  content.posts.select("typo");
   // @ts-expect-error Awaiting an unselected query fails to compile.
-  await posts; // oxlint-disable-line typescript-eslint/await-thenable
+  await posts.where((fields) => eq(fields.draft, false)); // oxlint-disable-line typescript-eslint/await-thenable
   // @ts-expect-error Unselected queries have no runnable terminals.
   void posts.all();
   // @ts-expect-error Filters alone select nothing.
@@ -443,18 +444,18 @@ async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
   const total: number = await posts.count();
   void total;
   // @ts-expect-error Row-returning relational queries must select data.
-  void content.query.posts.findMany();
+  void content.posts.findMany();
   // @ts-expect-error Filters alone select nothing, not even id.
-  void content.query.posts.findFirst({ where: { id: "a" } });
+  void content.posts.findFirst({ where: { id: "a" } });
   // @ts-expect-error An empty column list selects nothing on its own.
-  void content.query.posts.findMany({ columns: {} });
+  void content.posts.findMany({ columns: {} });
   // @ts-expect-error Columns only include fields; there are no exclusions.
-  void content.query.posts.findMany({ columns: { rank: false } });
+  void content.posts.findMany({ columns: { rank: false } });
   // @ts-expect-error Relationships select their own data.
-  void content.query.posts.findMany({ columns: { id: true }, with: { author: true } });
+  void content.posts.findMany({ columns: { id: true }, with: { author: true } });
   // @ts-expect-error A relationship scope must select data too.
-  void content.query.posts.findMany({ columns: { id: true }, with: { author: { columns: {} } } });
-  const relatedOnly = await content.query.posts.findMany({
+  void content.posts.findMany({ columns: { id: true }, with: { author: { columns: {} } } });
+  const relatedOnly = await content.posts.findMany({
     with: { author: { columns: { name: true } } },
   });
   const relatedName: string | undefined = relatedOnly[0]!.author?.name;
@@ -464,13 +465,13 @@ async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
   // @ts-expect-error Fluent neighbors select their own fields.
   void posts.select("id").selectAdjacent();
   // @ts-expect-error Relational neighbors select their own data.
-  void content.query.posts.findMany({ columns: { id: true }, adjacent: true });
-  void content.query.posts.findMany({
+  void content.posts.findMany({ columns: { id: true }, adjacent: true });
+  void content.posts.findMany({
     columns: { id: true },
     // @ts-expect-error Results-scope neighbors share the query's filters and order.
     adjacent: { scope: "results", columns: { id: true }, orderBy: { rank: "asc" } },
   });
-  const neighbors = await content.query.posts.findMany({
+  const neighbors = await content.posts.findMany({
     columns: { id: true },
     adjacent: { scope: "results", columns: { title: true } },
   });
@@ -492,7 +493,7 @@ async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
   content.query("posts");
   // @ts-expect-error Relational entry points live under their collection namespace.
   content.findMany("posts", {});
-  const selected = await content.query.posts.findMany({
+  const selected = await content.posts.findMany({
     columns: { title: true },
     with: { author: { columns: { name: true } } },
   });
@@ -504,26 +505,26 @@ async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
   // @ts-expect-error Unselected related columns are excluded from the result.
   void selected[0]!.author?.id;
   // @ts-expect-error Collection names are inferred from the configured registry.
-  void content.query.missing;
+  void content.missing;
   // @ts-expect-error Relationships are selected through with, not columns.
-  void content.query.posts.findMany({ columns: { author: true } });
+  void content.posts.findMany({ columns: { author: true } });
   // @ts-expect-error Recursive filters retain each field's type.
-  void content.query.posts.findMany({ where: { rank: { eq: "1" } } });
+  void content.posts.findMany({ where: { rank: { eq: "1" } } });
   // @ts-expect-error Unknown nested operators are rejected even alongside valid operators.
-  void content.query.posts.findMany({ where: { rank: { eq: 1, typo: 2 } } });
+  void content.posts.findMany({ where: { rank: { eq: 1, typo: 2 } } });
   // @ts-expect-error Singular relationships cannot be paginated.
-  void content.query.posts.findMany({ with: { author: { columns: { name: true }, limit: 1 } } });
+  void content.posts.findMany({ with: { author: { columns: { name: true }, limit: 1 } } });
   // @ts-expect-error Related filters use the related collection's schema.
-  void content.query.posts.findMany({ where: { author: { name: { gt: 1 } } } });
-  const authors = await content.query.authors.findMany({
+  void content.posts.findMany({ where: { author: { name: { gt: 1 } } } });
+  const authors = await content.authors.findMany({
     with: { posts: { columns: { title: true, rank: true } } },
   });
   const nestedRank: number = authors[0]!.posts[0]!.rank;
   void nestedRank;
-  const optional = await content.query.posts.findMany({ columns: { authorId: true } });
+  const optional = await content.posts.findMany({ columns: { authorId: true } });
   const authorId: string | undefined = optional[0]!.authorId;
   void authorId;
-  const withPayloads = await content.query.posts.findFirst({
+  const withPayloads = await content.posts.findFirst({
     columns: { title: true },
     payloads: { _body: true, _rendered: true },
     with: { author: { columns: { name: true }, payloads: { _body: true } } },
@@ -532,30 +533,29 @@ async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
   const html: string = withPayloads!._payloads._rendered.html;
   const authorBody: string | undefined = withPayloads!.author?._payloads._body;
   void [body, html, authorBody];
-  const omitted = await content.query.posts.findMany({
+  const omitted = await content.posts.findMany({
     columns: { id: true },
     payloads: { _body: false },
   });
   // @ts-expect-error Payloads set to false add no _payloads key.
   void omitted[0]!._payloads;
   // @ts-expect-error A payload set to false selects nothing.
-  void content.query.posts.findMany({ payloads: { _body: false } });
-  const payloadOnly = await content.query.posts.findFirst({
+  void content.posts.findMany({ payloads: { _body: false } });
+  const payloadOnly = await content.posts.findFirst({
     where: { id: "a" },
     payloads: { _rendered: true },
   });
   const payloadHtml: string | undefined = payloadOnly?._payloads._rendered.html;
   void payloadHtml;
   // @ts-expect-error Unknown payload names are rejected.
-  void content.query.posts.findMany({ payloads: { missing: true } });
-  void content.query.posts.findMany({
+  void content.posts.findMany({ payloads: { missing: true } });
+  void content.posts.findMany({
     // @ts-expect-error Adjacent sibling scopes cannot request payloads.
     adjacent: { columns: { id: true }, payloads: { _body: true } },
   });
   // @ts-expect-error Counts cannot request payloads.
-  void content.count("posts", { payloads: { _body: true } });
-  const fluent = await content
-    .from("posts")
+  void content.posts.count({ payloads: { _body: true } });
+  const fluent = await content.posts
     .select("id")
     .withPayload("_rendered")
     .withPayload("_body")
@@ -564,9 +564,9 @@ async function checkTypes(content: Content<ReturnType<typeof definitions>>) {
   const fluentBody: string | undefined = fluent?._payloads._body;
   void [fluentHtml, fluentBody];
   // @ts-expect-error Unknown fluent payload names are rejected.
-  content.from("posts").select("id").withPayload("missing");
+  content.posts.select("id").withPayload("missing");
   // @ts-expect-error Counting is unavailable once payloads are requested.
-  void content.from("posts").select("id").withPayload("_body").count();
+  void content.posts.select("id").withPayload("_body").count();
 }
 void checkTypes;
 
@@ -583,22 +583,22 @@ function recordDefinitions() {
 }
 
 /** Checks that built-in payloads are offered only where entries can carry them. */
-async function checkRecordTypes(content: Content<ReturnType<typeof recordDefinitions>>) {
+async function checkRecordTypes(content: AllCollections<ReturnType<typeof recordDefinitions>>) {
   // @ts-expect-error file() collections carry no built-in payloads.
-  void content.query.settings.findMany({ payloads: { _body: true } });
+  void content.settings.findMany({ payloads: { _body: true } });
   // @ts-expect-error JSON sources carry no built-in payloads.
-  void content.query.data.findMany({ payloads: { _rendered: true } });
+  void content.data.findMany({ payloads: { _rendered: true } });
   // @ts-expect-error Fluent queries follow the same availability.
-  content.from("data").select("id").withPayload("_body");
-  const page = await content.query.pages.findFirst({ payloads: { _rendered: true } });
+  content.data.select("id").withPayload("_body");
+  const page = await content.pages.findFirst({ payloads: { _rendered: true } });
   const pageHtml: string | undefined = page?._payloads._rendered.html;
   // @ts-expect-error Body loaders carry no built-in rendered output.
-  void content.query.notes.findMany({ payloads: { _rendered: true } });
+  void content.notes.findMany({ payloads: { _rendered: true } });
   // @ts-expect-error Fluent queries reject rendered output from body loaders too.
-  content.from("notes").select("id").withPayload("_rendered");
-  const note = await content.query.notes.findFirst({ payloads: { _body: true } });
+  content.notes.select("id").withPayload("_rendered");
+  const note = await content.notes.findFirst({ payloads: { _body: true } });
   const noteBody: string | undefined = note?._payloads._body;
-  const fluentNote = await content.from("notes").select("id").withPayload("_body").first();
+  const fluentNote = await content.notes.select("id").withPayload("_body").first();
   const fluentNoteBody: string | undefined = fluentNote?._payloads._body;
   void [pageHtml, noteBody, fluentNoteBody];
 }

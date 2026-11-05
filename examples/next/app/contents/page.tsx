@@ -1,7 +1,7 @@
 import "server-only";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { content } from "#content-query";
+import { guides } from "#content-query/guides";
 
 export const metadata: Metadata = {
   title: "Contents",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default async function ContentsPage() {
   // Requesting a payload in a list query loads it for every returned row, after ordering.
   // This page needs each guide's headings, so it opts into the rendered payload explicitly.
-  const guides = await content.query.guides.findMany({
+  const entries = await guides.findMany({
     columns: { id: true, title: true },
     orderBy: { order: "asc" },
     payloads: { _rendered: true },
@@ -24,7 +24,7 @@ export default async function ContentsPage() {
         <p>Every guide and its sections, from the guides' rendered headings.</p>
       </div>
       <ol className="contents-list">
-        {guides.map((guide) => (
+        {entries.map((guide) => (
           <li key={guide.id}>
             <Link href={`/docs/${guide.id}`}>{guide.title}</Link>
             <ul>

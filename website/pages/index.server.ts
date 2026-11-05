@@ -1,10 +1,10 @@
 import { defineHandler, defineHead, type InferProps } from "void";
-import { content } from "content-query:server";
+import { examples } from "content-query:collections/examples";
 
 export const prerender = true;
 
 export const loader = defineHandler(async () => {
-  const example = await content.query.examples.findFirst({
+  const example = await examples.findFirst({
     where: { id: "hello-world" },
     columns: {},
     payloads: { _rendered: true },

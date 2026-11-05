@@ -24,21 +24,21 @@ The build script runs `content-query build`, then `node src/site.ts`, which writ
 
 ## Payload patterns
 
-`src/site.ts` uses each pattern once:
+`src/site.ts` imports each collection from its own generated entry, such as `.content-query/collections/articles/server.js`, and uses each pattern once. Queries that follow a relationship pass its target collection to `using()`:
 
-| Page               | Query                                                                                                       | Loads                                                |
-| ------------------ | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Index list         | `query.articles.findMany({ columns, orderBy, with })`                                                       | Metadata only                                        |
-| Index "Latest"     | `from("articles").select("id", "title").orderBy(...).withPayload("_rendered").first()`                      | One article's HTML                                   |
-| Index announcement | `query.announcements.findFirst({ payloads: { _rendered: true, _body: true } })`                             | Supplied HTML; `_body` is `undefined`                |
-| Article pages      | `query.articles.findFirst({ where: { id }, with: { author }, payloads: { _rendered: true, _body: true } })` | HTML, headings, and the raw Markdown, from one query |
-| JSON feed          | `query.articles.findMany({ columns, orderBy, payloads: { excerpt: { length: "long" } } })`                  | One custom payload variant per article               |
-| Author pages       | `query.authors.findMany({ with: { articles: { limit: 1, payloads: { _rendered: true } } } })`               | Each author's newest article only                    |
+| Page               | Query                                                                                                                | Loads                                                |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Index list         | `articles.using(authors).findMany({ columns, orderBy, with })`                                                       | Metadata only                                        |
+| Index "Latest"     | `articles.select("id", "title").orderBy(...).withPayload("_rendered").first()`                                       | One article's HTML                                   |
+| Index announcement | `announcements.findFirst({ payloads: { _rendered: true, _body: true } })`                                            | Supplied HTML; `_body` is `undefined`                |
+| Article pages      | `articles.using(authors).findFirst({ where: { id }, with: { author }, payloads: { _rendered: true, _body: true } })` | HTML, headings, and the raw Markdown, from one query |
+| JSON feed          | `articles.findMany({ columns, orderBy, payloads: { excerpt: { length: "long" } } })`                                 | One custom payload variant per article               |
+| Author pages       | `authors.using(articles).findMany({ with: { articles: { limit: 1, payloads: { _rendered: true } } } })`              | Each author's newest article only                    |
 
 Requested values appear under `_payloads` on each row:
 
 ```ts
-const article = await content.query.articles.findFirst({
+const article = await articles.findFirst({
   where: { id },
   payloads: { _rendered: true, _body: true },
 });

@@ -1,8 +1,8 @@
-import { content } from "content-query:server";
+import { guides } from "content-query:collections/guides";
 
 export async function load() {
   return {
-    guides: await content.query.guides.findMany({
+    guides: await guides.findMany({
       columns: { id: true, title: true },
       orderBy: { order: "asc" },
     }),
