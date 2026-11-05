@@ -1,7 +1,7 @@
 import { ContentError, invalidQuery } from "../shared/errors.ts";
 import { assertServerOnly } from "../shared/server-only.ts";
 import type { Relationship } from "../collection/types.ts";
-import { createFrom } from "../query/from.ts";
+import { createById, createFrom } from "../query/from.ts";
 import type { QueryRegistry } from "../query/plan.ts";
 import { createQueryNamespace, relationalPlan } from "../query/relational.ts";
 import { createRunner } from "./content.ts";
@@ -258,6 +258,9 @@ export function createCollection(
   for (const member of queryStyleMembers.fluent) {
     handle[member] = (...arguments_: unknown[]) => {
       allow(member);
+      if (member === "byId") {
+        return createById(registry, run, name, arguments_[0] as string);
+      }
       const query = createFrom(registry, run, name) as Record<
         string,
         (...values: unknown[]) => unknown

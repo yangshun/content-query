@@ -23,7 +23,10 @@ import {
 const planSymbol = Symbol("content-query.query-plan");
 const scopeSymbol = Symbol("content-query.query-scope");
 
-/** Creates immutable root or relationship builders over one backend-independent plan. */
+/**
+ * Creates immutable root or relationship builders over one backend-independent plan. A root
+ * builder that is not `many` is a `byId()` query, which returns one entry or `undefined`.
+ */
 export function createBuilder(
   registry: QueryRegistry,
   run: QueryRunner,
@@ -52,13 +55,16 @@ export function createBuilder(
   const builder = {
     [planSymbol]: plan,
     [scopeSymbol]: scopeToken,
+    /** Selects fields, adding to earlier selections; a field selected again is kept once. */
     select(...fields: string[]) {
-      if (plan.select || fields.length === 0) {
-        invalidQuery(
-          "select() requires distinct prepared fields and can be called once per scope.",
-        );
+      if (fields.length === 0) {
+        invalidQuery("select() requires at least one prepared field.");
       }
-      return branch({ select: checkedFields(registry, plan.collection, fields) });
+      const checked = checkedFields(registry, plan.collection, fields);
+      const earlier = plan.select ?? [];
+      return branch({
+        select: [...earlier, ...checked.filter((field) => !earlier.includes(field))],
+      });
     },
     where(configure: (fields: object) => Expression) {
       if (typeof configure !== "function") {
@@ -71,6 +77,7 @@ export function createBuilder(
       });
     },
     orderBy(field: string, direction: "asc" | "desc" = "asc") {
+      assertList("orderBy()");
       return branch({ order: checkedOrder(plan, field, direction, many) });
     },
     limit(value: number) {
@@ -136,6 +143,7 @@ export function createBuilder(
       }
       const [configure] = arguments_;
       if (configure === undefined || typeof configure === "string") {
+        assertList("Results-scope selectAdjacent()");
         if (!arguments_.length || arguments_.some((field) => typeof field !== "string")) {
           invalidQuery(
             'selectAdjacent() requires neighbor fields, such as selectAdjacent("id"), or a sibling query.',
@@ -181,11 +189,12 @@ export function createBuilder(
       return branch({ adjacent: { scope: "collection", plan: adjacent } });
     },
     all() {
+      assertList("all()");
       return rows("all");
     },
     /** Executes a selected root query, matching direct await behavior. */
     execute() {
-      return rows("all");
+      return rows(many ? "all" : "first");
     },
     first() {
       return rows("first");
@@ -205,6 +214,7 @@ export function createBuilder(
       if (!root) {
         invalidQuery("Nested builders have no terminal methods.");
       }
+      assertList("paginate()");
       if (!hasSelection(plan)) {
         invalidQuery(NO_SELECTION_MESSAGE);
       }
@@ -220,7 +230,7 @@ export function createBuilder(
       ) => {
         let result: Promise<unknown>;
         try {
-          result = rows("all");
+          result = rows(many ? "all" : "first");
         } catch (cause) {
           result = Promise.reject(cause);
         }
@@ -241,8 +251,15 @@ export function createBuilder(
     }
     return run(plan, terminal);
   }
+  /** Rejects a list-only clause or terminal on a `byId()` query, which returns one entry. */
+  function assertList(member: string): void {
+    if (root && !many) {
+      invalidQuery(`${member} is unavailable after byId(), which returns one entry.`);
+    }
+  }
   /** Checks pagination before creating an independent branch. */
   function pagination(key: "limit" | "offset", value: number): unknown {
+    assertList(`${key}()`);
     if (!allowPagination || plan[key] !== undefined) {
       invalidQuery(
         "Pagination requires a nonnegative safe integer, one call per clause, and a many-valued scope.",

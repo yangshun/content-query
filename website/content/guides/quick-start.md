@@ -82,11 +82,7 @@ export async function listPosts() {
 }
 
 export async function getPost(id: string) {
-  return posts
-    .select("id", "title")
-    .where((fields) => eq(fields.id, id))
-    .withPayload("_rendered")
-    .first();
+  return posts.byId(id).select("id", "title").withPayload("_rendered");
 }
 ```
 

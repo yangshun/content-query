@@ -128,6 +128,7 @@ export type Query<
   Pagination extends boolean = true,
   Paged extends boolean = false,
 > = QueryInfo<Result, Selected, Filtered> & {
+  /** Selects fields, adding to fields that earlier `select()` calls on this scope selected. */
   select<
     const Keys extends readonly [
       keyof QueryData<Registry[Name]> & string,
@@ -138,11 +139,7 @@ export type Query<
   ): Query<
     Registry,
     Name,
-    Simplify<
-      {
-        [Key in Exclude<keyof Result, keyof QueryData<Registry[Name]>>]: Result[Key];
-      } & SelectedData<QueryData<Registry[Name]>, Keys[number]>
-    >,
+    Simplify<Result & SelectedData<QueryData<Registry[Name]>, Keys[number]>>,
     true,
     Many,
     Root,
@@ -244,6 +241,34 @@ export type Query<
       : {}
     : {}) &
   (AllowAdjacent extends true
+    ? [Root, Many] extends [true, false]
+      ? {}
+      : {
+          /** Selects neighbor fields within this scope's filtered and ordered results. */
+          selectAdjacent<
+            const Keys extends readonly [
+              keyof QueryData<Registry[Name]> & string,
+              ...(keyof QueryData<Registry[Name]> & string)[],
+            ],
+          >(
+            ...fields: Keys
+          ): Query<
+            Registry,
+            Name,
+            Result & {
+              _adjacent: Adjacent<SelectedData<QueryData<Registry[Name]>, Keys[number]>>;
+            },
+            true,
+            Many,
+            Root,
+            Filtered,
+            AllowAdjacent,
+            Pagination,
+            Paged
+          >;
+        }
+    : {}) &
+  (AllowAdjacent extends true
     ? {
         /** Attaches a payload under `_payloads` after filtering, ordering, and pagination. */
         withPayload<Key extends keyof PayloadsOf<Registry[Name]> & string>(
@@ -263,28 +288,7 @@ export type Query<
           Pagination,
           Paged
         >;
-        /** Selects neighbor fields within this scope's filtered and ordered results. */
-        selectAdjacent<
-          const Keys extends readonly [
-            keyof QueryData<Registry[Name]> & string,
-            ...(keyof QueryData<Registry[Name]> & string)[],
-          ],
-        >(
-          ...fields: Keys
-        ): Query<
-          Registry,
-          Name,
-          Result & {
-            _adjacent: Adjacent<SelectedData<QueryData<Registry[Name]>, Keys[number]>>;
-          },
-          true,
-          Many,
-          Root,
-          Filtered,
-          AllowAdjacent,
-          Pagination,
-          Paged
-        >;
+        /** Selects neighbors from an independent sibling scope. */
         selectAdjacent<Configured extends QueryInfo<unknown, true>>(
           configure: (
             siblings: Query<Registry, Name, {}, false, true, false, false, false, false>,
@@ -318,10 +322,31 @@ export type Query<
       }
     : {}) &
   (Root extends true
-    ? {
-        all: Selected extends true ? () => Promise<Simplify<Result>[]> : UnselectedTerminal;
-        execute: Selected extends true ? () => Promise<Simplify<Result>[]> : UnselectedTerminal;
-        then: Selected extends true ? Promise<Simplify<Result>[]>["then"] : UnselectedThen;
+    ? (Many extends true
+        ? {
+            all: Selected extends true ? () => Promise<Simplify<Result>[]> : UnselectedTerminal;
+            execute: Selected extends true ? () => Promise<Simplify<Result>[]> : UnselectedTerminal;
+            then: Selected extends true ? Promise<Simplify<Result>[]>["then"] : UnselectedThen;
+            /**
+             * Returns one page from one revision: `{ page, size }` for page numbers, or
+             * `{ size, after?, before?, total? }` for cursors. Unavailable after `limit()` or
+             * `offset()`.
+             */
+            paginate: Selected extends true
+              ? [Paged] extends [true]
+                ? PaginateAfterLimit
+                : Paginate<Simplify<Result>>
+              : UnselectedTerminal;
+          }
+        : {
+            /** Runs a `byId()` query, matching direct await: the entry, or `undefined`. */
+            execute: Selected extends true
+              ? () => Promise<Simplify<Result> | undefined>
+              : UnselectedTerminal;
+            then: Selected extends true
+              ? Promise<Simplify<Result> | undefined>["then"]
+              : UnselectedThen;
+          }) & {
         first: Selected extends true
           ? () => Promise<Simplify<Result> | undefined>
           : UnselectedTerminal;
@@ -331,15 +356,6 @@ export type Query<
           : [Result] extends [{ _payloads: unknown }]
             ? never
             : () => Promise<number>;
-        /**
-         * Returns one page from one revision: `{ page, size }` for page numbers, or
-         * `{ size, after?, before?, total? }` for cursors. Unavailable after `limit()` or `offset()`.
-         */
-        paginate: Selected extends true
-          ? [Paged] extends [true]
-            ? PaginateAfterLimit
-            : Paginate<Simplify<Result>>
-          : UnselectedTerminal;
       }
     : {});
 

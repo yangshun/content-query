@@ -7,7 +7,6 @@ import {
   type MetaFunction,
 } from "react-router";
 import { guides } from "content-query:collections/guides";
-import { eq } from "content-query/query";
 import { loadMdxDocument, renderMdx, getMdxAssets } from "content-query:mdx:server";
 import { MdxDocument, MdxIslands } from "@content-query/mdx/react";
 import { LoadMetrics } from "../load-metrics";
@@ -20,10 +19,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
   }
 
   const navigation = await guides.select("id", "title", "description").orderBy("order").all();
-  const guide = await guides
-    .select("id", "title", "description")
-    .where((fields) => eq(fields.id, slug))
-    .first();
+  const guide = await guides.byId(slug).select("id", "title", "description");
 
   if (!guide) {
     throw new Response("Guide not found", { status: 404 });

@@ -72,6 +72,9 @@ export async function fluent() {
   listed._adjacent.previous?./*@fluent-adjacent-title*/title;
   const [sibling] = await guides.select("title").selectAdjacent({ select: { summary: true } }).all();
   sibling._adjacent.next?./*@fluent-sibling-summary*/summary;
+  const guide = await guides.byId("intro").select("title").select("minutes");
+  guide?./*@fluent-by-id-title*/title;
+  guide?./*@fluent-by-id-minutes*/minutes;
 }
 
 export async function relational() {
@@ -204,6 +207,13 @@ describe("field documentation", () => {
         documentation: "A one-line summary for listings.",
         signature: "(property) summary: string | undefined",
       });
+    });
+
+    test("keeps comments on fields a byId() query selects across select() calls", () => {
+      expect(hover("fluent-by-id-title").documentation).toBe("The guide's headline.");
+      expect(hover("fluent-by-id-minutes").documentation).toBe(
+        "Estimated reading time in minutes.",
+      );
     });
 
     test("keeps comments on related and adjacent fields", () => {

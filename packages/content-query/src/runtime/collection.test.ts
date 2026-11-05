@@ -247,6 +247,134 @@ for (const entries of [false, true]) {
         await session.dispose();
       }
     });
+
+    describe("select()", () => {
+      test("adds fields across calls, keeping a repeated field once", async () => {
+        const { posts, authors, session } = await setup(entries);
+        try {
+          const listItem = posts.select("id", "title");
+          expect(
+            await listItem
+              .select("draft", "title")
+              .where((fields) => eq(fields.id, "a"))
+              .all(),
+          ).toStrictEqual([{ id: "a", title: "Alpha", draft: false }]);
+          // The shared builder keeps its own selection.
+          expect(await listItem.where((fields) => eq(fields.id, "a")).all()).toStrictEqual([
+            { id: "a", title: "Alpha" },
+          ]);
+          expect(
+            await posts
+              .using(authors)
+              .select("id")
+              .with("author", (author) => author.select("name").select("id"))
+              .where((fields) => eq(fields.id, "a"))
+              .select("title")
+              .first(),
+          ).toStrictEqual({ id: "a", author: { name: "Ada", id: "ada" }, title: "Alpha" });
+        } finally {
+          await session.dispose();
+        }
+      });
+
+      test("still rejects relationships, reserved names, and empty selections", async () => {
+        const { posts, session } = await setup(entries);
+        try {
+          for (const field of ["author", "_payloads"]) {
+            expect(() => posts.select("id").select(field as never)).toThrow(
+              expect.objectContaining({ code: "invalid-query" }),
+            );
+          }
+          // @ts-expect-error select() needs at least one field.
+          expect(() => posts.select("id").select()).toThrow(
+            "select() requires at least one prepared field.",
+          );
+        } finally {
+          await session.dispose();
+        }
+      });
+    });
+
+    describe("byId()", () => {
+      test("returns the entry with that ID, or undefined", async () => {
+        const { posts, authors, session } = await setup(entries);
+        try {
+          expect(await posts.byId("b").select("title")).toStrictEqual({ title: "Beta" });
+          expect(await posts.byId("missing").select("title")).toBeUndefined();
+          const alpha = posts.byId("a").select("id");
+          expect(await alpha.first()).toStrictEqual({ id: "a" });
+          expect(await alpha.execute()).toStrictEqual({ id: "a" });
+          expect(
+            await posts
+              .using(authors)
+              .byId("a")
+              .select("title")
+              .with("author", (author) => author.select("name")),
+          ).toStrictEqual({ title: "Alpha", author: { name: "Ada" } });
+        } finally {
+          await session.dispose();
+        }
+      });
+
+      test("applies later filters with the ID and counts zero or one entry", async () => {
+        const { posts, session } = await setup(entries);
+        try {
+          const published = posts.byId("b").where((fields) => eq(fields.draft, false));
+          expect(await published.select("id")).toBeUndefined();
+          expect(await published.count()).toBe(0);
+          expect(await posts.byId("a").count()).toBe(1);
+        } finally {
+          await session.dispose();
+        }
+      });
+
+      test("selects neighbors from a sibling scope", async () => {
+        const { posts, session } = await setup(entries);
+        try {
+          expect(
+            await posts
+              .byId("b")
+              .select("id")
+              .selectAdjacent((siblings) => siblings.orderBy("title").select("id")),
+          ).toStrictEqual({ id: "b", _adjacent: { previous: { id: "a" }, next: { id: "c" } } });
+        } finally {
+          await session.dispose();
+        }
+      });
+
+      test("rejects list-only clauses and terminals", async () => {
+        const { posts, session } = await setup(entries);
+        try {
+          const post = posts.byId("a").select("id") as unknown as Record<
+            string,
+            (...arguments_: unknown[]) => unknown
+          >;
+          for (const [member, argument] of [
+            ["orderBy", "title"],
+            ["limit", 1],
+            ["offset", 1],
+            ["all", undefined],
+            ["paginate", { page: 1, size: 1 }],
+            ["selectAdjacent", "id"],
+          ] as const) {
+            expect(() => post[member]!(argument)).toThrow(
+              expect.objectContaining({ code: "invalid-query" }),
+            );
+          }
+          expect(() => post.selectAdjacent!("id")).toThrow(
+            "Results-scope selectAdjacent() is unavailable after byId(), which returns one entry.",
+          );
+          // @ts-expect-error byId() takes an ID string.
+          expect(() => posts.byId(1)).toThrow("byId() requires an entry ID string.");
+          // @ts-expect-error A byId() query still selects its data before running.
+          expect(() => posts.byId("a").first()).toThrow(
+            expect.objectContaining({ code: "invalid-query" }),
+          );
+        } finally {
+          await session.dispose();
+        }
+      });
+    });
   });
 }
 

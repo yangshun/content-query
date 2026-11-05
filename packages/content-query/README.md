@@ -78,6 +78,12 @@ An entry imports only its own collection's data, so a route that imports `posts`
 
 Queries return only the data they select, not even `id` implicitly. A query must select fields, include a relationship, request a payload, or select adjacent entries; otherwise it fails to type-check and throws an `invalid-query` error. Counts need no selection.
 
+Later `select()` calls add fields, so a shared builder such as `const postLink = posts.select("id", "title")` can become `postLink.select("publishedAt")` where a page needs more. For detail pages, `posts.byId(id)` starts a query for one entry, and awaiting it returns that entry or `undefined`:
+
+```ts
+const post = await posts.byId("hello").select("title").withPayload("_rendered");
+```
+
 To follow a relationship, pass its target collection to `using()`. Nothing related loads implicitly:
 
 ```ts

@@ -199,9 +199,11 @@ async function expectLivingExample(collections: ExampleContent): Promise<void> {
   expect(() => featured.with("featuredPosts", (posts) => posts.select("id"))).toThrow(
     expect.objectContaining({ code: "invalid-query" }),
   );
-  expect(() => grace.select("id").select("name" as never)).toThrow(
-    expect.objectContaining({ code: "invalid-query" }),
-  );
+  // Later select() calls add fields, keeping a repeated field once.
+  expect(await grace.select("id").select("name", "id").first()).toStrictEqual({
+    id: "grace",
+    name: "Grace Hopper",
+  });
 
   // Returned values are detached from prepared data and rendering output.
   post!.publishedAt.setUTCFullYear(1999);

@@ -23,11 +23,26 @@ type FluentMember = MembersOf<"fluent">;
 /** The relational members, apart from `count`, which both styles share. */
 type RelationalMember = "findMany" | "findFirst" | "paginate";
 
+/** Fluent starters that only a collection handle offers, not a query builder. */
+type HandleStarters<Registry extends CollectionRegistry, Name extends keyof Registry & string> = {
+  /**
+   * Starts a query for the entry with this ID. Select its data as usual; awaiting the query, or
+   * calling `first()` or `execute()`, returns the entry or `undefined`. Later `where()` filters
+   * also apply. Lookups use the collection's ID index.
+   *
+   * @param id - The entry's ID.
+   * @returns A single-entry root query, without ordering, pagination, `all()`, or results-scope
+   * adjacency.
+   */
+  byId(id: string): Query<Registry, Name, {}, false, false>;
+};
+
 /** Every member before `queryStyle` gating. */
 type CollectionMethods<
   Registry extends CollectionRegistry,
   Name extends keyof Registry & string,
 > = Pick<Query<Registry, Name>, FluentMember & keyof Query<Registry, Name>> &
+  HandleStarters<Registry, Name> &
   RelationalCollectionQueries<Registry, Name>;
 
 /**

@@ -103,11 +103,10 @@ const exercise = await coding.findFirst({
 const hints = exercise?._payloads.detail.hints;
 
 const sameExercise = await coding
+  .byId("two-sum")
   .select("title")
-  .where((fields) => eq(fields.id, "two-sum"))
   .withPayload("detail", { locale: "fr-FR" })
-  .withPayload("walkthrough")
-  .first();
+  .withPayload("walkthrough");
 ```
 
 Each request loads only the modules it names, and catalog queries load none. Requesting a combination that an entry lacks, such as `fr-FR` for an exercise with only English hints, rejects with `variant-not-found`. The error's `payload` and `variant` properties name what was missing.
