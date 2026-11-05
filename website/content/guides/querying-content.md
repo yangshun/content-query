@@ -21,6 +21,15 @@ const entries = await posts.select("id", "title");
 const sameEntries = await posts.findMany({ columns: { id: true, title: true } });
 ```
 
+Later `.select()` calls add fields, so a shared selection can grow where a page needs more. A field selected again appears once:
+
+```ts
+const postLink = posts.select("id", "title");
+
+const links = await postLink;
+const cards = await postLink.select("publishedAt");
+```
+
 Queries return only the data they select. Nothing is implicit, not even `id`, so each query shows the data its page needs, and unrequested fields stay out of loader data and client payloads. A query must select fields, include a relationship, request a payload, or select adjacent entries. Otherwise it fails to type-check, and running it throws an `invalid-query` error:
 
 ```ts
@@ -32,7 +41,7 @@ Counts return no rows, so they need no selection. Bodies and HTML load only as r
 
 Relational `columns` lists fields to include with `true`; there are no exclusions. `columns: {}` selects no fields, for queries that only need relationships, payloads, or adjacent entries. Explicitly selected optional fields are present with value `undefined` when absent.
 
-Fluent queries can also start with `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, or `selectAdjacent`. Field names and result types are checked against the collection from the first call, so editors complete field names in `.select()`. Builders are immutable and reusable. Await a selected builder directly, or call `.all()` or `.execute()` for an array. Use `.first()` or relational `.findFirst()` for one entry; they return `undefined` when nothing matches.
+Fluent queries can also start with `byId`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, or `selectAdjacent`. Field names and result types are checked against the collection from the first call, so editors complete field names in `.select()`. Builders are immutable and reusable. Await a selected builder directly, or call `.all()` or `.execute()` for an array. Use `.first()` or relational `.findFirst()` for one entry; they return `undefined` when nothing matches.
 
 ## Filtering
 
@@ -49,7 +58,20 @@ const samePublished = await posts.findMany({
 
 Combine fluent predicates with `and`, `or`, and `not`, or relational filters with `AND`, `OR`, and `NOT`. See the [operator reference](/docs/reference/queries-and-operators) for comparisons, string matching, arrays, and presence checks.
 
-For detail pages, `.where((fields) => eq(fields.id, id))` and relational `where: { id }` use a lazy ID index for the current collection revision. Other filters and query options still apply, and development updates use the new revision's records.
+For detail pages, start with `posts.byId(id)`. Awaiting it returns the entry or `undefined`, without `.first()`:
+
+```ts
+const post = await posts.byId("hello").select("id", "title");
+
+const samePost = await posts.findFirst({
+  columns: { id: true, title: true },
+  where: { id: "hello" },
+});
+```
+
+A `byId()` query returns one entry, so it has no `.orderBy()`, `.limit()`, `.offset()`, `.paginate()`, or `.all()`. `.first()` and `.execute()` return the same entry, `.count()` returns `0` or `1`, and later `.where()` filters also apply: `posts.byId(id).where((fields) => eq(fields.draft, false))` finds the post only when it is published.
+
+`byId()`, `.where((fields) => eq(fields.id, id))`, and relational `where: { id }` use a lazy ID index for the current collection revision. Other filters and query options still apply, and development updates use the new revision's records.
 
 ## Sorting, limits, and counts
 
@@ -143,10 +165,9 @@ const post = await posts.findFirst({
 });
 
 const samePost = await posts
+  .byId("hello")
   .select("id", "title")
-  .where((fields) => eq(fields.id, "hello"))
-  .selectAdjacent((siblings) => siblings.orderBy("title").select("id", "title"))
-  .first();
+  .selectAdjacent((siblings) => siblings.orderBy("title").select("id", "title"));
 ```
 
 Neighbors are returned in `_adjacent.previous` and `_adjacent.next`, with `null` at each boundary. Sibling scopes cannot paginate or recursively request adjacency.

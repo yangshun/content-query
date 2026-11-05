@@ -40,6 +40,7 @@ Each `collections/<export name>/` directory also holds that collection's data mo
 | Method                                                                                   | Purpose                                                                                                              |
 | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `select`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, `selectAdjacent` | Start a fluent query, which selects nothing until `.select(...fields)` or another request.                           |
+| `byId(id)`                                                                               | Start a fluent query for one entry, which awaits to that entry or `undefined`.                                       |
 | `findMany(options)`, `findFirst(options)`, `paginate(options)`                           | Relational queries.                                                                                                  |
 | `count(options?)`                                                                        | Filtered parent count before pagination; `count()` counts every entry.                                               |
 | `using(...collections)`                                                                  | A handle that also loads the given collections, for [relationships](/docs/relationships#supply-related-collections). |

@@ -520,7 +520,7 @@ Preserving authored forward-array order and duplicates follows [Astro's `getEntr
 
 ## Query API
 
-Queries consume the collection definitions above. Each collection's generated entry exports one collection handle. A handle starts fluent queries with `select`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, or `selectAdjacent`, runs relational `findMany`, `findFirst`, and `paginate`, counts with `count()`, and supplies relationship targets with `using()`. This section covers builder reuse, filtering, returned fields, sorting, pagination, explicit relationship loading, and payload requests.
+Queries consume the collection definitions above. Each collection's generated entry exports one collection handle. A handle starts fluent queries with `byId`, `select`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, or `selectAdjacent`, runs relational `findMany`, `findFirst`, and `paginate`, counts with `count()`, and supplies relationship targets with `using()`. This section covers builder reuse, filtering, returned fields, sorting, pagination, explicit relationship loading, and payload requests.
 
 ### Query field checks
 
@@ -542,7 +542,7 @@ A base query can safely produce independent branches. Adding a locale filter, se
 
 Terminal methods execute the query without consuming or changing its configuration. Reusing a builder does not pin a content revision: each execution follows the per-query revision-consistency contract. Internal query-result caching follows the revision-aware implementation defaults; public cross-operation snapshot scopes remain outside v1.
 
-Immutability does not determine repeated-clause behavior. Follow the agreed method-specific rules: repeated `.where(...)` calls combine with AND, repeated `.orderBy(...)` calls append priorities while rejecting duplicate fields, and repeated `.limit(...)` or `.offset(...)` calls are rejected. Reject a second `.select(...)` on the same builder branch, including when the fields are unchanged. Reject duplicate `.with(...)` requests for the same relationship in the same query scope; requests for different relationships are allowed. These methods do not implicitly merge or replace earlier requests. Each nested scope has its own selection and relationship requests.
+Immutability does not determine repeated-clause behavior. Follow the agreed method-specific rules: repeated `.where(...)` calls combine with AND, repeated `.orderBy(...)` calls append priorities while rejecting duplicate fields, and repeated `.limit(...)` or `.offset(...)` calls are rejected. Repeated `.select(...)` calls add fields to the scope's earlier selection, keeping a field selected again once, so a shared base selection can be extended per call site. Reject duplicate `.with(...)` requests for the same relationship in the same query scope; requests for different relationships are allowed. Apart from `.select(...)`, these methods do not implicitly merge or replace earlier requests. Each nested scope has its own selection and relationship requests.
 
 The reason for immutability is predictable reuse of query definitions. The implementation can share unchanged internal query state between builders; the public contract does not require deep-copying the whole plan after every call. Allocation costs and performance differences need measurement rather than an assumed performance advantage for either approach. This choice applies equally to JavaScript execution and a future SQLite backend.
 
@@ -756,7 +756,7 @@ Sorting may use query fields that are absent from the selection. Raw bodies and 
 | Page requests                       | `paginate({ page, size })` and `paginate({ size, after?, before?, total? })` run filtering, sorting, and paging as one operation on one revision. Page numbers start at 1; `pageCount` is at least 1. Cursors encode the effective order and boundary sort values and position strictly after or before them. |
 | Page restrictions                   | `paginate()` is root-only and unavailable once a query sets `limit` or `offset`. Page and cursor options do not combine, and cursors from another collection or order reject with `invalid-cursor`.                                                                                                           |
 
-Fluent root queries start from a collection handle and select data with `select(...fields)`, `with()`, `withPayload()`, or `selectAdjacent()`. Awaiting a selected builder, `.all()`, and `.execute()` return the requested page; an unselected builder rejects. Other terminal methods are:
+Fluent root queries start from a collection handle and select data with `select(...fields)`, `with()`, `withPayload()`, or `selectAdjacent()`. Awaiting a selected builder, `.all()`, and `.execute()` return the requested page; an unselected builder rejects. `posts.byId(id)` starts a single-entry query instead: awaiting it, `.first()`, and `.execute()` return the entry or `undefined`, and it offers no ordering, pagination, `.all()`, or results-scope adjacency. Other terminal methods are:
 
 | Method     | Result                                   | Pagination behavior                                                                |
 | ---------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |

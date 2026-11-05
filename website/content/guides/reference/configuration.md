@@ -19,7 +19,7 @@ Export `queryStyle` to allow only one query API in the application:
 export const queryStyle = "relational"; // or "fluent"
 ```
 
-The style gates the collection members that start a query. The fluent starters are `select`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, and `selectAdjacent`.
+The style gates the collection members that start a query. The fluent starters are `byId`, `select`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, and `selectAdjacent`.
 
 | Value          | Allowed                                               | Disabled                                              |
 | -------------- | ----------------------------------------------------- | ----------------------------------------------------- |

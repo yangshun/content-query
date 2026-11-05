@@ -1,4 +1,3 @@
-import { eq } from "content-query/query";
 import { defineHandler, defineHead, type InferProps } from "void";
 import { guides } from "content-query:collections/guides";
 
@@ -11,11 +10,10 @@ export const loader = defineHandler(async (context) => {
   }
 
   const guide = await guides
+    .byId(id)
     .select("id", "title", "description")
-    .where((fields) => eq(fields.id, id))
     .selectAdjacent((siblings) => siblings.orderBy("order").select("id", "title"))
-    .withPayload("_rendered")
-    .first();
+    .withPayload("_rendered");
 
   if (!guide) {
     return context.notFound();

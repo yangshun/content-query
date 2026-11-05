@@ -185,7 +185,6 @@ for (const backend of ["in-memory", "encoded"] as const) {
       expect(await base.limit(0).first()).toBeUndefined();
       expect(() => base.limit(-1)).toThrow(/safe integer/);
       expect(() => base.orderBy("score")).toThrow(/repeated sort/);
-      expect(() => base.select("id")).toThrow(/once/);
     });
     test("loads forward/inverse relations with local filtering and per-parent pagination", async () => {
       const { content } = await setup();
@@ -872,7 +871,7 @@ describe("query style gating", () => {
     const session = await styledSession("relational");
     try {
       const content = unrestricted(loadAll(session.collections));
-      for (const member of ["select", "where", "orderBy", "with", "withPayload"] as const) {
+      for (const member of ["byId", "select", "where", "orderBy", "with", "withPayload"] as const) {
         expect(thrownBy(() => (content.posts[member] as () => unknown)())).toMatchObject({
           code: "invalid-query",
           message: `posts.${member} is unavailable because content-query.config sets queryStyle to "relational".`,

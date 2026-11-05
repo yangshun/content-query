@@ -189,11 +189,19 @@ const post = await posts.findFirst({
 const { _body: body, _rendered: rendered } = post!._payloads;
 ```
 
-Start fluent queries from the collection, such as `posts.select(...fields)`; field names are checked and completed immediately. `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, and `selectAdjacent` also start fluent queries. Builders are immutable and reusable. Await a selected builder directly, or call `all()` / `execute()` for an array, `first()` for one entry or `undefined`, and [`paginate()`](#pagination) for one page with page-number or cursor details. `count()` counts filtered parents before pagination and needs no selection.
+Start fluent queries from the collection, such as `posts.select(...fields)`; field names are checked and completed immediately. `byId`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, and `selectAdjacent` also start fluent queries. Builders are immutable and reusable. Later `select()` calls add fields to the scope's earlier ones, so a shared builder such as `const postLink = posts.select("id", "title")` can become `postLink.select("publishedAt")` where a page needs more; a field selected again appears once. Await a selected builder directly, or call `all()` / `execute()` for an array, `first()` for one entry or `undefined`, and [`paginate()`](#pagination) for one page with page-number or cursor details. `count()` counts filtered parents before pagination and needs no selection.
 
 Queries return only the data they select; nothing is implicit, not even `id`. Every row-returning scope, including relationship and adjacent sibling scopes, must select fields, include a relationship, request a payload, or select adjacency. A scope that selects nothing fails to type-check: awaiting an unselected builder reports "Type of 'await' operand must either be a valid promise…", and its `all()` / `first()` / `execute()` report the rule as their required `this` type. At runtime it throws an `invalid-query` ContentError: "Select fields, relationships, payloads, or adjacent entries before running this query." Selected optional properties remain own properties with value `undefined`. Returned graphs and headings are detached from internal state. Queries load bodies or rendered HTML only when they request [payloads](#payloads).
 
-Queries constrained by ID equality, such as `.where((fields) => eq(fields.id, id))` or `where: { id }`, use a lazily built index for the current immutable collection revision. Repeated detail-page lookups avoid scanning the entire collection. Additional filters, selection, ordering, pagination, counts, and independent adjacency scopes retain their normal semantics. Development revisions receive their own index.
+`posts.byId(id)` starts a query for one entry. Select its data as usual, then await it for the entry or `undefined`, without `first()`:
+
+```ts
+const post = await posts.byId(id).select("title").withPayload("_rendered");
+```
+
+A `byId()` query has no `orderBy`, `limit`, `offset`, `paginate`, `all()`, or results-scope `selectAdjacent(...fields)`. `first()` and `execute()` return the same entry as awaiting it, `count()` returns `0` or `1`, and later `where()` filters also apply, so `posts.byId(id).where((fields) => eq(fields.draft, false))` finds the entry only when it is published. A sibling scope, `selectAdjacent((siblings) => ...)`, selects its neighbors. `byId` is a fluent starter, so `queryStyle: "relational"` hides it; relational queries use `findFirst({ where: { id } })`.
+
+Queries constrained by ID equality, such as `byId(id)`, `.where((fields) => eq(fields.id, id))`, or `where: { id }`, use a lazily built index for the current immutable collection revision. Repeated detail-page lookups avoid scanning the entire collection. Additional filters, selection, ordering, pagination, counts, and independent adjacency scopes retain their normal semantics. Development revisions receive their own index.
 
 Detachment copies a result directly when it contains only primitives, plain objects, dense arrays, and dates. This covers typical field selections and `_rendered` payloads, including long HTML strings. A result containing any other value, such as a `Map` or an array hole, is detached as a whole through the devalue round trip. Repeated references, cycles, mutation isolation, and the supported-value rules are the same on both paths.
 
@@ -321,15 +329,14 @@ const post = await posts.findFirst({
   columns: { title: true },
 });
 const same = await posts
+  .byId(currentId)
   .select("title")
-  .where((fields) => eq(fields.id, currentId))
   .selectAdjacent((siblings) =>
     siblings
       .where((fields) => eq(fields.draft, false))
       .orderBy("title")
       .select("id", "title"),
-  )
-  .first();
+  );
 ```
 
 Both return `_adjacent: { previous, next }`, with `null` at boundaries or when the current entry is outside the sibling scope. Neighbors select their own data; nothing is implicit, not even `id`. Results-scope neighbors (`.selectAdjacent(...fields)` or `adjacent: { scope: "results", columns, with? }`) share the scope's filters and order, and inside a relationship they come from the parent's related entries in their declared or authored order. `adjacent: true` and an empty `.selectAdjacent()` are rejected. The fluent `.selectAdjacent(options)` overload retains its explicit `{ where?, orderBy?, select }` scope; relational `adjacent` uses `{ scope?: "collection", where?, orderBy?, columns?, with? }`. Sibling scopes select their own neighbor fields and cannot paginate or recursively select adjacency, including through relationships. `_adjacent` is a reserved field name. Stable ID tie-breakers apply in both APIs.
@@ -389,7 +396,7 @@ Export an optional `queryStyle` from the config to allow only one query API:
 export const queryStyle = "relational"; // or "fluent"
 ```
 
-Omit it to allow both. `"fluent"` keeps the fluent starters on each collection: `select`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, and `selectAdjacent`. `"relational"` keeps `findMany`, `findFirst`, `paginate`, and `count(options)`. `count()` without options works in both. Every other query API starts from one of those members, so the setting also covers relationships, payloads, adjacency, and counts.
+Omit it to allow both. `"fluent"` keeps the fluent starters on each collection: `byId`, `select`, `where`, `orderBy`, `limit`, `offset`, `with`, `withPayload`, and `selectAdjacent`. `"relational"` keeps `findMany`, `findFirst`, `paginate`, and `count(options)`. `count()` without options works in both. Every other query API starts from one of those members, so the setting also covers relationships, payloads, adjacency, and counts.
 
 Generated declarations read the export's type, so the editor and `tsc` report a disabled member without a rebuild: `posts.select is unavailable because content-query.config sets queryStyle to "relational".` Keep the literal type: use a plain `const` or `satisfies QueryStyle`, not a `: QueryStyle` annotation, which widens the type and allows both styles in types while the runtime still enforces the value.
 
@@ -513,12 +520,7 @@ const post = await posts.findFirst({
 });
 const { html, headings } = post!._payloads._rendered;
 
-const same = await posts
-  .select("title")
-  .where((fields) => eq(fields.id, id))
-  .withPayload("_rendered")
-  .withPayload("_body")
-  .first();
+const same = await posts.byId(id).select("title").withPayload("_rendered").withPayload("_body");
 ```
 
 - **Requests.** Relational `payloads` maps payload names to `true`, or to a record naming every variant key for a payload with variants; `false` omits a payload. It is accepted at the root and inside `with` scopes. Fluent `.withPayload(name)` does the same on root and relationship builders; requesting the same payload twice throws. Omitting `columns` still returns all metadata alongside the payloads.

@@ -102,6 +102,43 @@ function check(
   expectTypeOf<Awaited<ReturnType<typeof selected.all>>[number]["subtitle"]>().toEqualTypeOf<
     string | undefined
   >();
+  // Later select() calls add fields to the earlier ones.
+  const added = content.posts
+    .select("id")
+    .with("author", (author) => author.select("name"))
+    .select("subtitle", "id");
+  expectTypeOf<Awaited<ReturnType<typeof added.first>>>().toEqualTypeOf<
+    { id: string; author: { name: string }; subtitle: string | undefined } | undefined
+  >();
+  // byId() queries return one entry and offer no list-only members.
+  const single = content.posts.byId("a").select("subtitle").withPayload("_body");
+  expectTypeOf<Awaited<typeof single>>().toEqualTypeOf<
+    { subtitle: string | undefined; _payloads: { _body: string | undefined } } | undefined
+  >();
+  expectTypeOf<Awaited<ReturnType<typeof single.execute>>>().toEqualTypeOf<
+    Awaited<typeof single>
+  >();
+  expectTypeOf(content.posts.byId("a").count()).toEqualTypeOf<Promise<number>>();
+  const neighbors = content.posts
+    .byId("a")
+    .select("id")
+    .selectAdjacent((siblings) => siblings.select("id"));
+  expectTypeOf<Awaited<typeof neighbors>>().toEqualTypeOf<
+    | { id: string; _adjacent: { previous: { id: string } | null; next: { id: string } | null } }
+    | undefined
+  >();
+  // @ts-expect-error byId() queries cannot sort.
+  void content.posts.byId("a").orderBy("id");
+  // @ts-expect-error byId() queries cannot set a limit.
+  void content.posts.byId("a").limit(1);
+  // @ts-expect-error byId() queries have no all().
+  void content.posts.byId("a").select("id").all();
+  // @ts-expect-error byId() queries have no paginate().
+  void content.posts.byId("a").select("id").paginate;
+  // @ts-expect-error byId() queries have no results-scope neighbors.
+  void content.posts.byId("a").select("id").selectAdjacent("id");
+  // @ts-expect-error byId() queries still select data before running.
+  void content.posts.byId("a").first();
   const required = content.posts.select("id").with("author", (author) => author.select("name"));
   expectTypeOf<Awaited<ReturnType<typeof required.all>>[number]["author"]>().toEqualTypeOf<{
     name: string;

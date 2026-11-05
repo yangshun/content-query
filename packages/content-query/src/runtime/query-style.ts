@@ -8,6 +8,7 @@ export type QueryStyle = "fluent" | "relational";
  */
 export const queryStyleMembers = {
   fluent: [
+    "byId",
     "select",
     "where",
     "orderBy",
