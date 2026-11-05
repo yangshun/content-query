@@ -9,4 +9,5 @@ export type {
   LoadedRegistry,
 } from "./runtime/collection-types.ts";
 export type { QueryStyle, QueryStyleDisabled } from "./runtime/query-style.ts";
+export type { Unavailable } from "./shared/types.ts";
 export type { ContentHeading, ContentRenderResult } from "./runtime/types.ts";

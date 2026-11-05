@@ -9,14 +9,10 @@ import type {
   UnavailableRelationshipsOf,
   VariantOf,
 } from "../collection/types.ts";
+import type { Unavailable } from "../shared/types.ts";
 import type { Expression, NO_SELECTION_MESSAGE, PAGINATE_AFTER_LIMIT_MESSAGE } from "./plan.ts";
 
 declare const queryType: unique symbol;
-/** Running an unselected query reports the explicit-selection rule as its required `this` type. */
-type UnselectedTerminal = (
-  this: typeof NO_SELECTION_MESSAGE,
-  ...arguments_: readonly unknown[]
-) => never;
 /** A `then` that cannot resolve a value, so awaiting an unselected query fails to compile. */
 type UnselectedThen = (selectBeforeAwaiting: typeof NO_SELECTION_MESSAGE) => never;
 declare const fieldType: unique symbol;
@@ -337,8 +333,12 @@ export type Query<
   (Root extends true
     ? (Many extends true
         ? {
-            all: Selected extends true ? () => Promise<Row<Result>[]> : UnselectedTerminal;
-            execute: Selected extends true ? () => Promise<Row<Result>[]> : UnselectedTerminal;
+            all: Selected extends true
+              ? () => Promise<Row<Result>[]>
+              : Unavailable<typeof NO_SELECTION_MESSAGE>;
+            execute: Selected extends true
+              ? () => Promise<Row<Result>[]>
+              : Unavailable<typeof NO_SELECTION_MESSAGE>;
             then: Selected extends true ? Promise<Row<Result>[]>["then"] : UnselectedThen;
             /**
              * Returns one page from one revision: `{ page, size }` for page numbers, or
@@ -347,32 +347,29 @@ export type Query<
              */
             paginate: Selected extends true
               ? [Paged] extends [true]
-                ? PaginateAfterLimit
+                ? Unavailable<typeof PAGINATE_AFTER_LIMIT_MESSAGE>
                 : Paginate<Row<Result>>
-              : UnselectedTerminal;
+              : Unavailable<typeof NO_SELECTION_MESSAGE>;
           }
         : {
             /** Runs a `byId()` query, matching direct await: the entry, or `undefined`. */
             execute: Selected extends true
               ? () => Promise<Row<Result> | undefined>
-              : UnselectedTerminal;
+              : Unavailable<typeof NO_SELECTION_MESSAGE>;
             then: Selected extends true ? Promise<Row<Result> | undefined>["then"] : UnselectedThen;
           }) & {
-        first: Selected extends true ? () => Promise<Row<Result> | undefined> : UnselectedTerminal;
+        first: Selected extends true
+          ? () => Promise<Row<Result> | undefined>
+          : Unavailable<typeof NO_SELECTION_MESSAGE>;
         /** Counts matching entries without a selection; unavailable once payloads are requested. */
         count: [Result] extends [never]
           ? () => Promise<number>
           : [Result] extends [{ _payloads: unknown }]
-            ? never
+            ? Unavailable<"Counts cannot request payloads; count without withPayload().">
             : () => Promise<number>;
       }
     : {});
 
-/** `paginate()` after `limit()` or `offset()` reports why as its required `this` type. */
-type PaginateAfterLimit = (
-  this: typeof PAGINATE_AFTER_LIMIT_MESSAGE,
-  ...arguments_: readonly unknown[]
-) => never;
 /** The `paginate()` overloads for one item type. */
 export type Paginate<Item> = {
   (options: PageOptions): Promise<NumberedPage<Item>>;
