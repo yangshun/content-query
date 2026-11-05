@@ -27,4 +27,4 @@ Metadata queries and rendered bodies are separate. A page listing can select tit
 
 ## Start here
 
-Follow the [quick start](/docs/quick-start) to build a small content pipeline, or read [how ContentQuery works](/docs/how-it-works) to understand preparation and runtime behavior.
+Follow the [quick start](/docs/quick-start) to add ContentQuery to a full-stack application, or read [how ContentQuery works](/docs/how-it-works) to understand preparation and runtime behavior.

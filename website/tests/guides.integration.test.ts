@@ -66,6 +66,23 @@ const sectionIds = [
   "reference",
 ];
 
+/** Returns a guide's fenced code blocks in order, with their info-string languages. */
+function codeBlocks(markdown: string) {
+  return [...markdown.matchAll(/^```(\w+)\n([\s\S]*?)^```/gm)].map((match) => ({
+    language: match[1]!,
+    code: match[2]!,
+  }));
+}
+
+/** Returns the quick start's collection configuration and sample post. */
+function quickStartContent(markdown: string) {
+  const blocks = codeBlocks(markdown);
+  return {
+    config: blocks.find((block) => block.code.includes("defineCollection("))!.code,
+    post: blocks.find((block) => block.language === "md")!.code,
+  };
+}
+
 /** Supplies the request parameter and 404 response used by the guide loader. */
 function requestContext(id = "") {
   return {
@@ -279,36 +296,92 @@ describe("ContentQuery website guide routes with the generated backend", () => {
     }
   });
 
-  test("runs the published quick-start code through preparation and rendering", async () => {
-    const body = (await guidePayload("quick-start", "body"))!;
-    const blocks = new Map(
-      [...body.matchAll(/^```(ts|md|js)\n([\s\S]*?)^```/gm)].map((match) => [match[1]!, match[2]!]),
+  test("runs the published quick-start code through the Vite plugin with inferred types", async () => {
+    const blocks = codeBlocks((await guidePayload("quick-start", "body"))!);
+    expect(blocks.map((block) => block.language)).toEqual(["sh", "ts", "ts", "md", "ts", "html"]);
+    const [, viteConfig, config, post, serverModule, renderedHtml] = blocks.map(
+      (block) => block.code,
     );
-    expect([...blocks.keys()]).toEqual(["ts", "md", "js"]);
     const quickStartRoot = path.join(workspace, "quick-start");
     await mkdir(path.join(quickStartRoot, "content/posts"), { recursive: true });
+    await mkdir(path.join(quickStartRoot, "app"));
     await symlink(
       path.join(appRoot, "node_modules"),
       path.join(quickStartRoot, "node_modules"),
       "dir",
     );
     await writeFile(path.join(quickStartRoot, "package.json"), '{"type":"module"}\n');
-    await writeFile(path.join(quickStartRoot, "content-query.config.ts"), blocks.get("ts")!);
-    await writeFile(path.join(quickStartRoot, "content/posts/hello.md"), blocks.get("md")!);
-    await writeFile(path.join(quickStartRoot, "render.mjs"), blocks.get("js")!);
+    await writeFile(path.join(quickStartRoot, "vite.config.ts"), viteConfig!);
+    await writeFile(path.join(quickStartRoot, "content-query.config.ts"), config!);
+    await writeFile(path.join(quickStartRoot, "content/posts/hello.md"), post!);
+    await writeFile(path.join(quickStartRoot, "app/posts.server.ts"), serverModule!);
+    const quickStartServer = await createServer({
+      configFile: path.join(quickStartRoot, "vite.config.ts"),
+      root: quickStartRoot,
+      logLevel: "silent",
+      server: { middlewareMode: true, ws: false },
+      optimizeDeps: { noDiscovery: true },
+    });
+    try {
+      const { listPosts, getPost } = await quickStartServer.ssrLoadModule("/app/posts.server.ts");
+      expect(await listPosts()).toEqual([{ id: "hello", title: "Hello ContentQuery" }]);
+      const entry = await getPost("hello");
+      expect(entry).toMatchObject({ id: "hello", title: "Hello ContentQuery" });
+      expect(entry._payloads._rendered.html.trim()).toBe(renderedHtml!.trim());
+      expect(await getPost("missing")).toBeUndefined();
+    } finally {
+      await quickStartServer.close();
+    }
+    // The guide's tsconfig advice supplies the virtual module types to the server module.
+    await writeFile(
+      path.join(quickStartRoot, "tsconfig.json"),
+      JSON.stringify({
+        include: ["app", ".content-query/**/*.d.ts"],
+        compilerOptions: {
+          target: "es2022",
+          module: "esnext",
+          moduleResolution: "bundler",
+          strict: true,
+          noEmit: true,
+          skipLibCheck: true,
+          allowImportingTsExtensions: true,
+        },
+      }),
+    );
+    await execFileAsync(process.execPath, [path.join(appRoot, "node_modules/tsrs/bin/tsrs")], {
+      cwd: quickStartRoot,
+    });
+  }, 20_000);
+
+  test("runs the published standalone code through the CLI and rendering", async () => {
+    const { config, post } = quickStartContent((await guidePayload("quick-start", "body"))!);
+    const blocks = codeBlocks((await guidePayload("integrations/standalone", "body"))!);
+    expect(blocks.map((block) => block.language)).toEqual(["sh", "js", "ts"]);
+    expect(blocks[0]!.code).toBe("npx content-query build\n");
+    const standaloneRoot = path.join(workspace, "standalone");
+    await mkdir(path.join(standaloneRoot, "content/posts"), { recursive: true });
+    await symlink(
+      path.join(appRoot, "node_modules"),
+      path.join(standaloneRoot, "node_modules"),
+      "dir",
+    );
+    await writeFile(path.join(standaloneRoot, "package.json"), '{"type":"module"}\n');
+    await writeFile(path.join(standaloneRoot, "content-query.config.ts"), config);
+    await writeFile(path.join(standaloneRoot, "content/posts/hello.md"), post);
+    await writeFile(path.join(standaloneRoot, "render.mjs"), blocks[1]!.code);
     await execFileAsync(
       process.execPath,
       [path.join(appRoot, "node_modules/content-query/dist/cli.mjs"), "build"],
-      { cwd: quickStartRoot },
+      { cwd: standaloneRoot },
     );
-    await execFileAsync(process.execPath, ["render.mjs"], { cwd: quickStartRoot });
-    const html = await readFile(path.join(quickStartRoot, "post.html"), "utf8");
+    await execFileAsync(process.execPath, ["render.mjs"], { cwd: standaloneRoot });
+    const html = await readFile(path.join(standaloneRoot, "post.html"), "utf8");
     expect(html).toContain('<h2 id="my-first-post">My first post</h2>');
     expect(html).toContain("Content starts here.");
   });
 
   test("executes the Next.js guide and homepage snippets with inferred collection types", async () => {
-    const quickStart = (await guidePayload("quick-start", "body"))!;
+    const quickStart = quickStartContent((await guidePayload("quick-start", "body"))!);
     const guide = (await guidePayload("integrations/next", "body"))!;
     const exampleRoot = path.join(workspace, "next-guide");
     await mkdir(path.join(exampleRoot, "content/posts"), { recursive: true });
@@ -324,14 +397,8 @@ describe("ContentQuery website guide routes with the generated backend", () => {
       path.join(exampleRoot, "package.json"),
       JSON.stringify({ type: "module", ...packageJson }),
     );
-    await writeFile(
-      path.join(exampleRoot, "content-query.config.ts"),
-      quickStart.match(/^```ts\n([\s\S]*?)^```/m)![1]!,
-    );
-    await writeFile(
-      path.join(exampleRoot, "content/posts/hello.md"),
-      quickStart.match(/^```md\n([\s\S]*?)^```/m)![1]!,
-    );
+    await writeFile(path.join(exampleRoot, "content-query.config.ts"), quickStart.config);
+    await writeFile(path.join(exampleRoot, "content/posts/hello.md"), quickStart.post);
     await writeFile(
       path.join(exampleRoot, "verify.mjs"),
       `import assert from "node:assert/strict";
