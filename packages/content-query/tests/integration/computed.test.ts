@@ -19,6 +19,11 @@ describe("computed helpers through public package exports", () => {
           fixture.postPath,
           "---\ntitle: Hello\n---\n# Hello\n\nRead **this** [guide](https://example.com).\n",
         );
+        // Two fields that computedFields() fills from one read of this file.
+        await writeFile(
+          path.join(path.dirname(fixture.postPath), "series.json"),
+          JSON.stringify({ series: "Basics", part: 1 }),
+        );
         await writeFile(
           path.join(fixture.root, "content/articles.json"),
           JSON.stringify([
@@ -32,7 +37,7 @@ describe("computed helpers through public package exports", () => {
         await writeFile(
           fixture.config,
           `import {defineCollection} from "content-query";
-import {excerpt, readingTime, wordCount} from "content-query/computed";
+import {computedFields, excerpt, readingTime, wordCount} from "content-query/computed";
 import {file, glob, type Loader} from "content-query/loaders";
 import { schema } from "content-query/schema";
 const articleSchema = schema.object({description:schema.string(),html:schema.string()});
@@ -45,7 +50,13 @@ export const collections = {
   posts: defineCollection({
     loader:glob({base:"./content/posts",pattern:"*.md",retainBody:false,deferRender:true}),
     schema:schema.object({title:schema.string()}),
-    computed:{readingMinutes:readingTime(),words:wordCount(),summary:excerpt({maxLength:16})},
+    computed:{
+      readingMinutes:readingTime(),words:wordCount(),summary:excerpt({maxLength:16}),
+      ...computedFields({
+        fields:{series:schema.string(),part:schema.number()},
+        resolve:async ({files})=>JSON.parse(await files.text("series.json")),
+      }),
+    },
   }),
   articles: defineCollection({
     loader:file("./content/articles.json"),schema:articleSchema,
@@ -69,7 +80,7 @@ const {buildContent}=await import("content-query/build");
 const session=await buildContent({backend:${JSON.stringify(backend)}});
 try {
   console.log(JSON.stringify({
-    posts:await session.collections.posts.select("readingMinutes", "words", "summary").all(),
+    posts:await session.collections.posts.select("readingMinutes", "words", "summary").select("series", "part").all(),
     articles:await session.collections.articles.select("readingMinutes", "words", "summary").all(),
     cms:await session.collections.cms.select("words").all(),
     retainedBody:(await session.collections.posts.findFirst({where:{id:"getting-started"},payloads:{_body:true}}))._payloads._body,
@@ -80,7 +91,9 @@ try {
           { cwd: fixture.root },
         );
         const expected = {
-          posts: [{ readingMinutes: 1, words: 4, summary: "Hello Read this…" }],
+          posts: [
+            { readingMinutes: 1, words: 4, summary: "Hello Read this…", series: "Basics", part: 1 },
+          ],
           articles: [{ readingMinutes: 1, words: 3, summary: "A short description" }],
           cms: [{ words: 2 }],
         };
@@ -93,10 +106,11 @@ try {
 import {posts, type ContentPost} from "./.content-query/collections/posts/server.js";
 import type {ContentArticle} from "./.content-query/collections/articles/server.js";
 const selected:Promise<{words:number;readingMinutes:number;summary:string}[]> = posts.select("words", "readingMinutes", "summary").all();
+const series:Promise<{series:string;part:number}[]> = posts.select("series", "part").all();
 const words:ContentArticle["words"] = 3;
 // @ts-expect-error Computed number fields do not become strings through generated declarations.
 const wrong:ContentPost["readingMinutes"] = "one";
-void [selected,words,wrong];
+void [selected,series,words,wrong];
 `,
           );
           await execute(
@@ -135,7 +149,7 @@ const {posts}=await entry("posts");
 const {articles}=await entry("articles");
 const {cms}=await entry("cms");
 console.log(JSON.stringify({
-  posts:await posts.select("readingMinutes", "words", "summary").all(),
+  posts:await posts.select("readingMinutes", "words", "summary").select("series", "part").all(),
   articles:await articles.select("readingMinutes", "words", "summary").all(),
   cms:await cms.select("words").all(),
 }));

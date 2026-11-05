@@ -15,6 +15,7 @@ const consumer = path.join(root, "consumer.ts");
 
 const configSource = `
 import { defineCollection } from "content-query";
+import { computedFields } from "content-query/computed";
 import { schema } from "content-query/schema";
 
 const loader = { name: "memory", load: async () => {} };
@@ -34,6 +35,13 @@ export const collections = {
     computed: {
       /** Estimated reading time in minutes. */
       minutes: { schema: schema.number(), resolve: () => 1 },
+      ...computedFields({
+        fields: {
+          /** Words in the guide, read with its minutes. */
+          words: schema.number(),
+        },
+        resolve: () => ({ words: 200 }),
+      }),
     },
     relationships: {
       author: { collection: "authors", type: "one", from: "authorId", to: "id", referenceSide: "from" },
@@ -58,6 +66,7 @@ declare const full: ContentGuide;
 declare const picked: ContentGuide<"title" | "summary">;
 full./*@full-title*/title;
 full./*@full-minutes*/minutes;
+full./*@full-words*/words;
 full./*@full-id*/id;
 full./*@full-draft*/draft;
 picked./*@picked-title*/title;
@@ -75,6 +84,8 @@ export async function fluent() {
   const guide = await guides.byId("intro").select("title").select("minutes");
   guide?./*@fluent-by-id-title*/title;
   guide?./*@fluent-by-id-minutes*/minutes;
+  const [counted] = await guides.select("words").all();
+  counted./*@fluent-words*/words;
 }
 
 export async function relational() {
@@ -185,6 +196,13 @@ describe("field documentation", () => {
       expect(hover("full-title").documentation).toBe("The guide's headline.");
       expect(hover("full-minutes").documentation).toBe("Estimated reading time in minutes.");
       expect(hover("full-id").documentation).toBe("The entry's ID, unique within its collection.");
+    });
+
+    test("shows comments on fields that computedFields() declares", () => {
+      expect(hover("full-words").documentation).toBe("Words in the guide, read with its minutes.");
+      expect(hover("fluent-words").documentation).toBe(
+        "Words in the guide, read with its minutes.",
+      );
     });
 
     test("does not turn runtime schema metadata into comments", () => {

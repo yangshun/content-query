@@ -1,8 +1,8 @@
 import { describe, expectTypeOf, test } from "vite-plus/test";
 import { z } from "zod";
 import { defineCollection } from "../index.ts";
-import { excerpt, readingTime, wordCount } from "../computed.ts";
-import type { QueryData } from "../collection/types.ts";
+import { computedFields, excerpt, readingTime, wordCount } from "../computed.ts";
+import type { ComputedContext, EntryFiles, QueryData } from "../collection/types.ts";
 import type { Loader } from "../loaders.ts";
 
 describe("computed helper inference", () => {
@@ -51,5 +51,41 @@ describe("computed helper inference", () => {
     expectTypeOf<QueryData<typeof collection>["summary"]>().toEqualTypeOf<string>();
     expectTypeOf<QueryData<typeof collection>["words"]>().toEqualTypeOf<number>();
     expectTypeOf<QueryData<typeof collection>["minutes"]>().toEqualTypeOf<number>();
+  });
+
+  test("types each field that computedFields() declares from its schema", () => {
+    const schema = z.object({ description: z.string() });
+    const collection = defineCollection({
+      loader: { name: "cms", async load() {} },
+      schema,
+      computed: {
+        ...computedFields({
+          fields: {
+            title: z.string(),
+            labels: z.record(z.string(), z.string()),
+            subtitle: z.string().optional(),
+          },
+          resolve: async ({ files }) => {
+            expectTypeOf(files).toEqualTypeOf<EntryFiles>();
+            return { title: "Title", labels: {} };
+          },
+        }),
+        summary: computedFields({
+          fields: { summary: z.string() },
+          resolve: ({ data }: ComputedContext<z.infer<typeof schema>>) => ({
+            summary: data.description,
+          }),
+        }).summary,
+      },
+    });
+    expectTypeOf<QueryData<typeof collection>["title"]>().toEqualTypeOf<string>();
+    expectTypeOf<QueryData<typeof collection>["labels"]>().toEqualTypeOf<Record<string, string>>();
+    expectTypeOf<QueryData<typeof collection>["subtitle"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<QueryData<typeof collection>["summary"]>().toEqualTypeOf<string>();
+    computedFields({
+      fields: { title: z.string() },
+      // @ts-expect-error Results are checked against each field's schema input.
+      resolve: () => ({ title: 1 }),
+    });
   });
 });

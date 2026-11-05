@@ -91,6 +91,43 @@ computed: {
 }
 ```
 
+## Fields that share one read
+
+When several fields come from the same file or expensive call, declare them together with `computedFields()`. Its resolver runs once per entry and returns every field's value, and each field is still validated by its own schema:
+
+```ts
+import { defineCollection } from "content-query";
+import { computedFields } from "content-query/computed";
+import { glob } from "content-query/loaders";
+import { schema } from "content-query/schema";
+
+const challenges = defineCollection({
+  loader: glob({
+    base: "./content/challenges",
+    pattern: "*/metadata.json",
+    generateId: ({ entry }) => entry.split("/")[0]!,
+  }),
+  schema: schema.object({ difficulty: schema.string() }),
+  computed: {
+    ...computedFields({
+      fields: {
+        /** The challenge's name. */
+        title: schema.string(),
+        description: schema.string(),
+        labels: schema.record(schema.string(), schema.string()),
+      },
+      resolve: async ({ files }) => JSON.parse(await files.text("info/en-US.json")),
+    }),
+  },
+});
+
+export const collections = { challenges };
+```
+
+Spread the result into `computed`, beside other fields. Fields whose schema accepts `undefined` can be left out of the returned object. Each field is selected, filtered, and sorted like any other computed field, and a JSDoc comment on its key documents it on entry types and query results.
+
+The resolver receives the same context as other resolvers. To type `data`, annotate the context, such as `({ data }: ComputedContext<Post>) => ...` with `ComputedContext` from `content-query`. Files it reads through `files` are tracked, so editing `info/en-US.json` resolves that entry's fields again. A failing resolver reports a diagnostic for each field it fills.
+
 ## When computation runs
 
 Resolvers run during preparation and can be asynchronous. Their results are validated by the field schema and stored for runtime queries.
