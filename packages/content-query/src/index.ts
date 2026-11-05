@@ -14,6 +14,7 @@ export type {
   PayloadsOf,
   QueryData,
   Relationship,
+  SelectedData,
   VariantContext,
   VariantField,
   VariantOf,

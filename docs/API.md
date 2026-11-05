@@ -252,7 +252,29 @@ type PostLink = ContentPost<"id" | "title">; // What select("id", "title") retur
 type Detail = ContentCodingPayload<"detail">; // One declared payload's value.
 ```
 
-`ContentPost<"id" | "title">` is the shape a query returns when it selects those fields: every selected key is present, optional fields read as `undefined` when missing, and unknown field names are type errors. Spell type imports with `import type`, which works under every TypeScript configuration; a plain import also works unless `verbatimModuleSyntax` is enabled. Vite apps import the same types from `content-query:collections/posts`.
+`ContentPost<"id" | "title">` is the shape a query returns when it selects those fields: every selected key is present, optional fields read as `undefined` when missing, and unknown field names are type errors. Outside generated declarations, `SelectedData<Data, Field>` from `content-query` builds the same shape, for example `SelectedData<QueryData<typeof collections.posts>, "id" | "title">`.
+
+#### Field descriptions
+
+A JSDoc comment on a schema field or a computed field's name documents that field. Editors show it when you hover the field on the full entry type, on a picked entry type, and on fluent and relational query results, including related entries and `_adjacent` neighbors. Go to definition opens the schema. The built-in `id` field has its own description.
+
+```ts
+const posts = defineCollection({
+  source: "./content/posts",
+  schema: schema.object({
+    /** The headline, also used as the page title. */
+    title: schema.string(),
+  }),
+  computed: {
+    /** Estimated reading time in minutes. */
+    minutes: readingTime(),
+  },
+});
+```
+
+This works with any schema library whose inferred output type keeps property declarations, as Zod 4 does. Zod's `.describe()` and `.meta()` store descriptions at runtime only, so they don't show up in types.
+
+Spell type imports with `import type`, which works under every TypeScript configuration; a plain import also works unless `verbatimModuleSyntax` is enabled. Vite apps import the same types from `content-query:collections/posts`.
 
 `content-query/runtime` exports `Collection<Registry, Name, Style?>` (one collection's query API), `CollectionHandles<Registry, Style?>` (one handle per collection, keyed by name), `AnyCollection` (what `using()` accepts), and `LoadedRegistry` for typed helpers.
 

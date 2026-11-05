@@ -85,6 +85,19 @@ const links: GuideLink[] = await guides.select("id", "title").all();
 
 A picked entry has every selected key, and an optional field that an entry omits reads as `undefined`, so it matches what the query returns. Field names the collection does not define are type errors.
 
+### Field descriptions
+
+To describe a field, write a JSDoc comment above it in the schema or above a computed field's name:
+
+```ts
+schema: schema.object({
+  /** The headline, also used as the page title. */
+  title: schema.string(),
+}),
+```
+
+Editors show the comment when you hover `title` on `ContentGuide`, on `ContentGuide<"id" | "title">`, and on any query result that selects it, including related entries and `_adjacent` neighbors. Zod's `.describe()` and `.meta()` store descriptions at runtime only, so they don't show up in types.
+
 To import only types, such as in a Client Component, write `import type { ContentPost } from "#content-query/posts"`. That spelling works under every TypeScript configuration; a plain `import { ContentPost }` also works unless `verbatimModuleSyntax` is on. For helpers that accept collections, `content-query/runtime` exports the `Collection`, `CollectionHandles`, and `AnyCollection` types.
 
 Keep runtime imports on the server. See [querying content](/docs/querying-content) and [rendering content](/docs/rendering-content) for usage.

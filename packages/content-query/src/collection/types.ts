@@ -163,8 +163,31 @@ export type ComputedData<Definition> = Definition extends { computed: infer Comp
         : never;
     }
   : {};
-export type QueryData<Definition> = { id: string } & EntryData<Definition> &
+/**
+ * An entry's ID, validated metadata, and computed fields. JSDoc comments on schema fields and
+ * computed field names carry through, so editors show them when hovering a field.
+ */
+export type QueryData<Definition> = {
+  /** The entry's ID, unique within its collection. */
+  id: string;
+} & EntryData<Definition> &
   ComputedData<Definition>;
+/** Maps `Field` without reading `Data`'s modifiers, so every key is required. */
+type PresentFields<Data, Field extends PropertyKey> = {
+  [Key in Field]: Key extends keyof Data ? Data[Key] : never;
+};
+/** Flattens an intersection into one mutable object type, keeping each property's declaration. */
+type MutableObject<Value> = { -readonly [Key in keyof Value]: Value[Key] };
+/**
+ * The shape of `Data` when a query selects `Field`. Every selected key is present and mutable,
+ * and an optional field's value includes `undefined` instead of the key being optional.
+ *
+ * Each property stays linked to its declaration in `Data`, so JSDoc comments written on schema
+ * fields show when hovering a selected field, and go to definition opens the schema.
+ */
+export type SelectedData<Data, Field extends keyof Data> = MutableObject<
+  PresentFields<Data, Field> & Pick<Data, Field>
+>;
 /**
  * Type-only marker recording which collections a query scope loaded. A marked definition offers
  * only the relationships whose target is loaded; an unmarked one offers every relationship.
