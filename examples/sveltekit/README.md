@@ -28,7 +28,7 @@ The example prerenders the homepage and guide pages. ContentQuery's Vite integra
 
 Queries are inline in SvelteKit's required `+page.server.ts` and `+layout.server.ts` modules. `src/routes/docs/+layout.server.ts` fetches navigation for the persistent docs layout; the article loader fetches only the article and its neighbors. `$app/state` keeps the active sidebar link current. There is no separate content-loading helper. Generated data and declarations are ignored by Git.
 
-Development subscribes to `content-query:client` and calls `refreshAll()` after publication. The generated `content-query:server` types include `CollectionKey`, `CollectionData`, and `Collections`; there is no handwritten declaration file. `source: "./content/guides"` defaults to Markdown. The production output is `build/`.
+Development subscribes to `content-query:client` and calls `refreshAll()` after publication. The generated `content-query:server` types include `CollectionKey`, `CollectionEntry`, and `Collections`; there is no handwritten declaration file. `source: "./content/guides"` defaults to Markdown. The production output is `build/`.
 
 Run `vp test run examples/sveltekit/tests` from the repository root to build an isolated copy, add a nested guide, and verify ordered metadata, Markdown, and previous/next links after deleting the source files.
 

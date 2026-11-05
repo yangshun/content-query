@@ -66,7 +66,19 @@ const { html, headings } = post!._payloads._rendered;
 
 Queries return only the data they select, not even `id` implicitly. A query must select fields, include a relationship, request a payload, or select adjacent entries; otherwise it fails to type-check and throws an `invalid-query` error. Counts need no selection.
 
+Generated declarations export `CollectionEntry<"posts">` for a full entry. Pass the selected fields to type query results, such as props for a list component:
+
+```ts
+import type { CollectionEntry } from "content-query:server";
+
+type PostLink = CollectionEntry<"posts", "id" | "title">; // What select("id", "title") returns.
+```
+
 Add `.content-query/` to `.gitignore`. Follow the quick start for a complete walkthrough, or choose a framework example below.
+
+## Migrating to `CollectionEntry`
+
+The generated `CollectionData` type is now `CollectionEntry`. Rename imports from `content-query:server` or the generated server entry, and replace `Pick<CollectionData<"posts">, "id" | "title">` with `CollectionEntry<"posts", "id" | "title">`. Regenerate declarations by starting Vite or running `content-query build`.
 
 ## Migrating to 0.4
 

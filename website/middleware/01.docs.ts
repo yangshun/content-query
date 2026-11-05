@@ -1,8 +1,8 @@
 import { defineMiddleware } from "void";
-import { content, type CollectionData } from "content-query:server";
+import { content, type CollectionEntry } from "content-query:server";
 
 export type NavigationShared = {
-  guideNavigation: Pick<CollectionData<"guides">, "id" | "title" | "section">[];
+  guideNavigation: CollectionEntry<"guides", "id" | "title" | "section">[];
   isDocsPage: boolean;
 };
 
