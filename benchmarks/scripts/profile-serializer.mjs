@@ -8,8 +8,8 @@ import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { benchmarkRoot } from "./config.ts";
 
-if (process.versions.node !== "24.21.0") {
-  throw new Error("Use Node 24.21.0 for serializer profiling.");
+if (process.versions.node !== "24.22.2") {
+  throw new Error("Use Node 24.22.2 for serializer profiling.");
 }
 const appRequire = createRequire(path.join(benchmarkRoot, "apps/void/package.json"));
 const voidRoot = path.dirname(path.dirname(appRequire.resolve("void")));

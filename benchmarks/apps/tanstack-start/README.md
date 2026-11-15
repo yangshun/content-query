@@ -15,15 +15,15 @@ Links use ordinary document navigation, matching the Astro and Vite + React benc
 Follow the [suite setup](../../README.md#setup). From the repository root:
 
 ```sh
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmark-tanstack-start dev
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmark-tanstack-start build
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmark-tanstack-start preview
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmark-tanstack-start dev
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmark-tanstack-start build
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmark-tanstack-start preview
 ```
 
 The suite runs startup and production builds sequentially, verifies the full homepage and first/last articles in Chromium, and audits every emitted article HTML file. Cold runs remove `.tanstack/`, generated route types, ContentQuery declarations, Vite optimizer caches, and build output; warm runs retain the preceding run's generated files.
 
 ```sh
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks bench --apps tanstack-start
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks bench --apps tanstack-start
 ```
 
 The standard benchmark command replaces `results/latest.json` and `RESULTS.md`; preserve an existing comparison before running a subset. The [suite results](../../RESULTS.md) retain each framework's source run when combining partial reruns.

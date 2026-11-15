@@ -72,7 +72,7 @@ The Vite guide documents the in-memory default and explicit standalone artifact 
 
 It also explains shared development revision serialization, bounded lazy payload batches, and portable compression of large metadata indexes and payloads while preserving value semantics.
 
-From the repository root, using Node.js 24.21.0 and Vite+:
+From the repository root, using Node.js 24.22.2 and Vite+:
 
 ```sh
 vp install --frozen-lockfile
@@ -80,7 +80,7 @@ vp run --filter content-query build
 vp run --filter @content-query/website dev
 ```
 
-`void` and `@void/react` use `catalog:` references to the matching `1.5.0` pins in the root `pnpm-workspace.yaml`.
+`void` and `@void/react` use `catalog:` references to the matching `1.9.1` pins in the root `pnpm-workspace.yaml`.
 
 ## Build and verify
 
@@ -95,7 +95,7 @@ Static pages are emitted to `dist/client/`. The Cloudflare Worker name is `conte
 
 Cloudflare Workers Builds uses `website/` as its root directory and automatic dependency installation. Leave its build command empty and set its deploy command to `./node_modules/.bin/void deploy --platform cloudflare`. This uses the installed project tool without a global Vite+ installation or shell setup.
 
-Set the build variable `NODE_VERSION` to `24.21.0` and leave `SKIP_DEPENDENCY_INSTALL` unset.
+Set the build variable `NODE_VERSION` to `24.22.2` and leave `SKIP_DEPENDENCY_INSTALL` unset.
 
 To build and deploy locally from `website/`:
 

@@ -11,9 +11,9 @@ Use `vp run build` for this app's custom build script; `vp build` alone runs onl
 Follow the [suite setup](../../README.md#setup) to install dependencies, Chromium, and generate the shared corpus. From the repository root:
 
 ```sh
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmark-vite-react dev
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmark-vite-react build
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmark-vite-react preview
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmark-vite-react dev
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmark-vite-react build
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmark-vite-react preview
 ```
 
 Use the [benchmark runner](../../README.md#run-the-comparison) for controlled cold/warm measurements. Generated content, `.content-collections/`, `.prerender/`, and `dist/` are ignored by Git.

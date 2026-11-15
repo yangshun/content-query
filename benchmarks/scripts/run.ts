@@ -144,9 +144,9 @@ export async function runBenchmark(options: {
   seed: number;
   settle: SettleOptions;
 }): Promise<Report> {
-  if (process.versions.node !== "24.21.0") {
+  if (process.versions.node !== "24.22.2") {
     throw new Error(
-      "Run with the pinned runtime: vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks bench",
+      "Run with the pinned runtime: vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks bench",
     );
   }
   if (!Number.isSafeInteger(options.runs) || options.runs < 1) {

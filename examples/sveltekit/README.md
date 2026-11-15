@@ -10,7 +10,7 @@ The Vite config passes `contentQuery()` directly to `plugins`; the shared worksp
 
 ## Run locally
 
-From the repository root, use Node.js 24.21.0 and Vite+:
+From the repository root, use Node.js 24.22.2 and Vite+:
 
 ```sh
 vp install

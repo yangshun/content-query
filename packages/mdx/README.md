@@ -224,7 +224,7 @@ This implementation targets local files, React 19, synchronous SSR-compatible wi
 
 ## Develop and verify
 
-From the repository root on Node.js 24.21.0:
+From the repository root on Node.js 24.22.2:
 
 ```sh
 vp install --frozen-lockfile

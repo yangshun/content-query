@@ -17,15 +17,15 @@ The normal `next build` includes content preparation, compilation, route enumera
 Follow the [suite setup](../../README.md#setup), including building ContentQuery and generating the shared corpus. From the repository root:
 
 ```sh
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmark-next dev
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmark-next build
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmark-next preview
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmark-next dev
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmark-next build
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmark-next preview
 ```
 
 Run the controlled benchmark for only this app:
 
 ```sh
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks bench --apps next
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks bench --apps next
 ```
 
 The runner clears `.next/`, `out/`, and `.content-query/` for cold runs and verifies every emitted article's HTML after a build. Benchmark runs replace the latest raw measurements and report, so preserve previous results before running a subset. Generated content, framework types, and outputs are ignored by Git.

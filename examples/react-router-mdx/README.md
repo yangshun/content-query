@@ -10,7 +10,7 @@ Minimal CSS uses compact typography: 15px body text, 24px page titles, and 18px 
 
 ## Run
 
-From the repository root with Node.js 24.21.0 and Vite+:
+From the repository root with Node.js 24.22.2 and Vite+:
 
 ```sh
 vp install --frozen-lockfile

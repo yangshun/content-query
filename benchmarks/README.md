@@ -22,10 +22,10 @@ Run these commands from the repository root. Use the explicit runtime wrapper be
 All apps use the pinned Vite+ version from the shared workspace catalog. Recorded reports retain the toolchain versions used when they were measured.
 
 ```sh
-vp env exec --node 24.21.0 -- vp install --frozen-lockfile
-vp env exec --node 24.21.0 -- vp run --no-cache --filter content-query build
-vp env exec --node 24.21.0 -- vp exec --filter @content-query/benchmarks playwright install chromium
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks generate
+vp env exec --node 24.22.2 -- vp install --frozen-lockfile
+vp env exec --node 24.22.2 -- vp run --no-cache --filter content-query build
+vp env exec --node 24.22.2 -- vp exec --filter @content-query/benchmarks playwright install chromium
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks generate
 ```
 
 The generator creates 10,000 deterministic, unique files of approximately 1 KB each in `.fixtures/entries/`. It hardlinks each file into every app's `content/entries/` folder, with a copy fallback for filesystems that do not support hardlinks. The manifest records the entry count, source bytes, ordered corpus SHA-256, hardlink count, and copy count. These generated directories are ignored by Git; regenerate them after a fresh checkout. The generator replaces only its own generated entry folders. Edit the generator rather than the hardlinked files.
@@ -33,7 +33,7 @@ The generator creates 10,000 deterministic, unique files of approximately 1 KB e
 ## Run the comparison
 
 ```sh
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks bench
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks bench
 ```
 
 The runner generates the corpus before starting any timers. It requires the package build and browser setup above. Results are checkpointed after each sample to [results/latest.json](./results/latest.json) and summarized in [RESULTS.md](./RESULTS.md). The current workload is recorded as `full-index-and-prerendered-articles` in raw measurements. The [historical single-page report](./results/single-page-RESULTS.md) and [raw data](./results/single-page.json) describe the previous workload and are not directly comparable. A full benchmark run replaces the latest report with that run's complete comparison. Each run writes complete command output to the ignored `.runs/` directory.
@@ -60,8 +60,8 @@ The previous [composite report](./results/composite-20261020-RESULTS.md) and its
 The [previous in-memory samples](./results/full-site-in-memory.json) and [Void rerun after Next.js stopped](./results/profile-void-no-next-20261020.json) remain archived. The [original report](./results/full-site-generated-RESULTS.md) preserves the generated-backend Void measurements. To collect Void-only timings after rebuilding ContentQuery while preserving the comparison report:
 
 ```sh
-vp env exec --node 24.21.0 -- vp run --no-cache --filter content-query build
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks profile --mode timings --backend in-memory --label void-no-next-20261020 --phase all --runs 3
+vp env exec --node 24.22.2 -- vp run --no-cache --filter content-query build
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks profile --mode timings --backend in-memory --label void-no-next-20261020 --phase all --runs 3
 ```
 
 This saves `results/profile-void-no-next-20261020.json` without overwriting other stacks' results. Choose a fresh label for subsequent runs. The archived composite comparison identifies each sample's `sourceRun` and records each source environment in `measurementRuns`. The ordinary `bench --apps void` command replaces `results/latest.json` and `RESULTS.md` at every checkpoint, so use the timing profiler above for partial reruns.
@@ -87,8 +87,8 @@ The inputs contain no images, code fences, or framework components. Native conte
 Useful smaller runs, from the repository root:
 
 ```sh
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks bench --runs 1 --entries 100
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks bench --apps astro,void --phase build
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks bench --runs 1 --entries 100
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks bench --apps astro,void --phase build
 ```
 
 Options are `--entries` (default `10000`), `--runs` (default `3`), `--apps` (comma-separated `astro,vite-react,nuxt,void,next,tanstack-start`), `--phase` (`all`, `startup`, or `build`), `--seed` (an integer from `0` to `4294967295`; defaults to one derived from the current time and recorded in the report), `--settle-idle` (minimum idle CPU fraction before each sample, default `0.8`), and `--settle-timeout` (maximum seconds to wait for it, default `180`; `0` records one measurement window without waiting). Use `--apps next` for only Next.js + ContentQuery or `--apps tanstack-start` for only TanStack Start + ContentQuery. Each run overwrites the latest report, so preserve a report before running a different workload. Run the default command again to restore the full dataset and report after experimenting.
@@ -100,8 +100,8 @@ The [earlier full-site build profile](./BUILD-PROFILING.md) separates ContentQue
 The [core optimization report](./CORE-OPTIMIZATION.md) records compact artifacts, bounded source reads, shared development serialization, the focused comparison, and final CPU attribution. A renderer replay can isolate an existing framework change against the same compiled application:
 
 ```sh
-vp env exec --node 24.21.0 -- vp exec --filter @content-query/benchmarks node scripts/profile-prerender.mjs --label renderer-baseline
-vp env exec --node 24.21.0 -- vp exec --filter @content-query/benchmarks node scripts/profile-prerender.mjs --renderer ../../../void/packages/void/src/prerender-render.ts --label renderer-candidate
+vp env exec --node 24.22.2 -- vp exec --filter @content-query/benchmarks node scripts/profile-prerender.mjs --label renderer-baseline
+vp env exec --node 24.22.2 -- vp exec --filter @content-query/benchmarks node scripts/profile-prerender.mjs --renderer ../../../void/packages/void/src/prerender-render.ts --label renderer-candidate
 ```
 
 The second command assumes a sibling Void checkout and reads its renderer source. The replay records that source's SHA-256 and substitutes it in its own process. Replay timings cover prerendering; the `bench` command measures complete application builds.
@@ -111,10 +111,10 @@ The [Void follow-up](./CORE-OPTIMIZATION.md#authorized-void-follow-up) uses a lo
 The [historical profiling report](./PROFILING.md) records startup/build bottlenecks and follow-up measurements for the previous single-page workload. The commands below profile the current full-site workload. After building ContentQuery and generating the corpus, collect profiles without replacing the six-stack comparison:
 
 ```sh
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks profile --mode timings --label local --runs 3
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks profile --mode trace --label local-trace
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks profile --mode cpu --label local-cpu --phase build
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks profile:summary .runs/profiles/local-cpu results/profile-attribution.json
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks profile --mode timings --label local --runs 3
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks profile --mode trace --label local-trace
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks profile --mode cpu --label local-cpu --phase build
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks profile:summary .runs/profiles/local-cpu results/profile-attribution.json
 ```
 
 `timings` uses the ordinary benchmark commands without instrumentation. `trace` adds preparation spans and filesystem operation counters to the built ContentQuery modules through Node load hooks. `cpu` also records V8 CPU profiles. Instrumentation adds overhead: use these modes to attribute work, and compare wall-clock performance using `timings`. Spans can overlap; summed asynchronous I/O durations are not elapsed time. The profiler excludes production preview from instrumentation.
@@ -126,15 +126,15 @@ The Void app and profiler default to the in-memory backend, emitting only declar
 `profile:serializer` compares Miniflare's installed linear arena growth with geometric growth in isolated Node child processes using synthetic module configs. The load hook changes only the child process's source and checks that every serialized byte matches. It does not modify installed dependency files or the application benchmarks.
 
 ```sh
-vp env exec --node 24.21.0 -- vp run --no-cache --filter @content-query/benchmarks profile:serializer
+vp env exec --node 24.22.2 -- vp run --no-cache --filter @content-query/benchmarks profile:serializer
 ```
 
 ## Validation
 
 ```sh
-vp env exec --node 24.21.0 -- vp test run benchmarks
-vp env exec --node 24.21.0 -- vp run check
-vp env exec --node 24.21.0 -- vp test run
+vp env exec --node 24.22.2 -- vp test run benchmarks
+vp env exec --node 24.22.2 -- vp run check
+vp env exec --node 24.22.2 -- vp test run
 ```
 
 The repository's CI includes benchmark unit tests. Browser tests and full performance measurements are opt-in, so regular tests do not require Chromium. Unit tests cover corpus determinism, app-file parity, hardlink and copy behavior, invalid inputs, timing summaries, deadlines, and process-tree cleanup.
@@ -142,8 +142,8 @@ The repository's CI includes benchmark unit tests. Browser tests and full perfor
 To run the browser tests, install Chromium and select their config from the repository root:
 
 ```sh
-vp env exec --node 24.21.0 -- vp exec --filter @content-query/benchmarks playwright install chromium
-vp env exec --node 24.21.0 -- vp test run --config benchmarks/vite.browser.config.ts
+vp env exec --node 24.22.2 -- vp exec --filter @content-query/benchmarks playwright install chromium
+vp env exec --node 24.22.2 -- vp test run --config benchmarks/vite.browser.config.ts
 ```
 
 The browser config selects `tests/*.browser.ts`, which the default test command does not discover. These tests copy the real apps into a temporary workspace with 24 entries each, then verify the full index and first/last articles in development and production in Chromium. They audit all 25 content HTML files, including every article body, and exceed the old 20-item display limit. They do not overwrite the main 10,000-entry corpus or timing report.

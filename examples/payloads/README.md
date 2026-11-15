@@ -4,7 +4,7 @@ A framework-free example that builds a small static site from prepared content. 
 
 ## Run it
 
-Use the repository's Node.js 24.21.0 runtime and Vite+ CLI. From the repository root:
+Use the repository's Node.js 24.22.2 runtime and Vite+ CLI. From the repository root:
 
 ```sh
 vp install --frozen-lockfile

@@ -16,8 +16,8 @@ const { values } = parseArgs({
     renderer: { type: "string" },
   },
 });
-if (!/^[a-z0-9][a-z0-9_-]*$/.test(values.label) || process.versions.node !== "24.21.0") {
-  throw new Error("Use Node 24.21.0 and a lowercase, filesystem-safe --label.");
+if (!/^[a-z0-9][a-z0-9_-]*$/.test(values.label) || process.versions.node !== "24.22.2") {
+  throw new Error("Use Node 24.22.2 and a lowercase, filesystem-safe --label.");
 }
 const appRoot = path.join(benchmarkRoot, "apps/void");
 const packageDir = await fs.promises.realpath(path.join(appRoot, "node_modules/void"));

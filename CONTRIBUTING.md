@@ -2,7 +2,7 @@
 
 ## Setup and checks
 
-From this repository root, use Node.js 24.21.0 and Vite+. The repository owns its workspace configuration, dependency catalog, lockfile, formatting, type-aware linting, tsrs type checks, tests, and package builds:
+From this repository root, use Node.js 24.22.2 and Vite+. The repository owns its workspace configuration, dependency catalog, lockfile, formatting, type-aware linting, tsrs type checks, tests, and package builds:
 
 ```sh
 vp install --frozen-lockfile

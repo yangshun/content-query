@@ -32,8 +32,8 @@ if (!["generated", "in-memory"].includes(values.backend)) {
 }
 environment.CONTENT_QUERY_BENCH_BACKEND = values.backend;
 const runs = Number(values.runs);
-if (!Number.isSafeInteger(runs) || runs < 1 || process.versions.node !== "24.21.0") {
-  throw new Error("Use Node 24.21.0 and a positive integer --runs.");
+if (!Number.isSafeInteger(runs) || runs < 1 || process.versions.node !== "24.22.2") {
+  throw new Error("Use Node 24.22.2 and a positive integer --runs.");
 }
 const app = apps.find((app) => app.id === "void")!;
 const corpus = JSON.parse(

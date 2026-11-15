@@ -8,7 +8,7 @@ A minimal Void + React documentation app in `examples/void`, backed by one Conte
 
 ## Setup and development
 
-Use the repository's Node.js 24.21.0 runtime and Vite+ CLI. From the repository root:
+Use the repository's Node.js 24.22.2 runtime and Vite+ CLI. From the repository root:
 
 ```sh
 vp install --frozen-lockfile
@@ -16,7 +16,7 @@ vp run --filter content-query build
 vp run --filter @content-query/example-void dev
 ```
 
-`void` and `@void/react` use `catalog:` references to the matching `1.5.0` pins in the root `pnpm-workspace.yaml`. Workspace type checks use tsrs; `allowImportingTsExtensions` enables the local ContentQuery Vite source types.
+`void` and `@void/react` use `catalog:` references to the matching `1.9.1` pins in the root `pnpm-workspace.yaml`. Workspace type checks use tsrs; `allowImportingTsExtensions` enables the local ContentQuery Vite source types.
 
 Build the workspace ContentQuery package before starting the app because its exports point at `packages/content-query/dist/`. The dev server watches Markdown and updates metadata and rendered bodies after edits. `src/content-updates.tsx` subscribes to `content-query:client` and refreshes Void loader data while preserving component state and scroll; the surrounding application remains mounted.
 
