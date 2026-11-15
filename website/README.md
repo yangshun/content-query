@@ -95,7 +95,7 @@ Static pages are emitted to `dist/client/`. The Cloudflare Worker name is `conte
 
 Cloudflare Workers Builds uses `website/` as its root directory and automatic dependency installation. Leave its build command empty and set its deploy command to `./node_modules/.bin/void deploy --platform cloudflare`. This uses the installed project tool without a global Vite+ installation or shell setup.
 
-Set the build variable `NODE_VERSION` to `24.22.2` and leave `SKIP_DEPENDENCY_INSTALL` unset.
+`website/.node-version` links to the repository's root `.node-version`, so Cloudflare uses the same Node.js version as local development and GitHub Actions. Leave the build variables `NODE_VERSION` and `SKIP_DEPENDENCY_INSTALL` unset. Remove any existing `NODE_VERSION` override after the version-file link is available on the deployed branch.
 
 To build and deploy locally from `website/`:
 
